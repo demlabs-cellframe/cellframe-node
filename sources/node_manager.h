@@ -17,35 +17,35 @@
     You should have received a copy of the GNU Lesser General Public License
     along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
+#ifndef _NODE_MANAGER_H_
+#define _NODE_MANAGER_H_
 
-
-#include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "uthash.h"
 #include "dap_udp_server.h"
 #include "dap_udp_client.h"
-#include "dap_http.h"
-#include "stream.h"
-#include "node_manager.h"
+#include "dap_common.h"
+#include "dap_config.h"
+#include "dap_enc.h"
+#include "dap_enc_key.h"
 
 
+typedef struct node_manager{
+    dap_udp_server_t* sh;
+
+} node_manager_t;
 
 
+extern int node_manager_init();
+
+node_manager_t* new_node_manager();                             // Create new manager structure
+
+extern void node_manager_deinit();
+
+extern void node_manager_start(node_manager_t* manager);        // Start manager work
 
 
-int main(int argc, char **argv) {
-    printf("Kelvin Node version 0.1 \n");
-
-    node_manager_init();
-
-    node_manager_t* manager = new_node_manager();
-    node_manager_start(manager);
-
-    node_manager_deinit();
-
-    return 0;
-}
+#endif
