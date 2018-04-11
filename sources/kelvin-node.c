@@ -39,13 +39,20 @@
 
 int main(int argc, char **argv) {
     printf("Kelvin Node version 0.1 \n");
+    if (argc > 1)
+    {        
+        char *l_config_name = strdup(argv[1]);
 
-    node_manager_init();
+        node_manager_init();
 
-    node_manager_t* manager = new_node_manager();
-    node_manager_start(manager);
+        node_manager_t* manager = new_node_manager(l_config_name);
+        node_manager_start(manager);
 
-    node_manager_deinit();
+        node_manager_deinit();
+        free(l_config_name);
+    }
+    else            
+        puts("Please, specify config file path.");
 
     return 0;
 }

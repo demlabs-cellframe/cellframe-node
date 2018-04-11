@@ -35,13 +35,14 @@
 
 typedef struct node_manager{
     dap_udp_server_t* sh;
+    dap_config_t *l_config;
 
 } node_manager_t;
 
 
 extern int node_manager_init();
 
-node_manager_t* new_node_manager();                             // Create new manager structure
+node_manager_t* new_node_manager(char* config_file);                             // Create new manager structure
 
 extern void node_manager_deinit();
 

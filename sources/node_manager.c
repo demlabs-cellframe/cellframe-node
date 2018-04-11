@@ -97,8 +97,10 @@ void node_manager_deinit(){
  * @brief new_node_manager Create node manager structure
  * @return Manager instance
  */
-node_manager_t* new_node_manager(){
-    return (node_manager_t*)malloc(sizeof(node_manager_t));
+node_manager_t* new_node_manager(char* config_file){
+    node_manager_t* manager = (node_manager_t*)malloc(sizeof(node_manager_t));
+    manager->l_config = dap_config_open(config_file);
+    return manager;
 }
 
 /**
@@ -106,8 +108,19 @@ node_manager_t* new_node_manager(){
  * @param manager Manager instance
  */
 void node_manager_start(node_manager_t* manager){
+    int port = 0;
+    if (manager->l_config)
+        port = atoi(dap_config_get_item_str(manager->l_config, "general", "port"));
+    else{
+        log_it(L_CRITICAL,"Unable to find config file");
+        return;
+    }
+    if(port == 0){
+        log_it(L_CRITICAL,"Unable to read port value");
+        return;
+    }
     dap_udp_server_t* sh = manager->sh;
-    sh = dap_udp_server_listen(1212);
+    sh = dap_udp_server_listen(port);
     sh->client_read_callback = *client_read;
     sh->client_write_callback = *client_write;
     sh->client_new_callback = *client_new;
