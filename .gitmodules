@@ -10,3 +10,6 @@
 [submodule "libdap-stream"]
 	path = libdap-stream
 	url = https://github.com/demlabsinc/libdap-stream.git
+[submodule "libdap-stream-ch-vpn"]
+	path = libdap-stream-ch-vpn
+	url = https://github.com/demlabsinc/libdap-stream-ch-vpn.git
