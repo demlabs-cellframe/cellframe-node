@@ -19,33 +19,60 @@
 */
 
 #include "node_manager.h"
+#include "dap_http.h"
+#include "stream.h"
+#include "stream_ch_pkt.h"
 #define LOG_TAG "main"
 
 
-void client_new(dap_udp_client_t *client,void * arg){
+
+void channel_new(struct stream_ch* ch,void* arg){
+    puts("Channel new");
+}
+
+void channel_delete(struct stream_ch* ch,void* arg){
+    puts("Channel delete");
+}
+
+void channel_packet_in(struct stream_ch* ch,void* arg){
+    stream_ch_pkt_t * ch_pkt = arg;
+    char* data = (char*)malloc(ch_pkt->hdr.size);
+    memcpy(data,ch_pkt->data,ch_pkt->hdr.size);
+    printf("Income data: %s from %s \n",data,itoa(ch->stream->conn_udp->host_key));
+    stream_ch_set_ready_to_write(ch,false);
+    stream_ch_pkt_write_f(ch, 1, "ping");
+    stream_ch_set_ready_to_write(ch,true);
+}
+
+void channel_packet_out(struct stream_ch* ch,void* arg){
+    stream_ch_set_ready_to_write(ch,false);
+}
+
+
+void client_new(dap_client_remote_t *client,void * arg){
     printf("Client connected");
 }
 
-void client_read(dap_udp_client_t *client,void * arg){
+void client_read(dap_client_remote_t *client,void * arg){
     printf("Client read \n");
     unsigned char* data = (char*)malloc(client->buf_in_size);
     data[client->buf_in_size] = 0;
     if(client->_ready_to_read)
     {        
-        dap_udp_client_read(client,data,client->buf_in_size);
+        dap_client_read(client,data,client->buf_in_size);
     }
     puts(data);
     char outbox[] = "ping";
-    dap_udp_client_write(client,outbox,strlen(outbox));
+    dap_client_write(client,outbox,strlen(outbox));
     dap_udp_client_ready_to_write(client,true);
     free(data);
 }
 
-void client_write(dap_udp_client_t *client,void * arg){
+void client_write(dap_client_remote_t *client,void * arg){
     printf("Client write");
 }
 
-void client_disconnect(struct dap_client_remote *client,void * arg){
+void client_disconnect(dap_client_remote_t *client,void * arg){
     printf("Client disconnect");
 }
 
@@ -70,14 +97,18 @@ int node_manager_init(){
         log_it(L_CRITICAL,"Can't init encryption key module");
         return -57;
     }
-    if(dap_udp_server_init()!=0){
+    if(dap_server_init()!=0){
         log_it(L_CRITICAL,"Can't init udp server module");
         return -4;
     }
-    if(dap_udp_client_init()!=0){
+    if(dap_client_init()!=0){
         log_it(L_CRITICAL,"Can't init udp client module");
         return -4;
     }
+    stream_init();
+    stream_session_init();
+    dap_http_init();
+    dap_http_simple_module_init();
     return 0;
 }
 
@@ -85,8 +116,9 @@ int node_manager_init(){
  * @brief dap_server_deinit Deinit modules
  */
 void node_manager_deinit(){
-    dap_udp_server_deinit();
-    dap_udp_client_deinit();
+    stream_session_deinit();
+    dap_server_deinit();
+    dap_client_deinit();
     dap_enc_key_deinit();
     dap_enc_deinit();
     common_deinit();
@@ -119,7 +151,7 @@ void node_manager_start(node_manager_t* manager){
         log_it(L_CRITICAL,"Unable to read port value");
         return;
     }
-    dap_udp_server_t* sh = manager->sh;
+    dap_server_t* sh = manager->sh;
     sh = dap_udp_server_listen(port);
     sh->client_read_callback = *client_read;
     sh->client_write_callback = *client_write;
@@ -127,4 +159,13 @@ void node_manager_start(node_manager_t* manager){
     sh->client_delete_callback = *client_disconnect;
     dap_udp_server_loop(sh);
     dap_udp_server_delete(sh);
+
+
+}
+
+void node_manager_start_stream(){
+    dap_server_t* server = dap_server_listen("localhost",56001,DAP_SERVER_TCP);
+    dap_http_new(server,"HTTP-serv");
+    enc_http_add_proc(DAP_HTTP(server),"/handshake");
+    dap_server_loop(server);
 }
