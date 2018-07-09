@@ -40,13 +40,13 @@ typedef struct node_manager{
 } node_manager_t;
 
 
-extern int node_manager_init();
+int node_manager_init();
 
 node_manager_t* new_node_manager(char* config_file);                             // Create new manager structure
 
-extern void node_manager_deinit();
+void node_manager_deinit();
 
-extern void node_manager_start(node_manager_t* manager);        // Start manager work
+void node_manager_start(node_manager_t* manager);        // Start manager work
 
 
 #endif

@@ -19,7 +19,8 @@
 */
 
 #include "node_manager.h"
-#define LOG_TAG "main"
+
+#define LOG_TAG "node_manager"
 
 
 void client_new(dap_udp_client_t *client,void * arg){
