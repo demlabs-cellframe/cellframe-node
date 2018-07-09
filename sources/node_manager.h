@@ -25,16 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "dap_udp_server.h"
-#include "dap_udp_client.h"
+#include "dap_server.h"
 #include "dap_common.h"
 #include "dap_config.h"
+#include "dap_udp_server.h"
+#include "dap_udp_client.h"
 #include "dap_enc.h"
 #include "dap_enc_key.h"
 
 
 typedef struct node_manager{
-    dap_udp_server_t* sh;
+    dap_server_t* sh;
     dap_config_t *l_config;
 
 } node_manager_t;
