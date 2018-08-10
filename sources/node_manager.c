@@ -26,54 +26,60 @@
 #define LOG_TAG "node_manager"
 
 
-void channel_new(struct stream_ch* ch,void* arg){
-    puts("Channel new");
+void channel_new(struct stream_ch* ch,void* arg)
+{
+    log_it(L_INFO,"Channel new");
 }
 
-void channel_delete(struct stream_ch* ch,void* arg){
-    puts("Channel delete");
+
+void channel_delete(struct stream_ch* ch,void* arg)
+{
+    log_it(L_INFO,"Channel delete");
 }
 
-void channel_packet_in(struct stream_ch* ch,void* arg){
+void channel_packet_in(struct stream_ch* ch,void* arg)
+{
     stream_ch_pkt_t * ch_pkt = arg;
     char* data = (char*)malloc(ch_pkt->hdr.size);
     memcpy(data,ch_pkt->data,ch_pkt->hdr.size);
-    printf("Income data: %s from %s \n",data,itoa(ch->stream->conn_udp->host_key));
+    log_it(L_DEBUG,"Income data: %s from %s \n",data,itoa(ch->stream->conn_udp->host_key));
     stream_ch_set_ready_to_write(ch,false);
     stream_ch_pkt_write_f(ch, 1, "ping");
     stream_ch_set_ready_to_write(ch,true);
 }
 
-void channel_packet_out(struct stream_ch* ch,void* arg){
+void channel_packet_out(struct stream_ch* ch,void* arg)
+{
     stream_ch_set_ready_to_write(ch,false);
 }
 
 
 void client_new(dap_client_remote_t *client,void * arg){
-    printf("Client connected");
+    log_it(L_INFO,"Client connected");
 }
 
 void client_read(dap_client_remote_t *client,void * arg){
-    printf("Client read \n");
+    log_it(L_INFO,"Client read %u",client->buf_in_size);
     unsigned char* data = (char*)malloc(client->buf_in_size);
     data[client->buf_in_size] = 0;
     if(client->_ready_to_read)
     {        
         dap_client_read(client,data,client->buf_in_size);
     }
-    puts(data);
     char outbox[] = "ping";
     dap_client_write(client,outbox,strlen(outbox));
     dap_udp_client_ready_to_write(client,true);
     free(data);
 }
 
-void client_write(dap_client_remote_t *client,void * arg){
-    printf("Client write");
+void client_write(dap_client_remote_t *client,void * arg)
+{
+    log_it(L_DEBUG,"Client write");
 }
 
-void client_disconnect(dap_client_remote_t *client,void * arg){
-    printf("Client disconnect");
+void client_disconnect(dap_client_remote_t *client,void * arg)
+{
+    log_it(L_DEBUG,"Client disconnect");
 }
 
 /**
@@ -164,7 +170,7 @@ void node_manager_start(node_manager_t* manager){
 
 void node_manager_start_stream(){
     dap_server_t* server = dap_server_listen("localhost",56001,DAP_SERVER_TCP);
-    dap_http_new(server,"HTTP-serv");
+    dap_http_new(server,"KelvinNode");
     enc_http_add_proc(DAP_HTTP(server),"/handshake");
     dap_server_loop(server);
 }

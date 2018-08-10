@@ -1,15 +1,21 @@
 [submodule "libdap"]
 	path = libdap
-	url = https://github.com/demlabsinc/libdap.git
+	url = https://github.com/kelvinblockchain/libdap.git
 [submodule "libdap-server"]
 	path = libdap-server
-	url = https://github.com/demlabsinc/libdap-server.git
+	url = https://github.com/kelvinblockchain/libdap-server.git
 [submodule "libdap-chain"]
 	path = libdap-chain
-	url = https://github.com/demlabsinc/libdap-chain.git
+	url = https://github.com/kelvinblockchain/libdap-chain.git
 [submodule "libdap-stream"]
 	path = libdap-stream
-	url = https://github.com/demlabsinc/libdap-stream.git
+	url = https://github.com/kelvinblockchain/libdap-stream.git
 [submodule "libdap-stream-ch-vpn"]
 	path = libdap-stream-ch-vpn
-	url = https://github.com/demlabsinc/libdap-stream-ch-vpn.git
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-vpn.git
+[submodule "libdap-stream-ch-av"]
+	path = libdap-stream-ch-av
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-av
+[submodule "libdap-stream-ch-chat"]
+	path = libdap-stream-ch-chat
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-chat
