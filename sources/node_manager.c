@@ -19,7 +19,9 @@
 */
 
 #include "node_manager.h"
+#include "dap_enc_http.h"
 #include "dap_http.h"
+#include "dap_http_simple.h"
 #include "stream.h"
 #include "stream_ch_pkt.h"
 
@@ -127,7 +129,7 @@ void node_manager_deinit(){
     dap_client_deinit();
     dap_enc_key_deinit();
     dap_enc_deinit();
-    common_deinit();
+    dap_common_deinit();
     dap_config_deinit();
 }
 

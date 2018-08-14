@@ -9,7 +9,7 @@ add_definitions ("-DDAP_SERVER")
 
 add_subdirectory(libdap-server)
 add_subdirectory(libdap)
-#add_subdirectory(libdap-chain)
+add_subdirectory(libdap-chain)
 add_subdirectory(libdap-stream)
 
 
@@ -43,4 +43,4 @@ set(HEADERS sources/node_manager.h)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
 add_executable(${PROJECT_NAME} "sources/kelvin-node.c" ${HEADERS} ${SOURCES} ${CRYPTO_SRCS})
-target_link_libraries(${PROJECT_NAME} dap_http_server dap_core_server dap_udp_server dap_session dap_crypto  dap_client dap_core dap_http dap_enc_server dap_stream  m pthread)
+target_link_libraries(${PROJECT_NAME} dap_http_server dap_core_server dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream  m pthread)
