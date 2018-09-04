@@ -37,10 +37,10 @@ add_definitions ("${dap_udp_server_DEFINITIONS}")
 add_definitions ("${dap_session_DEFINITIONS}")
 add_definitions ("${dap_stream_DEFINITIONS}")
 
-set(SOURCES sources/kelvin-node.c sources/node_manager.c )
+set(SOURCES sources/main.c sources/node_manager.c )
 set(HEADERS sources/node_manager.h)
 
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
-add_executable(${PROJECT_NAME} "sources/kelvin-node.c" ${HEADERS} ${SOURCES} ${CRYPTO_SRCS})
+add_executable(${PROJECT_NAME} "sources/main.c" ${HEADERS} ${SOURCES} ${CRYPTO_SRCS})
 target_link_libraries(${PROJECT_NAME} dap_http_server dap_core_server dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream  m pthread)
