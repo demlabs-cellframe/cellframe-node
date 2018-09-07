@@ -1,21 +1,32 @@
 [submodule "libdap"]
 	path = libdap
-	url = https://gitlab.com/demlabs/libdap.git
+	url = https://github.com/kelvinblockchain/libdap.git
+	branch = master
 [submodule "libdap-server"]
 	path = libdap-server
 	url = https://github.com/kelvinblockchain/libdap-server.git
+	branch = master
 [submodule "libdap-chain"]
 	path = libdap-chain
-	url = https://gitlab.com/demlabs/libdap-chain.git
+	url = https://github.com/kelvinblockchain/libdap-chain.git
+	branch = master
 [submodule "libdap-stream"]
 	path = libdap-stream
-	url = https://gitlab.com/demlabs/libdap-stream.git
+	url = https://github.com/kelvinblockchain/libdap-stream.git
+	branch = master
 [submodule "libdap-stream-ch-vpn"]
 	path = libdap-stream-ch-vpn
-	url = https://gitlab.com/demlabs/libdap-stream-ch-vpn.git
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-vpn.git
+	branch = master
 [submodule "libdap-stream-ch-av"]
 	path = libdap-stream-ch-av
-	url = https://gitlab.com/demlabs/libdap-stream-ch-av
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-av
+	branch = master
 [submodule "libdap-stream-ch-chat"]
 	path = libdap-stream-ch-chat
-	url = https://gitlab.com/demlabs/libdap-stream-ch-chat
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-chat
+	branch = master
+[submodule "libdap-server-core"]
+	path = libdap-server-core
+	url = https://github.com/kelvinblockchain/libdap-server-core
+	branch = master
