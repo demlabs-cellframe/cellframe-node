@@ -5,6 +5,8 @@
 
 #define LOG_TAG "main"
 
+#include "sig_unix_handler.h"
+#include "dap_config.h"
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
@@ -12,33 +14,26 @@
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
 
-#ifdef DAP_MOD_SERVER_LIST
-#include "mods/serverlist/server_list.h"
-#endif
-
 #include "stream_session.h"
 #include "stream.h"
 #include "stream_ctl.h"
 #include "dap_stream_ch_vpn.h"
+#include "dap_stream_ch_chain.h"
 #include "dap_common.h"
-#include "db_http.h"
-#include "db_http_file.h"
-#include "auth/db_auth.h"
 #include "dap_server_client.h"
-#include "db_core.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
-#include "sig_unix_handler.h"
-#include "dap_server_config.h"
 #include "dap_traffic_track.h"
 
-#define SERVER_FILENAME NODE_NETNAME "-node"
-#define SERVER_PREFIX="/opt/"SERVER_FILENAME
+#define SERVER_FILENAME NODE_NETNAME"-node"
+#define SERVER_PREFIX "/opt/kelvin-node"
 #define CONFIG_DIR_PATH SERVER_PREFIX"/etc"
+#define GLOBAL_CONFIG_FILENAME SERVER_PREFIX"/etc/"SERVER_FILENAME".cfg"
 #define DEFAULT_PID_FILE_PATH SERVER_PREFIX"/run/dapserver.pid"
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_URL "/stream_url"
+#define STREAM_CTL_URL "/stream_url"
 #define SLIST_URL "/nodelist"
 #define MAIN_URL "/"
 
@@ -52,8 +47,9 @@ int main(int argc, const char * argv[])
     dap_server_t * sh; // DAP Server instance
     int rc;
 
-    if((g_config = dap_server_config_init(CONFIG_DIR_PATH)) == NULL) {
-        log_it(L_CRITICAL,"Can't init general configurations module");
+    dap_config_init(CONFIG_DIR_PATH);
+    if((g_config = dap_config_open(SERVER_FILENAME) ) == NULL) {
+        log_it(L_CRITICAL,"Can't init general configurations");
         return -1;
     }
 
@@ -142,7 +138,7 @@ int main(int argc, const char * argv[])
                     dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
 
             dap_traffic_track_init(sh, timeout);
-            dap_traffic_callback_set(db_auth_traffic_track_callback);
+           // dap_traffic_callback_set(db_auth_traffic_track_callback);
         }
 
         // Init HTTP-specific values
@@ -156,11 +152,8 @@ int main(int argc, const char * argv[])
                                                             "www_root",
                                                             "/opt/dapserver/www"));
 
-        server_list_add_proc(DAP_HTTP(sh), SLIST_URL);
-        db_http_add_proc(DAP_HTTP(sh), DB_URL);
-        db_http_file_proc_add(DAP_HTTP(sh), DB_HTTP_FILE_URL);
         stream_add_proc_http(DAP_HTTP(sh), STREAM_URL);
-        stream_ctl_add_proc(DAP_HTTP(sh), CTL_URL);
+        stream_ctl_add_proc(DAP_HTTP(sh), STREAM_CTL_URL);
 
         enc_http_add_proc(DAP_HTTP(sh), ENC_HTTP_URL);
         ch_sf_init(dap_config_get_item_str_default(g_config, "network", "vpn_addr", "10.0.0.0"),
@@ -174,14 +167,11 @@ int main(int argc, const char * argv[])
         // Deinit modules
         stream_deinit();
         stream_ctl_deinit();
-        db_http_deinit();
         dap_http_folder_deinit();
         dap_http_deinit();
         dap_server_deinit();
-        db_core_deinit();
         dap_enc_ks_deinit();
         dap_common_deinit();
-        server_list_module_deinit();
         return rc*10;
     }
 }

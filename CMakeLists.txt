@@ -27,10 +27,7 @@ SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/../debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/../debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/../debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/../debian/config;")
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
-INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
-INCLUDE(CPack)
+
 
 add_definitions ("-DDAP_SERVER")
 add_definitions ("-DNODE_NETNAME=\"kelvin\"")
@@ -41,6 +38,8 @@ add_subdirectory(libdap-server-core)
 add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-stream)
+add_subdirectory(libdap-stream-ch-vpn)
+add_subdirectory(libdap-stream-ch-chain)
 
 
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_core_INCLUDE_DIRS}")
@@ -74,5 +73,11 @@ set(SOURCES sources/main.c )
 
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
-add_executable(${PROJECT_NAME} "sources/main.c" ${HEADERS} ${SOURCES} ${SERVER_SRCS} )
-target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream  m pthread)
+add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c"${HEADERS} ${SOURCES} ${SERVER_SRCS} )
+
+target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain m pthread magic)
+
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
+INCLUDE(CPack)

@@ -30,3 +30,7 @@
 	path = libdap-server-core
 	url = https://github.com/kelvinblockchain/libdap-server-core
 	branch = master
+[submodule "libdap-stream-ch-chain"]
+	path = libdap-stream-ch-chain
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain
+	branch = master
