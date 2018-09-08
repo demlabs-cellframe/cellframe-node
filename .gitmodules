@@ -98,3 +98,15 @@
 	path = libdap-chain-net-srv-vpn
 	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-vpn
 	branch = master
+[submodule "libdap-chain-wallet"]
+	path = libdap-chain-wallet
+	url = https://github.com/kelvinblockchain/libdap-chain-wallet
+	branch = master
+[submodule "libdap-chain-crypto"]
+	path = libdap-chain-crypto
+	url = https://github.com/kelvinblockchain/libdap-chain-crypto
+	branch = master
+[submodule "libdap-chain-mine"]
+	path = libdap-chain-mine
+	url = https://github.com/kelvinblockchain/libdap-chain-mine
+	branch = master
