@@ -34,3 +34,67 @@
 	path = libdap-stream-ch-chain
 	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain
 	branch = master
+[submodule "libdap-chain-block"]
+	path = libdap-chain-block
+	url = https://github.com/kelvinblockchain/libdap-chain-block
+	branch = master
+[submodule "libdap-chain-block-cs"]
+	path = libdap-chain-block-cs
+	url = https://github.com/kelvinblockchain/libdap-chain-block-cs
+	branch = master
+[submodule "libdap-chain-block-cs-pow"]
+	path = libdap-chain-block-cs-pow
+	url = https://github.com/kelvinblockchain/libdap-chain-block-cs-pow
+	branch = master
+[submodule "libdap-chain-block-cs-poa"]
+	path = libdap-chain-block-cs-poa
+	url = https://github.com/kelvinblockchain/libdap-chain-block-cs-poa
+	branch = master
+[submodule "libdap-chain-dag-cs"]
+	path = libdap-chain-dag-cs
+	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs
+	branch = master
+[submodule "libdap-chain-dag"]
+	path = libdap-chain-dag
+	url = https://github.com/kelvinblockchain/libdap-chain-dag
+	branch = master
+[submodule "libdap-chain-dag-cs-poa"]
+	path = libdap-chain-dag-cs-poa
+	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-poa
+	branch = master
+[submodule "libdap-chain-dag-cs-poh"]
+	path = libdap-chain-dag-cs-poh
+	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-poh
+	branch = master
+[submodule "libdap-chain-dag-cs-hashgraph"]
+	path = libdap-chain-dag-cs-hashgraph
+	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-hashgraph
+	branch = master
+[submodule "libdap-chain-net"]
+	path = libdap-chain-net
+	url = https://github.com/kelvinblockchain/libdap-chain-net
+	branch = master
+[submodule "libdap-chain-net-srv"]
+	path = libdap-chain-net-srv
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv
+	branch = master
+[submodule "libdap-stream-ch-chain-net"]
+	path = libdap-stream-ch-chain-net
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain-net
+	branch = master
+[submodule "libdap-stream-ch-chain-net-srv"]
+	path = libdap-stream-ch-chain-net-srv
+	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain-net-srv
+	branch = master
+[submodule "libdap-chain-net-srv-tx"]
+	path = libdap-chain-net-srv-tx
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-tx
+	branch = master
+[submodule "libdap-chain-net-srv-mining-pool"]
+	path = libdap-chain-net-srv-mining-pool
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-mining-pool
+	branch = master
+[submodule "libdap-chain-net-srv-vpn"]
+	path = libdap-chain-net-srv-vpn
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-vpn
+	branch = master
