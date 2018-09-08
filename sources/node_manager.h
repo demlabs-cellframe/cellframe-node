@@ -48,6 +48,7 @@ node_manager_t* new_node_manager(char* config_file);                            
 void node_manager_deinit();
 
 void node_manager_start(node_manager_t* manager);        // Start manager work
+void node_manager_start_stream();
 
 
 #endif

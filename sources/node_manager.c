@@ -56,11 +56,11 @@ void channel_packet_out(struct stream_ch* ch,void* arg)
 }
 
 
-void client_new(dap_client_remote_t *client,void * arg){
+void client_new(dap_server_client_t *client,void * arg){
     log_it(L_INFO,"Client connected");
 }
 
-void client_read(dap_client_remote_t *client,void * arg){
+void client_read(dap_server_client_t *client,void * arg){
     log_it(L_INFO,"Client read %u",client->buf_in_size);
     unsigned char* data = (char*)malloc(client->buf_in_size);
     data[client->buf_in_size] = 0;
@@ -74,12 +74,12 @@ void client_read(dap_client_remote_t *client,void * arg){
     free(data);
 }
 
-void client_write(dap_client_remote_t *client,void * arg)
+void client_write(dap_server_client_t *client,void * arg)
 {
     log_it(L_DEBUG,"Client write");
 }
 
-void client_disconnect(dap_client_remote_t *client,void * arg)
+void client_disconnect(dap_server_client_t *client,void * arg)
 {
     log_it(L_DEBUG,"Client disconnect");
 }
@@ -105,14 +105,11 @@ int node_manager_init(){
         log_it(L_CRITICAL,"Can't init encryption key module");
         return -57;
     }
-    if(dap_server_init()!=0){
+    if(dap_server_init(0)!=0){
         log_it(L_CRITICAL,"Can't init udp server module");
         return -4;
     }
-    if(dap_client_init()!=0){
-        log_it(L_CRITICAL,"Can't init udp client module");
-        return -4;
-    }
+
     stream_init();
     stream_session_init();
     dap_http_init();
@@ -126,7 +123,7 @@ int node_manager_init(){
 void node_manager_deinit(){
     stream_session_deinit();
     dap_server_deinit();
-    dap_client_deinit();
+    dap_server_client_deinit();
     dap_enc_key_deinit();
     dap_enc_deinit();
     dap_common_deinit();

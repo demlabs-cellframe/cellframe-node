@@ -17,7 +17,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define DAP_SERVER
 
 #include <errno.h>
 #include <signal.h>
