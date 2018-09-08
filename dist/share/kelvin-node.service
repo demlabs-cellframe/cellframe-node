@@ -1,0 +1,14 @@
+[Unit]
+Description=Demlabs Applications Protocol Server
+After=network.target
+
+[Service]
+Type=forking
+OOMScoreAdjust=-1000
+PIDFile=/opt/dapserver/run/dapserver.pid
+WorkingDirectory=/opt/dapserver/
+ExecStart=/opt/dapserver/bin/DapServer -D
+ExecStop=/opt/dapserver/bin/DapServer --stop
+
+[Install] 
+WantedBy=multi-user.target

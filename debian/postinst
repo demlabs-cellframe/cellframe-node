@@ -1,0 +1,28 @@
+#!/bin/bash -e
+. /usr/share/debconf/confmodule
+
+DAP_APP_NAME="kelvin-node"
+DAP_PREFIX="/opt/$DAP_APP_NAME"
+DAP_CFG_TPL="$DAP_PREFIX/share/$DAP_APP_NAME.cfg.tpl"
+
+# Store write config to new if present smth
+DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+
+if [ -e "$DAP_CFG" ]; then
+    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
+else
+    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+fi
+
+cat $DAP_CFG_TPL > $DAP_CFG || true
+
+
+if [ -e "/etc/systemd/user/$DAP_APP_NAME.service" ]; then
+    echo "Restart $DAP_APP_NAME to implement changes"
+else
+    ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/user/$DAP_APP_NAME.service
+    systemctl --system enable 
+    systemctl --system start $DAP_APP_NAME
+fi
+
+#echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"

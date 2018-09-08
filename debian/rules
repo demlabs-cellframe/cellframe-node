@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+override_dh_fixperms:
+    dh_fixperms -X/opt/kelvin-node
+override_dh_auto_install:
+    dh_auto_install -- prefix=/opt/kelvin-node
+%:
+#    dh $@  --with=systemd
+    dh $@
