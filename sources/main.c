@@ -19,17 +19,26 @@
 #include "stream_ctl.h"
 #include "dap_stream_ch_vpn.h"
 #include "dap_stream_ch_chain.h"
+#include "dap_stream_ch_chain.h"
+
 #include "dap_common.h"
 #include "dap_server_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
 #include "dap_traffic_track.h"
 
-#define SERVER_FILENAME NODE_NETNAME"-node"
-#define SERVER_PREFIX "/opt/kelvin-node"
-#define CONFIG_DIR_PATH SERVER_PREFIX"/etc"
-#define GLOBAL_CONFIG_FILENAME SERVER_PREFIX"/etc/"SERVER_FILENAME".cfg"
-#define DEFAULT_PID_FILE_PATH SERVER_PREFIX"/run/dapserver.pid"
+#define DAP_APP_NAME NODE_NETNAME"-node"
+#define SYSTEM_PREFIX "/opt/"DAP_APP_NAME
+#define LOCAL_PREFIX "~/."DAP_APP_NAME
+
+#define SYSTEM_CONFIGS_DIR SYSTEM_PREFIX"/etc"
+#define LOCAL_CONFIGS_DIR LOCAL_PREFIX"/etc"
+
+#define SYSTEM_CONFIG_GLOBAL_FILENAME SYSTEM_PREFIX"/etc/"DAP_APP_NAME".cfg"
+#define LOCAL_CONFIG_GLOBAL LOCAL_PREFIX"/etc/"DAP_APP_NAME".cfg"
+
+#define SYSTEM_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
+#define LOCAL_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_URL "/stream_url"
@@ -44,16 +53,16 @@ static dap_config_t * g_config;
 
 int main(int argc, const char * argv[])
 {
-    dap_server_t * sh; // DAP Server instance
+    dap_server_t * l_server = NULL; // DAP Server instance
     int rc;
 
-    dap_config_init(CONFIG_DIR_PATH);
-    if((g_config = dap_config_open(SERVER_FILENAME) ) == NULL) {
+    dap_config_init(SYSTEM_CONFIGS_DIR);
+    if((g_config = dap_config_open(DAP_APP_NAME) ) == NULL) {
         log_it(L_CRITICAL,"Can't init general configurations");
         return -1;
     }
 
-    if(dap_common_init(SERVER_FILENAME"_logs.txt")!=0){
+    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
         log_it(L_CRITICAL,"Can't init common functions module");
         return -2;
     }
@@ -112,7 +121,7 @@ int main(int argc, const char * argv[])
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
-                                                              DEFAULT_PID_FILE_PATH)) != 0) {
+                                                              SYSTEM_PID_FILE_PATH)) != 0) {
         log_it(L_CRITICAL,"Can't init sig unix handler module");
         return -9;
     }
@@ -120,60 +129,80 @@ int main(int argc, const char * argv[])
     save_process_pid_in_file(dap_config_get_item_str_default(g_config,
                                                              "resources",
                                                              "pid_path",
-                                                             SERVER_PREFIX"/run/dapserver.pid"));
+                                                             SYSTEM_PREFIX"/run/dapserver.pid"));
 
-    sh = dap_server_listen((dap_config_get_item_str_default(g_config,
-                                                            "network",
-                                                            "listen_address",
-                                                            "0.0.0.0")),
-                           dap_config_get_item_int32(g_config, "network", "listen_port"), // TODO DEFAULT PORT
-                           DAP_SERVER_TCP);
+    if( dap_config_get_item_bool_default(g_config,"server","enabled",false) ) {
+        int32_t l_port = dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1); // TODO Default listen port
 
-    if(sh) {
-        bool is_traffick_track_enable = // TODO change to get_item_bool_feault
-                strcmp(dap_config_get_item_str_default(g_config, "traffic_track", "enable", "false"), "true") == 0;
+        if( l_port > 0 ) {
+            l_server = dap_server_listen((dap_config_get_item_str_default(g_config,
+                                                                    "server",
+                                                                    "listen_address",
+                                                                    "0.0.0.0")),
+                                   l_port,
+                                   DAP_SERVER_TCP);
+        }
+    }
+
+    if(l_server) { // If listener server is initialized
+        bool is_traffick_track_enable = dap_config_get_item_bool_default(g_config, "traffic_track", "enable", false);
 
         if(is_traffick_track_enable) {
             time_t timeout = // TODO add default timeout (get_item_int32_default)
                     dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
 
-            dap_traffic_track_init(sh, timeout);
+            dap_traffic_track_init(l_server, timeout);
            // dap_traffic_callback_set(db_auth_traffic_track_callback);
         }
 
-        // Init HTTP-specific values
-        dap_http_new(sh,SERVER_FILENAME "DAPServer/1.0 (QNX)");
+        // TCP-specific things
+        if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
+            // Init HTTP-specific values
+            dap_http_new(l_server,DAP_APP_NAME);
 
+            // Handshake URL
+            enc_http_add_proc(DAP_HTTP(l_server), ENC_HTTP_URL);
 
+            // Streaming URLs
+            stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
+            stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
-        dap_http_folder_add(DAP_HTTP(sh), "/",
-                            dap_config_get_item_str_default(g_config,
-                                                            "resources",
-                                                            "www_root",
-                                                            "/opt/dapserver/www"));
+            // Built in WWW server
+            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+                dap_http_folder_add(DAP_HTTP(l_server), "/",
+                                dap_config_get_item_str_default(g_config,
+                                                                "resources",
+                                                                "www_root",
+                                                                "/opt/dapserver/www"));
+            }
 
-        stream_add_proc_http(DAP_HTTP(sh), STREAM_URL);
-        stream_ctl_add_proc(DAP_HTTP(sh), STREAM_CTL_URL);
-
-        enc_http_add_proc(DAP_HTTP(sh), ENC_HTTP_URL);
-        ch_sf_init(dap_config_get_item_str_default(g_config, "network", "vpn_addr", "10.0.0.0"),
-                   dap_config_get_item_str_default(g_config, "network", "vpn_mask", "255.255.255.0"));
-
-        // Endless loop for server's requests processing
-        rc = dap_server_loop(sh);
-        // After loop exit actions
-        log_it(rc?L_CRITICAL:L_NOTICE,"Server loop stopped with return code %d",rc);
-
-        // Deinit modules
-        stream_deinit();
-        stream_ctl_deinit();
-        dap_http_folder_deinit();
-        dap_http_deinit();
-        dap_server_deinit();
-        dap_enc_ks_deinit();
-        dap_common_deinit();
-        return rc*10;
+        }
     }
+    // VPN channel
+    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
+        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
+                   dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
+
+    }
+    // Endless loop for server's requests processing
+    rc = dap_server_loop(l_server);
+    // After loop exit actions
+    log_it(rc?L_CRITICAL:L_NOTICE,"Server loop stopped with return code %d",rc);
+
+    // Deinit modules
+
+    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
+        dap_stream_ch_vpn_deinit();
+
+    stream_deinit();
+    stream_ctl_deinit();
+    dap_http_folder_deinit();
+    dap_http_deinit();
+    dap_server_deinit();
+    dap_enc_ks_deinit();
+    dap_common_deinit();
+    return rc*10;
+
 }
 
 void parse_args(int argc, const char * argv[]) {
@@ -190,7 +219,7 @@ void parse_args(int argc, const char * argv[]) {
             pid_t pid = get_pid_from_file(dap_config_get_item_str_default(g_config,
                                                                           "resources",
                                                                           "pid_path",
-                                                                          DEFAULT_PID_FILE_PATH));
+                                                                          SYSTEM_PID_FILE_PATH));
             if (pid == 0) {
                 log_it(L_ERROR, "Can't read pid from file");
                 exit(-20);

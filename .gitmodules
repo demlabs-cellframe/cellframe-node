@@ -110,3 +110,19 @@
 	path = libdap-chain-mine
 	url = https://github.com/kelvinblockchain/libdap-chain-mine
 	branch = master
+[submodule "libdap-chain-net-srv-app"]
+	path = libdap-chain-net-srv-app
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-app
+	branch = master
+[submodule "libdap-chain-net-srv-app-db"]
+	path = libdap-chain-net-srv-app-db
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-app-db
+	branch = master
+[submodule "libdap-chain-net-srv-mining"]
+	path = libdap-chain-net-srv-mining
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-mining
+	branch = master
+[submodule "libdap-stream-ch"]
+	path = libdap-stream-ch
+	url = https://github.com/kelvinblockchain/libdap-stream-ch
+	branch = master

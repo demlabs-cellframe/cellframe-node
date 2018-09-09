@@ -51,16 +51,19 @@ add_subdirectory(libdap-chain-dag-cs-hashgraph)
 add_subdirectory(libdap-chain-dag-cs-poh)
 add_subdirectory(libdap-chain-net)
 add_subdirectory(libdap-chain-net-srv)
+add_subdirectory(libdap-chain-net-srv-app)
+add_subdirectory(libdap-chain-net-srv-app-db)
 add_subdirectory(libdap-chain-net-srv-tx)
 add_subdirectory(libdap-chain-net-srv-vpn)
-add_subdirectory(libdap-chain-net-srv-mining-pool)
-add_subdirectory(libdap-chain-net-srv)
+add_subdirectory(libdap-chain-net-srv-mining)
+#add_subdirectory(libdap-chain-net-srv-mining-pool)
 add_subdirectory(libdap-stream)
+add_subdirectory(libdap-stream-ch)
 add_subdirectory(libdap-stream-ch-vpn)
 add_subdirectory(libdap-stream-ch-chain)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
-add_subdirectory(libdap-stream-ch-chat)
+#add_subdirectory(libdap-stream-ch-chat)
 
 
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_core_INCLUDE_DIRS}")
@@ -71,7 +74,7 @@ add_subdirectory(libdap-stream-ch-chat)
 
 #include_directories("${INCLUDE_DIRECTORIES} ${dap-chain_INCLUDE_DIRS}")
 
-include_directories("${INCLUDE_DIRECTORIES} ${dap_core_server_INCLUDE_DIRS}")
+#include_directories("${INCLUDE_DIRECTORIES} ${dap_core_server_INCLUDE_DIRS}")
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_udp_server_INCLUDE_DIRS}")
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_session_INCLUDE_DIRS}")
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_stream_INCLUDE_DIRS}")
@@ -94,7 +97,7 @@ set(SOURCES sources/main.c )
 
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
-add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c"${HEADERS} ${SOURCES} ${SERVER_SRCS} )
+add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c" ${HEADERS} ${SOURCES} ${SERVER_SRCS} )
 
 target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain m pthread magic)
 
