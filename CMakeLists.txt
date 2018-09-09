@@ -53,10 +53,11 @@ add_subdirectory(libdap-chain-net)
 add_subdirectory(libdap-chain-net-srv)
 add_subdirectory(libdap-chain-net-srv-app)
 add_subdirectory(libdap-chain-net-srv-app-db)
-add_subdirectory(libdap-chain-net-srv-tx)
+add_subdirectory(libdap-chain-net-srv-datum)
+add_subdirectory(libdap-chain-net-srv-datum-pool)
 add_subdirectory(libdap-chain-net-srv-vpn)
 add_subdirectory(libdap-chain-net-srv-mining)
-#add_subdirectory(libdap-chain-net-srv-mining-pool)
+add_subdirectory(libdap-chain-net-srv-mining-pool)
 add_subdirectory(libdap-stream)
 add_subdirectory(libdap-stream-ch)
 add_subdirectory(libdap-stream-ch-vpn)
@@ -99,7 +100,17 @@ set(SOURCES sources/main.c )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
 add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c" ${HEADERS} ${SOURCES} ${SERVER_SRCS} )
 
-target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto  dap_core dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain m pthread magic)
+target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto
+    dap_core dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+    dap_stream_ch_chain_net_srv
+    dap_chain dap_chain_crypto
+    dap_chain_block dap_chain_block_cs dap_chain_block_cs_poa dap_chain_block_cs_pow
+    dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
+    dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db dap_chain_net_srv_mining
+    dap_chain_net_srv_mining_pool dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
+    dap_chain_mine dap_chain_wallet
+    m pthread magic)
+target_include_directories(${PROJECT_NAME} INTERFACE .)
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )

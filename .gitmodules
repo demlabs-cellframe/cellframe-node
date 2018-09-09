@@ -126,3 +126,11 @@
 	path = libdap-stream-ch
 	url = https://github.com/kelvinblockchain/libdap-stream-ch
 	branch = master
+[submodule "libdap-chain-net-srv-datum"]
+	path = libdap-chain-net-srv-datum
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-datum
+	branch = master
+[submodule "libdap-chain-net-srv-datum-pool"]
+	path = libdap-chain-net-srv-datum-pool
+	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-datum-pool
+	branch = master

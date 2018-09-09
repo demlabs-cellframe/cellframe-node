@@ -13,13 +13,39 @@
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
+#include "dap_chain.h"
+#include "dap_chain_mine.h"
+#include "dap_chain_wallet.h"
+
+#include "dap_chain_block.h"
+#include "dap_chain_block_cs.h"
+#include "dap_chain_block_cs_poa.h"
+#include "dap_chain_block_cs_pow.h"
+
+#include "dap_chain_dag.h"
+#include "dap_chain_dag_cs.h"
+#include "dap_chain_dag_cs_hashgraph.h"
+#include "dap_chain_dag_cs_poa.h"
+#include "dap_chain_dag_cs_poh.h"
+
+#include "dap_chain_net.h"
+#include "dap_chain_net_srv.h"
+#include "dap_chain_net_srv_app.h"
+#include "dap_chain_net_srv_app_db.h"
+#include "dap_chain_net_srv_mining.h"
+#include "dap_chain_net_srv_mining_pool.h"
+#include "dap_chain_net_srv_datum.h"
+#include "dap_chain_net_srv_datum_pool.h"
+#include "dap_chain_net_srv_vpn.h"
+
 
 #include "stream_session.h"
 #include "stream.h"
 #include "stream_ctl.h"
 #include "dap_stream_ch_vpn.h"
 #include "dap_stream_ch_chain.h"
-#include "dap_stream_ch_chain.h"
+#include "dap_stream_ch_chain_net.h"
+#include "dap_stream_ch_chain_net_srv.h"
 
 #include "dap_common.h"
 #include "dap_server_client.h"
@@ -101,19 +127,118 @@ int main(int argc, const char * argv[])
         return -57;
     }
 
+    if( dap_chain_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain modules");
+        return -58;
+    }
+
+    if( dap_chain_wallet_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -59;
+    }
+
+    if( dap_chain_mine_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain mining module");
+        return -60;
+    }
+
+    if( dap_chain_block_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain block module");
+        return -6;
+    }
+
+    if( dap_chain_block_cs_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain block consensuse module");
+        return -6;
+    }
+
+    if( dap_chain_block_cs_poa_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain block consensus PoA module");
+        return -6;
+    }
+
+    if( dap_chain_block_cs_pow_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain block consensus PoW module");
+        return -6;
+    }
+
+    if( dap_chain_dag_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag module");
+        return -6;
+    }
+
+    if( dap_chain_dag_cs_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
+        return -6;
+    }
+
+    if( dap_chain_dag_cs_hashgraph_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus hashgraph module");
+        return -6;
+    }
+
+    if( dap_chain_dag_cs_poa_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
+        return -6;
+    }
+
+    if( dap_chain_dag_cs_poh_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoH module");
+        return -6;
+    }
+
+    if( dap_chain_net_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network module");
+        return -6;
+    }
+
+    if( dap_chain_net_srv_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service module");
+        return -6;
+    }
+
+    if( dap_chain_net_srv_app_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service applications module");
+        return -6;
+    }
+
+    if( dap_chain_net_srv_mining_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service mining module");
+        return -6;
+    }
+
+    if( dap_chain_net_srv_mining_pool_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain  network service mining pool module");
+        return -6;
+    }
+    if( dap_chain_net_srv_datum_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service datum module");
+        return -6;
+    }
+    if( dap_chain_net_srv_datum_pool_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
+        return -6;
+    }
+
+    if( dap_chain_net_srv_vpn_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
+        return -6;
+    }
+
+
     if(enc_http_init() !=0){
         log_it(L_CRITICAL,"Can't init encryption http session storage module");
-        return -58;
+        return -81;
     }
 
     if(stream_init() != 0 ){
         log_it(L_CRITICAL,"Can't init stream server module");
-        return -6;
+        return -82;
     }
 
     if (stream_ctl_init() != 0 ){
         log_it(L_CRITICAL,"Can't init stream control module");
-        return -7;
+        return -83;
     }
 
     if ( dap_http_simple_module_init() != 0 ) {
@@ -193,6 +318,13 @@ int main(int argc, const char * argv[])
                    dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
 
     }
+
+    // Chain Network init
+
+    dap_stream_ch_chain_init();
+    dap_stream_ch_chain_net_init();
+    dap_stream_ch_chain_net_srv_init();
+
     // Endless loop for server's requests processing
     rc = dap_server_loop(l_server);
     // After loop exit actions
