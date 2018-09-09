@@ -134,3 +134,7 @@
 	path = libdap-chain-net-srv-datum-pool
 	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-datum-pool
 	branch = master
+[submodule "test/libdap-test"]
+	path = test/libdap-test
+	url = https://github.com/kelvinblockchain/libdap-test
+	branch = master

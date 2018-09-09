@@ -66,6 +66,10 @@ add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 #add_subdirectory(libdap-stream-ch-chat)
 
+if(BUILD_KELVIN_NODE_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_core_INCLUDE_DIRS}")
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_http_INCLUDE_DIRS}")
