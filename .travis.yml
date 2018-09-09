@@ -5,7 +5,12 @@ dist: trusty
 notifications:
   email: false
 
+os:
+  - linux
+  - osx
+
 before_install:
+    - gcc -v
     - git submodule init
     - git submodule update --recursive
 
