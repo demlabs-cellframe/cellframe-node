@@ -126,3 +126,7 @@
 	path = libdap-stream-ch
 	url = https://github.com/kelvinblockchain/libdap-stream-ch
 	branch = master
+[submodule "test/libdap-test"]
+	path = test/libdap-test
+	url = https://github.com/kelvinblockchain/libdap-test
+    branch = master

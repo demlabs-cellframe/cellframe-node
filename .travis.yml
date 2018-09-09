@@ -13,8 +13,9 @@ script:
     - export CC=gcc-5
     - mkdir build
     - cd build 
-    - cmake ../
+    - cmake -DBUILD_KELVIN_NODE_TESTS=ON ../
     - make
+    - ctest --verbose
 
 addons:
   apt:
