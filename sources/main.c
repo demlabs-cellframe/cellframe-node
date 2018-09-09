@@ -70,12 +70,15 @@ int main(int argc, const char * argv[])
     parse_args(argc, argv);
 
     // change to dap_config_get_item_int_default when it's will be possible
-    size_t thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
-    const char *s_thrd_cnt = dap_config_get_item_str(g_config, "configure", "threads_cnt");
+    size_t l_thread_cnt;
+    const char *s_thrd_cnt = dap_config_get_item_str(g_config, "resources", "threads_cnt");
     if(s_thrd_cnt != NULL)
-        thread_cnt = (size_t)atoi(s_thrd_cnt);
+        l_thread_cnt = (size_t)atoi(s_thrd_cnt);
 
-    if(dap_server_init(thread_cnt)!=0){
+    if (l_thread_cnt == 0 )
+        l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
+
+    if(dap_server_init(l_thread_cnt)!=0){
         log_it(L_CRITICAL,"Can't init socket server module");
         return -4;
     }

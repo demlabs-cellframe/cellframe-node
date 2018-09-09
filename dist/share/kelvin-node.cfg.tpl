@@ -7,7 +7,7 @@ network-role=light  #  Possible values: light,full,archive,master,root
 [server]
 enabled=false #  By default you don't need to open you to the world
 listen_address=127.0.0.1
-listen_port=8079
+listen_port_tcp=8079
 
 # VPN stream channel processing module
 [vpn]
@@ -17,6 +17,7 @@ network_address=10.0.0.0
 network_mask=255.255.255.0
 
 [resources]
+threads_cnt=0 # 0 means auto detect
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
 
