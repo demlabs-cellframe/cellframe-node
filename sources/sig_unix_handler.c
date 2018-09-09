@@ -4,6 +4,8 @@
 #include "dap_common.h"
 #include "sig_unix_handler.h"
 
+#define LOG_TAG "sig_unix_handler"
+
 static const char *l_pid_path;
 
 static void clear_pid_file() {
