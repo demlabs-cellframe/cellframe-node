@@ -1,28 +1,36 @@
 # General section
 [general]
-network-name=kelvin-test  # Network config name (without trailing .cfg )
-network-role=light  #  Possible values: light,full,archive,master,root
+#   Network config name (without trailing .cfg )
+network-name=kelvin-dev  
+#   Possible values: light,full,archive,master,root
+network-role=root  
 
 # Server part
 [server]
-enabled=false #  By default you don't need to open you to the world
-listen_address=127.0.0.1
+#   By default you don't need to open you to the world
+enabled=true 
+listen_address=0.0.0.0
 listen_port_tcp=8079
 
 # VPN stream channel processing module
 [vpn]
-enabled=false  # Turn to true if you want to share VPN service from you node 
-access_groups=expats,services,admins # list of loca security access groups. Built in: expats,admins,services,nobody,everybody
+#   Turn to true if you want to share VPN service from you node 
+enabled=false
+#   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
+access_groups=expats,services,admins 
 network_address=10.0.0.0
 network_mask=255.255.255.0
 
+# Application Resources
 [resources]
-threads_cnt=0 # 0 means auto detect
+#   0 means auto detect
+threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
 
-# Small built in WWW server
+# Small builtin WWW server
 [www]
-enabled=false # Really who need this??
+#   Really who need this??
+enabled=false 
 www_root=/opt/dapserver/www
 url=/

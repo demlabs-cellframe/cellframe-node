@@ -41,8 +41,8 @@
 #define LOCAL_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
 
 #define ENC_HTTP_URL "/enc_init"
-#define STREAM_URL "/stream_url"
-#define STREAM_CTL_URL "/stream_url"
+#define STREAM_URL "/stream"
+#define STREAM_CTL_URL "/stream_ctl"
 #define SLIST_URL "/nodelist"
 #define MAIN_URL "/"
 
@@ -134,6 +134,9 @@ int main(int argc, const char * argv[])
                                                              "pid_path",
                                                              SYSTEM_PREFIX"/run/dapserver.pid"));
 
+    log_it (L_DEBUG,"config server->enabled = \"%s\" ",dap_config_get_item_str_default(
+                g_config,"server","enabled",false
+                ) );
     if( dap_config_get_item_bool_default(g_config,"server","enabled",false) ) {
         int32_t l_port = dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1); // TODO Default listen port
 
@@ -144,7 +147,9 @@ int main(int argc, const char * argv[])
                                                                     "0.0.0.0")),
                                    l_port,
                                    DAP_SERVER_TCP);
-        }
+        }else
+            log_it(L_WARNING, "Server is enabled but no port is defined");
+
     }
 
     if(l_server) { // If listener server is initialized
