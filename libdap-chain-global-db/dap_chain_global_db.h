@@ -27,7 +27,7 @@ char *dap_db_path = NULL;
 static struct ldb_context *ldb  = NULL;
 static TALLOC_CTX *mem_ctx      = NULL;
 
-int     dap_db_init     (void);
+int     dap_db_init     (const char*);
 void    dap_db_deinit   (void);
 
 int dap_db_add_msg(struct ldb_message *);
