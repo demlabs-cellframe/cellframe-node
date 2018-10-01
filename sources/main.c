@@ -254,6 +254,10 @@ int main(int argc, const char * argv[])
         return -9;
     }
 
+    if( dap_config_get_item_bool_default(g_config,"mining","enabled",false) ) {
+        dap_chain_mine_activate();
+    }
+
     save_process_pid_in_file(dap_config_get_item_str_default(g_config,
                                                              "resources",
                                                              "pid_path",
