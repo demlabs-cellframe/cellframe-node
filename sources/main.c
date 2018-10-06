@@ -67,8 +67,8 @@
 #define LOCAL_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
 
 #define ENC_HTTP_URL "/enc_init"
-#define STREAM_URL "/stream"
 #define STREAM_CTL_URL "/stream_ctl"
+#define STREAM_URL "/stream"
 #define SLIST_URL "/nodelist"
 #define MAIN_URL "/"
 
@@ -224,7 +224,6 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
         return -6;
     }
-
 
     if(enc_http_init() !=0){
         log_it(L_CRITICAL,"Can't init encryption http session storage module");
