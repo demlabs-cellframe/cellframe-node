@@ -141,3 +141,8 @@
 [submodule "libdap-server-udp"]
 	path = libdap-server-udp
 	url = https://github.com/kelvinblockchain/libdap-server-udp
+    branch = master
+[submodule "libdap-chain-global-db"]
+	path = libdap-chain-global-db
+	url = https://github.com/kelvinblockchain/libdap-chain-global-db
+    branch = master
