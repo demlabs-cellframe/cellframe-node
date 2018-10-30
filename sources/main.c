@@ -48,7 +48,7 @@
 #include "dap_stream_ch_chain_net_srv.h"
 
 #include "dap_common.h"
-#include "dap_server_client.h"
+#include "dap_client_remote.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
 #include "dap_traffic_track.h"
