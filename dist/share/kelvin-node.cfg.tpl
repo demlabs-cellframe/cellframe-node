@@ -27,6 +27,7 @@ network_mask=255.255.255.0
 threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
+dap_global_db_path=/opt/kelvin-node/var/whitelist.ldb
 
 # Small builtin WWW server
 [www]

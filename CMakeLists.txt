@@ -64,6 +64,7 @@ add_subdirectory(libdap-stream-ch-vpn)
 add_subdirectory(libdap-stream-ch-chain)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
+add_subdirectory(libdap-chain-global-db)
 #add_subdirectory(libdap-stream-ch-chat)
 
 if(BUILD_KELVIN_NODE_TESTS)
@@ -112,7 +113,7 @@ target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_s
     dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db dap_chain_net_srv_mining
     dap_chain_net_srv_mining_pool dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_mine dap_chain_wallet
+    dap_chain_mine dap_chain_wallet dap_chain_global_db
     m pthread magic)
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
