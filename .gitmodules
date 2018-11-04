@@ -144,7 +144,7 @@
 	branch = master
 [submodule "libdap-client"]
 	path = libdap-client
-	url = https://github.com/kelvinbockchain/libdap-client
+	url = https://github.com/kelvinblockchain/libdap-client
 	branch = master
 [submodule "libdap-chain-global-db"]
 	path = libdap-chain-global-db
