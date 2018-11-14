@@ -304,13 +304,14 @@ int main(int argc, const char * argv[])
             stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
             // Built in WWW server
-            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+
+            /*if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                 dap_http_folder_add(DAP_HTTP(l_server), "/",
                                 dap_config_get_item_str_default(g_config,
                                                                 "resources",
                                                                 "www_root",
-                                                                "/opt/dapserver/www"));
-            }
+                                                                "/opt/kelvin-node/www"));
+            }*/
 
         }
     }else
