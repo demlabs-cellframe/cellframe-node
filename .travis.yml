@@ -25,6 +25,10 @@ addons:
     - gcc-5
     - libev-dev
     - libmagic-dev
+    - libldb-dev
+    - libtevent-dev
+
+
 
 
 
