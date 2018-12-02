@@ -32,11 +32,11 @@ SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 add_definitions ("-DDAP_SERVER")
 add_definitions ("-DNODE_NETNAME=\"kelvin\"")
 
-
 add_subdirectory(libdap)
 add_subdirectory(libdap-server-core)
 add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain)
+add_subdirectory(libdap-client)
 add_subdirectory(libdap-chain-crypto)
 add_subdirectory(libdap-chain-wallet)
 add_subdirectory(libdap-chain-mine)
@@ -85,7 +85,7 @@ endif()
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_session_INCLUDE_DIRS}")
 #include_directories("${INCLUDE_DIRECTORIES} ${dap_stream_INCLUDE_DIRS}")
 
-#add_definitions ("${dap_core_DEFINITIONS}")
+add_definitions ("${dap_core_DEFINITIONS}")
 #add_definitions ("${dap_crypto_DEFINITIONS}")
 #add_definitions ("${dap_enc_server_DEFINITIONS}")
 #add_definitions ("${dap_http_server_DEFINITIONS}")
@@ -102,13 +102,17 @@ file(GLOB SERVER_SRCS *.c)
 set(SOURCES sources/main.c )
 
 
+if(UNIX)
+    add_definitions ("-DDAP_OS_LINUX")
+endif()
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
 add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c" ${HEADERS} ${SOURCES} ${SERVER_SRCS} )
 
 target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_server dap_session dap_crypto
     dap_core dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv
-    dap_chain dap_chain_crypto
+    dap_chain dap_chain_crypto dap_client
     dap_chain_block dap_chain_block_cs dap_chain_block_cs_poa dap_chain_block_cs_pow
     dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db dap_chain_net_srv_mining

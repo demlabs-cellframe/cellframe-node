@@ -136,12 +136,12 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -59;
     }
-
+/*
     if( dap_chain_mine_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain mining module");
         return -60;
     }
-
+*/
     if( dap_chain_block_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain block module");
         return -6;
@@ -253,7 +253,7 @@ int main(int argc, const char * argv[])
         return -9;
     }
 
-    if( dap_config_get_item_bool_default(g_config,"mining","enabled",false) ) {
+    if( dap_config_get_item_bool_default(g_config,"mining","enabled",true) ) {
         dap_chain_mine_activate();
     }
 
