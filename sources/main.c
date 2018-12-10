@@ -39,9 +39,9 @@
 #include "dap_chain_net_srv_vpn.h"
 
 
-#include "stream_session.h"
-#include "stream.h"
-#include "stream_ctl.h"
+#include "dap_stream_session.h"
+#include "dap_stream.h"
+#include "dap_stream_ctl.h"
 #include "dap_stream_ch_vpn.h"
 #include "dap_stream_ch_chain.h"
 #include "dap_stream_ch_chain_net.h"
@@ -122,7 +122,7 @@ int main(int argc, const char * argv[])
         return -56;
     }
 
-    if(dap_enc_ks_init() !=0){
+    if(dap_enc_ks_init(false, 60*60*2 ) !=0){
         log_it(L_CRITICAL,"Can't init encryption key storage module");
         return -57;
     }
@@ -230,12 +230,12 @@ int main(int argc, const char * argv[])
         return -81;
     }
 
-    if(stream_init() != 0 ){
+    if(dap_stream_init() != 0 ){
         log_it(L_CRITICAL,"Can't init stream server module");
         return -82;
     }
 
-    if (stream_ctl_init() != 0 ){
+    if (dap_stream_ctl_init() != 0 ){
         log_it(L_CRITICAL,"Can't init stream control module");
         return -83;
     }
@@ -300,8 +300,8 @@ int main(int argc, const char * argv[])
             enc_http_add_proc(DAP_HTTP(l_server), ENC_HTTP_URL);
 
             // Streaming URLs
-            stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
-            stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
+            dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
+            dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
             // Built in WWW server
 
@@ -339,8 +339,8 @@ int main(int argc, const char * argv[])
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
         dap_stream_ch_vpn_deinit();
 
-    stream_deinit();
-    stream_ctl_deinit();
+    dap_stream_deinit();
+    dap_stream_ctl_deinit();
     dap_http_folder_deinit();
     dap_http_deinit();
     dap_server_deinit();
