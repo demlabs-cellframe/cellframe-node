@@ -10,17 +10,18 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+#include "dap_events.h"
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
 #include "dap_chain.h"
-#include "dap_chain_mine.h"
 #include "dap_chain_wallet.h"
 
 #include "dap_chain_block.h"
+#include "dap_chain_blocks.h"
 #include "dap_chain_block_cs.h"
 #include "dap_chain_block_cs_poa.h"
-#include "dap_chain_block_cs_pow.h"
+
 
 #include "dap_chain_dag.h"
 #include "dap_chain_dag_cs.h"
@@ -32,8 +33,6 @@
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_app.h"
 #include "dap_chain_net_srv_app_db.h"
-#include "dap_chain_net_srv_mining.h"
-#include "dap_chain_net_srv_mining_pool.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_srv_vpn.h"
@@ -136,13 +135,14 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -59;
     }
-/*
-    if( dap_chain_mine_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain mining module");
-        return -60;
-    }
-*/
+
+
     if( dap_chain_block_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain block module");
+        return -6;
+    }
+
+    if( dap_chain_blocks_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain block module");
         return -6;
     }
@@ -154,11 +154,6 @@ int main(int argc, const char * argv[])
 
     if( dap_chain_block_cs_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain block consensus PoA module");
-        return -6;
-    }
-
-    if( dap_chain_block_cs_pow_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain block consensus PoW module");
         return -6;
     }
 
@@ -202,15 +197,7 @@ int main(int argc, const char * argv[])
         return -6;
     }
 
-    if( dap_chain_net_srv_mining_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service mining module");
-        return -6;
-    }
 
-    if( dap_chain_net_srv_mining_pool_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain  network service mining pool module");
-        return -6;
-    }
     if( dap_chain_net_srv_datum_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -6;
@@ -235,7 +222,7 @@ int main(int argc, const char * argv[])
         return -82;
     }
 
-    if (dap_stream_ctl_init() != 0 ){
+    if (dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32) != 0 ){
         log_it(L_CRITICAL,"Can't init stream control module");
         return -83;
     }
@@ -253,14 +240,10 @@ int main(int argc, const char * argv[])
         return -9;
     }
 
-    if( dap_config_get_item_bool_default(g_config,"mining","enabled",true) ) {
-        dap_chain_mine_activate();
-    }
-
     save_process_pid_in_file(dap_config_get_item_str_default(g_config,
                                                              "resources",
                                                              "pid_path",
-                                                             SYSTEM_PREFIX"/run/dapserver.pid"));
+                                                             SYSTEM_PREFIX"/run/kelvin-node.pid"));
 
     log_it (L_DEBUG,"config server->enabled = \"%s\" ",dap_config_get_item_str_default(
                 g_config,"server","enabled",false
@@ -334,6 +317,7 @@ int main(int argc, const char * argv[])
     // After loop exit actions
     log_it(rc?L_CRITICAL:L_NOTICE,"Server loop stopped with return code %d",rc);
 
+    dap_events_init(0,0);
     // Deinit modules
 
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
