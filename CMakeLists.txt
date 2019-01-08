@@ -53,6 +53,7 @@ add_subdirectory(libdap-chain-net-srv-app-db)
 add_subdirectory(libdap-chain-net-srv-datum)
 add_subdirectory(libdap-chain-net-srv-datum-pool)
 add_subdirectory(libdap-chain-net-srv-vpn)
+add_subdirectory(libdap-chain-mempool)
 
 add_subdirectory(libdap-stream)
 add_subdirectory(libdap-stream-ch)
@@ -114,7 +115,7 @@ target_link_libraries(${PROJECT_NAME} dap_core_server dap_http_server  dap_udp_s
     dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool
     m pthread magic)
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 

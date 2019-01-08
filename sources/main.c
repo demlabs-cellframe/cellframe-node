@@ -36,7 +36,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_srv_vpn.h"
-
+#include "dap_chain_mempool.h"
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
@@ -69,6 +69,7 @@
 #define STREAM_CTL_URL "/stream_ctl"
 #define STREAM_URL "/stream"
 #define SLIST_URL "/nodelist"
+#define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
 void parse_args(int argc, const char * argv[]);
@@ -285,6 +286,8 @@ int main(int argc, const char * argv[])
             // Streaming URLs
             dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
             dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
+
+            dap_chain_mempool_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
             // Built in WWW server
 

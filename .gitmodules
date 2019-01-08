@@ -150,3 +150,6 @@
 	path = libdap-chain-global-db
 	url = https://github.com/kelvinblockchain/libdap-chain-global-db
 	branch = master
+[submodule "libdap-chain-mempool"]
+	path = libdap-chain-mempool
+	url = https://github.com/kelvinblockchain/libdap-chain-mempool
