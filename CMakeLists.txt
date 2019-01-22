@@ -28,6 +28,11 @@ SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/../debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/../debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/../debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/../debian/config;")
 
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_COLOR_MAKEFILE   ON)
+set(CMAKE_C_STANDARD 11)
+set(SUBMODULES_NO_BUILD ON)
+
 
 add_definitions ("-DDAP_SERVER")
 add_definitions ("-DNODE_NETNAME=\"kelvin\"")
