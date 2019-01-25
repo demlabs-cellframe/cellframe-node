@@ -309,8 +309,7 @@ int main(int argc, const char * argv[])
             // Streaming URLs
             dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
             dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
-
-            dap_chain_mempool_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
+            dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
 
             // Built in WWW server
 
