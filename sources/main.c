@@ -59,7 +59,8 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_srv_vpn.h"
-
+#include "dap_chain_global_db.h"
+#include "dap_chain_mempool.h"
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
@@ -92,6 +93,7 @@
 #define STREAM_CTL_URL "/stream_ctl"
 #define STREAM_URL "/stream"
 #define SLIST_URL "/nodelist"
+#define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
 void parse_args(int argc, const char * argv[]);
@@ -255,6 +257,11 @@ int main(int argc, const char * argv[])
         return -9;
     }
 
+    if(dap_chain_global_db_init(g_config)) {
+        log_it(L_CRITICAL, "Can't init global db module");
+        return -10;
+    }
+
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -308,6 +315,11 @@ int main(int argc, const char * argv[])
             // Streaming URLs
             dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
             dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
+
+            const char *str_start_mempool = dap_config_get_item_str(g_config, "server", "accept_mempool_request");
+            if(str_start_mempool && !strcmp(str_start_mempool, "true")) {
+                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
+            }
 
             // Built in WWW server
 

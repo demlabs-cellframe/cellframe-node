@@ -60,6 +60,7 @@ add_subdirectory(libdap-chain-net-srv-app-db)
 add_subdirectory(libdap-chain-net-srv-datum)
 add_subdirectory(libdap-chain-net-srv-datum-pool)
 add_subdirectory(libdap-chain-net-srv-vpn)
+add_subdirectory(libdap-chain-mempool)
 
 add_subdirectory(libdap-stream)
 add_subdirectory(libdap-stream-ch)
@@ -114,6 +115,7 @@ include_directories("${INCLUDE_DIRECTORIES} ${dap_chain_net_srv_datum_pool_INCLU
 include_directories("${INCLUDE_DIRECTORIES} ${dap_chain_net_srv_vpn_INCLUDE_DIRS}")
 include_directories("${INCLUDE_DIRECTORIES} ${dap_chain_wallet_INCLUDE_DIRS}")
 include_directories("${INCLUDE_DIRECTORIES} ${dap_chain_global_db_INCLUDE_DIRS}")
+include_directories("${INCLUDE_DIRECTORIES} ${dap_chain_mempool_INCLUDE_DIRS}")
 
 add_definitions ("${monero_crypto_DEFINITIONS}")
 add_definitions(" ${dap_core_DEFINITIONS}")
@@ -152,6 +154,7 @@ add_definitions(" ${dap_chain_net_srv_datum_pool_DEFINITIONS}")
 add_definitions(" ${dap_chain_net_srv_vpn_DEFINITIONS}")
 add_definitions(" ${dap_chain_wallet_DEFINITIONS}")
 add_definitions(" ${dap_chain_global_db_DEFINITIONS}")
+add_definitions(" ${dap_chain_mempool_DEFINITIONS}")
 
 
 #file(GLOB SERVER_SRCS *.c)
@@ -175,7 +178,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_en
     dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db  m pthread magic )
+    dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
 target_link_libraries(${PROJECT_NAME}-cli m )
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
@@ -184,7 +187,7 @@ target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server d
     dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db  m pthread magic )
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool m pthread magic )
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 target_include_directories(${PROJECT_NAME}-tool INTERFACE .)
