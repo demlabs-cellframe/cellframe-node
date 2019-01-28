@@ -53,3 +53,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/.project
+/.cproject
+/kelvin-node_logs.txt
+/build/
