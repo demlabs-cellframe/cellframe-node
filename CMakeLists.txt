@@ -168,7 +168,7 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
 add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c" ${HEADERS} ${SOURCES} )
-add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c"  )
+add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
 add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
 target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
@@ -179,7 +179,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_en
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
-target_link_libraries(${PROJECT_NAME}-cli m )
+target_link_libraries(${PROJECT_NAME}-cli m dap_client curl) 
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
@@ -190,6 +190,7 @@ target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server d
     dap_chain_wallet dap_chain_global_db dap_chain_mempool m pthread magic )
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
+target_include_directories(${PROJECT_NAME}-cli INTERFACE .)
 target_include_directories(${PROJECT_NAME}-tool INTERFACE .)
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")

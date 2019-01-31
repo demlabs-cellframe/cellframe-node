@@ -61,6 +61,7 @@
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
+#include "dap_chain_node_cli.h"
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
@@ -260,6 +261,11 @@ int main(int argc, const char * argv[])
     if(dap_chain_global_db_init(g_config)) {
         log_it(L_CRITICAL, "Can't init global db module");
         return -10;
+    }
+
+    if(dap_chain_node_cli_init(g_config)) {
+            log_it(L_CRITICAL, "Can't init server for console");
+        return -11;
     }
 
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
