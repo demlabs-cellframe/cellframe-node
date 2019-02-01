@@ -89,17 +89,16 @@ connect_param* node_cli_connect(void)
     curl_global_init(CURL_GLOBAL_DEFAULT);
     connect_param *param = DAP_NEW_Z(connect_param);
     CURL *curl_handle = curl_easy_init();
-    int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, UNIX_SOCKET_FILE);
-    //ret = curl_easy_setopt(curl_handle, CURLOPT_BUFFERSIZE, 256);
-    //ret = curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 1000000);
-//    curl_easy_setopt(curl_handle, CURLOPT_URL, "http://localhost:8079/");
-    ret = curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1L);
+    int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, UNIX_SOCKET_FILE); // unix socket mode
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 20L); // complete within 20 seconds
+    ret = curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1L); // connection only
     ret = curl_easy_setopt(curl_handle, CURLOPT_URL, "http:/localhost/connect");
     // execute request
     ret = curl_easy_perform(curl_handle);
     if(!ret)
     {
         param->curl = curl_handle;
+        curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 0L); // disable mode - connection only
     }
     else
     {
@@ -126,7 +125,7 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
     CURL *curl = conn->curl;
 
     ret = curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // don't get header in the body
-    ret = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate"); // allow receive of compressed data
+    //ret = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate"); // allow receive of compressed data
     //callback functions to receive data
     ret = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteHttpMemoryCallback); // callback for the data read
     //callback functions to receive header
@@ -136,28 +135,33 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
     ret = curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void * )cmd);
     ret = curl_easy_setopt(curl, CURLOPT_USERAGENT, "kelvin-console 1.0");
 
-    ret = curl_easy_setopt(curl, CURLOPT_POST, 1); // POST request - optional if CURLOPT_POSTFIELDS will be
+//    ret = curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);// GET запрос
+    //  ret = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);// удалённый сервер не будет проверять наш сертификат. В противном случае необходимо этот самый сертификат послать.
+    //ret = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 
     char *post_data = NULL;
+    ret = curl_easy_setopt(curl, CURLOPT_POST, 1); // POST request - optional if CURLOPT_POSTFIELDS will be
+
     size_t post_data_len = 0;
-    add_mem_data((uint8_t**)&post_data, &post_data_len, cmd->cmd_name, strlen(cmd->cmd_name));
-    if(cmd->cmd_param)
-    {
-        add_mem_data((uint8_t**)&post_data, &post_data_len, "\r\n", 2);
-        add_mem_data((uint8_t**)&post_data, &post_data_len, cmd->cmd_param, strlen(cmd->cmd_param));
+    add_mem_data((uint8_t**) &post_data, &post_data_len, cmd->cmd_name, strlen(cmd->cmd_name));
+    if(cmd->cmd_param) {
+        for(int i = 0; i < cmd->cmd_param_count; i++) {
+            if(cmd->cmd_param[i]) {
+                add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n", 2);
+                add_mem_data((uint8_t**) &post_data, &post_data_len, cmd->cmd_param[i], strlen(cmd->cmd_param[i]));
+            }
+        }
+        add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
+        if(post_data)
+            ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
+        if(post_data_len >= 0)
+            ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
+        // sending request and receiving the http page (filling cmd)
+        ret = curl_easy_perform(curl); // curl_easy_send
+        free(post_data);
+        return ret;
     }
-    add_mem_data((uint8_t**)&post_data, &post_data_len, "\r\n", 2);
-    if(post_data)
-        ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
-    if(post_data_len >= 0)
-        ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
-    // sending request and receiving the http page (filling cmd)
-    ret = curl_easy_perform(curl); // curl_easy_send
-    free(post_data);
-//    net_func_exit_if_err(ret);
-//    // распарсить принятый http-заголовок
-//    page->header = http_parse_header(page);
-    return ret;
+    return -1;
 }
 
 int node_cli_desconnect(connect_param *param)

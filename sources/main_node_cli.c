@@ -157,6 +157,19 @@ int execute_line(char *line)
 }
 
 /**
+ * Clear and delete memory of structure cmd_state
+ */
+void free_cmd_state(cmd_state *cmd) {
+    if(!cmd->cmd_param)
+        return;
+    for(int i = 0; i < cmd->cmd_param_count; i++)
+            {
+        DAP_DELETE(cmd->cmd_param[i]);
+    }
+    DAP_DELETE(cmd);
+}
+
+/**
  *  Read and execute commands until EOF is reached.  This assumes that
  *  the input source has already been initialized.
  */
@@ -206,10 +219,13 @@ int main(int argc, const char * argv[])
         printf("start node_cli_post_command()\n");
         cmd_state *cmd = DAP_NEW_Z(cmd_state);
         cmd->cmd_name = "cmd1";
-        cmd->cmd_param = "t1 -t2";
+        cmd->cmd_param_count = 2;
+        cmd->cmd_param = DAP_NEW_Z_SIZE(char*, cmd->cmd_param_count * sizeof(char*));
+        cmd->cmd_param[0] = strdup("t2-t1");
+        cmd->cmd_param[1] = strdup("-opt");
         int a = node_cli_post_command(cparam, cmd);
-        printf("node_cli_post_command()=%d\n",a);
-        DAP_DELETE(cmd);
+        printf("node_cli_post_command()=%d\n", a);
+        free_cmd_state(cmd);
     }
 
     COMMAND *command = NULL;
@@ -231,3 +247,4 @@ int main(int argc, const char * argv[])
     node_cli_desconnect(cparam);
     return 0;
 }
+

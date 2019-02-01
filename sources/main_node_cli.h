@@ -26,10 +26,16 @@
 #include <stdint.h>
 
 // command description
-typedef struct cmd_state_{
+typedef struct cmd_state_ {
     char *cmd_name;
-    char *cmd_param;
+    char **cmd_param;
+    int cmd_param_count;
     int ret_code;
     uint8_t *ret_str;
     size_t ret_str_len;
 } cmd_state;
+
+/**
+ * Clear and delete memory of structure cmd_state
+ */
+void free_cmd_state(cmd_state *cmd);
