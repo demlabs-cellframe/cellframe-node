@@ -7,7 +7,7 @@ notifications:
 
 before_install:
     - git submodule init
-    - git submodule update --recursive
+    - git submodule update
 
 script:
     - export CC=gcc-5
