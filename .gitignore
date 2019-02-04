@@ -3,7 +3,7 @@ build/*
 test/build
 *.d
 *.txt.user
-
+*.autosave
 # Object files
 *.o
 *.ko
