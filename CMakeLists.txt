@@ -179,7 +179,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_en
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
-target_link_libraries(${PROJECT_NAME}-cli m dap_client curl) 
+target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client

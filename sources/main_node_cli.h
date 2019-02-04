@@ -31,8 +31,10 @@ typedef struct cmd_state_ {
     char **cmd_param;
     int cmd_param_count;
     int ret_code;
-    uint8_t *ret_str;
-    size_t ret_str_len;
+    // for reply
+    char *cmd_res;
+    size_t cmd_res_len;
+    size_t cmd_res_cur;
 } cmd_state;
 
 /**

@@ -29,60 +29,14 @@
 
 //#include "dap_client.h"
 #include "dap_common.h"
+#include "dap_chain_node_cli.h"
 #include "main_node_cli.h"
 #include "main_node_cli_net.h"
 #include "main_node_cli_shell.h"
 
 static connect_param *cparam;
 
-int com_global_db(int argc, const char ** argv)
-{
-    printf("com_global_db\n");
-    return 0;
-}
 
-int com_node(int argc, const char ** argv)
-{
-    printf("com_node\n");
-    return 0;
-}
-
-int com_help(int argc, const char ** argv)
-{
-    printf("com_help\n");
-    return 0;
-}
-
-typedef int cmdfunc_t(int argc, const char ** argv);
-
-typedef struct {
-    char *name; /* User printable name of the function. */
-    cmdfunc_t *func; /* Function to call to do the job. */
-    char *doc; /* Documentation for this function.  */
-} COMMAND;
-
-COMMAND commands[] = {
-    { "global_db", com_global_db, "Work with database" },
-    { "node", com_node, "Work with node" },
-    { "help", com_help, "Display this text" },
-    { "?", com_help, "Synonym for `help'" },
-    { (char *) NULL, (cmdfunc_t *) NULL, (char *) NULL }
-};
-
-/**
- *  Look up NAME as the name of a command, and return a pointer to that
- *  command.  Return a NULL pointer if NAME isn't a command name.
- */
-COMMAND* find_command(const char *name)
-{
-    register int i;
-
-    for(i = 0; commands[i].name; i++)
-        if(strcmp(name, commands[i].name) == 0)
-            return (&commands[i]);
-
-    return ((COMMAND *) NULL );
-}
 
 /**
  * split string to argc and argv
@@ -121,7 +75,7 @@ static char** split_word(char *line, int *argc)
 int execute_line(char *line)
 {
     register int i;
-    COMMAND *command;
+    const COMMAND *command;
     char *word;
 
     /* Isolate the command word. */
@@ -153,7 +107,7 @@ int execute_line(char *line)
     int argc = 0;
     char **argv = split_word(word, &argc);
     /* Call the function. */
-    return ((*(command->func))(argc, (const char **) argv));
+    return ((*(command->func))(argc, (const char **) argv, NULL));
 }
 
 /**
@@ -166,6 +120,7 @@ void free_cmd_state(cmd_state *cmd) {
             {
         DAP_DELETE(cmd->cmd_param[i]);
     }
+    DAP_DELETE(cmd->cmd_res);
     DAP_DELETE(cmd);
 }
 
@@ -215,7 +170,7 @@ int main(int argc, const char * argv[])
         printf("Can't connected to kelvin-node\n");
         exit(0);
     }
-    {
+    /*{
         printf("start node_cli_post_command()\n");
         cmd_state *cmd = DAP_NEW_Z(cmd_state);
         cmd->cmd_name = "cmd1";
@@ -226,9 +181,9 @@ int main(int argc, const char * argv[])
         int a = node_cli_post_command(cparam, cmd);
         printf("node_cli_post_command()=%d\n", a);
         free_cmd_state(cmd);
-    }
+    }*/
 
-    COMMAND *command = NULL;
+    const COMMAND *command = NULL;
     // in the first argument of command line look for the command
     if(argc > 1)
         command = find_command(argv[1]);
@@ -237,9 +192,16 @@ int main(int argc, const char * argv[])
     if(command)
     {
         // Call the function
-        int ret = ((*(command->func))(argc - 2, argv + 2));
+        //int res = ((*(command->func))(argc - 2, argv + 2));
+        cmd_state cmd;
+        cmd.cmd_name = (char *)argv[1];
+        cmd.cmd_param_count = argc - 2;
+        if(cmd.cmd_param_count > 0)
+            cmd.cmd_param = (char**)(argv + 2);
+        // Send command
+        int res = node_cli_post_command(cparam, &cmd);
         node_cli_desconnect(cparam);
-        return ret;
+        return res;
     }
 
     // command not found, start interactive shell

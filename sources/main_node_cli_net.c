@@ -22,13 +22,14 @@
  along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dap_client.h>
+//#include <dap_client.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/socket.h>
+#include "dap_common.h"
 #include "dap_chain_node_cli.h" // for UNIX_SOCKET_FILE
 #include "main_node_cli_net.h"
 
@@ -63,20 +64,27 @@ static size_t WriteHttpMemoryHeadCallback(void *contents, size_t size, size_t nm
 {
     if(!cmd)
         return 0;
-    printf("[header] %s len=%d\n", contents, size * nmemb);
-    // добавить к заголовку принятые данные
-    //return add_mem_data(&page->raw_header, &page->header_len,(char*)contents, size * nmemb);
-    return size;
+    //printf("[header] %s len=%d\n", contents, size * nmemb);
+    const char *head_str = "Content-Length:";
+    int len_str = strlen(head_str);
+    if(!strncasecmp(contents, head_str, len_str)) {
+        cmd->cmd_res_len = atoi((contents + len_str));
+        cmd->cmd_res_cur = 0;
+        cmd->cmd_res = DAP_NEW_Z_SIZE(char, cmd->cmd_res_len);
+    }
+    return size * nmemb;
 }
 
 // callback function to receive data
 static size_t WriteHttpMemoryCallback(void *contents, size_t size, size_t nmemb, cmd_state *cmd)
 {
+    //printf("[data] %s len=%d\n", contents, size * nmemb);
     if(!cmd)
         return 0;
-    printf("[data] %s len=%d\n", contents, size * nmemb);
     // add received data to body
-    return add_mem_data(&cmd->ret_str, &cmd->ret_str_len, (char*) contents, size * nmemb);
+    memcpy(cmd->cmd_res + cmd->cmd_res_cur, contents, size * nmemb);
+    cmd->cmd_res_cur += size * nmemb;
+    return size * nmemb;
 }
 
 /**
@@ -93,7 +101,7 @@ connect_param* node_cli_connect(void)
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 20L); // complete within 20 seconds
     ret = curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1L); // connection only
     ret = curl_easy_setopt(curl_handle, CURLOPT_URL, "http:/localhost/connect");
-    // execute request
+// execute request
     ret = curl_easy_perform(curl_handle);
     if(!ret)
     {
@@ -135,10 +143,6 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
     ret = curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void * )cmd);
     ret = curl_easy_setopt(curl, CURLOPT_USERAGENT, "kelvin-console 1.0");
 
-//    ret = curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);// GET запрос
-    //  ret = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);// удалённый сервер не будет проверять наш сертификат. В противном случае необходимо этот самый сертификат послать.
-    //ret = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
-
     char *post_data = NULL;
     ret = curl_easy_setopt(curl, CURLOPT_POST, 1); // POST request - optional if CURLOPT_POSTFIELDS will be
 
@@ -157,8 +161,10 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         if(post_data_len >= 0)
             ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
         // sending request and receiving the http page (filling cmd)
+        printf("cmd='%s'\n", cmd->cmd_name);
         ret = curl_easy_perform(curl); // curl_easy_send
-        free(post_data);
+        printf("res=%s(err_code=%d) ret='%s'\n", (!ret) ? "OK" : "Err", ret, (cmd->cmd_res) ? cmd->cmd_res : "-");
+        DAP_DELETE(post_data);
         return ret;
     }
     return -1;
