@@ -27,6 +27,8 @@ addons:
     - libmagic-dev
     - libldb-dev
     - libtevent-dev
+    - libcurl4-gnutls-dev
+
 
 
 
