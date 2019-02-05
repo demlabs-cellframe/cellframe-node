@@ -133,7 +133,7 @@ int main(int argc, const char * argv[])
                                     size_t l_wallet_path_size = strlen(l_wallet_name)+strlen(SYSTEM_WALLET_DIR)+10;
                                     char * l_wallet_path = DAP_NEW_Z_SIZE(char,l_wallet_path_size);
                                     snprintf(l_wallet_path,l_wallet_path_size,"%s/%s.dwallet",SYSTEM_WALLET_DIR,l_wallet_name);
-                                    l_wallet = dap_chain_wallet_create(l_wallet_name,l_sig_type);
+                                    l_wallet = dap_chain_wallet_create(l_wallet_name,SYSTEM_WALLET_DIR,l_network_id,l_sig_type);
                                     DAP_DELETE (l_wallet_path);
                                 }else {
                                     log_it(L_CRITICAL,"Wrong signature '%s'",argv[4]);
@@ -153,7 +153,7 @@ int main(int argc, const char * argv[])
                     } else if ( strcmp( argv[2],"sign_file") == 0 ) {
                         // wallet sign_file <wallet name> <cert index> <data file path> <data offset> <data length> <dsign file path>
                         if ( argc >= 8 ){
-                            dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3]);
+                            dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3],SYSTEM_WALLET_DIR);
                             if ( l_wallet) {
                                 int l_cert_index = atoi(argv[4]);
                                 size_t l_wallet_certs_number = dap_chain_wallet_get_certs_number(l_wallet);
