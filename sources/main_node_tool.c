@@ -71,6 +71,9 @@
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
 
+#include "dap_chain_wallet.h"
+
+
 #include "dap_common.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -85,6 +88,9 @@
 
 #define SYSTEM_CA_DIR SYSTEM_PREFIX"/var/lib/ca"
 #define LOCAL_CA_DIR LOCAL_PREFIX"/ca"
+
+#define SYSTEM_WALLET_DIR SYSTEM_PREFIX"/var/lib/wallet"
+#define LOCAL_WALLET_DIR LOCAL_PREFIX"/wallet"
 
 #define SYSTEM_CONFIG_GLOBAL_FILENAME SYSTEM_PREFIX"/etc/"DAP_APP_NAME".cfg"
 #define LOCAL_CONFIG_GLOBAL LOCAL_PREFIX"/etc/"DAP_APP_NAME".cfg"
@@ -113,7 +119,96 @@ int main(int argc, const char * argv[])
     ret = s_init(argc, argv);
     if (ret == 0){
         if( argc >= 2 ){
-            if (strcmp (argv[1],"cert") == 0 ){
+            if ( strcmp ( argv[1], "wallet" ) == 0 ){
+                if ( argc >=3 ){
+                    if ( strcmp( argv[2],"create") == 0 ){
+                        // wallet create <network name> <wallet name> <wallet_sign>
+                        if ( argc >= 6 ){
+                            dap_chain_net_id_t l_network_id = dap_chain_net_id_by_name (argv[3]) ;
+                            if ( l_network_id.raw != 0) {
+                                const char * l_wallet_name = argv[4];
+                                dap_chain_sign_type_t l_sig_type = dap_chain_sign_type_from_str(argv[5]);
+                                dap_chain_wallet_t * l_wallet = NULL;
+                                if ( l_sig_type.type != SIG_TYPE_NULL ) {
+                                    size_t l_wallet_path_size = strlen(l_wallet_name)+strlen(SYSTEM_WALLET_DIR)+10;
+                                    char * l_wallet_path = DAP_NEW_Z_SIZE(char,l_wallet_path_size);
+                                    snprintf(l_wallet_path,l_wallet_path_size,"%s/%s.dwallet",SYSTEM_WALLET_DIR,l_wallet_name);
+                                    l_wallet = dap_chain_wallet_create(l_wallet_name,l_sig_type);
+                                    DAP_DELETE (l_wallet_path);
+                                }else {
+                                    log_it(L_CRITICAL,"Wrong signature '%s'",argv[4]);
+                                    s_help();
+                                    exit(-2004);
+                                }
+                            }else {
+                                log_it(L_CRITICAL,"No such network name '%s'",argv[3]);
+                                s_help();
+                                exit(-2005);
+                            }
+                        }else {
+                            log_it(L_CRITICAL,"Wrong 'wallet create' command params");
+                            s_help();
+                            exit(-2003);
+                        }
+                    } else if ( strcmp( argv[2],"sign_file") == 0 ) {
+                        // wallet sign_file <wallet name> <cert index> <data file path> <data offset> <data length> <dsign file path>
+                        if ( argc >= 8 ){
+                            dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3]);
+                            if ( l_wallet) {
+                                int l_cert_index = atoi(argv[4]);
+                                size_t l_wallet_certs_number = dap_chain_wallet_get_certs_number(l_wallet);
+                                if ( ( l_cert_index > 0 ) && ( l_wallet_certs_number >(size_t) l_cert_index ) ){
+                                    FILE * l_data_file = fopen (argv[5],"r");
+                                    if ( l_data_file){
+
+                                    }
+                                } else {
+                                    log_it(L_CRITICAL,"Cert index %d can't be found in wallet with %u certs inside"
+                                           ,l_cert_index,l_wallet_certs_number);
+                                    s_help();
+                                    exit(-3002);
+                                }
+                            }else {
+                                log_it(L_CRITICAL,"Can't open wallet \"%s\"",argv[3]);
+                                s_help();
+                                exit(-3001);
+                            }
+                        }else {
+                            log_it(L_CRITICAL,"Wrong 'wallet sign_file' command params");
+                            s_help();
+                            exit(-3000);
+                        }
+                    }
+                   /* if ( strcmp( argv[2],"create_from") == 0 ){
+                        }else if ( argc >=7){
+                            // wallet create_from <wallet name> from <wallet ca1> [<wallet ca2> ...<wallet caN>]
+                            dap_chain_cert_t ** l_wallet_cert = NULL;
+                            size_t l_wallet_cert_size = 0;
+                            l_wallet_cert_size = (argc - 3 )
+                            l_wallet_cert = DAP_NEW_Z_SIZE (dap_chain_cert_t*, l_wallet_cert_size );
+                        }else {
+                            log_it(L_CRITICAL,"Wrong 'wallet create_from' command params");
+                            s_help();
+                            exit(-2002);
+                        }
+
+                        if ( l_wallet_cert ){
+                            if (l_wallet_cert_size > 0)
+                                for (size_t i = 0; i < l_wallet_cert_size; i++)
+                                    dap_chain_cert_delete( l_wallet_cert[i]->);
+                        }
+
+                    }*/else {
+                        log_it(L_CRITICAL,"Wrong 'wallet' command params");
+                        s_help();
+                        exit(-2001);
+                    }
+                }else {
+                    log_it(L_CRITICAL,"Wrong 'wallet' command params");
+                    s_help();
+                    exit(-2000);
+                }
+            }else if (strcmp (argv[1],"cert") == 0 ){
                 if ( argc >=3 ){
                     if ( strcmp( argv[2],"dump") == 0 ){
                         if (argc>=4) {
@@ -121,7 +216,7 @@ int main(int argc, const char * argv[])
                             dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
                             if ( l_cert ){
                                 dap_chain_cert_dump(l_cert);
-                                dap_chain_cert_delete(l_cert_name);
+                                dap_chain_cert_delete_by_name(l_cert_name);
                                 ret = 0;
                             }else{
                                 exit(-702);
@@ -148,7 +243,7 @@ int main(int argc, const char * argv[])
                                             log_it(L_CRITICAL, "Can't produce pkey from the certificate");
                                             exit(-7022);
                                         }
-                                        dap_chain_cert_delete(l_cert_name);
+                                        dap_chain_cert_delete_by_name(l_cert_name);
 
                                         ret = 0;
                                     //}else{
@@ -246,11 +341,64 @@ static int s_init(int argc, const char * argv[])
         return -2;
     }
 
-    if (dap_chain_cert_init() != 0) {
-        log_it(L_CRITICAL,"Can't chain certificate storage module");
+    if (dap_chain_init() != 0 ){
+        log_it(L_CRITICAL,"Can't chain module");
         return -3;
 
     }
+
+    if (dap_chain_cert_init() != 0) {
+        log_it(L_CRITICAL,"Can't chain certificate storage module");
+        return -4;
+
+    }
+
+    if (dap_chain_wallet_init() != 0) {
+        log_it(L_CRITICAL,"Can't chain wallet storage module");
+        return -5;
+
+    }
+
+    if (dap_server_init(0) != 0) {
+        log_it(L_CRITICAL,"Can't server module");
+        return -6;
+
+    }
+
+    if (dap_stream_init() != 0) {
+        log_it(L_CRITICAL,"Can't init stream module");
+        return -7;
+
+    }
+
+    if (dap_stream_ch_init() != 0) {
+        log_it(L_CRITICAL,"Can't init stream ch module");
+        return -8;
+
+    }
+
+    if (dap_stream_ch_chain_init() != 0) {
+        log_it(L_CRITICAL,"Can't init stream ch chain module");
+        return -9;
+
+    }
+    if (dap_stream_ch_chain_net_init()  != 0) {
+        log_it(L_CRITICAL,"Can't init stream ch chain net module");
+        return -10;
+
+    }
+    if (dap_stream_ch_chain_net_srv_init() != 0) {
+        log_it(L_CRITICAL,"Can't init stream ch chain net srv module");
+        return -11;
+
+    }
+
+    if (dap_client_init() != 0) {
+        log_it(L_CRITICAL,"Can't chain wallet storage module");
+        return -12;
+
+    }
+
 
 }
 
@@ -261,10 +409,21 @@ static int s_init(int argc, const char * argv[])
 static void s_help()
 {
     printf("%s usage:\n",s_appname);
+    printf("\t\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]");
+    printf("\nCreate new key wallet and generate signatures with same names plus index \n\n");
+
+    printf("\t\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]");
+    printf("\nCreate new key wallet from existent certificates in the system\n\n");
+
     printf("\t\t%s cert create <cert name> <key type> [<key length>]\n",s_appname);
     printf("\nCreate new key file with randomly produced key stored in\n\n");
+
     printf("\t\t%s cert dump <cert name>\n",s_appname);
     printf("\nDump cert data stored in <file path>\n");
+
+    printf("\t\t%s cert sign <cert name> <data file path> <sign file output> [<sign data length>] [<sign data offset>]\n",s_appname);
+    printf("\nSign some data with cert \n");
+
     printf("\t\t%s cert create_pkey <cert name> <pkey path>\n",s_appname);
     printf("\nCreate pkey from <cert name> and store it on <pkey path>\n");
 }
