@@ -161,9 +161,12 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         if(post_data_len >= 0)
             ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
         // sending request and receiving the http page (filling cmd)
-        printf("cmd='%s'\n", cmd->cmd_name);
+        //printf("cmd='%s'\n", cmd->cmd_name);
         ret = curl_easy_perform(curl); // curl_easy_send
-        printf("res=%s(err_code=%d) ret='%s'\n", (!ret) ? "OK" : "Err", ret, (cmd->cmd_res) ? cmd->cmd_res : "-");
+        //printf("res=%s(err_code=%d) ret='%s'\n", (!ret) ? "OK" : "Err", ret, (cmd->cmd_res) ? cmd->cmd_res : "-");
+        if(ret != CURLE_OK)
+            printf("Error (err_code=%d)\n", ret);
+        printf("%s\n", (cmd->cmd_res) ? cmd->cmd_res : "no response");
         DAP_DELETE(post_data);
         return ret;
     }
