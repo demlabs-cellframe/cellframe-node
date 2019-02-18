@@ -170,6 +170,8 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         DAP_DELETE(post_data);
         return ret;
     }
+    else
+        printf("%s\n", "no parameters");
     return -1;
 }
 

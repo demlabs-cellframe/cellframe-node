@@ -36,8 +36,6 @@
 
 static connect_param *cparam;
 
-
-
 /**
  * split string to argc and argv
  */
@@ -53,16 +51,22 @@ static char** split_word(char *line, int *argc)
     int n = 0;
     char *s, *start = line;
     size_t len = strlen(line);
-    for(s = line; s < line + len; s++) {
+    for(s = line; s <= line + len; s++) {
         if(whitespace(*s)) {
             *s = '\0';
             argv[n] = start;
-            start = ++s;
-            n++;
+            s++;
             // miss spaces
             for(; whitespace(*s); s++)
                 ;
+            start = s;
+            n++;
         }
+    }
+    // last param
+    if(len) {
+        argv[n] = start;
+        n++;
     }
     if(argc)
         *argc = n;
@@ -84,30 +88,41 @@ int execute_line(char *line)
         i++;
     word = line + i;
 
-    while(line[i] && !whitespace(line[i]))
-        i++;
+    /*    while(line[i] && !whitespace(line[i]))
+     i++;
 
-    if(line[i])
-        line[i++] = '\0';
+     if(line[i])
+     line[i++] = '\0';
 
-    command = find_command(word);
+     command = find_command(word);
 
-    if(!command)
-    {
-        fprintf(stderr, "%s: No such command\n", word);
-        return (-1);
-    }
+     if(!command)
+     {
+     fprintf(stderr, "%s: No such command\n", word);
+     return (-1);
+     }*/
 
-    /* Get argument to command, if any. */
-    while(whitespace(line[i]))
-        i++;
-
-    word = line + i;
+    /* Get argument to command, if any.
+     while(whitespace(line[i]))
+     i++;
+     word = line + i;*/
 
     int argc = 0;
     char **argv = split_word(word, &argc);
-    /* Call the function. */
-    return ((*(command->func))(argc, (const char **) argv, NULL));
+    // Call the function
+    if(argc > 0) {
+        cmd_state cmd;
+        memset(&cmd, 0, sizeof(cmd_state));
+        cmd.cmd_name = (char *) argv[0];
+        cmd.cmd_param_count = argc - 1;
+        if(cmd.cmd_param_count > 0)
+            cmd.cmd_param = (char**) (argv + 1);
+        // Send command
+        int res = node_cli_post_command(cparam, &cmd);
+        return res;
+    }
+    fprintf(stderr, "No command\n");
+    return -1; //((*(command->func))(argc, (const char **) argv, NULL));
 }
 
 /**
@@ -153,7 +168,7 @@ int shell_reader_loop()
             execute_line(s);
         }
 
-        free(line);
+        DAP_DELETE(line);
     }
     exit(0);
 }
@@ -171,17 +186,17 @@ int main(int argc, const char * argv[])
         exit(0);
     }
     /*{
-        printf("start node_cli_post_command()\n");
-        cmd_state *cmd = DAP_NEW_Z(cmd_state);
-        cmd->cmd_name = "cmd1";
-        cmd->cmd_param_count = 2;
-        cmd->cmd_param = DAP_NEW_Z_SIZE(char*, cmd->cmd_param_count * sizeof(char*));
-        cmd->cmd_param[0] = strdup("t2-t1");
-        cmd->cmd_param[1] = strdup("-opt");
-        int a = node_cli_post_command(cparam, cmd);
-        printf("node_cli_post_command()=%d\n", a);
-        free_cmd_state(cmd);
-    }*/
+     printf("start node_cli_post_command()\n");
+     cmd_state *cmd = DAP_NEW_Z(cmd_state);
+     cmd->cmd_name = "cmd1";
+     cmd->cmd_param_count = 2;
+     cmd->cmd_param = DAP_NEW_Z_SIZE(char*, cmd->cmd_param_count * sizeof(char*));
+     cmd->cmd_param[0] = strdup("t2-t1");
+     cmd->cmd_param[1] = strdup("-opt");
+     int a = node_cli_post_command(cparam, cmd);
+     printf("node_cli_post_command()=%d\n", a);
+     free_cmd_state(cmd);
+     }*/
 
     const COMMAND *command = NULL;
     // in the first argument of command line look for the command
@@ -194,10 +209,11 @@ int main(int argc, const char * argv[])
         // Call the function
         //int res = ((*(command->func))(argc - 2, argv + 2));
         cmd_state cmd;
-        cmd.cmd_name = (char *)argv[1];
+        memset(&cmd, 0, sizeof(cmd_state));
+        cmd.cmd_name = (char *) argv[1];
         cmd.cmd_param_count = argc - 2;
         if(cmd.cmd_param_count > 0)
-            cmd.cmd_param = (char**)(argv + 2);
+            cmd.cmd_param = (char**) (argv + 2);
         // Send command
         int res = node_cli_post_command(cparam, &cmd);
         node_cli_desconnect(cparam);

@@ -28,7 +28,9 @@
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 #endif
 
-/* Initialize readline (and terminal if not already). */
+/*
+ *  Initialize readline (and terminal if not already).
+ */
 int rl_initialize(void);
 
 /**

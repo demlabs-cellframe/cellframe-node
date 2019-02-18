@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/ttydefaults.h>
 #include <unistd.h>
+#include "dap_common.h"
 #include "main_node_cli.h"
 #include "main_node_cli_shell.h"
 
@@ -70,28 +71,17 @@ unsigned long rl_readline_state = RL_STATE_NONE;
 /* The names of the streams that we do input and output to. */
 FILE *rl_instream = (FILE *) NULL;
 FILE *rl_outstream = (FILE *) NULL;
-//rl_vintfunc_t *rl_prep_term_function = rl_prep_terminal;
-//rl_voidfunc_t *rl_deprep_term_function = rl_deprep_terminal;
 
-/* Clear any pending input pushed with rl_execute_next() */
-int
-rl_clear_pending_input(void)
-{
-    rl_pending_input = 0;
-    RL_UNSETSTATE(RL_STATE_INPUTPENDING);
-    return 0;
-}
-
-int rl_getc(FILE *stream)
+/**
+ * Read one symbol
+ */
+unsigned char rl_getc(FILE *stream)
 {
     int result;
     unsigned char c;
 
     while(1)
     {
-//        RL_CHECK_SIGNALS();
-
-        /* We know at this point that _rl_caught_signal == 0 */
 
 #if defined (__MINGW32__)
         if (isatty (fileno (stream)))
@@ -100,7 +90,6 @@ int rl_getc(FILE *stream)
         result = 0;
         if(result >= 0)
             result = read(fileno(stream), &c, sizeof(unsigned char));
-
         if(result == sizeof(unsigned char))
             return (c);
 
@@ -109,13 +98,12 @@ int rl_getc(FILE *stream)
         if(result == 0)
             return (EOF);
     }
-
 }
 
-/* Set up the prompt and expand it.  Called from readline() and
- rl_callback_handler_install (). */
-int
-rl_set_prompt(const char *prompt)
+/**
+ *  Set up the prompt and expand it.  Called from readline()
+ */
+int rl_set_prompt(const char *prompt)
 {
     free(rl_prompt);
     rl_prompt = prompt ? savestring(prompt) : (char *) NULL;
@@ -126,186 +114,32 @@ rl_set_prompt(const char *prompt)
     return 0;
 }
 
-/* Read a key, including pending input. */
-int
-rl_read_key(void)
-{
-    int c, r;
-
-    if(rl_pending_input)
-    {
-        c = rl_pending_input; /* XXX - cast to unsigned char if > 0? */
-        rl_clear_pending_input();
-    }
-    else
-    {
-        /* If input is coming from a macro, then use that. */
-//        if(c = _rl_next_macro_key())
-//            return ((unsigned char) c);
-//        if(rl_get_char(&c) == 0)
-        c = rl_getc(rl_instream);
-        /* fprintf(stderr, "rl_read_key: calling RL_CHECK_SIGNALS: _rl_caught_signal = %d", _rl_caught_signal); */
-//        RL_CHECK_SIGNALS();
-    }
-
-    return (c);
-}
-
-int readline_internal_char(void)
-{
-    static int lastc, eof_found;
-    int c, code, lk, r;
-
-    lastc = EOF;
-
-#if !defined (READLINE_CALLBACKS)
-    eof_found = 0;
-    while(rl_done == 0)
-    {
-#endif
-        lk = _rl_last_command_was_kill;
-
-#if defined (HAVE_POSIX_SIGSETJMP)
-        code = sigsetjmp (_rl_top_level, 0);
-#else
-        code = setjmp(_rl_top_level);
-#endif
-
-        if(code)
-        {
-            //(*rl_redisplay_function) ();
-            //_rl_want_redisplay = 0;
-
-            /* If we get here, we're not being called from something dispatched
-             from _rl_callback_read_char(), which sets up its own value of
-             _rl_top_level (saving and restoring the old, of course), so
-             we can just return here. */
-//      if (RL_ISSTATE (RL_STATE_CALLBACK))
-//        return (0);
-        }
-
-        if(rl_pending_input == 0)
-                {
-            /* Then initialize the argument and number of keys read. */
-            //_rl_reset_argument();
-            //rl_executing_keyseq[rl_key_sequence_length = 0] = '\0';
-        }
-
-        RL_SETSTATE(RL_STATE_READCMD);
-        c = rl_read_key();
-        RL_UNSETSTATE(RL_STATE_READCMD);
-
-        /* look at input.c:rl_getc() for the circumstances under which this will
-         be returned; punt immediately on read error without converting it to
-         a newline; assume that rl_read_key has already called the signal
-         handler. */
-        if(c == READERR)
-        {
-#if defined (READLINE_CALLBACKS)
-            RL_SETSTATE(RL_STATE_DONE);
-            return (rl_done = 1);
-#else
-            eof_found = 1;
-            break;
-#endif
-        }
-
-        /* EOF typed to a non-blank line is ^D the first time, EOF the second
-         time in a row.  This won't return any partial line read from the tty.
-         If we want to change this, to force any existing line to be returned
-         when read(2) reads EOF, for example, this is the place to change. */
-        if(c == EOF && rl_end)
-                {
-//            if(RL_SIG_RECEIVED())
-//            {
-//                RL_CHECK_SIGNALS();
-//                if(rl_signal_event_hook)
-//                    (*rl_signal_event_hook)(); /* XXX */
-//            }
-
-            /* XXX - reading two consecutive EOFs returns EOF */
-            if(RL_ISSTATE(RL_STATE_TERMPREPPED))
-                    {
-                if(lastc == _rl_eof_char || lastc == EOF)
-                    rl_end = 0;
-                else
-                    c = _rl_eof_char;
-            }
-            else
-                c = NEWLINE;
-        }
-
-        /* The character _rl_eof_char typed to blank line, and not as the
-         previous character is interpreted as EOF.  This doesn't work when
-         READLINE_CALLBACKS is defined, so hitting a series of ^Ds will
-         erase all the chars on the line and then return EOF. */
-        if(((c == _rl_eof_char && lastc != c) || c == EOF) && rl_end == 0)
-                {
-#if defined (READLINE_CALLBACKS)
-            RL_SETSTATE(RL_STATE_DONE);
-            return (rl_done = 1);
-#else
-            eof_found = 1;
-            break;
-#endif
-        }
-
-        lastc = c;
-        //r = _rl_dispatch((unsigned char) c, _rl_keymap);
-//        RL_CHECK_SIGNALS();
-
-        /* If there was no change in _rl_last_command_was_kill, then no kill
-         has taken place.  Note that if input is pending we are reading
-         a prefix command, so nothing has changed yet. */
-        if(rl_pending_input == 0 && lk == _rl_last_command_was_kill)
-            _rl_last_command_was_kill = 0;
-
-//        _rl_internal_char_cleanup();
-
-#if defined (READLINE_CALLBACKS)
-        return 0;
-#else
-    }
-
-    return (eof_found);
-#endif
-}
-
 /**
  *  Read a line of input.  Prompt with PROMPT.  An empty PROMPT means none.
  *  A return value of NULL means that EOF was encountered.
  */
 char *rl_readline(const char *prompt)
 {
-    char *value;
+    int value_size = 3, value_len = 0;
+    char *value = DAP_NEW_Z_SIZE(char, value_size + 1);
 
-    /* If we are at EOF return a NULL string. */
-    if(rl_pending_input == EOF)
-    {
-        rl_clear_pending_input();
-        return ((char *) NULL);
-    }
-
+    // Set up the prompt
     rl_set_prompt(prompt);
 
-//    rl_initialize();
-//    if(rl_prep_term_function)
-//        (*rl_prep_term_function)(_rl_meta_flag);
-
-    /* Read a line of input from the global rl_instream, doing output on
-     the global rl_outstream.
-     If rl_prompt is non-null, then that is our prompt. */
+    // Read a line of input from the global rl_instream, doing output on the global rl_outstream.
+    while(1)
     {
-//        readline_internal_setup();
-        int eof = 1;
+        unsigned char c = rl_getc(rl_instream);
 
-        while(rl_done == 0)
-            eof = readline_internal_char();
-        value = (char *)(intptr_t) eof; //readline_internal_teardown(eof);
+        if(c == EOF || c == NEWLINE)
+            break;
+        value[value_len] = c;
+        value_len++;
+        if(value_len == value_size) {
+            value_size += 32;
+            value = realloc(value, value_size + 1);
+        }
     }
-//    if(rl_deprep_term_function)
-//        (*rl_deprep_term_function)();
-
     return (value);
 }
 
@@ -322,9 +156,11 @@ static char* _rl_get_locale_var(const char *v)
     return lspec;
 }
 
-/* Query the right environment variables and call setlocale() to initialize
- the C library locale settings. */
-char* _rl_init_locale(void)
+/*
+ * Query the right environment variables and call setlocale() to initialize
+ * the C library locale settings.
+ */
+static char* _rl_init_locale(void)
 {
     char *ret, *lspec;
 
@@ -346,7 +182,9 @@ char* _rl_init_locale(void)
     return ret;
 }
 
-/* Initialize readline (and terminal if not already). */
+/*
+ *  Initialize readline (and terminal if not already).
+ */
 int rl_initialize(void)
 {
     /* If we have never been called before, initialize the
@@ -363,7 +201,6 @@ int rl_initialize(void)
     else
         (void) _rl_init_locale(); /* check current locale */
     RL_SETSTATE(RL_STATE_INITIALIZING);
-//      readline_initialize_everything ();
     rl_instream = (FILE *) stdin;
     rl_outstream = (FILE *) stdout;
     RL_UNSETSTATE(RL_STATE_INITIALIZING);
