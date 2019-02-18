@@ -10,7 +10,6 @@ before_install:
     - git submodule update
 
 script:
-    - export CC=gcc-5
     - mkdir build
     - cd build 
     - cmake -DBUILD_KELVIN_NODE_TESTS=ON ../
@@ -22,7 +21,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - gcc-5
+    - libjson-c-dev
     - libev-dev
     - libmagic-dev
     - libldb-dev
