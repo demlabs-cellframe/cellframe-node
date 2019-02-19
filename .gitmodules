@@ -34,42 +34,40 @@
 	path = libdap-stream-ch-chain
 	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain
 	branch = master
-[submodule "libdap-chain-block"]
-	path = libdap-chain-block
-	url = https://github.com/kelvinblockchain/libdap-chain-block
+
+[submodule "libdap-chain-cs-block"]
+	path = libdap-chain-cs-block
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-block
 	branch = master
-[submodule "libdap-chain-block-cs"]
-	path = libdap-chain-block-cs
-	url = https://github.com/kelvinblockchain/libdap-chain-block-cs
+[submodule "libdap-chain-cs-block-pow"]
+	path = libdap-chain-cs-block-pow
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-block-pow
 	branch = master
-[submodule "libdap-chain-block-cs-pow"]
-	path = libdap-chain-block-cs-pow
-	url = https://github.com/kelvinblockchain/libdap-chain-block-cs-pow
+[submodule "libdap-chain-cs-block-poa"]
+	path = libdap-chain-cs-block-poa
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-block-poa
 	branch = master
-[submodule "libdap-chain-block-cs-poa"]
-	path = libdap-chain-block-cs-poa
-	url = https://github.com/kelvinblockchain/libdap-chain-block-cs-poa
+[submodule "libdap-chain-cs-dag"]
+	path = libdap-chain-cs-dag
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag
 	branch = master
-[submodule "libdap-chain-dag-cs"]
-	path = libdap-chain-dag-cs
-	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs
+[submodule "libdap-chain-cs-dag-poa"]
+	path = libdap-chain-cs-dag-poa
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-poa
 	branch = master
-[submodule "libdap-chain-dag"]
-	path = libdap-chain-dag
-	url = https://github.com/kelvinblockchain/libdap-chain-dag
+[submodule "libdap-chain-cs-dag-poh"]
+	path = libdap-chain-cs-dag-poh
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-poh
 	branch = master
-[submodule "libdap-chain-dag-cs-poa"]
-	path = libdap-chain-dag-cs-poa
-	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-poa
+[submodule "libdap-chain-cs-dag-hashgraph"]
+	path = libdap-chain-cs-dag-hashgraph
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-hashgraph
 	branch = master
-[submodule "libdap-chain-dag-cs-poh"]
-	path = libdap-chain-dag-cs-poh
-	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-poh
-	branch = master
-[submodule "libdap-chain-dag-cs-hashgraph"]
-	path = libdap-chain-dag-cs-hashgraph
-	url = https://github.com/kelvinblockchain/libdap-chain-dag-cs-hashgraph
-	branch = master
+
+
+
+
+
 [submodule "libdap-chain-net"]
 	path = libdap-chain-net
 	url = https://github.com/kelvinblockchain/libdap-chain-net
