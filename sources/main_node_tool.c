@@ -44,16 +44,14 @@
 #include "dap_chain_cert_file.h"
 
 #include "dap_chain_block.h"
-#include "dap_chain_blocks.h"
-#include "dap_chain_block_cs.h"
-#include "dap_chain_block_cs_poa.h"
+#include "dap_chain_cs_blocks.h"
+#include "dap_chain_cs_block_poa.h"
 
 
-#include "dap_chain_dag.h"
-#include "dap_chain_dag_cs.h"
-#include "dap_chain_dag_cs_hashgraph.h"
-#include "dap_chain_dag_cs_poa.h"
-#include "dap_chain_dag_cs_poh.h"
+#include "dap_chain_cs_dag.h"
+#include "dap_chain_cs_dag_hashgraph.h"
+#include "dap_chain_cs_dag_poa.h"
+#include "dap_chain_cs_dag_poh.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"

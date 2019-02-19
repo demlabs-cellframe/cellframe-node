@@ -45,13 +45,12 @@ add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
 add_subdirectory(libdap-chain-wallet)
-add_subdirectory(libdap-chain-block)
-add_subdirectory(libdap-chain-block-cs)
-add_subdirectory(libdap-chain-block-cs-poa)
+add_subdirectory(libdap-chain-cs-block)
+add_subdirectory(libdap-chain-cs-block-poa)
 add_subdirectory(libdap-chain-cs-dag)
-add_subdirectory(libdap-chain-dag-cs-poa)
-add_subdirectory(libdap-chain-dag-cs-hashgraph)
-add_subdirectory(libdap-chain-dag-cs-poh)
+add_subdirectory(libdap-chain-cs-dag-poa)
+add_subdirectory(libdap-chain-cs-dag-hashgraph)
+add_subdirectory(libdap-chain-cs-dag-poh)
 add_subdirectory(libdap-chain-net)
 add_subdirectory(libdap-chain-net-srv)
 add_subdirectory(libdap-chain-net-srv-app)
@@ -89,8 +88,8 @@ add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_block dap_chain_block_cs dap_chain_block_cs_poa
-    dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
+    dap_chain_cs_block dap_chain_cs_block_poa
+    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_hashgraph dap_chain_cs_dag_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
@@ -98,8 +97,8 @@ target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl)
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_block dap_chain_block_cs dap_chain_block_cs_poa
-    dap_chain_dag dap_chain_dag_cs dap_chain_dag_cs_poa dap_chain_dag_cs_hashgraph dap_chain_dag_cs_poh
+    dap_chain_cs_block dap_chain_cs_block_poa
+    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_hashgraph dap_chain_cs_dag_poh
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db dap_chain_mempool m pthread magic )

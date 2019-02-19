@@ -40,17 +40,14 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_block.h"
-#include "dap_chain_blocks.h"
-#include "dap_chain_block_cs.h"
-#include "dap_chain_block_cs_poa.h"
+#include "dap_chain_cs_blocks.h"
+#include "dap_chain_cs_block_poa.h"
 
 
-#include "dap_chain_dag.h"
-#include "dap_chain_dag_cs.h"
-#include "dap_chain_dag_cs_hashgraph.h"
-#include "dap_chain_dag_cs_poa.h"
-#include "dap_chain_dag_cs_poh.h"
+#include "dap_chain_cs_dag.h"
+#include "dap_chain_cs_dag_hashgraph.h"
+#include "dap_chain_cs_dag_poa.h"
+#include "dap_chain_cs_dag_poh.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -168,42 +165,33 @@ int main(int argc, const char * argv[])
         return -6;
     }
 
-    if( dap_chain_blocks_init() !=0){
+    if( dap_chain_cs_blocks_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain block module");
         return -6;
     }
 
-    if( dap_chain_block_cs_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain block consensuse module");
-        return -6;
-    }
-
-    if( dap_chain_block_cs_poa_init() !=0){
+    if( dap_chain_cs_block_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain block consensus PoA module");
         return -6;
     }
 
-    if( dap_chain_dag_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain dag module");
-        return -6;
-    }
 
-    if( dap_chain_dag_cs_init() !=0){
+    if( dap_chain_cs_dag_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -6;
     }
 
-    if( dap_chain_dag_cs_hashgraph_init() !=0){
+    if( dap_chain_cs_dag_hashgraph_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus hashgraph module");
         return -6;
     }
 
-    if( dap_chain_dag_cs_poa_init() !=0){
+    if( dap_chain_cs_dag_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -6;
     }
 
-    if( dap_chain_dag_cs_poh_init() !=0){
+    if( dap_chain_cs_dag_poh_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoH module");
         return -6;
     }
