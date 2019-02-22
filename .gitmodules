@@ -143,3 +143,6 @@
 [submodule "libdap-chain-cs-dag-poh"]
 	path = libdap-chain-cs-dag-poh
 	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-poh
+[submodule "libdap-chain-cs-dag-pos"]
+	path = libdap-chain-cs-dag-pos
+	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-pos
