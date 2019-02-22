@@ -226,11 +226,11 @@ int main(int argc, const char * argv[])
                             const char * l_cert_pkey_path = argv[4];
                             dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
                             if ( l_cert ){
-                                l_cert->key_private->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->key_private);
-                                if ( l_cert->key_private->pub_key_data_size ){
+                                l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
+                                if ( l_cert->enc_key->pub_key_data_size ){
                                     //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
                                     //if ( dap_enc_gen_key_public(l_cert->key_private, l_cert->key_private->pub_key_data) == 0){
-                                        dap_chain_pkey_t * l_pkey = dap_chain_pkey_from_enc_key( l_cert->key_private );
+                                        dap_chain_pkey_t * l_pkey = dap_chain_pkey_from_enc_key( l_cert->enc_key );
                                         if (l_pkey){
                                             FILE * l_file = fopen(l_cert_pkey_path,"w");
                                             if (l_file){
