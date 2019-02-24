@@ -97,7 +97,7 @@
 void parse_args(int argc, const char * argv[]);
 void exit_if_server_already_running(void);
 
-static dap_config_t * g_config;
+static dap_config_t * g_config = NULL;
 
 int main(int argc, const char * argv[])
 {
