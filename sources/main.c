@@ -341,12 +341,15 @@ int main(int argc, const char * argv[])
     dap_stream_ch_chain_net_init();
     dap_stream_ch_chain_net_srv_init();
 
+    dap_events_init(0,0);
+    dap_events_t *l_events = dap_events_new();
+    dap_events_start (l_events);
+
     // Endless loop for server's requests processing
     rc = dap_server_loop(l_server);
     // After loop exit actions
     log_it(rc?L_CRITICAL:L_NOTICE,"Server loop stopped with return code %d",rc);
 
-    dap_events_init(0,0);
     // Deinit modules
 
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))

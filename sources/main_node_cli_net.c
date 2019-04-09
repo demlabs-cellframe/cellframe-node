@@ -70,7 +70,7 @@ static size_t WriteHttpMemoryHeadCallback(void *contents, size_t size, size_t nm
     if(!strncasecmp(contents, head_str, len_str)) {
         cmd->cmd_res_len = atoi((contents + len_str));
         cmd->cmd_res_cur = 0;
-        cmd->cmd_res = DAP_NEW_Z_SIZE(char, cmd->cmd_res_len);
+        cmd->cmd_res = DAP_NEW_Z_SIZE(char, cmd->cmd_res_len + 1);
     }
     return size * nmemb;
 }
