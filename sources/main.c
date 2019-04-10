@@ -341,9 +341,12 @@ int main(int argc, const char * argv[])
     dap_stream_ch_chain_net_init();
     dap_stream_ch_chain_net_srv_init();
 
+    // New event loop init
     dap_events_init(0,0);
     dap_events_t *l_events = dap_events_new();
     dap_events_start (l_events);
+    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
+        dap_stream_ch_vpn_deinit();
 
     // Endless loop for server's requests processing
     rc = dap_server_loop(l_server);
