@@ -49,6 +49,7 @@
 
 
 #include "dap_chain_cs_dag.h"
+#include "dap_chain_cs_dag_event.h"
 #include "dap_chain_cs_dag_hashgraph.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_poh.h"

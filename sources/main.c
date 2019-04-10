@@ -89,6 +89,7 @@
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
+
 #define STREAM_URL "/stream"
 #define SLIST_URL "/nodelist"
 #define MEMPOOL_URL "/mempool"
@@ -341,16 +342,19 @@ int main(int argc, const char * argv[])
     dap_stream_ch_chain_net_init();
     dap_stream_ch_chain_net_srv_init();
 
+    // New event loop init
+    dap_events_init(0,0);
+    dap_events_t *l_events = dap_events_new();
+    dap_events_start (l_events);
+    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
+        dap_stream_ch_vpn_deinit();
+
     // Endless loop for server's requests processing
     rc = dap_server_loop(l_server);
     // After loop exit actions
     log_it(rc?L_CRITICAL:L_NOTICE,"Server loop stopped with return code %d",rc);
 
-    dap_events_init(0,0);
     // Deinit modules
-
-    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
-        dap_stream_ch_vpn_deinit();
 
     dap_stream_deinit();
     dap_stream_ctl_deinit();
