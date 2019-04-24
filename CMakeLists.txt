@@ -12,14 +12,14 @@ SET (DESTDIR "/opt/${PROJECT_NAME}")
 SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 0)
-SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 1)
+SET( CPACK_PACKAGE_VERSION_MINOR 9)
+SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
 SET( CPACK_SYSTEM_NAME "debian-9.5-amd64")
 
 SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov  <naeper@ldemlabs.net>" )
 SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "Kelvin Blockchain Node software" )
-SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION 	"DAP server" )
+SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION 	"Kelvin Node" )
 SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
 SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64" )
 SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4)")
@@ -45,13 +45,9 @@ add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
 add_subdirectory(libdap-chain-wallet)
-add_subdirectory(libdap-chain-cs-block)
-add_subdirectory(libdap-chain-cs-block-poa)
 add_subdirectory(libdap-chain-cs-dag)
 add_subdirectory(libdap-chain-cs-dag-poa)
 add_subdirectory(libdap-chain-cs-dag-pos)
-add_subdirectory(libdap-chain-cs-dag-hashgraph)
-add_subdirectory(libdap-chain-cs-dag-poh)
 add_subdirectory(libdap-chain-net)
 add_subdirectory(libdap-chain-net-srv)
 add_subdirectory(libdap-chain-net-srv-app)
@@ -89,8 +85,7 @@ add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_cs_block dap_chain_cs_block_poa
-    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_hashgraph dap_chain_cs_dag_poh
+    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
@@ -98,8 +93,7 @@ target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl)
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_cs_block dap_chain_cs_block_poa
-    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_hashgraph dap_chain_cs_dag_poh
+    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db dap_chain_mempool m pthread magic )

@@ -45,9 +45,8 @@
 
 
 #include "dap_chain_cs_dag.h"
-#include "dap_chain_cs_dag_hashgraph.h"
 #include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_poh.h"
+#include "dap_chain_cs_dag_pos.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -98,8 +97,6 @@
 void parse_args(int argc, const char * argv[]);
 void exit_if_server_already_running(void);
 
-static dap_config_t * g_config = NULL;
-
 int main(int argc, const char * argv[])
 {
     dap_server_t * l_server = NULL; // DAP Server instance
@@ -149,11 +146,13 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL,"Can't init encryption key storage module");
         return -57;
     }
+    
 
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
         return -58;
     }
+
 
     if( dap_chain_wallet_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
@@ -182,18 +181,14 @@ int main(int argc, const char * argv[])
         return -6;
     }
 
-    if( dap_chain_cs_dag_hashgraph_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus hashgraph module");
-        return -6;
-    }
 
     if( dap_chain_cs_dag_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -6;
     }
 
-    if( dap_chain_cs_dag_poh_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoH module");
+    if( dap_chain_cs_dag_pos_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -6;
     }
 
@@ -311,20 +306,20 @@ int main(int argc, const char * argv[])
             dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
             dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
-            const char *str_start_mempool = dap_config_get_item_str(g_config, "server", "accept_mempool_request");
+            dap_datum_mempool_init();
+            const char *str_start_mempool = dap_config_get_item_str(g_config, "mempool", "accept");
             if(str_start_mempool && !strcmp(str_start_mempool, "true")) {
                 dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
             }
 
             // Built in WWW server
 
-            /*if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                 dap_http_folder_add(DAP_HTTP(l_server), "/",
-                                dap_config_get_item_str_default(g_config,
+                                dap_config_get_item_str(g_config,
                                                                 "resources",
-                                                                "www_root",
-                                                                "/opt/kelvin-node/www"));
-            }*/
+                                                                "www_root"));
+            }
 
         }
     }else
