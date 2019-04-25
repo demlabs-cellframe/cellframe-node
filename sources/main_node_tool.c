@@ -43,16 +43,11 @@
 #include "dap_chain_cert.h"
 #include "dap_chain_cert_file.h"
 
-#include "dap_chain_block.h"
-#include "dap_chain_cs_blocks.h"
-#include "dap_chain_cs_block_poa.h"
-
 
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_event.h"
-#include "dap_chain_cs_dag_hashgraph.h"
 #include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_poh.h"
+#include "dap_chain_cs_dag_pos.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -109,7 +104,6 @@
 static int s_init(int argc, const char * argv[]);
 static void s_help();
 
-static dap_config_t * g_config;
 static const char * s_appname;
 int main(int argc, const char * argv[])
 {

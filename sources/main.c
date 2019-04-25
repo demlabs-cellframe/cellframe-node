@@ -40,10 +40,6 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_cs_blocks.h"
-#include "dap_chain_cs_block_poa.h"
-
-
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
@@ -159,21 +155,6 @@ int main(int argc, const char * argv[])
         return -59;
     }
 
-
-    if( dap_chain_block_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain block module");
-        return -6;
-    }
-
-    if( dap_chain_cs_blocks_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain block module");
-        return -6;
-    }
-
-    if( dap_chain_cs_block_poa_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain block consensus PoA module");
-        return -6;
-    }
 
 
     if( dap_chain_cs_dag_init() !=0){
