@@ -251,6 +251,35 @@ int main(int argc, const char * argv[])
                                 exit(-7021);
                             }
                         }
+                    }else if ( strcmp( argv[2],"create_cert_pkey") == 0 ){
+                        if (argc>=5) {
+                            const char * l_cert_name = argv[3];
+                            const char * l_cert_new_name = argv[4];
+                            dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
+                            if ( l_cert ){
+                                if ( l_cert->enc_key->pub_key_data_size ){
+                                    // Create empty new cert
+                                    dap_chain_cert_t * l_cert_new = dap_chain_cert_new(l_cert_new_name);
+                                    l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
+
+                                    // Copy only public key
+                                    l_cert_new->enc_key->pub_key_data = DAP_NEW_Z_SIZE(uint8_t,
+                                                                                       l_cert_new->enc_key->pub_key_data_size =
+                                                                                       l_cert->enc_key->pub_key_data_size );
+                                    memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
+
+                                    dap_chain_cert_save_to_folder(l_cert_new, SYSTEM_CA_DIR);
+                                   //dap_chain_cert_delete_by_name(l_cert_name);
+                                   //dap_chain_cert_delete_by_name(l_cert_new_name);
+
+                                }else{
+                                    log_it(L_CRITICAL,"Can't produce pkey from this cert type");
+                                    exit(-7023);
+                                }
+                            }else{
+                                exit(-7021);
+                            }
+                        }
                     }
                     else if ( strcmp( argv[2],"create" ) == 0 ){
                         if (argc>=5) {
@@ -419,5 +448,9 @@ static void s_help()
 
     printf("\t\t%s cert create_pkey <cert name> <pkey path>\n",s_appname);
     printf("\nCreate pkey from <cert name> and store it on <pkey path>\n");
+
+
+    printf("\t\t%s cert create_cert_pkey <cert name> <new cert name>\n",s_appname);
+    printf("\nExport only public key from <cert name> and stores it \n");
 }
 
