@@ -143,25 +143,32 @@ int main(int argc, const char * argv[])
         return -57;
     }
     
+    if(dap_chain_global_db_init(g_config)) {
+        log_it(L_CRITICAL, "Can't init global db module");
+        return -58;
+    }
+
+    if(dap_datum_mempool_init()) {
+        log_it(L_CRITICAL, "Can't init mempool module");
+        return -59;
+    }
 
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
-        return -58;
+        return -60;
     }
 
 
     if( dap_chain_wallet_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -59;
+        return -61;
     }
-
 
 
     if( dap_chain_cs_dag_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -6;
     }
-
 
     if( dap_chain_cs_dag_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
@@ -197,8 +204,7 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
         return -6;
     }
-
-    if( dap_chain_net_srv_vpn_init() !=0){
+    if( dap_chain_net_srv_vpn_init(g_config) !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
         return -6;
     }
@@ -221,11 +227,6 @@ int main(int argc, const char * argv[])
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
-    }
-
-    if(dap_chain_global_db_init(g_config)) {
-        log_it(L_CRITICAL, "Can't init global db module");
-        return -10;
     }
 
     if(dap_chain_node_cli_init(g_config)) {
@@ -287,7 +288,6 @@ int main(int argc, const char * argv[])
             dap_stream_add_proc_http(DAP_HTTP(l_server), STREAM_URL);
             dap_stream_ctl_add_proc(DAP_HTTP(l_server), STREAM_CTL_URL);
 
-            dap_datum_mempool_init();
             const char *str_start_mempool = dap_config_get_item_str(g_config, "mempool", "accept");
             if(str_start_mempool && !strcmp(str_start_mempool, "true")) {
                 dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
