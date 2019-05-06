@@ -79,7 +79,7 @@ static char** split_word(char *line, int *argc)
 int execute_line(char *line)
 {
     register int i;
-    const COMMAND *command;
+    dap_chain_node_cmd_item_t *command;
     char *word;
 
     /* Isolate the command word. */
@@ -198,19 +198,12 @@ int main(int argc, const char * argv[])
      free_cmd_state(cmd);
      }*/
 
-    const COMMAND *command = NULL;
-    // in the first argument of command line look for the command
-    if(argc > 1)
-        command = find_command(argv[1]);
-
-    // command found
-    if(command)
-    {
+    if(argc > 1){
         // Call the function
         //int res = ((*(command->func))(argc - 2, argv + 2));
         cmd_state cmd;
         memset(&cmd, 0, sizeof(cmd_state));
-        cmd.cmd_name = (char *) argv[1];
+        cmd.cmd_name = strdup(argv[1]);
         cmd.cmd_param_count = argc - 2;
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 2);
