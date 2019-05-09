@@ -1,6 +1,15 @@
 # General section
 [general]
 debug_mode=false
+ca_folders=[/opt/kelvin-node/, /opt/kelvin-node,var/lib/ca]
+wallets_path = /opt/kelvin-node/var/lib/wallet
+wallets_default=naeper
+node_role=root
+node_cert=kelvin.testnet.root.0
+
+# Mempool
+[mempool]
+accept=false
 
 
 # Server part
@@ -25,8 +34,8 @@ network_mask=255.255.255.0
 threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
-dap_global_db_path=/opt/kelvin-node/db/global_db.ldb
-
+dap_global_db_path=/opt/kelvin-node/var/whitelist.ldb
+ca_folders=[/opt/kelvin-node/share/ca,/opt/kelvin-node/var/lib/ca]
 
 # Small builtin WWW server
 [www]

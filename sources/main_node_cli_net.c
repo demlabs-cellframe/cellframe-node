@@ -155,6 +155,7 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
                 add_mem_data((uint8_t**) &post_data, &post_data_len, cmd->cmd_param[i], strlen(cmd->cmd_param[i]));
             }
         }
+    }
         add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
         if(post_data)
             ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
@@ -169,9 +170,9 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         printf("%s\n", (cmd->cmd_res) ? cmd->cmd_res : "no response");
         DAP_DELETE(post_data);
         return ret;
-    }
-    else
-        printf("%s\n", "no parameters");
+    //}
+    //else
+    //    printf("%s\n", "no parameters");
     return -1;
 }
 
