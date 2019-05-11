@@ -4,6 +4,9 @@ debug_mode=false
 wallets_path=/opt/kelvin-node/var/lib/wallet
 wallets_default=default
 node_role=full
+# seed mode. WARNING. Used true only when you start the new network
+#seed_mode=false
+
 
 # Server part
 [server]

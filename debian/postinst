@@ -1,13 +1,17 @@
 #!/bin/bash -e
 . /usr/share/debconf/confmodule
 
-DAP_APP_NAME="kelvin-node"
+DAP_CHAINS_NAME="kelvin"
+DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 DAP_CFG_TPL="$DAP_PREFIX/share/$DAP_APP_NAME.cfg.tpl"
+DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/network/$DAP_CHAINS_NAME-testnet.cfg.tpl"
 
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg"
 
+# Init node config
 if [ -e "$DAP_CFG" ]; then
     DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
 else
@@ -16,6 +20,14 @@ fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
 
+# Init testnet
+if [ -e "$DAP_CFG_TESTNET" ]; then
+    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg.dpkg-new"
+else
+    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg"
+fi
+
+cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true
 
 if [ -e "/etc/systemd/user/$DAP_APP_NAME.service" ]; then
     echo "Restart $DAP_APP_NAME to implement changes"
