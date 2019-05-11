@@ -1,15 +1,11 @@
 # General section
 [general]
 debug_mode=false
-ca_folders=[/opt/kelvin-node/, /opt/kelvin-node,var/lib/ca]
-wallets_path = /opt/kelvin-node/var/lib/wallet
-wallets_default=naeper
-node_role=root
-node_cert=kelvin.testnet.root.0
-
-# Mempool
-[mempool]
-accept=false
+wallets_path=/opt/kelvin-node/var/lib/wallet
+wallets_default=default
+node_role=full
+# seed mode. WARNING. Used true only when you start the new network
+#seed_mode=false
 
 
 # Server part
@@ -18,6 +14,10 @@ accept=false
 enabled=true 
 listen_address=0.0.0.0
 listen_port_tcp=8079
+
+# Mempool
+[mempool]
+accept=false
 
 # VPN stream channel processing module
 [vpn]
@@ -34,12 +34,6 @@ network_mask=255.255.255.0
 threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
-dap_global_db_path=/opt/kelvin-node/var/whitelist.ldb
 ca_folders=[/opt/kelvin-node/share/ca,/opt/kelvin-node/var/lib/ca]
+dap_global_db_path=/opt/kelvin-node/var/whitelist.ldb
 
-# Small builtin WWW server
-[www]
-#   Really who need this??
-enabled=false 
-www_root=/opt/dapserver/www
-url=/

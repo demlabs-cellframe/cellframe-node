@@ -5,13 +5,14 @@ id=0x0000000000000001
 name=kelvin-testnet
 type=development
 # Possible values: light, full, archive, master, root
-node-role=full
+node-role=root
+node-alias=kelvin.testnet.root.0
 gdb_groups_prefix=kelvin.testnet
+seed_nodes_ipv4=[159.89.228.115,165.227.17.239,104.248.89.205,157.230.240.104,167.99.87.197,46.101.149.240,159.89.122.48]
+seed_nodes_aliases=[kelvin.testnet.root.0,kelvin.testnet.root.1,kelvin.testnet.root.2,kelvin.testnet.root.3,kelvin.testnet.root.4,kelvin.testnet.root.5,kelvin.testnet.root.6]
 
-# Only for root nodes
-#[dag-poa]
-#node-ca-sign=pvt.mycert
+[dag-poa]
+node-ca-sign=pvt.kelvin.testnet.root.0
 
-# Only for master nodes
-#[dag-pos]
-#node-ca-wallet=mywallet
+[dag-pos]
+node-ca-wallet=naeper
