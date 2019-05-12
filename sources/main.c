@@ -167,46 +167,46 @@ int main(int argc, const char * argv[])
 
     if( dap_chain_cs_dag_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
-        return -6;
+        return -62;
     }
 
     if( dap_chain_cs_dag_poa_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
-        return -6;
+        return -63;
     }
 
     if( dap_chain_cs_dag_pos_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
-        return -6;
+        return -64;
     }
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
-        return -6;
+        return -65;
     }
 
     if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
-        return -6;
+        return -66;
     }
 
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
-        return -6;
+        return -67;
     }
 
 
     if( dap_chain_net_srv_datum_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
-        return -6;
+        return -68;
     }
     if( dap_chain_net_srv_datum_pool_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
-        return -6;
+        return -69;
     }
     if( dap_chain_net_srv_vpn_init(g_config) !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
-        return -6;
+        return -70;
     }
 
     if(enc_http_init() !=0){
@@ -325,6 +325,8 @@ int main(int argc, const char * argv[])
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
         dap_stream_ch_vpn_deinit();
 
+    // Load default chain network
+    dap_chain_net_load("default");
     // Endless loop for server's requests processing
     rc = dap_server_loop(l_server);
     // After loop exit actions
