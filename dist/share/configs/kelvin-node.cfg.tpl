@@ -34,6 +34,6 @@ network_mask=255.255.255.0
 threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
-ca_folders=[/opt/kelvin-node/share/ca,/opt/kelvin-node/var/lib/ca]
+ca_folders=[/opt/kelvin-node/var/lib/ca,/opt/kelvin-node/share/ca]
 dap_global_db_path=/opt/kelvin-node/var/whitelist.ldb
 
