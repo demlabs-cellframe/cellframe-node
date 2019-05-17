@@ -212,8 +212,8 @@ int main(int argc, const char * argv[])
         return -69;
     }
     if( dap_chain_net_srv_vpn_init(g_config) !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
-        return -70;
+        log_it(L_ERROR,"Can't init dap chain network service vpn module");
+        //return -70;
     }
 
     if(enc_http_init() !=0){
@@ -221,7 +221,7 @@ int main(int argc, const char * argv[])
         return -81;
     }
 
-    if(dap_stream_init() != 0 ){
+    if(dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ){
         log_it(L_CRITICAL,"Can't init stream server module");
         return -82;
     }

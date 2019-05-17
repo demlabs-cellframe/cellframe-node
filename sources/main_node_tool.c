@@ -387,7 +387,7 @@ static int s_init(int argc, const char * argv[])
 
     }
 
-    if (dap_stream_init() != 0) {
+    if (dap_stream_init(false) != 0) {
         log_it(L_CRITICAL,"Can't init stream module");
         return -7;
 
