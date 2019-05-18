@@ -214,7 +214,7 @@ int main(int argc, const char * argv[])
         return -81;
     }
 
-    if(dap_stream_init() != 0 ){
+    if(dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ){
         log_it(L_CRITICAL,"Can't init stream server module");
         return -82;
     }
