@@ -65,6 +65,9 @@
 
 #include "dap_common.h"
 #include "dap_client_remote.h"
+#include "dap_client.h"
+#include "dap_http_client.h"
+#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
 #include "dap_traffic_track.h"
@@ -147,11 +150,15 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL, "Can't init global db module");
         return -58;
     }
+    dap_client_init();
+    dap_http_client_simple_init();
 
     if(dap_datum_mempool_init()) {
         log_it(L_CRITICAL, "Can't init mempool module");
         return -59;
     }
+
+
 
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
@@ -205,8 +212,8 @@ int main(int argc, const char * argv[])
         return -69;
     }
     if( dap_chain_net_srv_vpn_init(g_config) !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service vpn module");
-        return -70;
+        log_it(L_ERROR,"Can't init dap chain network service vpn module");
+        //return -70;
     }
 
     if(enc_http_init() !=0){
