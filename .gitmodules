@@ -114,3 +114,6 @@
 [submodule "libdap-chain-cs-dag-pos"]
 	path = libdap-chain-cs-dag-pos
 	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-pos
+[submodule "libdap-server-http-db-auth"]
+	path = libdap-server-http-db-auth
+	url = https://github.com/kelvinblockchain/libdap-server-http-db-auth

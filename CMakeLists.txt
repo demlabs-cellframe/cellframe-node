@@ -42,6 +42,7 @@ add_subdirectory(libdap)
 add_subdirectory(libdap-server-core)
 add_subdirectory(libdap-server-udp)
 add_subdirectory(libdap-server)
+add_subdirectory(libdap-server-http-db-auth)
 
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
@@ -89,7 +90,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_core_server dap_en
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic )
+    dap_chain_wallet dap_chain_global_db  dap_chain_mempool m pthread magic dap_server_http_db_auth)
 target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_core_server dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net

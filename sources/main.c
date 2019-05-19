@@ -280,7 +280,8 @@ int main(int argc, const char * argv[])
                     dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
 
             dap_traffic_track_init(l_server, timeout);
-           // dap_traffic_callback_set(db_auth_traffic_track_callback);
+            dap_traffic_callback_set(dap_chain_net_srv_traffic_callback);
+            //dap_traffic_callback_set(db_auth_traffic_track_callback);
         }
 
         // TCP-specific things
