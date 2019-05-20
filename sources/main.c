@@ -150,6 +150,9 @@ int main(int argc, const char * argv[])
         log_it(L_CRITICAL, "Can't init global db module");
         return -58;
     }
+    dap_chain_global_db_add_history_group_prefix("global");
+    dap_chain_global_db_add_history_group_prefix("cell");
+
     dap_client_init();
     dap_http_client_simple_init();
 

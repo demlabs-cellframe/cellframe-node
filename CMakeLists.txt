@@ -42,6 +42,7 @@ add_subdirectory(libdap)
 add_subdirectory(libdap-server-core)
 add_subdirectory(libdap-server-udp)
 add_subdirectory(libdap-server)
+add_subdirectory(libdap-server-http-db-auth)
 
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
