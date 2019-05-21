@@ -117,3 +117,6 @@
 [submodule "libdap-server-http-db-auth"]
 	path = libdap-server-http-db-auth
 	url = https://github.com/kelvinblockchain/libdap-server-http-db-auth
+[submodule "libdap-chain-gdb"]
+	path = libdap-chain-gdb
+	url = https://github.com/kelvinblockchain/libdap-chain-gdb

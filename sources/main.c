@@ -43,6 +43,7 @@
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
+#include "dap_chain_gdb.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -174,7 +175,6 @@ int main(int argc, const char * argv[])
         return -61;
     }
 
-
     if( dap_chain_cs_dag_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -62;
@@ -188,6 +188,11 @@ int main(int argc, const char * argv[])
     if( dap_chain_cs_dag_pos_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -64;
+    }
+
+    if(dap_chain_gdb_init() != 0) {
+        log_it(L_CRITICAL, "Can't init dap chain gdb module");
+        return -71;
     }
 
     if( dap_chain_net_init() !=0){
@@ -283,7 +288,8 @@ int main(int argc, const char * argv[])
                     dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
 
             dap_traffic_track_init(l_server, timeout);
-           // dap_traffic_callback_set(db_auth_traffic_track_callback);
+            dap_traffic_callback_set(dap_chain_net_srv_traffic_callback);
+            //dap_traffic_callback_set(db_auth_traffic_track_callback);
         }
 
         // TCP-specific things
