@@ -1,6 +1,7 @@
 /*
  * Authors:
  * Dmitriy A. Gearasimov <kahovski@gmail.com>
+ * Alexander Lysikov <alexander.lysikov@demlabs.net>
  * DeM Labs Inc.   https://demlabs.net
  * DeM Labs Open source community https://github.com/demlabsinc
  * Copyright  (c) 2017-2019
@@ -30,6 +31,7 @@
 #include <assert.h>
 #include <sys/socket.h>
 #include "dap_common.h"
+#include "dap_strfuncs.h"
 #include "dap_chain_node_cli.h" // for UNIX_SOCKET_FILE
 #include "main_node_cli_net.h"
 
@@ -156,24 +158,35 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
             }
         }
     }
-        add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
-        if(post_data)
-            ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
-        if(post_data_len >= 0)
-            ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
-        // sending request and receiving the http page (filling cmd)
-        //printf("cmd='%s'\n", cmd->cmd_name);
-        ret = curl_easy_perform(curl); // curl_easy_send
-        //printf("res=%s(err_code=%d) ret='%s'\n", (!ret) ? "OK" : "Err", ret, (cmd->cmd_res) ? cmd->cmd_res : "-");
-        if(ret != CURLE_OK)
-            printf("Error (err_code=%d)\n", ret);
-        printf("%s\n", (cmd->cmd_res) ? cmd->cmd_res : "no response");
-        DAP_DELETE(post_data);
-        return ret;
-    //}
-    //else
-    //    printf("%s\n", "no parameters");
-    return -1;
+	add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
+	if (post_data)
+		ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
+	if (post_data_len >= 0)
+		ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,
+				(long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
+	// sending request and receiving the http page (filling cmd)
+	//printf("cmd='%s'\n", cmd->cmd_name);
+	ret = curl_easy_perform(curl); // curl_easy_send
+
+	if (ret != CURLE_OK) {
+		printf("Error (err_code=%d)\n", ret);
+		exit(-1);
+	}
+	int l_err_code = -1;
+	if (cmd->cmd_res) {
+		char **l_str = dap_strsplit(cmd->cmd_res, "\r\n", 1);
+		int l_cnt = dap_str_countv(l_str);
+		char *l_str_reply = NULL;
+		if (l_cnt == 2) {
+			l_err_code = strtol(l_str[0], NULL, 10);
+			l_str_reply = l_str[1];
+		}
+		printf("%s\n", (l_str_reply) ? l_str_reply : "no response");
+		dap_strfreev(l_str);
+	}
+	DAP_DELETE(post_data);
+	exit(l_err_code);
+	return 0;
 }
 
 int node_cli_desconnect(connect_param *param)
@@ -185,4 +198,5 @@ int node_cli_desconnect(connect_param *param)
     }
 
     curl_global_cleanup();
+    return 0;
 }
