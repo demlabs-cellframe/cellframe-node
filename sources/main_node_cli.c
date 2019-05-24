@@ -183,7 +183,7 @@ int main(int argc, const char * argv[])
     if(!cparam)
     {
         printf("Can't connected to kelvin-node\n");
-        exit(0);
+        exit(-1);
     }
     /*{
      printf("start node_cli_post_command()\n");
