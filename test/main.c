@@ -1,7 +1,10 @@
+#include "dap_global_db_test.h"
 #include "dap_common.h"
+
 
 int main(void) {
     // switch off debug info from library
-    set_log_level(L_CRITICAL);
+    dap_log_level_set(L_CRITICAL);
+    dap_global_db_tests_run();
     return 0;
 }
