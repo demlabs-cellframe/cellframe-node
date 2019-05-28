@@ -72,10 +72,10 @@ add_subdirectory(libdap-stream-ch-chain-net-srv)
 add_subdirectory(libdap-chain-global-db)
 #add_subdirectory(libdap-stream-ch-chat)
 
-if(BUILD_KELVIN_NODE_TESTS)
+#if(BUILD_KELVIN_NODE_TESTS)
     enable_testing()
     add_subdirectory(test)
-endif()
+#endif()
 
 if(UNIX)
     add_definitions ("-DDAP_OS_LINUX")

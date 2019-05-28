@@ -10,7 +10,7 @@ file(GLOB HEADERS *.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-target_link_libraries(${PROJECT_NAME} dap_core dap_test dap_global_db)
+target_link_libraries(${PROJECT_NAME} dap_core dap_test dap_chain_global_db)
 
 add_test(
     NAME kelvin_node_test
