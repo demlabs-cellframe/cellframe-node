@@ -29,9 +29,9 @@ static void test_write_read_one(void)
     for(size_t i = 0; i < l_store_obj->value_len; i++) {
         l_store_obj->value[i] = rand();
     }
-    int ret = dap_db_add(l_store_obj, l_store_count);
+    int ret = dap_chain_global_db_driver_add(l_store_obj, l_store_count);
 
-    dap_store_obj_t *l_store_obj2 = dap_db_read_data(l_store_obj->group, l_store_obj->key, NULL);
+    dap_store_obj_t *l_store_obj2 = dap_chain_global_db_driver_read(l_store_obj->group, l_store_obj->key, NULL);
 
     dap_assert_PIF(l_store_obj2, "Read global_db entry");
 
@@ -62,7 +62,7 @@ static void test_close_db(void)
 
 static void test_write_db_count(void)
 {
-    int a_count = 100000;
+    int a_count = 20000;
     dap_store_obj_t *l_store_obj = DAP_NEW_Z_SIZE(dap_store_obj_t, sizeof(dap_store_obj_t) * a_count);
     size_t l_store_count = 1;
     for(size_t n = 0; n < a_count; n++) {
@@ -78,14 +78,14 @@ static void test_write_db_count(void)
         }
     }
     //dap_test_msg("Start test write dap_global_db %d record", a_count);
-    int ret = dap_db_add(l_store_obj, a_count);
+    int ret = dap_chain_global_db_driver_add(l_store_obj, a_count);
 
     //dap_test_msg("Read first record");
-    dap_store_obj_t *l_store_obj2 = dap_db_read_data(l_store_obj->group, l_store_obj->key, NULL);
+    dap_store_obj_t *l_store_obj2 = dap_chain_global_db_driver_read(l_store_obj->group, l_store_obj->key, NULL);
     dap_store_obj_free(l_store_obj2, 1);
     //dap_test_msg("Start test read dap_global_db %d record", a_count);
     for(size_t n = 1; n < a_count; n++) {
-        dap_store_obj_t *l_store_obj2 = dap_db_read_data(l_store_obj->group, l_store_obj->key, NULL);
+        dap_store_obj_t *l_store_obj2 = dap_chain_global_db_driver_read(l_store_obj->group, l_store_obj->key, NULL);
         dap_assert_PIF(l_store_obj2, "Read data");
         // compare l_store_obj and l_store_obj
         if(l_store_obj->timestamp == l_store_obj2->timestamp &&
@@ -117,17 +117,17 @@ void dap_global_db_tests_run(void)
     test_write_read_one();
 //    test_write_db_count(1000000);
 
-    benchmark_mgs_time("Read and Write in blobal_db 20000 times",
+    benchmark_mgs_time("Read and Write in global_db 20000 records",
                 benchmark_test_time(test_write_db_count, 1));
-    dap_assert(1, "Test dap_global_db: write and read 20000 records");
+    //dap_assert(1, "Test dap_global_db: write and read 20000 records");
 
 /*
-    benchmark_mgs_time("Read and Write in blobal_db 100 times",
+    benchmark_mgs_time("Read and Write in global_db 100 times",
             benchmark_test_time(test_write_db_count, 1));
     dap_assert(1, "Test dap_global_db 100 records");
 */
 
-//        benchmark_mgs_rate("Read and Write in blobal_db",
+//        benchmark_mgs_rate("Read and Write in global_db",
 //                benchmark_test_rate(test_write_db_count, 2000));
 
     //dap_usleep(2 * DAP_USEC_PER_SEC);
