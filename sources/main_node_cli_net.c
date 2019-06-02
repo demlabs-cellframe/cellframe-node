@@ -150,6 +150,7 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
 
     size_t post_data_len = 0;
     add_mem_data((uint8_t**) &post_data, &post_data_len, cmd->cmd_name, strlen(cmd->cmd_name));
+
     if(cmd->cmd_param) {
         for(int i = 0; i < cmd->cmd_param_count; i++) {
             if(cmd->cmd_param[i]) {
@@ -158,35 +159,36 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
             }
         }
     }
-	add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
-	if (post_data)
-		ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
-	if (post_data_len >= 0)
-		ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,
-				(long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
-	// sending request and receiving the http page (filling cmd)
-	//printf("cmd='%s'\n", cmd->cmd_name);
-	ret = curl_easy_perform(curl); // curl_easy_send
 
-	if (ret != CURLE_OK) {
-		printf("Error (err_code=%d)\n", ret);
-		exit(-1);
-	}
-	int l_err_code = -1;
-	if (cmd->cmd_res) {
-		char **l_str = dap_strsplit(cmd->cmd_res, "\r\n", 1);
-		int l_cnt = dap_str_countv(l_str);
-		char *l_str_reply = NULL;
-		if (l_cnt == 2) {
-			l_err_code = strtol(l_str[0], NULL, 10);
-			l_str_reply = l_str[1];
-		}
-		printf("%s\n", (l_str_reply) ? l_str_reply : "no response");
-		dap_strfreev(l_str);
-	}
-	DAP_DELETE(post_data);
-	exit(l_err_code);
-	return 0;
+    add_mem_data((uint8_t**) &post_data, &post_data_len, "\r\n\r\n", 4);
+    if (post_data)
+        ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data); // data for POST request
+    if (post_data_len >= 0)
+        ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,
+                (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
+    // sending request and receiving the http page (filling cmd)
+    //printf("cmd='%s'\n", cmd->cmd_name);
+    ret = curl_easy_perform(curl); // curl_easy_send
+
+    if (ret != CURLE_OK) {
+        printf("Error (err_code=%d)\n", ret);
+        exit(-1);
+    }
+    int l_err_code = -1;
+    if (cmd->cmd_res) {
+        char **l_str = dap_strsplit(cmd->cmd_res, "\r\n", 1);
+        int l_cnt = dap_str_countv(l_str);
+        char *l_str_reply = NULL;
+        if (l_cnt == 2) {
+            l_err_code = strtol(l_str[0], NULL, 10);
+            l_str_reply = l_str[1];
+        }
+        printf("%s\n", (l_str_reply) ? l_str_reply : "no response");
+        dap_strfreev(l_str);
+    }
+    DAP_DELETE(post_data);
+    exit(l_err_code);
+    return 0;
 }
 
 int node_cli_desconnect(connect_param *param)
