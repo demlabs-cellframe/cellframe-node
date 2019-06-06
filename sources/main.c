@@ -113,6 +113,7 @@ int main(int argc, const char * argv[])
         return -2;
     }
 
+    dap_log_level_set( dap_config_get_item_bool_default(g_config,"general","debug_mode", false)? L_DEBUG: L_NOTICE );
     parse_args(argc, argv);
 
     // change to dap_config_get_item_int_default when it's will be possible
