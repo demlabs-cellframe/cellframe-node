@@ -3,18 +3,29 @@
 
 #include "dap_common.h"
 #include "dap_strfuncs.h"
+#include "dap_file_utils.h"
 //#include "dap_list.h"
 #include "dap_chain_global_db.h"
 #include "dap_chain_global_db_driver.h"
 #include "dap_global_db_test.h"
 
-#define DB_FILE "./base.sqlite"
+#define DB_FILE "./base.tmp"
 
-static void test_create_db(void)
+static void test_create_db(const char *db_type)
 {
-    unlink(DB_FILE);
-    int res = dap_db_driver_init("sqlite", DB_FILE);
-    dap_assert(!res, "Test init global_db");
+    if(dap_dir_test(DB_FILE)) {
+        rmdir(DB_FILE);
+        char *l_cmd = dap_strdup_printf("rm -rf %s", DB_FILE);
+        system(l_cmd);
+        DAP_DELETE(l_cmd);
+
+    }
+    else
+        unlink(DB_FILE);
+    int res = dap_db_driver_init(db_type, DB_FILE);
+    char *l_str = dap_strdup_printf("Test init %s global_db", db_type);
+    dap_assert(!res, l_str);
+    DAP_DELETE(l_str);
 }
 static void test_write_read_one(void)
 {
@@ -49,14 +60,13 @@ static void test_write_read_one(void)
     dap_store_obj_free(l_store_obj, 1);
     dap_store_obj_free(l_store_obj2, 1);
 
-
     dap_assert(1, "Test dap_global_db one record");
 
 }
 
 static void test_close_db(void)
 {
-    dap_db_driver_deinit();//dap_chain_global_db_deinit();
+    dap_db_driver_deinit(); //dap_chain_global_db_deinit();
     dap_assert(1, "Test close global_db");
 }
 
@@ -112,24 +122,36 @@ void dap_global_db_tests_run(void)
 {
     dap_print_module_name("dap_global_db");
 
-    unlink(DB_FILE);
-    test_create_db();
+    // cdb
+    test_create_db("cdb");
+    test_write_read_one();
+    benchmark_mgs_time("Read and Write in cdb 20000 records",
+            benchmark_test_time(test_write_db_count, 1));
+
+    // sqlite
+    test_create_db("sqlite");
     test_write_read_one();
 //    test_write_db_count(1000000);
 
-    benchmark_mgs_time("Read and Write in global_db 20000 records",
-                benchmark_test_time(test_write_db_count, 1));
+    benchmark_mgs_time("Read and Write in sqlite 20000 records",
+            benchmark_test_time(test_write_db_count, 1));
+
+
+
+    //test_close_db();
+
+
+
     //dap_assert(1, "Test dap_global_db: write and read 20000 records");
 
-/*
-    benchmark_mgs_time("Read and Write in global_db 100 times",
-            benchmark_test_time(test_write_db_count, 1));
-    dap_assert(1, "Test dap_global_db 100 records");
-*/
+    /*
+     benchmark_mgs_time("Read and Write in global_db 100 times",
+     benchmark_test_time(test_write_db_count, 1));
+     dap_assert(1, "Test dap_global_db 100 records");
+     */
 
 //        benchmark_mgs_rate("Read and Write in global_db",
 //                benchmark_test_rate(test_write_db_count, 2000));
-
     //dap_usleep(2 * DAP_USEC_PER_SEC);
     test_close_db();
 }
