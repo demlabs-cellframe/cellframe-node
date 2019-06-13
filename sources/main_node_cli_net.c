@@ -100,7 +100,7 @@ connect_param* node_cli_connect(void)
     connect_param *param = DAP_NEW_Z(connect_param);
     CURL *curl_handle = curl_easy_init();
     int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, UNIX_SOCKET_FILE); // unix socket mode
-    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L); // complete within 60 seconds
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 600L); // complete within 10 minutes
     ret = curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1L); // connection only
     ret = curl_easy_setopt(curl_handle, CURLOPT_URL, "http:/localhost/connect");
 // execute request
