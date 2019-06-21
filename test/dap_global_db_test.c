@@ -72,7 +72,7 @@ static void test_close_db(void)
 
 static void test_write_db_count(void)
 {
-    int a_count = 20000;
+    int a_count = 2000;
     dap_store_obj_t *l_store_obj = DAP_NEW_Z_SIZE(dap_store_obj_t, sizeof(dap_store_obj_t) * a_count);
     size_t l_store_count = 1;
     for(size_t n = 0; n < a_count; n++) {
@@ -111,6 +111,11 @@ static void test_write_db_count(void)
     }
     //dap_assert_PIF(1, "Read global_db entry");
 
+    // read all data in one time
+    size_t l_count_out3 = 0;
+    dap_store_obj_t *l_store_obj3 = dap_chain_global_db_driver_read(l_store_obj->group, NULL, &l_count_out3);
+    dap_store_obj_free(l_store_obj3, l_count_out3);
+
     dap_store_obj_free(l_store_obj, a_count);
 
     //dap_usleep(5 * DAP_USEC_PER_SEC);
@@ -131,27 +136,8 @@ void dap_global_db_tests_run(void)
     // sqlite
     test_create_db("sqlite");
     test_write_read_one();
-//    test_write_db_count(1000000);
-
     benchmark_mgs_time("Read and Write in sqlite 20000 records",
             benchmark_test_time(test_write_db_count, 1));
 
-
-
-    //test_close_db();
-
-
-
-    //dap_assert(1, "Test dap_global_db: write and read 20000 records");
-
-    /*
-     benchmark_mgs_time("Read and Write in global_db 100 times",
-     benchmark_test_time(test_write_db_count, 1));
-     dap_assert(1, "Test dap_global_db 100 records");
-     */
-
-//        benchmark_mgs_rate("Read and Write in global_db",
-//                benchmark_test_rate(test_write_db_count, 2000));
-    //dap_usleep(2 * DAP_USEC_PER_SEC);
     test_close_db();
 }
