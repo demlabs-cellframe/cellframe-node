@@ -352,16 +352,22 @@ int main(int argc, const char * argv[])
  */
 static int s_init(int argc, const char * argv[])
 {
+
+  if ( dap_common_init( DAP_APP_NAME, DAP_APP_NAME"_logs.txt") != 0 ) {
+    printf( "Fatal Error: Can't init common functions module" );
+    return -2;
+  }
+
     dap_config_init(SYSTEM_CONFIGS_DIR);
     if((g_config = dap_config_open(DAP_APP_NAME) ) == NULL) {
         log_it(L_CRITICAL,"Can't init general configurations");
         return -1;
     }
 
-    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
-        log_it(L_CRITICAL,"Can't init common functions module");
-        return -2;
-    }
+//    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
+//        log_it(L_CRITICAL,"Can't init common functions module");
+//        return -2;
+//    }
 
     if (dap_chain_init() != 0 ){
         log_it(L_CRITICAL,"Can't chain module");
