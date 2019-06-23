@@ -7,7 +7,7 @@ wallets_default=default
 node_role=full
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
-
+auto_online=false
 
 # Server part
 [server]

@@ -421,8 +421,8 @@ int main( int argc, const char **argv )
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
 
-    // Load default chain network
-  dap_chain_net_load( "kelvin-testnet" );
+    // Load all chain networks
+  dap_chain_net_load_all();
 
   // Endless loop for server's requests processing
   rc = dap_server_loop(l_server);

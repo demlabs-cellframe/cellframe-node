@@ -15,7 +15,6 @@ script:
     - cmake -DBUILD_KELVIN_NODE_TESTS=ON ../
     - make
     - ctest --verbose
-
 addons:
   apt:
     sources:
