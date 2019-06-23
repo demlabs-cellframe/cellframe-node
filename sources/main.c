@@ -102,16 +102,17 @@ int main(int argc, const char * argv[])
     dap_server_t * l_server = NULL; // DAP Server instance
     int rc;
 
+    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
+        log_it(L_CRITICAL,"Can't init common functions module");
+        return -2;
+    }
+
     dap_config_init(SYSTEM_CONFIGS_DIR);
     if((g_config = dap_config_open(DAP_APP_NAME) ) == NULL) {
         log_it(L_CRITICAL,"Can't init general configurations");
         return -1;
     }
 
-    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
-        log_it(L_CRITICAL,"Can't init common functions module");
-        return -2;
-    }
 
     dap_log_level_set( dap_config_get_item_bool_default(g_config,"general","debug_mode", false)? L_DEBUG: L_NOTICE );
     parse_args(argc, argv);

@@ -11,9 +11,9 @@ SET (DESTDIR "/opt/${PROJECT_NAME}")
 
 SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
-SET( CPACK_PACKAGE_VERSION_MAJOR 0)
-SET( CPACK_PACKAGE_VERSION_MINOR 9)
-SET( CPACK_PACKAGE_VERSION_PATCH 15)
+SET( CPACK_PACKAGE_VERSION_MAJOR 1)
+SET( CPACK_PACKAGE_VERSION_MINOR 0)
+SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
 #SET( CPACK_SYSTEM_NAME "debian-9.5-amd64")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -81,7 +81,14 @@ if(UNIX)
     add_definitions ("-DDAP_OS_LINUX")
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+#if(BUILD_PROFILE)
+    SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+    SET(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -pg")
+    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+#endif()
+
 add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c")
 add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
 add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
