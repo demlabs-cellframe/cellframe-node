@@ -1,0 +1,138 @@
+
+my-dir = $(call parent-dir,$(lastword $(MAKEFILE_LIST)))
+
+prextarget := lib/
+
+LOCAL_PATH       := $(call my-dir)
+LOCAL_MODULE     := kelvin-node$(xtarget)
+
+include win32/[cdf_set].mk
+
+LOCAL_C_INCLUDES += \
+  libdap-server-http-db-auth/ \
+  libdap-client/include/ \
+  libdap-chain-gdb/ \
+  libdap-chain-cs-dag-pos/ \
+  libdap-chain-cs-dag-poa/ \
+  libdap-chain-cs-dag/ \
+  libdap-stream-ch-chain-net-srv/ \
+  libdap-stream-ch-vpn/ \
+  libdap-stream-ch-chain-net/ \
+  libdap-stream-ch-chain/ \
+  libdap-chain-wallet/ \
+  libdap-chain-net-srv-vpn/ \
+  libdap-chain-net-srv-datum-pool/ \
+  libdap-chain-net-srv-datum/ \
+  libdap-chain-net-srv-app-db/ \
+  libdap-chain-net-srv-app/ \
+  libdap-chain-net-srv/ \
+  libdap-chain-net/ \
+  libdap-chain-mempool/ \
+  libdap-chain-global-db/ \
+  libdap-chain/ \
+  libdap-chain-crypto/monero_crypto/ \
+  libdap-chain-crypto/ \
+  libdap-stream/stream \
+  libdap-stream/session \
+  libdap/include/ \
+  libdap-crypto/include/ \
+  libdap-crypto/src/ \
+  libdap/src/win32/ \
+  libdap-server-core/include/ \
+  libdap-server/http_server/ \
+  libdap-server/enc_server/ \
+  libdap-server/http_server/http_client/ \
+  libdap-server-udp/ \
+  libdap-stream-ch/ \
+  3rdparty/cuttdb/src/ \
+  3rdparty/libsqlite3/ \
+  3rdparty/libjson-c/ \
+  3rdparty/libmemcached/ \
+  3rdparty/libmemcached/win32/ \
+  3rdparty/wepoll/include/ \
+  3rdparty/uthash/src/ \
+
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+
+LOCAL_C_DEFINES := UNDEBUG NDEBUG WIN32 _WINDOWS __WINDOWS__ _CRT_SECURE_NO_WARNINGS CURL_STATICLIB
+LOCAL_C_DEFINES += DAP_SERVER NODE_NETNAME=\"kelvin\" 
+
+LOCAL_LSLIBS := \
+  libdap-stream-ch-chain-net \
+  libdap-stream-ch-chain \
+  libdap-chain-net-srv \
+  libdap-chain-net \
+  libdap-chain-gdb \
+  libdap-chain-cs-dag-poa \
+  libdap-chain-cs-dag-pos \
+  libdap-chain-cs-dag \
+  libdap-chain-net \
+  libdap-chain-wallet \
+  libdap-chain-mempool \
+  libdap-chain \
+  libdap-client \
+  libdap-stream \
+  libdap-stream-ch \
+  libdap-chain-global-db \
+  libdap-chain-crypto \
+  libdap_server \
+  libdap_server_core \
+  libdap \
+  libdap-server-udp \
+  libjson-c \
+  libmemcached \
+  wepoll \
+  libmagic \
+  monero_crypto \
+  libdap_crypto \
+  cuttdb \
+  libsqlite3 \
+  regex \
+  libmongoc \
+  libbson \
+  curl \
+  nghttp2 \
+  libssl \
+  c-ares \
+  misc \
+  zlib \
+  libssh2 \
+  libcrypto \
+
+LOCAL_LSLIBS := $(addsuffix $(xtarget).a, $(LOCAL_LSLIBS))
+
+ifneq ($(filter [x86CLANG] [x86_64CLANG] [x86GCC] [x86_64GCC],$(xtarget)),)
+    LOCAL_LSLIBS := $(addprefix lib/$(xtarget)/, $(LOCAL_LSLIBS))
+endif
+
+LOCAL_LDLIBS := \
+    KERNEL32 \
+    USER32 \
+    SHELL32 \
+    WINMM \
+    GDI32 \
+    ADVAPI32 \
+    Ole32 \
+    Version \
+    Imm32 \
+    OleAut32 \
+    ws2_32 \
+    ntdll \
+    psapi \
+    Shlwapi \
+    Bcrypt \
+    Crypt32 \
+    Secur32
+
+ifneq ($(filter [x86CLANG] [x86_64CLANG] [x86GCC] [x86_64GCC],$(xtarget)),)
+    LOCAL_LDLIBS := $(addprefix -l, $(LOCAL_LDLIBS))
+else
+    LOCAL_LDLIBS := $(addsuffix .lib, $(LOCAL_LDLIBS))
+endif
+
+LOCAL_SRC_FILES := \
+  sources/main.c \
+  sources/exh_win32.c \
+  sources/sig_win32_handler.c \
+
+include win32/[cdf_makebin].mk
