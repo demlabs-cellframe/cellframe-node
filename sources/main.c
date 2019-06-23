@@ -422,7 +422,7 @@ int main( int argc, const char **argv )
 ///        dap_stream_ch_vpn_deinit();
 
     // Load default chain network
-  dap_chain_net_load( "default" );
+  dap_chain_net_load( "kelvin-testnet" );
 
   // Endless loop for server's requests processing
   rc = dap_server_loop(l_server);
