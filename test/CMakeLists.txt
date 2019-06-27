@@ -10,7 +10,9 @@ file(GLOB HEADERS *.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-target_link_libraries(${PROJECT_NAME} dap_core dap_test dap_chain_global_db)
+target_link_libraries(${PROJECT_NAME} dap_core dap_test dap_chain_global_db dap_chain_gdb)
+
+file(COPY locale DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_test(
     NAME kelvin_node_test
