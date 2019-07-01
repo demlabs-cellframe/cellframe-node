@@ -1,0 +1,15 @@
+[Unit]
+Description=Kelvin Node
+After=network.target
+
+[Service]
+Type=forking
+OOMScoreAdjust=-1000
+PIDFile=/opt/kelvin-node/var/run/kelvin-node.pid
+WorkingDirectory=/opt/kelvin-node
+ExecStart=/opt/kelvin-node/bin/kelvin-node -D
+ExecStop=/opt/kelvin-node/bin/kelvin-node --stop
+Restart=always
+
+[Install] 
+WantedBy=multi-user.target

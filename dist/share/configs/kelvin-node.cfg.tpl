@@ -1,12 +1,13 @@
 # General section
 [general]
 debug_mode=false
+debug_dump_stream_headers=false
 wallets_path=/opt/kelvin-node/var/lib/wallet
 wallets_default=default
 node_role=full
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
-
+auto_online=false
 
 # Server part
 [server]
@@ -25,7 +26,7 @@ accept=false
 enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 access_groups=expats,services,admins 
-network_address=10.0.0.0
+network_address=10.11.12.0
 network_mask=255.255.255.0
 
 # Application Resources
@@ -35,6 +36,7 @@ threads_cnt=0
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
 ca_folders=[/opt/kelvin-node/var/lib/ca,/opt/kelvin-node/share/ca]
-dap_global_db_path=/opt/kelvin-node/var/global_db.sqlite
-dap_global_db_driver=sqlite
+dap_global_db_path=/opt/kelvin-node/var/lib/global_db
+dap_global_db_driver=cdb
+
 
