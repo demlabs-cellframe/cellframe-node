@@ -174,7 +174,7 @@ int main( int argc, const char **argv )
 
       size_t l_wallet_path_size = strlen( l_wallet_name ) + strlen( SYSTEM_WALLET_DIR ) + 10;
       char * l_wallet_path = DAP_NEW_Z_SIZE( char, l_wallet_path_size );
-      dap_snprintf( l_wallet_path, l_wallet_path_size, "%s/%s.dwallet", SYSTEM_WALLET_DIR, l_wallet_name );
+      snprintf( l_wallet_path, l_wallet_path_size, "%s/%s.dwallet", SYSTEM_WALLET_DIR, l_wallet_name );
       l_wallet = dap_chain_wallet_create( l_wallet_name, SYSTEM_WALLET_DIR, l_network_id, l_sig_type );
       DAP_DELETE (l_wallet_path);
 
