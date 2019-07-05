@@ -42,7 +42,10 @@
 
 #include <pthread.h>
 
+#include "dap_common.h"
+
 #include "sig_unix_handler.h"
+
 #include "dap_config.h"
 #include "dap_server.h"
 #include "dap_http.h"
@@ -79,7 +82,6 @@
 
 #include "dap_chain_wallet.h"
 
-#include "dap_common.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
