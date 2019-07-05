@@ -109,6 +109,7 @@ int execute_line(char *line)
 
     int argc = 0;
     char **argv = split_word(word, &argc);
+
     // Call the function
     if(argc > 0) {
         cmd_state cmd;

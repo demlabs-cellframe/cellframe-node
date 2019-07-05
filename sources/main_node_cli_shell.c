@@ -1,10 +1,34 @@
-#include <locale.h>
-#include <setjmp.h>
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <string.h>
-#include <sys/ttydefaults.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <getopt.h>
+#include <signal.h>
+#include <string.h>
+#include <assert.h>
+#include <setjmp.h>
+#include <locale.h>
+
+#ifdef _WIN32
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <winsock2.h>
+#include <windows.h>
+#include <mswsock.h>
+#include <ws2tcpip.h>
+#include <io.h>
+//#include "wrappers.h"
+#include <wepoll.h>
+#include <pthread.h>
+#else
+#include <sys/ttydefaults.h>
+#endif
+
 #include "dap_common.h"
 #include "main_node_cli.h"
 #include "main_node_cli_shell.h"
@@ -45,7 +69,8 @@ int rl_end;
 
 /* The character that can generate an EOF.  Really read from
  the terminal driver... just defaulted here. */
-int _rl_eof_char = CTRL('D');
+//int _rl_eof_char = CTRL('D');
+
 #define NEWLINE '\n'
 
 /* Input error; can be returned by (*rl_getc_function) if readline is reading

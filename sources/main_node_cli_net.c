@@ -24,12 +24,35 @@
  */
 
 //#include <dap_client.h>
-#include <stddef.h>
-#include <stdio.h>
+
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <getopt.h>
+#include <signal.h>
 #include <string.h>
 #include <assert.h>
+
+#ifdef _WIN32
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <winsock2.h>
+#include <windows.h>
+#include <mswsock.h>
+#include <ws2tcpip.h>
+#include <io.h>
+//#include "wrappers.h"
+#include <wepoll.h>
+#include <pthread.h>
+#else
 #include <sys/socket.h>
+#endif
+
 #include "dap_common.h"
 #include "dap_strfuncs.h"
 #include "dap_chain_node_cli.h" // for UNIX_SOCKET_FILE
@@ -99,11 +122,20 @@ connect_param* node_cli_connect(void)
     curl_global_init(CURL_GLOBAL_DEFAULT);
     connect_param *param = DAP_NEW_Z(connect_param);
     CURL *curl_handle = curl_easy_init();
+
+#ifndef _WIN32
     int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, UNIX_SOCKET_FILE); // unix socket mode
-    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 600L); // complete within 10 minutes
+#else
+    int ret = curl_easy_setopt(curl_handle, CURLOPT_PORT, 9999); // unix socket mode
+#endif
+
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L); // complete within 60 seconds
+
     ret = curl_easy_setopt(curl_handle, CURLOPT_CONNECT_ONLY, 1L); // connection only
     ret = curl_easy_setopt(curl_handle, CURLOPT_URL, "http:/localhost/connect");
+
 // execute request
+
     ret = curl_easy_perform(curl_handle);
     if(!ret)
     {
@@ -124,7 +156,7 @@ connect_param* node_cli_connect(void)
  *
  * return 0 if OK, else error code
  */
-int node_cli_post_command(connect_param *conn, cmd_state *cmd)
+int node_cli_post_command( connect_param *conn, cmd_state *cmd )
 {
     if(!conn || !conn->curl || !cmd || !cmd->cmd_name)
             {
@@ -166,6 +198,7 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
     if (post_data_len >= 0)
         ret = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,
                 (long )post_data_len); // if need a lot to send: CURLOPT_POSTFIELDSIZE_LARGE
+
     // sending request and receiving the http page (filling cmd)
     //printf("cmd='%s'\n", cmd->cmd_name);
     ret = curl_easy_perform(curl); // curl_easy_send
@@ -174,7 +207,9 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         printf("Error (err_code=%d)\n", ret);
         exit(-1);
     }
+
     int l_err_code = -1;
+
     if (cmd->cmd_res) {
         char **l_str = dap_strsplit(cmd->cmd_res, "\r\n", 1);
         int l_cnt = dap_str_countv(l_str);
@@ -186,6 +221,7 @@ int node_cli_post_command(connect_param *conn, cmd_state *cmd)
         printf("%s\n", (l_str_reply) ? l_str_reply : "no response");
         dap_strfreev(l_str);
     }
+
     DAP_DELETE(post_data);
     exit(l_err_code);
     return 0;
