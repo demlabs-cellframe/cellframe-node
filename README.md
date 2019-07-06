@@ -7,7 +7,7 @@ Kelvin Blockchain node
 
 ## Build
 
-The project uses CMake. To generate a Makefile run in the project root directory `git submodule init && git submodule update --remote && cmake .`.
+The project uses CMake. To generate a Makefile run in the project root directory `git submodule init && git submodule update --remote && cmake -S . -B build && cd ./build && make`.
 Or if don't clone the project yet, run `git clone --recursive <repo>` to clone it with all submodules. Then build the project as a regular CMake project.
 
 ### Prerequsites
