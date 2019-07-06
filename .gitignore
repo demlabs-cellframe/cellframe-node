@@ -64,3 +64,5 @@ CMakeCache.txt
 CMakeFiles/
 CPackConfig.cmake
 CPackSourceConfig.cmake
+Makefile
+cmake_install.cmake
