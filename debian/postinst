@@ -19,8 +19,9 @@ else
 fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
-mkdir $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
-mkdir $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
+mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
+mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
+mkdir -p $DAP_PREFIX/var/run || true
 
 # Init testnet
 if [ -e "$DAP_CFG_TESTNET" ]; then
