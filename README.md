@@ -19,3 +19,6 @@ To successfully complete of the build, you must have folgende prerequisites inst
 * libev-dev (for libdap-server-core submodule)
 * libmagic-dev (for libdap-server submodule)
 * libcurl4-openssl-dev | libcurl4-nss-dev | libcurl4-gnutls-dev (for libdap-server submodule)
+* libldb-dev
+* libtalloc-dev
+* libtevent-dev
