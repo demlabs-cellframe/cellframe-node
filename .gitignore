@@ -66,3 +66,6 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 Makefile
 cmake_install.cmake
+
+# Editor's temp files
+*~
