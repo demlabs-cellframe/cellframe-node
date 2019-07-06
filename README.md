@@ -12,7 +12,7 @@ Or if you don't clone the project yet, run `git clone --recursive <repo>` to clo
 
 ### Prerequsites
 
-To successfully complete of the build, you must have following prerequisites installed (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
+To successfully complete of the build, you must have following prerequisites preinstalled (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
 * libjson-c-dev
 * libmemcached-dev (for libdap-server-core submodule)
