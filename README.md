@@ -8,11 +8,11 @@ Kelvin Blockchain node
 ## Build
 
 The project uses CMake. To generate a Makefile run in the project root directory `git submodule init && git submodule update --remote && cmake -S . -B build && cd ./build && make`.
-Or if don't clone the project yet, run `git clone --recursive <repo>` to clone it with all submodules. Then build the project as a regular CMake project.
+Or if you don't clone the project yet, run `git clone --recursive <repo>` to clone it with all submodules. Then build the project as a regular CMake project.
 
 ### Prerequsites
 
-To successfully complete of the build, you must have folgende prerequisites installed (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
+To successfully complete of the build, you must have following prerequisites installed (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
 * libjson-c-dev
 * libmemcached-dev (for libdap-server-core submodule)
