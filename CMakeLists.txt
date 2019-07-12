@@ -35,7 +35,6 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
 set(SUBMODULES_NO_BUILD ON)
 
-
 add_definitions ("-DDAP_SERVER")
 add_definitions ("-DNODE_NETNAME=\"kelvin\"")
 
@@ -82,10 +81,10 @@ if(UNIX)
     add_definitions ("-DDAP_OS_LINUX")
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 #if(BUILD_PROFILE)
-    SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+    SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg")
     SET(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -pg")
     SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 #endif()
@@ -101,7 +100,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db  dap_chain_mempool dap_chain_gdb m pthread magic dap_server_http_db_auth)
-target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
+target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl)
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
@@ -118,5 +117,6 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 INSTALL(TARGETS ${PROJECT_NAME}-cli DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 INSTALL(TARGETS ${PROJECT_NAME}-tool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/share/configs/kelvin-node.cfg.tpl DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/ RENAME kelvin-node.cfg PERMISSIONS OWNER_WRITE;OWNER_READ;GROUP_READ;WORLD_READ)
+#INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 INCLUDE(CPack)
