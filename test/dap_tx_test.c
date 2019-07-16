@@ -235,7 +235,10 @@ int dap_node_init() {
     dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
     dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
     dap_http_simple_module_init();
-    dap_assert_PIF(dap_chain_node_cli_init(g_config) == 0,  "Can't init server for console");
+
+//    
+//    dap_assert_PIF(dap_chain_node_cli_init(g_config) == 0,  "Can't init server for console");
+
     dap_stream_ch_chain_init();
     dap_stream_ch_chain_net_init();
     dap_events_init(0, 0);
