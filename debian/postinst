@@ -21,7 +21,6 @@ fi
 cat $DAP_CFG_TPL > $DAP_CFG || true
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
-mkdir -p $DAP_PREFIX/var/run || true
 
 # Init testnet
 if [ -e "$DAP_CFG_TESTNET" ]; then
@@ -40,5 +39,12 @@ else
     systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service
 #    systemctl --system start $DAP_APP_NAME
 fi
-
+    USERMAN=`users | awk '{print $1}'`
+    #groupadd $DAP_CHAINS_NAME
+    #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
+    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db} 
+    touch $DAP_PREFIX/var/run/kelvin-node.pid 
+    chown -R $USERMAN:$USERMAN $DAP_PREFIX
+    chmod 0775 $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db}
+    
 echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
