@@ -100,7 +100,7 @@ if(UNIX)
   add_definitions ("-DDAP_OS_LINUX")
 
   if(DAP_RELEASE)
-    set(_CCOPT "-Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+    set(_CCOPT "-Wall -O3 -fPIC -fno-pie -no-pie -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
   else()
     set(_CCOPT "-Wall -pg -fPIC -fno-pie -no-pie")
     set(_LOPT "-pg")
