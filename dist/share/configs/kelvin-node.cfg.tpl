@@ -2,7 +2,6 @@
 [general]
 debug_mode=false
 debug_dump_stream_headers=false
-wallets_path=/opt/kelvin-node/var/lib/wallet
 wallets_default=default
 node_role=full
 # seed mode. WARNING. Used true only when you start the new network
@@ -35,6 +34,7 @@ network_mask=255.255.255.0
 threads_cnt=0 
 pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
 log_file=/opt/kelvin-node/var/log/kelvin-node.log
+wallets_path=/opt/kelvin-node/var/lib/wallet
 ca_folders=[/opt/kelvin-node/var/lib/ca,/opt/kelvin-node/share/ca]
 dap_global_db_path=/opt/kelvin-node/var/lib/global_db
 dap_global_db_driver=cdb
