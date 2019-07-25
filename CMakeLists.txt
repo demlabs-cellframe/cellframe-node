@@ -5,6 +5,27 @@ if(WIN32)
   message(STATUS "Building for Windows")
 endif()
 
+# Check whether we're on a 32-bit or 64-bit system
+if(CMAKE_SIZEOF_VOID_P EQUAL "8")
+  set(DEFAULT_BUILD_64 ON)
+else()
+  set(DEFAULT_BUILD_64 OFF)
+endif()
+option(BUILD_64 "Build for 64-bit? 'OFF' builds for 32-bit." ${DEFAULT_BUILD_64})
+
+if(BUILD_64)
+  set(ARCH_WIDTH "64")
+else()
+  set(ARCH_WIDTH "32")
+endif()
+message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
+
+if(DAP_RELEASE)
+  message(STATUS "Building type RELEASE")
+else()
+  message(STATUS "Building type DEBUG")
+endif()
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_CXX_STANDARD 11)
@@ -42,6 +63,7 @@ add_definitions ("-DDAP_SERVER")
 add_definitions ("-DNODE_NETNAME=\"kelvin\"")
 
 if(WIN32)
+
   add_definitions ("-DUNDEBUG")
   add_definitions ("-DNDEBUG")
   add_definitions ("-DWIN32")
@@ -49,33 +71,45 @@ if(WIN32)
   add_definitions ("-D__WINDOWS__")
   add_definitions ("-D_CRT_SECURE_NO_WARNINGS")
   add_definitions ("-DCURL_STATICLIB")
-#  add_definitions ("-DDAP_SERVER NODE_NETNAME=\"kelvin\"")
-  set(_CCOPT "-mconsole -static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+
+  if(DAP_RELEASE)
+    set(_CCOPT "-mconsole -static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+  else()
+    set(_CCOPT "-mconsole -static -Wall -pg")
+    set(_LOPT "-mconsole -static -pg")
+  endif()
+
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
+
+  include_directories(libdap/src/win32/)
+  include_directories(3rdparty/libmemcached/)
+  include_directories(3rdparty/libmemcached/win32/)
+  include_directories(3rdparty/wepoll/include/)
+  include_directories(3rdparty/uthash/src/)
+  include_directories(3rdparty/libjson-c/)
+  include_directories(3rdparty/libmagic/src/)
+  include_directories(3rdparty/curl/include/)
+  include_directories(3rdparty/libsqlite3/)
+
+  include_directories(libdap-server-http-db-auth/)
+  include_directories(libdap-chain-net-srv-vpn/)
 endif()
 
 if(UNIX)
-    add_definitions ("-DDAP_OS_LINUX")
-endif()
+  add_definitions ("-DDAP_OS_LINUX")
 
-if(DAP_RELEASE)
-  add_definitions ("-DUNDEBUG")
-  add_definitions ("-DNDEBUG")
-
-  if(UNIX)
-    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
-  endif()
-
-else()
-  if(UNIX)
-    SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-    SET(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -pg")
+  if(DAP_RELEASE)
+    set(_CCOPT "-Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+  else()
+    set(_CCOPT "-Wall -pg -fPIC -fno-pie -no-pie")
+    set(_LOPT "-pg")
     SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
   endif()
-endif()
 
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
+  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
+endif()
 
 add_subdirectory(libdap)
 add_subdirectory(libdap-crypto)
@@ -123,24 +157,6 @@ if(BUILD_KELVIN_NODE_TESTS)
     add_subdirectory(test)
 endif()
 
-
-if(WIN32)
-  include_directories(libdap/src/win32/)
-  include_directories(3rdparty/libmemcached/)
-  include_directories(3rdparty/libmemcached/win32/)
-  include_directories(3rdparty/wepoll/include/)
-  include_directories(3rdparty/uthash/src/)
-  include_directories(3rdparty/libjson-c/)
-  include_directories(3rdparty/libmagic/src/)
-  include_directories(3rdparty/curl/include/)
-  include_directories(3rdparty/libsqlite3/)
-endif()
-
-if(WIN32)
-  include_directories(libdap-server-http-db-auth/)
-  include_directories(libdap-chain-net-srv-vpn/)
-endif()
-
 if(UNIX)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c")
   add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
@@ -153,7 +169,40 @@ if(WIN32)
   add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
   target_link_libraries(${PROJECT_NAME}-cli dap_chain_net 
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
+    KERNEL32
+    USER32
+    SHELL32
+    WINMM
+    GDI32
+    ADVAPI32
+    Ole32
+    Version
+    Imm32
+    OleAut32
+    ws2_32
+    ntdll
+    psapi
+    Shlwapi
+    Bcrypt
+    Crypt32
+    Secur32
   )
 
   target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
