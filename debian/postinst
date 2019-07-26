@@ -55,5 +55,6 @@ fi
             chmod 0664 $filename
         fi
     done
+    chmod 0774 $DAP_PREFIX/bin/*
     
 echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
