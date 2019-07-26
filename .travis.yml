@@ -23,7 +23,7 @@ script:
     - sudo systemctl status kelvin-node
     - sudo /opt/kelvin-node/bin/kelvin-node-cli wallet new -w wallet0
     - sudo /opt/kelvin-node/bin/kelvin-node-cli token_decl -net private -chain gdb token TOK1 total_supply 1000000000000000000000000 signs_total 1 signs_emission 1 certs cert0
-    - sudo /opt/kelvin-node/bin/kelvin-node-cli token_emit -net private -chain_emission gdb -chain_base_tx gdb -addr $(/opt/kelvin-node/bin/kelvin-node-cli wallet list| grep addr | awk '{print $3}' |tr -d "\n") -token TOK1 -certs cert0 -emission_value 123000000000000
+    - sudo /opt/kelvin-node/bin/kelvin-node-cli token_emit -net private -chain_emission gdb -chain_base_tx gdb -addr $(/opt/kelvin-node/bin/kelvin-node-cli wallet list| grep addr | awk '{print $2}' |tr -d "\n") -token TOK1 -certs cert0 -emission_value 123000000000000
     - sudo /opt/kelvin-node/bin/kelvin-node-cli mempool_proc -net private -chain gdb
 addons:
   apt:
