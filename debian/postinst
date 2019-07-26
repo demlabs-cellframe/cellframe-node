@@ -39,12 +39,22 @@ else
     systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service
 #    systemctl --system start $DAP_APP_NAME
 fi
-    USERMAN=`users | awk '{print $1}'`
-    #groupadd $DAP_CHAINS_NAME
+    #USERMAN=`users | awk '{print $1}'`
+    groupadd $DAP_CHAINS_NAME
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
+    for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
+        usermod -aG $DAP_CHAINS_NAME $username
+    done
     mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db} 
     touch $DAP_PREFIX/var/run/kelvin-node.pid 
-    chown -R $USERMAN:$USERMAN $DAP_PREFIX
-    chmod 0775 $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db}
+    #chown -R $USERMAN:$USERMAN $DAP_PREFIX
+    for filename in $(find $DAP_PREFIX); do
+        if [ -d $filename ]; then
+            chmod 0775 $filename
+        else
+            chmod 0664 $filename
+        fi
+    done
+    chmod 0774 $DAP_PREFIX/bin/*
     
 echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
