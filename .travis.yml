@@ -14,7 +14,7 @@ script:
     - cd build
     - cmake -DBUILD_KELVIN_NODE_TESTS=ON ../
     - make
-    - ctest --verbose
+    - ctest
     - cpack
     - sudo dpkg -i *.deb
     - sudo /opt/kelvin-node/bin/kelvin-node-tool cert create cert0 sig_tesla
