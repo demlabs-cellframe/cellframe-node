@@ -35,6 +35,10 @@ addons:
     - libldb-dev
     - libtevent-dev
     - libcurl4-gnutls-dev
+    - debconf-utils
+    - dconf-cli
+    - pv
+ 
 
 
 
