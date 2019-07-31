@@ -1,140 +1,140 @@
 [submodule "libdap"]
 	path = libdap
-	url = https://github.com/kelvinblockchain/libdap.git
+	url = https://gitlab.demlabs.net/cellframe/libdap.git
 	branch = master
 [submodule "libdap-server"]
 	path = libdap-server
-	url = https://github.com/kelvinblockchain/libdap-server.git
+	url = https://gitlab.demlabs.net/cellframe/libdap-server.git
 	branch = master
 [submodule "libdap-chain"]
 	path = libdap-chain
-	url = https://github.com/kelvinblockchain/libdap-chain.git
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain.git
 	branch = master
 [submodule "libdap-stream"]
 	path = libdap-stream
-	url = https://github.com/kelvinblockchain/libdap-stream.git
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream.git
 	branch = master
 [submodule "libdap-stream-ch-vpn"]
 	path = libdap-stream-ch-vpn
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-vpn.git
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-vpn.git
 	branch = master
 [submodule "libdap-stream-ch-av"]
 	path = libdap-stream-ch-av
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-av
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-av
 	branch = master
 [submodule "libdap-stream-ch-chat"]
 	path = libdap-stream-ch-chat
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-chat
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chat
 	branch = master
 [submodule "libdap-server-core"]
 	path = libdap-server-core
-	url = https://github.com/kelvinblockchain/libdap-server-core
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-core
 	branch = master
 [submodule "libdap-stream-ch-chain"]
 	path = libdap-stream-ch-chain
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chain
 	branch = master
 [submodule "libdap-chain-net"]
 	path = libdap-chain-net
-	url = https://github.com/kelvinblockchain/libdap-chain-net
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net
 	branch = master
 [submodule "libdap-chain-net-srv"]
 	path = libdap-chain-net-srv
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv
 	branch = master
 [submodule "libdap-stream-ch-chain-net"]
 	path = libdap-stream-ch-chain-net
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain-net
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chain-net
 	branch = master
 [submodule "libdap-stream-ch-chain-net-srv"]
 	path = libdap-stream-ch-chain-net-srv
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-chain-net-srv
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chain-net-srv
 	branch = master
 [submodule "libdap-chain-net-srv-tx"]
 	path = libdap-chain-net-srv-tx
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-tx
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-tx
 	branch = master
 [submodule "libdap-chain-net-srv-vpn"]
 	path = libdap-chain-net-srv-vpn
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-vpn
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-vpn
 	branch = master
 [submodule "libdap-chain-wallet"]
 	path = libdap-chain-wallet
-	url = https://github.com/kelvinblockchain/libdap-chain-wallet
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-wallet
 	branch = master
 [submodule "libdap-chain-crypto"]
 	path = libdap-chain-crypto
-	url = https://github.com/kelvinblockchain/libdap-chain-crypto
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-crypto
 	branch = master
 [submodule "libdap-chain-net-srv-app"]
 	path = libdap-chain-net-srv-app
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-app
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-app
 	branch = master
 [submodule "libdap-chain-net-srv-app-db"]
 	path = libdap-chain-net-srv-app-db
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-app-db
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-app-db
 	branch = master
 [submodule "libdap-stream-ch"]
 	path = libdap-stream-ch
-	url = https://github.com/kelvinblockchain/libdap-stream-ch
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch
 	branch = master
 [submodule "libdap-chain-net-srv-datum"]
 	path = libdap-chain-net-srv-datum
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-datum
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-datum
 	branch = master
 [submodule "libdap-chain-net-srv-datum-pool"]
 	path = libdap-chain-net-srv-datum-pool
-	url = https://github.com/kelvinblockchain/libdap-chain-net-srv-datum-pool
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-srv-datum-pool
 	branch = master
 [submodule "test/libdap-test"]
 	path = test/libdap-test
-	url = https://github.com/kelvinblockchain/libdap-test
+	url = https://gitlab.demlabs.net/cellframe/libdap-test
 	branch = master
 [submodule "libdap-server-udp"]
 	path = libdap-server-udp
-	url = https://github.com/kelvinblockchain/libdap-server-udp
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-udp
 	branch = master
 [submodule "libdap-client"]
 	path = libdap-client
-	url = https://github.com/kelvinblockchain/libdap-client
+	url = https://gitlab.demlabs.net/cellframe/libdap-client
 	branch = master
 [submodule "libdap-chain-global-db"]
 	path = libdap-chain-global-db
-	url = https://github.com/kelvinblockchain/libdap-chain-global-db
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-global-db
 	branch = master
 [submodule "libdap-chain-mempool"]
 	path = libdap-chain-mempool
-	url = https://github.com/kelvinblockchain/libdap-chain-mempool
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-mempool
 	branch = master
 [submodule "libdap-chain-cs-dag"]
 	path = libdap-chain-cs-dag
-	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cs-dag
 	branch = master
 [submodule "libdap-chain-cs-dag-poa"]
 	path = libdap-chain-cs-dag-poa
-	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-poa
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cs-dag-poa
 	branch = master
 [submodule "libdap-chain-cs-dag-pos"]
 	path = libdap-chain-cs-dag-pos
-	url = https://github.com/kelvinblockchain/libdap-chain-cs-dag-pos
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cs-dag-pos
 	branch = master
 [submodule "libdap-server-http-db-auth"]
 	path = libdap-server-http-db-auth
-	url = https://github.com/kelvinblockchain/libdap-server-http-db-auth
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-http-db-auth
 	branch = master
 [submodule "libdap-chain-gdb"]
 	path = libdap-chain-gdb
-	url = https://github.com/kelvinblockchain/libdap-chain-gdb
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-gdb
 	branch = master
 [submodule "libdap-crypto"]
 	path = libdap-crypto
-	url = https://github.com/kelvinblockchain/libdap-crypto
+	url = https://gitlab.demlabs.net/cellframe/libdap-crypto
 	branch = master
 [submodule "libdap-stream-ch-iot"]
 	path = libdap-stream-ch-iot
-	url = https://github.com/kelvinblockchain/libdap-stream-ch-iot
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-iot
 	branch = master
 [submodule "libdap-iot"]
 	path = libdap-iot
-	url = https://github.com/kelvinblockchain/libdap-iot
+	url = https://gitlab.demlabs.net/cellframe/libdap-iot
 	branch = master
