@@ -3,5 +3,13 @@ if [ "$1" == "purge" ] && [ -e /usr/share/debconf/confmodule ] ; then
 . /usr/share/debconf/confmodule
 db_purge
 fi
-usermod -G $(groups $(id -nu) | sed 's/kelvin//')
+GROUP_RM="kelvin"
+
+systemctl stop kelvin-node
+systemctl disable kelvin-node
+
+for username in (cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
+  gpasswd -d $username $GROUP_RM
+done
+rm -r /opt/kelvin-node
 groupdel kelvin
