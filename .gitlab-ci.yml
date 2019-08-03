@@ -1,0 +1,12 @@
+stages:
+    - prepare
+    - build
+    - test
+
+kelvin-node-schedule:
+    stage: build
+    tags:
+    - kelvin-node
+    only:
+    - schedules
+    script: ~/production/integration/gitlab-CI/build_all_handler.sh kelvin-node
