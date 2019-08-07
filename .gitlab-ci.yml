@@ -3,6 +3,9 @@ stages:
     - build
     - test
 
+variables:
+    GIT_SUBMODULE_STRATEGY: normal
+
 kelvin-node-schedule:
     stage: build
     tags:
