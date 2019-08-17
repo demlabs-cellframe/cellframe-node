@@ -10,4 +10,4 @@ kelvin-node-schedule:
     stage: build
     tags:
     - kelvin-node
-    script: ~/production/integration/gitlab-CI/build_all_handler.sh kelvin-node
+    script: ~/production/integration/gitlab-CI/build_all_handler.sh kelvin-node && ~/production/integration/gitlab-CI/travis_test.sh
