@@ -43,7 +43,6 @@ else
 #    systemctl --system start $DAP_APP_NAME
 fi
     #USERMAN=`users | awk '{print $1}'`
-    adduser --system --no-create-home --group --home /opt/kelvin-node kelvin-node
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
         usermod -aG kelvin-node $username
@@ -58,6 +57,6 @@ fi
             chmod 0664 $filename
         fi
     done
-    chmod 0774 $DAP_PREFIX/bin/*
+    chmod 0775 $DAP_PREFIX/bin/*
     
 echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
