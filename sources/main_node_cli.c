@@ -182,8 +182,12 @@ int main(int argc, const char * argv[])
     //    command_execution_string = shell_script_filename = (char *) NULL;
 
     dap_common_init(DAP_APP_NAME " Console interface", NULL);
-    dap_log_level_set(L_CRITICAL );
-    dap_config_init( SYSTEM_CONFIG_GLOBAL_FILENAME );
+    dap_log_level_set(L_CRITICAL);
+    dap_config_init(SYSTEM_CONFIGS_DIR);
+    if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
+        printf("Can't init general configurations\n");
+        exit(-1);
+    }
     // connect to node
     cparam = node_cli_connect();
     if(!cparam)
