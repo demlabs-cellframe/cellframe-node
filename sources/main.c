@@ -341,7 +341,7 @@ int main( int argc, const char **argv )
     }
 
     if ( l_server ) { // If listener server is initialized
-        bool is_traffick_track_enable = dap_config_get_item_bool_default(g_config, "traffic_track", "enable", false);
+        //bool is_traffick_track_enable = dap_config_get_item_bool_default(g_config, "traffic_track", "enable", false);
 
 #if 0
         if ( is_traffick_track_enable ) {

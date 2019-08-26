@@ -15,6 +15,7 @@ Or if you don't clone the project yet, run `git clone --recursive <repo>` to clo
 To successfully complete of the build, you must have following prerequisites preinstalled (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
 * libjson-c-dev
+* libsqlite3-dev
 * libmemcached-dev (for libdap-server-core submodule)
 * libev-dev (for libdap-server-core submodule)
 * libmagic-dev (for libdap-server submodule)
