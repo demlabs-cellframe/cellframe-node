@@ -126,7 +126,9 @@ int main( int argc, const char **argv )
     S_SetExceptionFilter( );
   #endif
 
-  if ( dap_common_init( DAP_APP_NAME, DAP_APP_NAME"_logs.txt") != 0 ) {
+  const char *l_log_file_path = SYSTEM_LOGS_DIR"/"DAP_APP_NAME"_logs.txt";
+  dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
+  if ( dap_common_init( DAP_APP_NAME, SYSTEM_LOGS_DIR"/"DAP_APP_NAME"_logs.txt") != 0 ) {
     printf( "Fatal Error: Can't init common functions module" );
     return -2;
   }
