@@ -8,6 +8,8 @@ node_role=full
 #seed_mode=false
 auto_online=false
 
+# Console
+
 # Server part
 [server]
 #   By default you don't need to open you to the world
@@ -27,6 +29,14 @@ enabled=false
 access_groups=expats,services,admins 
 network_address=10.11.12.0
 network_mask=255.255.255.0
+
+# Console interface server
+[conserver]
+enabled=true
+#listen_tcp_port=12345
+listen_unix_socket_path=/opt/kelvin-node/var/run/node_cli
+# Default permissions 770
+#listen_unix_socket_permissions=770
 
 # Application Resources
 [resources]

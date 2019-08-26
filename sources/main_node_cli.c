@@ -34,6 +34,8 @@
 #include "main_node_cli_net.h"
 #include "main_node_cli_shell.h"
 
+#include "dap_defines.h"
+
 static connect_param *cparam;
 
 /**
@@ -179,6 +181,9 @@ int main(int argc, const char * argv[])
     //    set_default_locale();
     //    command_execution_string = shell_script_filename = (char *) NULL;
 
+    dap_common_init(DAP_APP_NAME " Console interface", NULL);
+    dap_log_level_set(L_CRITICAL );
+    dap_config_init( SYSTEM_CONFIG_GLOBAL_FILENAME );
     // connect to node
     cparam = node_cli_connect();
     if(!cparam)

@@ -68,7 +68,7 @@
  */
 static int add_mem_data(uint8_t **memory, size_t *memory_len, char *add_mem, size_t add_size)
 {
-    *memory = (char*) realloc(*memory, *memory_len + add_size + 1);
+    *memory = (uint8_t*) realloc(*memory, *memory_len + add_size + 1);
     //out of memory!
     if(*memory == NULL) {
         //printf("not enough memory (realloc returned NULL)\n");
@@ -124,9 +124,9 @@ connect_param* node_cli_connect(void)
     CURL *curl_handle = curl_easy_init();
 
 #ifndef _WIN32
-    int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, UNIX_SOCKET_FILE); // unix socket mode
+    int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path") ); // unix socket mode
 #else
-    int ret = curl_easy_setopt(curl_handle, CURLOPT_PORT, 9999); // unix socket mode
+    int ret = curl_easy_setopt(curl_handle, CURLOPT_PORT, dap_config_get_item_uint16 ( g_config, "conserver", "listen_tcp_port")); // unix socket mode
 #endif
 
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L); // complete within 60 seconds
