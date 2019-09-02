@@ -203,6 +203,7 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
+	userenv
   )
 
   target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
@@ -247,6 +248,7 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
+	userenv
 )
 
 
@@ -291,6 +293,7 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
+	userenv
 )
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
