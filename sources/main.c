@@ -44,6 +44,8 @@
 //#include "wrappers.h"
 #include <wepoll.h>
 #include <pthread.h>
+#include "Userenv.h"
+
 #endif
 
 #define LOG_TAG "main"
@@ -115,104 +117,143 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
+char *win_prefix = NULL;
+
 int main( int argc, const char **argv )
 {
-  dap_server_t *l_server = NULL; // DAP Server instance
-  bool bDebugMode = true;
-  bool bServerEnabled = true;
-  int rc = 0;
+	dap_server_t *l_server = NULL; // DAP Server instance
+	bool bDebugMode = true;
+	bool bServerEnabled = true;
+	int rc = 0;
 
-  #if defined(_WIN32) && defined(NDEBUG)
-    S_SetExceptionFilter( );
-  #endif
+	#if defined(_WIN32) && defined(NDEBUG)
+		S_SetExceptionFilter( );
+	#endif
 
-  const char *l_log_file_path = SYSTEM_LOGS_DIR"/"DAP_APP_NAME"_logs.txt";
-  dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
-  if ( dap_common_init( DAP_APP_NAME, SYSTEM_LOGS_DIR"/"DAP_APP_NAME"_logs.txt") != 0 ) {
-    printf( "Fatal Error: Can't init common functions module" );
-    return -2;
-  }
+	char *l_log_file_path = (char *)DAP_MALLOC( 2048 );
+	char *l_sys_dir_path  = (char *)DAP_MALLOC( 2048 );
+	l_log_file_path[0] = 0;
+	l_sys_dir_path[0] = 0;
 
-  dap_config_init( SYSTEM_CONFIGS_DIR );
-  if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
-    log_it( L_CRITICAL,"Can't init general configurations" );
-    return -1;
-  }
+	#ifdef _WIN32
+		win_prefix = (char *)DAP_MALLOC( 2048 );
+		if ( !win_prefix ) goto failure;
 
-  parse_args( argc, argv );
+		uint32_t win_prefix_size = 2048;
+	    uint32_t res = GetEnvironmentVariableA( "USERPROFILE", (LPSTR)&win_prefix[0], 2048 );
+	    if ( !res ) {
 
-  #ifdef _WIN32
-    CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-  #endif
+			HANDLE hToken = 0;
+			OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken );
+		 	GetUserProfileDirectory( hToken, (LPSTR)&win_prefix[0], (DWORD*)&win_prefix_size );
+		 	CloseHandle( hToken );
+	    }
+		strcpy( l_log_file_path, win_prefix );
+		strcat( l_log_file_path, "/Documents/" );
+		strcat( l_log_file_path, DAP_APP_NAME );
 
-//  bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+		strcpy( l_sys_dir_path, win_prefix );
+		strcat( l_sys_dir_path, "/Documents/" );
+		strcat( l_sys_dir_path, DAP_APP_NAME );
+	#endif
 
-  if ( bDebugMode )
-    log_it( L_ATT, "*** DEBUG MODE ***" );
-  else
-    log_it( L_ATT, "*** NORMAL MODE ***" );
+	strcat( l_log_file_path, SYSTEM_LOGS_DIR );
+	dap_mkdir_with_parents( l_log_file_path );
+	strcat( l_log_file_path, "/" );
+	strcat( l_log_file_path, DAP_APP_NAME );
+	strcat( l_log_file_path, "_logs.txt" );
 
-  dap_log_level_set( bDebugMode ? L_DEBUG: L_NOTICE );
+	printf("l_log_file_path = %s\n", l_log_file_path );
 
-  log_it( L_DAP, "*** Kelvin Node version: %s ***", "0.0.0" ); //DAP_SERVER_VERSION_STR );
+	if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
+    	printf( "Fatal Error: Can't init common functions module" );
+		return -2;
+	}
 
-  // change to dap_config_get_item_int_default when it's will be possible
-  size_t l_thread_cnt = 0;
+	strcat( l_sys_dir_path, SYSTEM_CONFIGS_DIR );
+//	printf("l_sys_dir_path = %s\n", l_sys_dir_path );
+	dap_config_init( l_sys_dir_path );
 
-  const char *s_thrd_cnt = dap_config_get_item_str( g_config, "resources", "threads_cnt" );
-  if ( s_thrd_cnt != NULL )
-    l_thread_cnt = (size_t)atoi( s_thrd_cnt );
 
-  if ( !l_thread_cnt ) {
-    #ifndef _WIN32
-      l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
-    #else
-      SYSTEM_INFO si;
-      GetSystemInfo( &si );
-      l_thread_cnt = si.dwNumberOfProcessors;
-    #endif
-  }
+	if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
+    	log_it( L_CRITICAL,"Can't init general configurations" );
+		printf("log_it\n");
+    	return -1;
+	}
 
-  if ( dap_server_init(l_thread_cnt) != 0 ) {
-    log_it( L_CRITICAL, "Can't init socket server module" );
-    return -4;
-  }
+	parse_args( argc, argv );
 
-  if ( dap_http_init() != 0 ) {
-    log_it( L_CRITICAL, "Can't init http server module" );
-    return -5;
-  }
+	#ifdef _WIN32
+	    CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
+	#endif
 
-  if ( dap_http_folder_init() != 0 ){
-    log_it( L_CRITICAL, "Can't init http server module" );
-    return -55;
-  }
+	//  bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+	  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
-  if ( dap_enc_init() != 0 ){
-    log_it( L_CRITICAL, "Can't init encryption module" );
-    return -56;
-  }
+	if ( bDebugMode )
+	    log_it( L_ATT, "*** DEBUG MODE ***" );
+	else
+ 	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-  if ( dap_enc_ks_init( false, 60 *60 * 2 ) != 0 ) {
-   log_it( L_CRITICAL, "Can't init encryption key storage module" );
-    return -57;
-  }
+	dap_log_level_set( bDebugMode ? L_DEBUG: L_NOTICE );
+
+	log_it( L_DAP, "*** Kelvin Node version: %s ***", "0.0.0" ); //DAP_SERVER_VERSION_STR );
+
+	// change to dap_config_get_item_int_default when it's will be possible
+	size_t l_thread_cnt = 0;
+
+	const char *s_thrd_cnt = dap_config_get_item_str( g_config, "resources", "threads_cnt" );
+	if ( s_thrd_cnt != NULL )
+	    l_thread_cnt = (size_t)atoi( s_thrd_cnt );
+
+	if ( !l_thread_cnt ) {
+    	#ifndef _WIN32
+      		l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
+    	#else
+      		SYSTEM_INFO si;
+      		GetSystemInfo( &si );
+      		l_thread_cnt = si.dwNumberOfProcessors;
+    	#endif
+  	}
+
+	if ( dap_server_init(l_thread_cnt) != 0 ) {
+    	log_it( L_CRITICAL, "Can't init socket server module" );
+	    return -4;
+	}
+
+	if ( dap_http_init() != 0 ) {
+    	log_it( L_CRITICAL, "Can't init http server module" );
+	    return -5;
+	}
+
+	if ( dap_http_folder_init() != 0 ){
+	    log_it( L_CRITICAL, "Can't init http server module" );
+	    return -55;
+	}
+
+	if ( dap_enc_init() != 0 ){
+	    log_it( L_CRITICAL, "Can't init encryption module" );
+	    return -56;
+	}
+
+	if ( dap_enc_ks_init( false, 60 *60 * 2 ) != 0 ) {
+		log_it( L_CRITICAL, "Can't init encryption key storage module" );
+		return -57;
+	}
     
-  if ( dap_chain_global_db_init(g_config) ) {
-    log_it( L_CRITICAL, "Can't init global db module" );
-    return -58;
-  }
+	if ( dap_chain_global_db_init(g_config) ) {
+	    log_it( L_CRITICAL, "Can't init global db module" );
+	    return -58;
+	}
 
-  dap_client_init();
+	dap_client_init();
 
-  dap_http_client_simple_init( );
+	dap_http_client_simple_init( );
 
-  if ( dap_datum_mempool_init() ) {
-    log_it( L_CRITICAL, "Can't init mempool module" );
-    return -59;
-  }
-
+	if ( dap_datum_mempool_init() ) {
+	    log_it( L_CRITICAL, "Can't init mempool module" );
+	    return -59;
+	}
 
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
@@ -275,30 +316,30 @@ int main( int argc, const char **argv )
     }
 #endif
 
-  if ( enc_http_init() != 0 ) {
-    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
-    return -81;
-  }
+	if ( enc_http_init() != 0 ) {
+	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
+	    return -81;
+	}
 
-  if ( dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ) {
-    log_it( L_CRITICAL, "Can't init stream server module" );
-    return -82;
-  }
+	if ( dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ) {
+	    log_it( L_CRITICAL, "Can't init stream server module" );
+	    return -82;
+	}
 
-  if ( dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32) != 0 ){
-    log_it( L_CRITICAL, "Can't init stream control module" );
-    return -83;
-  }
+	if ( dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32) != 0 ){
+	    log_it( L_CRITICAL, "Can't init stream control module" );
+	    return -83;
+	}
 
-  if ( dap_http_simple_module_init() != 0 ) {
-      log_it(L_CRITICAL,"Can't init http simple module");
-      return -9;
-  }
+	if ( dap_http_simple_module_init() != 0 ) {
+	    log_it(L_CRITICAL,"Can't init http simple module");
+	    return -9;
+	}
 
-  if ( dap_chain_node_cli_init(g_config) ) {
-    log_it( L_CRITICAL, "Can't init server for console" );
-    return -11;
-  }
+	if ( dap_chain_node_cli_init(g_config) ) {
+	    log_it( L_CRITICAL, "Can't init server for console" );
+	    return -11;
+	}
 
 #ifndef _WIN32
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
@@ -315,20 +356,31 @@ int main( int argc, const char **argv )
     }
 #endif
 
-  save_process_pid_in_file(dap_config_get_item_str_default(g_config,
-                                                             "resources",
-                                                             "pid_path",
-                                                             SYSTEM_PREFIX"/run/kelvin-node.pid"));
 
-  bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
+	{
+		char l_pid_file_path[ 2048 ];
+		l_pid_file_path[0] = 0;
 
-///8079
+		#ifdef _WIN32
+			strcpy( l_pid_file_path, win_prefix );
+			strcat( l_pid_file_path, "/Documents/" );
+			strcat( l_pid_file_path, DAP_APP_NAME );
+		#endif
+		strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
 
-  log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
+		save_process_pid_in_file(dap_config_get_item_str_default( g_config,
+	                                                             "resources",
+	                                                             "pid_path",
+	                                                             l_pid_file_path));
+	}
 
-  if ( bServerEnabled ) {
+	bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
-    int32_t l_port = dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp", 8079 ); // TODO Default listen port
+	log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
+
+	if ( bServerEnabled ) {
+
+    	int32_t l_port = dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp", 8079 ); // TODO Default listen port
 
         if( l_port > 0 ) {
             l_server = dap_server_listen( (dap_config_get_item_str_default(g_config,
@@ -357,34 +409,36 @@ int main( int argc, const char **argv )
 #endif
 
         // TCP-specific things
-        if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
+		if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
             // Init HTTP-specific values
-            dap_http_new( l_server, DAP_APP_NAME );
+	    	dap_http_new( l_server, DAP_APP_NAME );
 
-            // Handshake URL
-            enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
+	        // Handshake URL
+	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
 
-            // Streaming URLs
-            dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
-            dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
+	        // Streaming URLs
+	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
+	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
-            const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-            if(str_start_mempool && !strcmp(str_start_mempool, "true")) {
-                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
-            }
+	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
+	                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
+	        }
 
-            // Built in WWW server
+	        // Built in WWW server
 
-            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP(l_server), "/",
-                                dap_config_get_item_str(g_config,
+	        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+	                dap_http_folder_add( DAP_HTTP(l_server), "/",
+	                                dap_config_get_item_str(g_config,
                                                                 "resources",
                                                                 "www_root") );
-            }
+	        }
 
-        }
+		}
     } else
-        log_it(L_INFO, "No enabled server, working in client mode only");
+        log_it( L_INFO, "No enabled server, working in client mode only" );
+
+
     // VPN channel
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
@@ -395,109 +449,141 @@ int main( int argc, const char **argv )
 
     // Chain Network init
 
-  dap_stream_ch_chain_init( );
-  dap_stream_ch_chain_net_init( );
+	dap_stream_ch_chain_init( );
+	dap_stream_ch_chain_net_init( );
 
 ///    dap_stream_ch_chain_net_srv_init();
 
     // New event loop init
-  dap_events_init( 0, 0 );
-  dap_events_t *l_events = dap_events_new( );
-  dap_events_start( l_events );
+	dap_events_init( 0, 0 );
+	dap_events_t *l_events = dap_events_new( );
+	dap_events_start( l_events );
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
 
     // Load all chain networks
-  dap_chain_net_load_all();
+	dap_chain_net_load_all();
 
-  // Endless loop for server's requests processing
-  rc = dap_server_loop(l_server);
-  // After loop exit actions
-  log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
+	// Endless loop for server's requests processing
+	rc = dap_server_loop(l_server);
+	// After loop exit actions
+	log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
 
     // Deinit modules
 
-  dap_stream_deinit();
-  dap_stream_ctl_deinit();
-  dap_http_folder_deinit();
-  dap_http_deinit();
-  dap_server_deinit();
-  dap_enc_ks_deinit();
+failure:;
 
-  dap_config_close( g_config );
-  dap_common_deinit();
+	dap_stream_deinit();
+	dap_stream_ctl_deinit();
+	dap_http_folder_deinit();
+	dap_http_deinit();
+	dap_server_deinit();
+	dap_enc_ks_deinit();
 
-  return rc * 10;
+	dap_config_close( g_config );
+	dap_common_deinit();
+
+	if ( l_log_file_path )
+		DAP_FREE( l_log_file_path );
+
+	if ( l_sys_dir_path )
+		DAP_FREE( l_sys_dir_path );
+
+	if ( win_prefix )
+		DAP_FREE( win_prefix );
+
+	return rc * 10;
 }
 
 static struct option long_options[] = {
 
-  { "stop", 0, NULL, 0 },
-  { NULL,   0, NULL, 0 } // must be a last element
+	{ "stop", 0, NULL, 0 },
+	{ NULL,   0, NULL, 0 } // must be a last element
 };
 
 void parse_args( int argc, const char **argv ) {
 
-  int opt, option_index = 0, is_daemon = 0;
+	int opt, option_index = 0, is_daemon = 0;
 
-  while ( (opt = getopt_long(argc, (char *const *)argv, "D0",
+	while ( (opt = getopt_long(argc, (char *const *)argv, "D0",
                               long_options, &option_index)) != -1) {
-    switch ( opt ) {
+	    switch ( opt ) {
 
-    case 0: // --stop
-    { 
-      pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", SYSTEM_PID_FILE_PATH) );
+	    case 0: // --stop
+    	{
+			char l_pid_file_path[ 2048 ];
+			l_pid_file_path[0] = 0;
 
-      if ( pid == 0 ) {
-        log_it( L_ERROR, "Can't read pid from file" );
-        exit( -20 );
-      } 
+			#ifdef _WIN32
+				strcpy( l_pid_file_path, win_prefix );
+				strcat( l_pid_file_path, "/Documents/" );
+				strcat( l_pid_file_path, DAP_APP_NAME );
+			#endif
+			strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
 
-      if ( kill_process(pid) ) {
-        log_it( L_INFO, "Server successfully stopped" );
-        exit( 0 );
-      }
+			pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
 
-      log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
-      exit( -21 );
-    }
+	    	if ( pid == 0 ) {
+	        	log_it( L_ERROR, "Can't read pid from file" );
+	        	exit( -20 );
+	      	} 
 
-    case 'D': 
-    {
-      log_it( L_INFO, "Daemonize server starting..." );
-      exit_if_server_already_running( );
-      is_daemon = 1;
-      daemonize_process( );
-      break;
-    }
+	    	if ( kill_process(pid) ) {
+	        	log_it( L_INFO, "Server successfully stopped" );
+	        	exit( 0 );
+	      	}
 
-    default:
-      log_it( L_WARNING, "Unknown option from command line" );
-    }
-  }
+	    	log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
+	    	exit( -21 );
+	    }
 
-  if( !is_daemon )
-    exit_if_server_already_running( );
+    	case 'D': 
+    	{
+        	log_it( L_INFO, "Daemonize server starting..." );
+        	exit_if_server_already_running( );
+        	is_daemon = 1;
+        	daemonize_process( );
+        	break;
+      	}
+
+      	default:
+        log_it( L_WARNING, "Unknown option from command line" );
+		}
+	}
+
+	if( !is_daemon )
+		exit_if_server_already_running( );
 }
 
 void exit_if_server_already_running( void ) {
 
-  pid_t pid = get_pid_from_file( dap_config_get_item_str( g_config, "resources", "pid_path") );
-  bool  mf = false;
+	char l_pid_file_path[ 2048 ];
+	l_pid_file_path[0] = 0;
 
-  #ifdef _WIN32
-    CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
+	#ifdef _WIN32
+		strcpy( l_pid_file_path, win_prefix );
+		strcat( l_pid_file_path, "/Documents/" );
+		strcat( l_pid_file_path, DAP_APP_NAME );
+	#endif
+	strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
 
-    if ( GetLastError( ) == 183 ) {
-      mf = true;
-    }
-  #endif
+	pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
 
-  if ( (pid != 0 && is_process_running(pid)) || mf ) {
-    log_it( L_WARNING, "Proccess %d is running, don't allow "
-                        "to run more than one copy of DapServer, exiting...", pid );
-    exit( -2 );
-  }
+	bool  mf = false;
+
+	#ifdef _WIN32
+    	CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
+
+		if ( GetLastError( ) == 183 ) {
+      		mf = true;
+    	}
+	#endif
+
+	if ( (pid != 0 && is_process_running(pid)) || mf ) {
+    	log_it( L_WARNING, "Proccess %d is running, don't allow "
+        	                "to run more than one copy of DapServer, exiting...", pid );
+		exit( -2 );
+	}
 }
 

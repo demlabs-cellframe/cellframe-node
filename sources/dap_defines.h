@@ -1,10 +1,12 @@
 #pragma once
 #define DAP_APP_NAME NODE_NETNAME "-node"
-#ifdef _WIN32
-  #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
-#else
+
+//#ifdef _WIN32
+//  #define SYSTEM_PREFIX "%USERPROFILE%/opt/"DAP_APP_NAME
+//#else
   #define SYSTEM_PREFIX "/opt/"DAP_APP_NAME
-#endif
+//  #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
+//#endif
 
 #define LOCAL_PREFIX "~/."DAP_APP_NAME
 
