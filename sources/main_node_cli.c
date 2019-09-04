@@ -178,16 +178,46 @@ int shell_reader_loop()
 
 int main(int argc, const char * argv[])
 {
+	char l_sys_dir_path[ 2048 ], win_prefix[ 2048 ];
+	uint32_t path_len = 0;
+	uint32_t win_prefix_size;
+
+	#ifdef _WIN32
+		{
+			HKEY hKey;
+			win_prefix_size = 2048;
+
+			LSTATUS lRes = RegOpenKeyExA( HKEY_CURRENT_USER, 
+										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 
+										  0, KEY_READ, &hKey );
+
+		    lRes = RegQueryValueExA( hKey, "Personal", 0, NULL, (LPBYTE)&win_prefix[0], (DWORD*)&win_prefix_size );
+			RegCloseKey( hKey );
+
+			if ( lRes != ERROR_SUCCESS ) {
+				memcpy( &win_prefix[0], "c:", 3 );
+				win_prefix_size = 3;
+			}
+
+			path_len = dap_sprintf( l_sys_dir_path, "%s/%s", win_prefix, DAP_APP_NAME );
+		}
+	#endif
+
     //    set_default_locale();
     //    command_execution_string = shell_script_filename = (char *) NULL;
 
-    dap_common_init(DAP_APP_NAME " Console interface", NULL);
-    dap_log_level_set(L_CRITICAL);
-    dap_config_init(SYSTEM_CONFIGS_DIR);
+	memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+
+    dap_common_init( DAP_APP_NAME "Console interface", NULL );
+    dap_log_level_set( L_CRITICAL );
+
+	dap_config_init( l_sys_dir_path );
+
     if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
         printf("Can't init general configurations\n");
         exit(-1);
     }
+
     // connect to node
     cparam = node_cli_connect();
     if(!cparam)
@@ -195,6 +225,7 @@ int main(int argc, const char * argv[])
         printf("Can't connected to kelvin-node\n");
         exit(-1);
     }
+
     /*{
      printf("start node_cli_post_command()\n");
      cmd_state *cmd = DAP_NEW_Z(cmd_state);
