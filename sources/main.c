@@ -117,7 +117,8 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
-char *win_prefix = NULL;
+char *win_prefix = NULL, *l_pid_file_path = NULL;
+uint32_t	win_prefix_size = 0;
 
 int main( int argc, const char **argv )
 {
@@ -130,50 +131,67 @@ int main( int argc, const char **argv )
 		S_SetExceptionFilter( );
 	#endif
 
-	char *l_log_file_path = (char *)DAP_MALLOC( 2048 );
-	char *l_sys_dir_path  = (char *)DAP_MALLOC( 2048 );
-	l_log_file_path[0] = 0;
-	l_sys_dir_path[0] = 0;
+	char *l_log_file_path,
+		 *l_sys_dir_path;
+
+	char *l_path_buff = (char *)DAP_MALLOC( 2048 * 4 );
+	if ( !l_path_buff )
+		goto failure;
+
+	win_prefix = l_path_buff;
+	l_log_file_path = l_path_buff + 2048;
+	l_sys_dir_path  = l_path_buff + 2048 * 2;
+	l_pid_file_path = l_path_buff + 2048 * 3;
+
+	uint32_t path_len = 0;
 
 	#ifdef _WIN32
-		win_prefix = (char *)DAP_MALLOC( 2048 );
-		if ( !win_prefix ) goto failure;
+		{
+			HKEY hKey;
+			win_prefix_size = 2048;
 
-		uint32_t win_prefix_size = 2048;
-	    uint32_t res = GetEnvironmentVariableA( "USERPROFILE", (LPSTR)&win_prefix[0], 2048 );
-	    if ( !res ) {
+			LSTATUS lRes = RegOpenKeyExA( HKEY_CURRENT_USER, 
+										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 
+										  0, KEY_READ, &hKey );
 
-			HANDLE hToken = 0;
-			OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken );
-		 	GetUserProfileDirectory( hToken, (LPSTR)&win_prefix[0], (DWORD*)&win_prefix_size );
-		 	CloseHandle( hToken );
-	    }
-		strcpy( l_log_file_path, win_prefix );
-		strcat( l_log_file_path, "/Documents/" );
-		strcat( l_log_file_path, DAP_APP_NAME );
+		    lRes = RegQueryValueExA( hKey, "Personal", 0, NULL, (LPBYTE)&win_prefix[0], (DWORD*)&win_prefix_size );
+			RegCloseKey( hKey );
 
-		strcpy( l_sys_dir_path, win_prefix );
-		strcat( l_sys_dir_path, "/Documents/" );
-		strcat( l_sys_dir_path, DAP_APP_NAME );
+			if ( lRes != ERROR_SUCCESS ) {
+				memcpy( &win_prefix[0], "c:", 3 );
+				win_prefix_size = 3;
+			}
+
+			path_len = dap_sprintf( l_log_file_path, "%s/%s", win_prefix, DAP_APP_NAME );
+
+			memcpy( l_pid_file_path, l_log_file_path, path_len + 1 );
+			memcpy( l_sys_dir_path,  l_log_file_path, path_len + 1 );
+
+			path_len = dap_sprintf( l_pid_file_path, "%s/%s", win_prefix, DAP_APP_NAME );
+			memcpy( l_sys_dir_path, l_pid_file_path, path_len + 1 );
+
+		}
 	#endif
 
-	strcat( l_log_file_path, SYSTEM_LOGS_DIR );
-	dap_mkdir_with_parents( l_log_file_path );
-	strcat( l_log_file_path, "/" );
-	strcat( l_log_file_path, DAP_APP_NAME );
-	strcat( l_log_file_path, "_logs.txt" );
+	dap_sprintf( l_pid_file_path + win_prefix_size - 1, "/%s%s", DAP_APP_NAME, SYSTEM_PID_FILE_PATH );
 
-	printf("l_log_file_path = %s\n", l_log_file_path );
+	memcpy( l_log_file_path + path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
+	dap_mkdir_with_parents( l_log_file_path );
+
+	#if !DAP_RELEASE
+		dap_sprintf( l_log_file_path, "/%s_logs.txt", DAP_APP_NAME );
+	#else
+		dap_sprintf( l_log_file_path + path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
+	#endif
 
 	if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
     	printf( "Fatal Error: Can't init common functions module" );
 		return -2;
 	}
 
-	strcat( l_sys_dir_path, SYSTEM_CONFIGS_DIR );
-//	printf("l_sys_dir_path = %s\n", l_sys_dir_path );
-	dap_config_init( l_sys_dir_path );
+	memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
 
+	dap_config_init( l_sys_dir_path );
 
 	if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
     	log_it( L_CRITICAL,"Can't init general configurations" );
@@ -357,22 +375,11 @@ int main( int argc, const char **argv )
 #endif
 
 
-	{
-		char l_pid_file_path[ 2048 ];
-		l_pid_file_path[0] = 0;
 
-		#ifdef _WIN32
-			strcpy( l_pid_file_path, win_prefix );
-			strcat( l_pid_file_path, "/Documents/" );
-			strcat( l_pid_file_path, DAP_APP_NAME );
-		#endif
-		strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
-
-		save_process_pid_in_file(dap_config_get_item_str_default( g_config,
-	                                                             "resources",
-	                                                             "pid_path",
-	                                                             l_pid_file_path));
-	}
+	save_process_pid_in_file(dap_config_get_item_str_default( g_config,
+                                                             "resources",
+                                                             "pid_path",
+                                                             l_pid_file_path));
 
 	bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
@@ -484,14 +491,8 @@ failure:;
 	dap_config_close( g_config );
 	dap_common_deinit();
 
-	if ( l_log_file_path )
-		DAP_FREE( l_log_file_path );
-
-	if ( l_sys_dir_path )
-		DAP_FREE( l_sys_dir_path );
-
-	if ( win_prefix )
-		DAP_FREE( win_prefix );
+	if ( l_path_buff )
+		DAP_FREE( l_path_buff );
 
 	return rc * 10;
 }
@@ -512,16 +513,6 @@ void parse_args( int argc, const char **argv ) {
 
 	    case 0: // --stop
     	{
-			char l_pid_file_path[ 2048 ];
-			l_pid_file_path[0] = 0;
-
-			#ifdef _WIN32
-				strcpy( l_pid_file_path, win_prefix );
-				strcat( l_pid_file_path, "/Documents/" );
-				strcat( l_pid_file_path, DAP_APP_NAME );
-			#endif
-			strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
-
 			pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
 
 	    	if ( pid == 0 ) {
@@ -557,16 +548,6 @@ void parse_args( int argc, const char **argv ) {
 }
 
 void exit_if_server_already_running( void ) {
-
-	char l_pid_file_path[ 2048 ];
-	l_pid_file_path[0] = 0;
-
-	#ifdef _WIN32
-		strcpy( l_pid_file_path, win_prefix );
-		strcat( l_pid_file_path, "/Documents/" );
-		strcat( l_pid_file_path, DAP_APP_NAME );
-	#endif
-	strcat( l_pid_file_path, SYSTEM_PID_FILE_PATH );
 
 	pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
 
