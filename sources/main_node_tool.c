@@ -321,13 +321,16 @@ int main( int argc, const char **argv )
 
        dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
 
-       if ( strcmp (argv[4],"sig_bliss") == 0 ){
+       if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
          l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
-       } else if ( strcmp (argv[4],"sig_tesla") == 0) {
+       } else if ( dap_strcmp (argv[4],"sig_tesla") == 0) {
          l_key_type = DAP_ENC_KEY_TYPE_SIG_TESLA;
-       } else if ( strcmp (argv[4],"sig_picnic") == 0){
+       } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
          l_key_type = DAP_ENC_KEY_TYPE_SIG_PICNIC;
-       } else {
+       } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
+        l_key_type = DAP_ENC_KEY_TYPE_SIG_DILITHIUM;
+       }
+       else {
          log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
          exit(-600);
        }
@@ -338,6 +341,7 @@ int main( int argc, const char **argv )
          if (l_cert == NULL){
            log_it(L_ERROR, "Can't create %s",l_cert_path);
          }
+         dap_chain_cert_delete(l_cert);
        } else {
            s_help();
            DAP_DELETE(l_cert_path);
