@@ -178,11 +178,11 @@ int main( int argc, const char **argv )
 	memcpy( l_log_file_path + path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
 	dap_mkdir_with_parents( l_log_file_path );
 
-	#if !DAP_RELEASE
-		dap_sprintf( l_log_file_path, "%s_logs.txt", DAP_APP_NAME );
-	#else
+	//#if !DAP_RELEASE
+	//	dap_sprintf( l_log_file_path, "%s_logs.txt", DAP_APP_NAME );
+	//#else
 		dap_sprintf( l_log_file_path + path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
-	#endif
+	//#endif
 
 	if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
     	printf( "Fatal Error: Can't init common functions module" );
