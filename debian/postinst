@@ -1,15 +1,15 @@
 #!/bin/bash -e
 . /usr/share/debconf/confmodule
 
-DAP_CHAINS_NAME="kelvin"
+DAP_CHAINS_NAME="cellframe"
 DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
-DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/configs/network/$DAP_CHAINS_NAME-testnet.cfg.tpl"
+DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/configs/network/kelvin-testnet.cfg.tpl"
 
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg"
+DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
@@ -25,15 +25,15 @@ mkdir -p $DAP_PREFIX/var/log || true
 
 # Init testnet
 if [ -e "$DAP_CFG_TESTNET" ]; then
-    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg.dpkg-new"
+    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg.dpkg-new"
 else
-    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/$DAP_CHAINS_NAME-testnet.cfg"
+    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
 fi
 #echo "cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true"
 
 cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true
 
-cat /etc/passwd| grep kelvin-node || adduser --system --no-create-home --group --home /opt/kelvin-node kelvin-node
+cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
 
 if [ -e "/etc/systemd/user/$DAP_APP_NAME.service" ]; then
     echo "Restart $DAP_APP_NAME to implement changes"
@@ -43,13 +43,13 @@ else
 #    systemctl --system start $DAP_APP_NAME
 fi
     #USERMAN=`users | awk '{print $1}'`
-    adduser --system --no-create-home --group --home /opt/kelvin-node kelvin-node
+    adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
-        usermod -aG kelvin-node $username
+        usermod -aG cellframe-node $username
     done
     mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db} 
-    touch $DAP_PREFIX/var/run/kelvin-node.pid 
+    touch $DAP_PREFIX/var/run/cellframe-node.pid 
     #chown -R $USERMAN:$USERMAN $DAP_PREFIX
     for filename in $(find $DAP_PREFIX); do
         if [ -d $filename ]; then

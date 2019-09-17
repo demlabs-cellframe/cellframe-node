@@ -3,15 +3,15 @@ if [ "$1" == "purge" ] && [ -e /usr/share/debconf/confmodule ] ; then
 . /usr/share/debconf/confmodule
 db_purge
 fi
-GROUP_RM="kelvin-node"
+GROUP_RM="cellframe-node"
 
-systemctl stop kelvin-node || true
-systemctl disable kelvin-node || true
+systemctl stop cellframe-node || true
+systemctl disable cellframe-node || true
 
 #for username in `cat /etc/passwd | grep "/home" | cut -d ':' -f1`; do
 #  gpasswd -d $username $GROUP_RM || true
 #done
-#rm -r /opt/kelvin-node || true
-#groupdel kelvin-node || true
-#userdel kelvin-node || true
+#rm -r /opt/cellframe-node || true
+#groupdel cellframe-node || true
+#userdel cellframe-node || true
 
