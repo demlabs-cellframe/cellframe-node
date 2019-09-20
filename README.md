@@ -1,9 +1,9 @@
-# kelvin-node
-Kelvin Blockchain node
+# cellframe-node
+Cellframe Blockchain node
 
 [![Build Status](https://travis-ci.com/osetrovich/kelvin-node-ci.svg?branch=master)](https://travis-ci.com/osetrovich/kelvin-node-ci)
 
-[Kelvin node manual](https://github.com/cellframe/kelvin-node/wiki/Kelvin-Node)
+[Cellframe node manual](https://github.com/cellframe/kelvin-node/wiki/Kelvin-Node)
 
 ## Build
 
