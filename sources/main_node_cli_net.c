@@ -126,7 +126,7 @@ connect_param* node_cli_connect(void)
 #ifndef _WIN32
     int ret = curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path") ); // unix socket mode
 #else
-    int ret = curl_easy_setopt(curl_handle, CURLOPT_PORT, dap_config_get_item_uint16 ( g_config, "conserver", "listen_tcp_port")); // unix socket mode
+    int ret = curl_easy_setopt(curl_handle, CURLOPT_PORT, dap_config_get_item_uint16 ( g_config, "conserver", "listen_port_tcp")); // unix socket mode
 #endif
 
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 60L); // complete within 60 seconds
