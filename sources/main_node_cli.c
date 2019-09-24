@@ -34,7 +34,9 @@
 #include "main_node_cli_net.h"
 #include "main_node_cli_shell.h"
 
+#ifdef _WIN32
 #include "registry.h"
+#endif
 
 #include "dap_defines.h"
 
