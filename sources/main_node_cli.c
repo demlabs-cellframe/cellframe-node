@@ -34,6 +34,8 @@
 #include "main_node_cli_net.h"
 #include "main_node_cli_shell.h"
 
+#include "registry.h"
+
 #include "dap_defines.h"
 
 static connect_param *cparam;
@@ -182,26 +184,10 @@ int main(int argc, const char * argv[])
 	uint32_t path_len = 0;
 	uint32_t win_prefix_size;
 
-	#ifdef _WIN32
-		{
-			HKEY hKey;
-			win_prefix_size = 2048;
-
-			LSTATUS lRes = RegOpenKeyExA( HKEY_CURRENT_USER, 
-										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 
-										  0, KEY_READ, &hKey );
-
-		    lRes = RegQueryValueExA( hKey, "Personal", 0, NULL, (LPBYTE)&win_prefix[0], (DWORD*)&win_prefix_size );
-			RegCloseKey( hKey );
-
-			if ( lRes != ERROR_SUCCESS ) {
-				memcpy( &win_prefix[0], "c:", 3 );
-				win_prefix_size = 3;
-			}
-
-			path_len = dap_sprintf( l_sys_dir_path, "%s/%s", win_prefix, DAP_APP_NAME );
-		}
-	#endif
+#ifdef _WIN32
+    dap_sprintf(l_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+    path_len = strlen(l_sys_dir_path);
+#endif
 
     //    set_default_locale();
     //    command_execution_string = shell_script_filename = (char *) NULL;
