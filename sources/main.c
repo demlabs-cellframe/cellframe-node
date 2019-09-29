@@ -44,7 +44,7 @@
 //#include "wrappers.h"
 #include <wepoll.h>
 #include <pthread.h>
-#include "Userenv.h"
+#include "userenv.h"
 
 #endif
 
@@ -53,10 +53,9 @@
 #ifndef _WIN32
   #include "sig_unix_handler.h"
 #else
-  #include "sig_win32_handler.h"
-
-  void  S_SetExceptionFilter( void );
-
+    #include "sig_win32_handler.h"
+    #include "registry.h"
+    void  S_SetExceptionFilter( void );
 #endif
 
 #include "dap_config.h"
@@ -105,6 +104,7 @@
 #include "dap_traffic_track.h"
 
 #include "dap_defines.h"
+#include "dap_file_utils.h"
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
@@ -114,11 +114,14 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
+#ifndef MAX_PATH
+#define MAX_PATH 120
+#endif
+
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
-char *win_prefix = NULL, *l_pid_file_path = NULL;
-uint32_t	win_prefix_size = 0;
+static char *s_pid_file_path = NULL;
 
 int main( int argc, const char **argv )
 {
@@ -131,76 +134,40 @@ int main( int argc, const char **argv )
 		S_SetExceptionFilter( );
 	#endif
 
-	char *l_log_file_path,
-		 *l_sys_dir_path;
-
-	char *l_path_buff = (char *)DAP_MALLOC( 2048 * 4 );
-	if ( !l_path_buff )
-		goto failure;
-
-	win_prefix = l_path_buff;
-	l_log_file_path = l_path_buff + 2048;
-	l_sys_dir_path  = l_path_buff + 2048 * 2;
-	l_pid_file_path = l_path_buff + 2048 * 3;
-
 	uint32_t path_len = 0;
+    {
+        char l_log_file_path[MAX_PATH], l_sys_dir_path[MAX_PATH], l_pid_file_path[MAX_PATH];
+#ifdef _WIN32
+        dap_sprintf(l_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+        path_len = strlen(l_sys_dir_path);
+        memcpy(l_log_file_path, l_sys_dir_path, path_len);
+        memcpy(l_pid_file_path, l_log_file_path, path_len);
+#endif
+        memcpy( l_log_file_path + path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
+        dap_mkdir_with_parents( l_log_file_path );
 
-	#ifdef _WIN32
-		{
-			HKEY hKey;
-			win_prefix_size = 2048;
+        dap_sprintf( l_log_file_path + path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
 
-			LSTATUS lRes = RegOpenKeyExA( HKEY_CURRENT_USER, 
-										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 
-										  0, KEY_READ, &hKey );
+        if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
+            printf( "Fatal Error: Can't init common functions module" );
+            return -2;
+        }
 
-		    lRes = RegQueryValueExA( hKey, "Personal", 0, NULL, (LPBYTE)&win_prefix[0], (DWORD*)&win_prefix_size );
-			RegCloseKey( hKey );
+        memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
 
-			if ( lRes != ERROR_SUCCESS ) {
-				memcpy( &win_prefix[0], "c:", 3 );
-				win_prefix_size = 3;
-			}
+        dap_config_init( l_sys_dir_path );
 
-			path_len = dap_sprintf( l_log_file_path, "%s/%s", win_prefix, DAP_APP_NAME );
-
-			memcpy( l_pid_file_path, l_log_file_path, path_len + 1 );
-			memcpy( l_sys_dir_path,  l_log_file_path, path_len + 1 );
-
-			path_len = dap_sprintf( l_pid_file_path, "%s/%s", win_prefix, DAP_APP_NAME );
-			memcpy( l_sys_dir_path, l_pid_file_path, path_len + 1 );
-
-		}
-	#endif
-
-	dap_sprintf( l_pid_file_path + win_prefix_size - 1, "/%s%s", DAP_APP_NAME, SYSTEM_PID_FILE_PATH );
-
-	memcpy( l_log_file_path + path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
-	dap_mkdir_with_parents( l_log_file_path );
-
-	//#if !DAP_RELEASE
-	//	dap_sprintf( l_log_file_path, "%s_logs.txt", DAP_APP_NAME );
-	//#else
-		dap_sprintf( l_log_file_path + path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
-	//#endif
-
-	if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
-    	printf( "Fatal Error: Can't init common functions module" );
-		return -2;
-	}
-
-	memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-
-	dap_config_init( l_sys_dir_path );
-
-	if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
-    	log_it( L_CRITICAL,"Can't init general configurations" );
-		printf("log_it\n");
-    	return -1;
-	}
-
+        if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
+            log_it( L_CRITICAL,"Can't init general configurations" );
+            return -1;
+        }
+        dap_sprintf(l_pid_file_path + path_len, "/%s", dap_config_get_item_str_default( g_config,
+                                                                                   "resources",
+                                                                                   "pid_path",
+                                                                                   l_pid_file_path));
+        s_pid_file_path = dap_strdup(l_pid_file_path);
+    }
 	parse_args( argc, argv );
-
 	#ifdef _WIN32
 	    CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 	#endif
@@ -374,12 +341,7 @@ int main( int argc, const char **argv )
     }
 #endif
 
-
-
-	save_process_pid_in_file(dap_config_get_item_str_default( g_config,
-                                                             "resources",
-                                                             "pid_path",
-                                                             l_pid_file_path));
+    save_process_pid_in_file(s_pid_file_path);
 
 	bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
@@ -479,7 +441,7 @@ int main( int argc, const char **argv )
 
     // Deinit modules
 
-failure:;
+failure:
 
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
@@ -491,8 +453,7 @@ failure:;
 	dap_config_close( g_config );
 	dap_common_deinit();
 
-	if ( l_path_buff )
-		DAP_FREE( l_path_buff );
+    if (s_pid_file_path) { free(s_pid_file_path); }
 
 	return rc * 10;
 }
@@ -513,7 +474,7 @@ void parse_args( int argc, const char **argv ) {
 
 	    case 0: // --stop
     	{
-			pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
+            pid_t pid = get_pid_from_file(s_pid_file_path);
 
 	    	if ( pid == 0 ) {
 	        	log_it( L_ERROR, "Can't read pid from file" );
@@ -549,7 +510,7 @@ void parse_args( int argc, const char **argv ) {
 
 void exit_if_server_already_running( void ) {
 
-	pid_t pid = get_pid_from_file( dap_config_get_item_str_default( g_config, "resources", "pid_path", l_pid_file_path) );
+    pid_t pid = get_pid_from_file(s_pid_file_path);
 
 	bool  mf = false;
 

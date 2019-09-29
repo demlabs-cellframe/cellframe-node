@@ -1,6 +1,7 @@
 project(cellframe-node C)
 cmake_minimum_required(VERSION 2.8)
 
+set(DAP_RELEASE 1)
 if(WIN32)
   message(STATUS "Building for Windows")
 endif()
@@ -73,7 +74,7 @@ if(WIN32)
   add_definitions ("-DCURL_STATICLIB")
 
   if(DAP_RELEASE)
-    set(_CCOPT "-mconsole -static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
   else()
     set(_CCOPT "-mconsole -static -Wall -pg")
     set(_LOPT "-mconsole -static -pg")
@@ -205,7 +206,7 @@ if(WIN32)
     Secur32
 	userenv
   )
-
+	set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
   target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
@@ -250,7 +251,7 @@ if(WIN32)
     Secur32
 	userenv
 )
-
+	set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
@@ -295,6 +296,7 @@ if(WIN32)
     Secur32
 	userenv
 )
+	set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
 
