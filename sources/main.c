@@ -121,7 +121,7 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
-static char *s_pid_file_path = NULL;
+static char s_pid_file_path[MAX_PATH];
 
 int main( int argc, const char **argv )
 {
@@ -134,38 +134,36 @@ int main( int argc, const char **argv )
 		S_SetExceptionFilter( );
 	#endif
 
-	uint32_t path_len = 0;
     {
-        char l_log_file_path[MAX_PATH], l_sys_dir_path[MAX_PATH], l_pid_file_path[MAX_PATH];
+        char l_log_file_path[MAX_PATH];
 #ifdef _WIN32
-        dap_sprintf(l_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-        path_len = strlen(l_sys_dir_path);
-        memcpy(l_log_file_path, l_sys_dir_path, path_len);
-        memcpy(l_pid_file_path, l_log_file_path, path_len);
+        dap_sprintf(l_sys_dir_path, "%s\\%s\\", regGetUsrPath(), DAP_APP_NAME);
+        l_sys_dir_path_len = strlen(l_sys_dir_path);
+        memcpy(l_log_file_path, l_sys_dir_path, l_sys_dir_path_len);
+        memcpy(s_pid_file_path, l_sys_dir_path, l_sys_dir_path_len);
 #endif
-        memcpy( l_log_file_path + path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
+        memcpy( l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
         dap_mkdir_with_parents( l_log_file_path );
 
-        dap_sprintf( l_log_file_path + path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
+        dap_sprintf( l_log_file_path + l_sys_dir_path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-
-        memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-
+        log_it( L_ATT, "+++++ %s", l_sys_dir_path );
+        memcpy( l_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
         dap_config_init( l_sys_dir_path );
 
+        memset(l_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+        log_it( L_ATT, "+++++ %s", l_sys_dir_path );
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;
         }
-        dap_sprintf(l_pid_file_path + path_len, "/%s", dap_config_get_item_str_default( g_config,
+        dap_sprintf(s_pid_file_path + l_sys_dir_path_len, "%s", dap_config_get_item_str( g_config,
                                                                                    "resources",
-                                                                                   "pid_path",
-                                                                                   l_pid_file_path));
-        s_pid_file_path = dap_strdup(l_pid_file_path);
+                                                                                   "pid_path"));
     }
 	parse_args( argc, argv );
 	#ifdef _WIN32
