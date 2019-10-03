@@ -85,7 +85,9 @@
 #include "dap_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
+#ifdef _WIN32
 #include "registry.h"
+#endif
 #define DAP_APP_NAME NODE_NETNAME "-node"
 #ifdef _WIN32
   #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
