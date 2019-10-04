@@ -33,8 +33,8 @@ network_mask=255.255.255.0
 # Console interface server
 [conserver]
 enabled=true
-#listen_tcp_port=12345
-listen_unix_socket_path=/opt/kelvin-node/var/run/node_cli
+#listen_port_tcp=12345
+listen_unix_socket_path=/opt/cellframe-node/var/run/node_cli
 # Default permissions 770
 #listen_unix_socket_permissions=770
 
@@ -42,11 +42,11 @@ listen_unix_socket_path=/opt/kelvin-node/var/run/node_cli
 [resources]
 #   0 means auto detect
 threads_cnt=0 
-pid_path=/opt/kelvin-node/var/run/kelvin-node.pid
-log_file=/opt/kelvin-node/var/log/kelvin-node.log
-wallets_path=/opt/kelvin-node/var/lib/wallet
-ca_folders=[/opt/kelvin-node/var/lib/ca,/opt/kelvin-node/share/ca]
-dap_global_db_path=/opt/kelvin-node/var/lib/global_db
+pid_path=/opt/cellframe-node/var/run/cellframe-node.pid
+log_file=/opt/cellframe-node/var/log/cellframe-node.log
+wallets_path=/opt/cellframe-node/var/lib/wallet
+ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
+dap_global_db_path=/opt/cellframe-node/var/lib/global_db
 dap_global_db_driver=cdb
 
 

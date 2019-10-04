@@ -137,10 +137,10 @@ int main( int argc, const char **argv )
     {
         char l_log_file_path[MAX_PATH];
 #ifdef _WIN32
-        dap_sprintf(l_sys_dir_path, "%s\\%s\\", regGetUsrPath(), DAP_APP_NAME);
-        l_sys_dir_path_len = strlen(l_sys_dir_path);
-        memcpy(l_log_file_path, l_sys_dir_path, l_sys_dir_path_len);
-        memcpy(s_pid_file_path, l_sys_dir_path, l_sys_dir_path_len);
+        dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+        l_sys_dir_path_len = strlen(s_sys_dir_path);
+        memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
+        memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
         memcpy( l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
         dap_mkdir_with_parents( l_log_file_path );
@@ -151,12 +151,10 @@ int main( int argc, const char **argv )
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-        log_it( L_ATT, "+++++ %s", l_sys_dir_path );
-        memcpy( l_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-        dap_config_init( l_sys_dir_path );
+        memcpy( s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+        dap_config_init( s_sys_dir_path );
 
-        memset(l_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
-        log_it( L_ATT, "+++++ %s", l_sys_dir_path );
+        memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;

@@ -390,13 +390,13 @@ static int s_init( int argc, const char **argv )
     return -2;
   }
 #ifdef _WIN32
-        dap_sprintf(l_sys_dir_path, "%s/%s/", regGetUsrPath(), DAP_APP_NAME);
-        l_sys_dir_path_len = strlen(l_sys_dir_path);
-        memcpy(s_system_ca_dir, l_sys_dir_path, l_sys_dir_path_len);
+        dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+        l_sys_dir_path_len = strlen(s_sys_dir_path);
+        memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-    memcpy( l_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-    dap_config_init( l_sys_dir_path );
-    memset(l_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+    memcpy( s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+    dap_config_init( s_sys_dir_path );
+    memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
     dap_sprintf(s_system_ca_dir + l_sys_dir_path_len, "%s", SYSTEM_CA_DIR);
   if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
     log_it( L_ERROR, "Can't init general configurations" );
