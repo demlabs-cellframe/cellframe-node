@@ -85,12 +85,15 @@
 #include "dap_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
-
+#ifdef _WIN32
+#include "registry.h"
+#endif
 #define DAP_APP_NAME NODE_NETNAME "-node"
 #ifdef _WIN32
   #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
 #else
   #define SYSTEM_PREFIX "/opt/"DAP_APP_NAME
+#define MAX_PATH 260
 #endif
 
 #define LOCAL_PREFIX "~/."DAP_APP_NAME
@@ -120,6 +123,7 @@
 static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
+static char s_system_ca_dir[MAX_PATH];
 static const char *s_appname = "kelvin-node-tool";
 
 int main( int argc, const char **argv )
@@ -171,13 +175,13 @@ int main( int argc, const char **argv )
         s_help( );
         exit( -2004 );
       }
-
-      size_t l_wallet_path_size = strlen( l_wallet_name ) + strlen( SYSTEM_WALLET_DIR ) + 10;
-      char * l_wallet_path = DAP_NEW_Z_SIZE( char, l_wallet_path_size );
-      snprintf( l_wallet_path, l_wallet_path_size, "%s/%s.dwallet", SYSTEM_WALLET_DIR, l_wallet_name );
-      l_wallet = dap_chain_wallet_create( l_wallet_name, SYSTEM_WALLET_DIR, l_network_id, l_sig_type );
-      DAP_DELETE (l_wallet_path);
-
+        char l_wallets_path[MAX_PATH];
+#ifdef _WIN32
+        dap_sprintf(l_wallets_path, "%s\\%s\\%s", regGetUsrPath(), DAP_APP_NAME, SYSTEM_WALLET_DIR);
+#else
+        dap_stpcpy(l_wallets_path, SYSTEM_WALLET_DIR);
+#endif
+        l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_network_id, l_sig_type );
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
 
@@ -187,7 +191,13 @@ int main( int argc, const char **argv )
         s_help();
         exit(-3000);
       }
-      dap_chain_wallet_t *l_wallet = dap_chain_wallet_open( argv[3], SYSTEM_WALLET_DIR );
+      char l_wallets_path[MAX_PATH];
+#ifdef _WIN32
+      dap_sprintf(l_wallets_path, "%s\\%s\\%s", regGetUsrPath(), DAP_APP_NAME, SYSTEM_WALLET_DIR);
+#else
+      dap_stpcpy(l_wallets_path, SYSTEM_WALLET_DIR);
+#endif
+      dap_chain_wallet_t *l_wallet = dap_chain_wallet_open( argv[3], l_wallets_path);
       if ( !l_wallet ) {
         log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
         s_help();
@@ -234,7 +244,7 @@ int main( int argc, const char **argv )
       if ( strcmp( argv[2],"dump") == 0 ){
         if (argc>=4) {
           const char * l_cert_name = argv[3];
-          dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
+          dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
           if ( l_cert ) {
             dap_chain_cert_dump(l_cert);
             dap_chain_cert_delete_by_name(l_cert_name);
@@ -248,7 +258,7 @@ int main( int argc, const char **argv )
        if (argc < 5) exit(-7023);
          const char *l_cert_name = argv[3];
          const char *l_cert_pkey_path = argv[4];
-         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
+         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
          if ( !l_cert ) exit( -7021 );
            l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
            if ( l_cert->enc_key->pub_key_data_size ) {
@@ -279,7 +289,7 @@ int main( int argc, const char **argv )
        if ( argc >= 5 ) {
          const char *l_cert_name = argv[3];
          const char *l_cert_new_name = argv[4];
-         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name,SYSTEM_CA_DIR);
+         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
          if ( l_cert ) {
            if ( l_cert->enc_key->pub_key_data_size ) {
              // Create empty new cert
@@ -292,7 +302,7 @@ int main( int argc, const char **argv )
                                                                 l_cert->enc_key->pub_key_data_size );
              memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
 
-             dap_chain_cert_save_to_folder(l_cert_new, SYSTEM_CA_DIR);
+             dap_chain_cert_save_to_folder(l_cert_new, s_system_ca_dir);
              //dap_chain_cert_delete_by_name(l_cert_name);
              //dap_chain_cert_delete_by_name(l_cert_new_name);
            } else {
@@ -311,9 +321,9 @@ int main( int argc, const char **argv )
        }
        size_t l_key_length = 0;
        const char *l_cert_name = argv[3];
-       size_t l_cert_path_length = strlen(argv[3])+8+strlen(SYSTEM_CA_DIR);
+       size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
        char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
-       snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",SYSTEM_CA_DIR,l_cert_name);
+       snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
        if ( access( l_cert_path, F_OK ) != -1 ) {
          log_it (L_ERROR, "File %s is already exists! Who knows, may be its smth important?", l_cert_path);
          exit(-700);
@@ -379,18 +389,19 @@ static int s_init( int argc, const char **argv )
     printf( "Fatal Error: Can't init common functions module" );
     return -2;
   }
-
-  dap_config_init( SYSTEM_CONFIGS_DIR );
-
+#ifdef _WIN32
+        dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+        l_sys_dir_path_len = strlen(s_sys_dir_path);
+        memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
+#endif
+    memcpy( s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+    dap_config_init( s_sys_dir_path );
+    memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+    dap_sprintf(s_system_ca_dir + l_sys_dir_path_len, "%s", SYSTEM_CA_DIR);
   if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
     log_it( L_ERROR, "Can't init general configurations" );
     return -1;
   }
-
-  //    if(dap_common_init(DAP_APP_NAME"_logs.txt")!=0){
-  //        log_it(L_ERROR,"Can't init common functions module");
-  //        return -2;
-  //    }
 
   if ( dap_chain_init() != 0 ) {
     log_it( L_ERROR, "Can't chain module" );
