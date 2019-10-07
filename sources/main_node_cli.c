@@ -182,24 +182,19 @@ int shell_reader_loop()
 
 int main(int argc, const char * argv[])
 {
-	char l_sys_dir_path[ 2048 ], win_prefix[ 2048 ];
-	uint32_t path_len = 0;
-	uint32_t win_prefix_size;
-
 #ifdef _WIN32
-    dap_sprintf(l_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-    path_len = strlen(l_sys_dir_path);
+    dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+    l_sys_dir_path_len = strlen(s_sys_dir_path);
 #endif
 
     //    set_default_locale();
     //    command_execution_string = shell_script_filename = (char *) NULL;
 
-	memcpy( l_sys_dir_path + path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-
-    dap_common_init( DAP_APP_NAME "Console interface", NULL );
+    memcpy(s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+    dap_common_init( DAP_APP_NAME " Console interface", NULL );
     dap_log_level_set( L_CRITICAL );
-
-	dap_config_init( l_sys_dir_path );
+    dap_config_init( s_sys_dir_path );
+    memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
 
     if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
         printf("Can't init general configurations\n");

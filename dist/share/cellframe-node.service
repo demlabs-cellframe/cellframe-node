@@ -1,17 +1,17 @@
 [Unit]
-Description=Kelvin Node
+Description=Cellframe Node
 After=network.target
 
 [Service]
 Type=forking
 OOMScoreAdjust=-1000
-PIDFile=/opt/kelvin-node/var/run/kelvin-node.pid
-WorkingDirectory=/opt/kelvin-node
-ExecStart=/opt/kelvin-node/bin/kelvin-node -D
-ExecStop=/opt/kelvin-node/bin/kelvin-node --stop
+PIDFile=/opt/kelvin-node/var/run/cellframe-node.pid
+WorkingDirectory=/opt/cellframe-node
+ExecStart=/opt/cellframe-node/bin/cellframe-node -D
+ExecStop=/opt/cellframe-node/bin/cellframe-node --stop
 Restart=always
-User=kelvin-node
-Group=kelvin-node
+User=cellframe-node
+Group=cellframe-node
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_IPC_LOCK CAP_KILL CAP_LEASE CAP_MKNOD CAP_NET_ADMIN CAP_NET_BROADCAST CAP_NET_RAW CAP_SYS_NICE CAP_SYS_RAWIO CAP_SYSLOG CAP_WAKE_ALARM 
 
 [Install] 
