@@ -345,13 +345,10 @@ int main( int argc, const char **argv )
 
 	if ( bServerEnabled ) {
 
-    	int32_t l_port = dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp", 8079 ); // TODO Default listen port
+        int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
 
         if( l_port > 0 ) {
-            l_server = dap_server_listen( (dap_config_get_item_str_default(g_config,
-                                                                    "server",
-                                                                    "listen_address",
-                                                                    "0.0.0.0")),
+            l_server = dap_server_listen((dap_config_get_item_str(g_config, "server", "listen_address")),
                                    l_port,
                                    DAP_SERVER_TCP );
         } else
@@ -448,8 +445,6 @@ failure:
 
 	dap_config_close( g_config );
 	dap_common_deinit();
-
-    if (s_pid_file_path) { free(s_pid_file_path); }
 
 	return rc * 10;
 }
