@@ -35,7 +35,7 @@ cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
 
-if [ -e "/etc/systemd/user/$DAP_APP_NAME.service" ]; then
+if [ -e "/etc/systemd/system/$DAP_APP_NAME.service" ]; then
     echo "Restart $DAP_APP_NAME to implement changes"
 else
     ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service
