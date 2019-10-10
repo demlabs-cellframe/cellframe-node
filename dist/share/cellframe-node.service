@@ -3,16 +3,18 @@ Description=Cellframe Node
 After=network.target
 
 [Service]
-Type=forking
-OOMScoreAdjust=-1000
-PIDFile=/opt/kelvin-node/var/run/cellframe-node.pid
+#Type=forking
+#OOMScoreAdjust=-1000
+#PIDFile=/opt/cellframe-node/var/run/cellframe-node.pid
 WorkingDirectory=/opt/cellframe-node
-ExecStart=/opt/cellframe-node/bin/cellframe-node -D
+ExecStart=/opt/cellframe-node/bin/cellframe-node &
 ExecStop=/opt/cellframe-node/bin/cellframe-node --stop
 Restart=always
-User=cellframe-node
-Group=cellframe-node
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_IPC_LOCK CAP_KILL CAP_LEASE CAP_MKNOD CAP_NET_ADMIN CAP_NET_BROADCAST CAP_NET_RAW CAP_SYS_NICE CAP_SYS_RAWIO CAP_SYSLOG CAP_WAKE_ALARM 
+#User=cellframe-node
+#Group=cellframe-node
+User=root
+Group=root
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_IPC_LOCK CAP_KILL CAP_LEASE CAP_MKNOD CAP_NET_ADMIN CAP_NET_BROADCAST CAP_NET_RAW CAP_SYS_NICE CAP_SYS_RAWIO CAP_SYSLOG CAP_WAKE_ALARM
 
-[Install] 
+[Install]
 WantedBy=multi-user.target
