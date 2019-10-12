@@ -1,14 +1,31 @@
 # cellframe-node
 Cellframe Blockchain node
 
-[![Build Status](https://travis-ci.com/osetrovich/kelvin-node-ci.svg?branch=master)](https://travis-ci.com/osetrovich/kelvin-node-ci)
-
-[Cellframe node manual](https://github.com/cellframe/kelvin-node/wiki/Kelvin-Node)
+[Cellframe Wiki](https://wiki.cellframe.net)
 
 ## Build
 
 The project uses CMake. To generate a Makefile run in the project root directory `git submodule init && git submodule update --remote && cmake -S . -B build && cd ./build && make`.
 Or if you don't clone the project yet, run `git clone --recursive <repo>` to clone it with all submodules. Then build the project as a regular CMake project with command `cmake -S . -B build && cd ./build && make`.
+
+##How to install:
+
+### Debian and Ubuntu
+
+Create file /etc/apt/sources.list.d/demlabs.list with one line below:
+
+deb http://debian.pub.demlabs.net/ stretch main non-free
+
+Then download public signature and install it:
+
+wget https://debian.pub.demlabs.net/demlabskey.asc
+apt-key add demlabskey.asc
+
+Then update your apt cache and install the package:
+
+apt-get update
+apt-get install cellframe-node
+
 
 ### Prerequsites
 
