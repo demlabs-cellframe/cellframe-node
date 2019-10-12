@@ -1,21 +1,22 @@
 # General section
 [general]
-debug_mode=false
-debug_dump_stream_headers=false
+debug_mode={DEBUG_MODE}
+debug_dump_stream_headers={DEBUG_STREAM_HEADERS}
 wallets_default=default
-node_role=full
+node_role={NODE_TYPE}
+
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
-auto_online=false
+auto_online={AUTO_ONLINE}
 
 # Console
 
 # Server part
 [server]
 #   By default you don't need to open you to the world
-enabled=true 
-listen_address=0.0.0.0
-listen_port_tcp=8079
+enabled={SERVER_ENABLED}
+listen_address={SERVER_ADDR}
+listen_port_tcp={SERVER_PORT}
 
 # Mempool
 [mempool]

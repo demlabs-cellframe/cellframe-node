@@ -19,29 +19,32 @@ else
 fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
+
+db_get cellframe-node/node_type
+sed -i "s/{NODE_TYPE}/$RET/" $DAP_CFG  || true
+db_get cellframe-node/log_level
+sed -i "s/{LOG_LEVEL}/$RET/" $DAP_CFG  || true
+
+
+
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
 mkdir -p $DAP_PREFIX/var/log || true
 
-# Init testnet
-if [ -e "$DAP_CFG_TESTNET" ]; then
-    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg.dpkg-new"
-else
-    DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
-fi
-#echo "cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true"
-
-cat $DAP_CFG_TESTNET_TPL > $DAP_CFG_TESTNET || true
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
 
 if [ -e "/etc/systemd/system/$DAP_APP_NAME.service" ]; then
-    echo "Restart $DAP_APP_NAME to implement changes"
+    echo "Restarting $DAP_APP_NAME to implement changes"
+    systemctl --system stop $DAP_APP_NAME
+    systemctl daemon-reload
+    systemctl --system start $DAP_APP_NAME
 else
     ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service
     systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service
 #    systemctl --system start $DAP_APP_NAME
-fi
+    echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
+
     #USERMAN=`users | awk '{print $1}'`
     adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
@@ -59,5 +62,4 @@ fi
         fi
     done
     chmod 0774 $DAP_PREFIX/bin/*
-    
-echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
+fi

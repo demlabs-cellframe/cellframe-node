@@ -3,6 +3,11 @@
 
 case "$1" in
 reconfigure|configure)
+   db_input critical cellframe-node/node_type || true 
+   db_go || true 
+   db_input critical cellframe-node/log_level || true 
+   db_go || true 
+
 ;;
 *)
    echo "config called with unknown argument \`$1'" >&2
