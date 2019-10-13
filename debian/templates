@@ -1,7 +1,7 @@
 Template: cellframe-node/node_type
 Type: select
 Default: full
-Choices: full,light,master,archive,root
+Choices: full, light, master, archive, root
 Description: Node type
  Select node type:. 
  Light - syncronize only local wallets 
@@ -12,28 +12,28 @@ Description: Node type
 
 Template: cellframe-node/auto_online
 Default: false
-Choices: true,false
+Choices: true, false
 Type: select
 Description: Auto online
  Bring up links automaticly and go to the ONLINE network state
 
 Template: cellframe-node/debug_mode
 Default: false
-Choices: true,false
+Choices: true, false
 Type: select
 Description: Debug mode
  Debug mode for logs
 
 Template: cellframe-node/debug_stream_headers
 Default: false
-Choices: true,false
+Choices: true, false
 Type: select
 Description: Debug stream headers
  Dump stream headers in log file
 
 Template: cellframe-node/server_enabled
 Default: false
-Choices: true,false
+Choices: true, false
 Type: select
 Description: Accept connections
  Accept connections 
