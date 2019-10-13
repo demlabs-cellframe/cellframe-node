@@ -36,17 +36,17 @@ cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --grou
 
 if [ -e "/etc/systemd/system/$DAP_APP_NAME.service" ]; then
     echo "Restarting $DAP_APP_NAME to implement changes"
-    systemctl --system stop $DAP_APP_NAME
-    systemctl daemon-reload
-    systemctl --system start $DAP_APP_NAME
+    systemctl --system stop $DAP_APP_NAME  >> /dev/null|| true
+    systemctl daemon-reload || true
+    systemctl --system start $DAP_APP_NAME || true
 else
-    ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service
-    systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service
+    ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service || true
+    systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
 #    systemctl --system start $DAP_APP_NAME
-    echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'"
+    echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'" 
 
     #USERMAN=`users | awk '{print $1}'`
-    adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
+    adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
         usermod -aG cellframe-node $username
