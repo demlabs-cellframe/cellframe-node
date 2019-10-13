@@ -20,9 +20,9 @@ fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
 
-db_get cellframe-node/node_type
+db_get cellframe-node/node_type || true
 sed -i "s/{NODE_TYPE}/$RET/" $DAP_CFG  || true
-db_get cellframe-node/log_level
+db_get cellframe-node/log_level || true
 sed -i "s/{LOG_LEVEL}/$RET/" $DAP_CFG  || true
 
 
