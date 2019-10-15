@@ -44,7 +44,7 @@ sed -i "s/{SERVER_ENABLED}/$RET/" $DAP_CFG  || true
 db_get cellframe-node/server_port || true
 sed -i "s/{SERVER_PORT}/$RET/" $DAP_CFG  || true
 
-db_get cellframe-node/server-addr || true
+db_get cellframe-node/server_addr || true
 sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
