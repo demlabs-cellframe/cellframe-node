@@ -4,12 +4,18 @@
 DAP_CHAINS_NAME="cellframe"
 DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
+
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
 DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/configs/network/kelvin-testnet.cfg.tpl"
 
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
+
+
+# Check profile.d symlink
+
+[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] || ln -s $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
@@ -22,10 +28,24 @@ cat $DAP_CFG_TPL > $DAP_CFG || true
 
 db_get cellframe-node/node_type || true
 sed -i "s/{NODE_TYPE}/$RET/" $DAP_CFG  || true
-db_get cellframe-node/log_level || true
-sed -i "s/{LOG_LEVEL}/$RET/" $DAP_CFG  || true
 
+db_get cellframe-node/debug_mode || true
+sed -i "s/{DEBUG_MODE}/$RET/" $DAP_CFG  || true
 
+db_get cellframe-node/auto_online || true
+sed -i "s/{AUTO_ONLINE}/$RET/" $DAP_CFG  || true
+
+db_get cellframe-node/debug_stream_headers || true
+sed -i "s/{DEBUG_STREAM_HEADERS}/$RET/" $DAP_CFG  || true
+
+db_get cellframe-node/server_enabled || true
+sed -i "s/{SERVER_ENABLED}/$RET/" $DAP_CFG  || true
+
+db_get cellframe-node/server_port || true
+sed -i "s/{SERVER_PORT}/$RET/" $DAP_CFG  || true
+
+db_get cellframe-node/server-addr || true
+sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
 mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true

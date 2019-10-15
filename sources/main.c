@@ -178,7 +178,7 @@ int main( int argc, const char **argv )
 
 	dap_log_level_set( bDebugMode ? L_DEBUG: L_NOTICE );
 
-	log_it( L_DAP, "*** Kelvin Node version: %s ***", "0.0.0" ); //DAP_SERVER_VERSION_STR );
+    log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
 	// change to dap_config_get_item_int_default when it's will be possible
 	size_t l_thread_cnt = 0;
