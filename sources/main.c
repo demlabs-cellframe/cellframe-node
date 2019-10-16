@@ -114,10 +114,6 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
-#ifndef MAX_PATH
-#define MAX_PATH 120
-#endif
-
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
