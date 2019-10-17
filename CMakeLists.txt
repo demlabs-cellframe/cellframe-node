@@ -46,7 +46,7 @@ SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
 SET( CPACK_PACKAGE_VERSION_MINOR 4)
-SET( CPACK_PACKAGE_VERSION_PATCH 11)
+SET( CPACK_PACKAGE_VERSION_PATCH 12)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -104,7 +104,7 @@ endif()
 
 if(UNIX)
   add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
-
+# add_definitions ("-DDAP_LOG_MT")
   if(DAP_RELEASE)
     set(_CCOPT "-Wall -O3 -fPIC -fno-pie -no-pie -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
   else()
