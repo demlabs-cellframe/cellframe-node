@@ -85,33 +85,11 @@
 #include "dap_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
+#include "dap_defines.h"
 #ifdef _WIN32
 #include "registry.h"
 #endif
 #define DAP_APP_NAME NODE_NETNAME "-node"
-#ifdef _WIN32
-  #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
-#else
-  #define SYSTEM_PREFIX "/opt/"DAP_APP_NAME
-#define MAX_PATH 260
-#endif
-
-#define LOCAL_PREFIX "~/."DAP_APP_NAME
-
-#define SYSTEM_CONFIGS_DIR SYSTEM_PREFIX"/etc"
-#define LOCAL_CONFIGS_DIR LOCAL_PREFIX"/etc"
-
-#define SYSTEM_CA_DIR SYSTEM_PREFIX"/var/lib/ca"
-#define LOCAL_CA_DIR LOCAL_PREFIX"/ca"
-
-#define SYSTEM_WALLET_DIR SYSTEM_PREFIX"/var/lib/wallet"
-#define LOCAL_WALLET_DIR LOCAL_PREFIX"/wallet"
-
-#define SYSTEM_CONFIG_GLOBAL_FILENAME SYSTEM_PREFIX"/etc/"DAP_APP_NAME".cfg"
-#define LOCAL_CONFIG_GLOBAL LOCAL_PREFIX"/etc/"DAP_APP_NAME".cfg"
-
-#define SYSTEM_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
-#define LOCAL_PID_FILE_PATH SYSTEM_PREFIX"/run/"DAP_APP_NAME".pid"
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
@@ -124,11 +102,9 @@ static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
 static char s_system_ca_dir[MAX_PATH];
-static const char *s_appname = "kelvin-node-tool";
+static const char *s_appname = "cellframe-node-tool";
 
-int main( int argc, const char **argv )
-{
-  uint8_t *buff = (uint8_t *)malloc( 8192 );
+int main(int argc, const char **argv) {
   int ret = s_init( argc, argv );
 
   if ( ret ) {
@@ -175,12 +151,11 @@ int main( int argc, const char **argv )
         s_help( );
         exit( -2004 );
       }
-        char l_wallets_path[MAX_PATH];
+      char l_wallets_path[MAX_PATH] = {'\0'};
 #ifdef _WIN32
-        dap_sprintf(l_wallets_path, "%s\\%s\\%s", regGetUsrPath(), DAP_APP_NAME, SYSTEM_WALLET_DIR);
-#else
-        dap_stpcpy(l_wallets_path, SYSTEM_WALLET_DIR);
+        dap_stpcpy(l_wallets_path, s_sys_dir_path);
 #endif
+        dap_sprintf(l_wallets_path + l_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
         l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_network_id, l_sig_type );
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
@@ -191,12 +166,11 @@ int main( int argc, const char **argv )
         s_help();
         exit(-3000);
       }
-      char l_wallets_path[MAX_PATH];
+      char l_wallets_path[MAX_PATH] = {'\0'};
 #ifdef _WIN32
-      dap_sprintf(l_wallets_path, "%s\\%s\\%s", regGetUsrPath(), DAP_APP_NAME, SYSTEM_WALLET_DIR);
-#else
-      dap_stpcpy(l_wallets_path, SYSTEM_WALLET_DIR);
+        dap_stpcpy(l_wallets_path, s_sys_dir_path);
 #endif
+        dap_sprintf(l_wallets_path + l_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
       dap_chain_wallet_t *l_wallet = dap_chain_wallet_open( argv[3], l_wallets_path);
       if ( !l_wallet ) {
         log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
@@ -385,19 +359,28 @@ int main( int argc, const char **argv )
  */
 static int s_init( int argc, const char **argv )
 {
-  if ( dap_common_init( DAP_APP_NAME, DAP_APP_NAME"_logs.txt") != 0 ) {
-    printf( "Fatal Error: Can't init common functions module" );
-    return -2;
-  }
+    char l_log_file_path[MAX_PATH];
+    l_sys_dir_path_len = 0;
 #ifdef _WIN32
-        dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-        l_sys_dir_path_len = strlen(s_sys_dir_path);
-        memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
+    dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
+    l_sys_dir_path_len = strlen(s_sys_dir_path);
+    memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
+    memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-    memcpy( s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+    memcpy(l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR));
+    dap_sprintf(l_log_file_path + l_sys_dir_path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_tool_logs.txt", DAP_APP_NAME);
+
+    if (dap_common_init(DAP_APP_NAME, l_log_file_path) != 0) {
+        printf("Fatal Error: Can't init common functions module");
+        return -2;
+    }
+
+    memcpy(s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR));
     dap_config_init( s_sys_dir_path );
     memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
-    dap_sprintf(s_system_ca_dir + l_sys_dir_path_len, "%s", SYSTEM_CA_DIR);
+
+    //dap_sprintf(s_system_ca_dir + l_sys_dir_path_len, "%s", l_ca_folders[i]);
+
   if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
     log_it( L_ERROR, "Can't init general configurations" );
     return -1;
@@ -418,7 +401,7 @@ static int s_init( int argc, const char **argv )
     return -5;
   }
 
-  if ( dap_server_init(0) != 0 ) {
+ /* if ( dap_server_init(0) != 0 ) {
     log_it( L_ERROR, "Can't server module" );
     return -6;
   }
@@ -451,9 +434,12 @@ static int s_init( int argc, const char **argv )
   if ( dap_client_init() != 0 ) {
     log_it( L_ERROR, "Can't chain wallet storage module" );
     return -12;
-  }
+  } */
 
-  return 0;
+    uint16_t l_ca_folders_size = 0;
+    char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
+    memcpy(s_system_ca_dir + l_sys_dir_path_len, l_ca_folders[0], strlen(l_ca_folders[0]));
+    return 0;
 }
 
 /**
