@@ -6,11 +6,10 @@ DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
-DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/configs/network/kelvin-testnet.cfg.tpl"
 
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
+
 
 
 # Check profile.d symlink
@@ -25,9 +24,6 @@ else
 fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
-
-db_get cellframe-node/node_type || true
-sed -i "s/{NODE_TYPE}/$RET/" $DAP_CFG  || true
 
 db_get cellframe-node/debug_mode || true
 sed -i "s/{DEBUG_MODE}/$RET/" $DAP_CFG  || true
@@ -47,8 +43,30 @@ sed -i "s/{SERVER_PORT}/$RET/" $DAP_CFG  || true
 db_get cellframe-node/server_addr || true
 sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 
-mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
-mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
+
+
+# Init kelvin-testnet
+NET_NAME="kelvin-testnet"
+
+db_get cellframe-node/kelvin_testnet_enable || true
+sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
+if [ "$RET" = "true" ]; then
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/NET_NAME.cfg.dpkg-new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/kelvin_testnet_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_CFG  || true
+
+fi
+
 mkdir -p $DAP_PREFIX/var/log || true
 
 

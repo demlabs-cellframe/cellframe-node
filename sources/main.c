@@ -142,34 +142,34 @@ int main( int argc, const char **argv )
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-        memcpy( l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR) );
-        dap_mkdir_with_parents( l_log_file_path );
-
-        dap_sprintf( l_log_file_path + l_sys_dir_path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_logs.txt", DAP_APP_NAME );
+        dap_snprintf(l_log_file_path, sizeof (l_log_file_path),"%s/%s.log",SYSTEM_LOGS_DIR, DAP_APP_NAME );
+        dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-        memcpy( s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
+        dap_snprintf(s_sys_dir_path,sizeof (s_sys_dir_path),"%s",SYSTEM_CONFIGS_DIR);
         dap_config_init( s_sys_dir_path );
-
-        memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+        log_it(L_DEBUG,"1");
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;
         }
-        dap_sprintf(s_pid_file_path + l_sys_dir_path_len, "%s", dap_config_get_item_str( g_config,
+        log_it(L_DEBUG,"2");
+        dap_sprintf(s_pid_file_path + l_sys_dir_path_len, "%s", dap_config_get_item_str_default( g_config,
                                                                                    "resources",
-                                                                                   "pid_path"));
+                                                                                   "pid_path","/tmp") );
+        log_it(L_DEBUG,"3");
     }
+    log_it(L_DEBUG, "Parsing command line args");
 	parse_args( argc, argv );
 	#ifdef _WIN32
-	    CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
+        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 	#endif
 
-	//  bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-	  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+      bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+    //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
 	if ( bDebugMode )
 	    log_it( L_ATT, "*** DEBUG MODE ***" );
@@ -349,7 +349,7 @@ int main( int argc, const char **argv )
 
         if( l_port > 0 ) {
             l_server = dap_server_listen((dap_config_get_item_str(g_config, "server", "listen_address")),
-                                   l_port,
+                                   (uint16_t) l_port,
                                    DAP_SERVER_TCP );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
@@ -506,7 +506,7 @@ void exit_if_server_already_running( void ) {
 	bool  mf = false;
 
 	#ifdef _WIN32
-    	CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_KELVIN_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
+        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 
 		if ( GetLastError( ) == 183 ) {
       		mf = true;

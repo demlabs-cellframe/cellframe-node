@@ -1,7 +1,14 @@
 project(cellframe-node C)
 cmake_minimum_required(VERSION 2.8)
 
-set(DAP_RELEASE 1)
+if(DAP_DEBUG_BUILD)
+    set(DAP_RELEASE 0)
+    message(STATUS "Debug build")
+else()
+    set(DAP_RELEASE 1)
+    message(STATUS "Release build")
+endif()
+
 if(WIN32)
   message(STATUS "Building for Windows")
 endif()
