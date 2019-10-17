@@ -14,7 +14,7 @@ DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 
 # Check profile.d symlink
 
-[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] || ln -s $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
+[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] && ln -sf $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
@@ -49,22 +49,20 @@ sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 NET_NAME="kelvin-testnet"
 
 db_get cellframe-node/kelvin_testnet_enable || true
-sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
-if [ "$RET" = "true" ]; then
+if [ "$RET"="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
     else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/NET_NAME.cfg"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/kelvin_testnet_node_type || true
     NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_CFG  || true
-
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_NET_CFG  || true
 fi
 
 mkdir -p $DAP_PREFIX/var/log || true
