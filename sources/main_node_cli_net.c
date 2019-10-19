@@ -175,7 +175,7 @@ int node_cli_post_command( connect_param *conn, cmd_state *cmd )
     // passing a parameter to the callback function
     ret = curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void * )cmd);
     ret = curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void * )cmd);
-    ret = curl_easy_setopt(curl, CURLOPT_USERAGENT, "kelvin-console 1.0");
+    ret = curl_easy_setopt(curl, CURLOPT_USERAGENT, "cellframe-console 1.0");
 
     char *post_data = NULL;
     ret = curl_easy_setopt(curl, CURLOPT_POST, 1); // POST request - optional if CURLOPT_POSTFIELDS will be
@@ -205,7 +205,7 @@ int node_cli_post_command( connect_param *conn, cmd_state *cmd )
 
     if (ret != CURLE_OK) {
         printf("Error (err_code=%d)\n", ret);
-        exit(-1);
+        return -1;
     }
 
     int l_err_code = -1;
@@ -223,11 +223,10 @@ int node_cli_post_command( connect_param *conn, cmd_state *cmd )
     }
 
     DAP_DELETE(post_data);
-    exit(l_err_code);
-    return 0;
+    return l_err_code;
 }
 
-int node_cli_desconnect(connect_param *param)
+int node_cli_disconnect(connect_param *param)
 {
     if(param) {
         if(param->curl)
