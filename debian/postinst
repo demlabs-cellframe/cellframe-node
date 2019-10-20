@@ -99,5 +99,5 @@ else
         fi
     done
     chmod 0774 $DAP_PREFIX/bin/*
-    echo "[*] Done
+    echo "[*] Done"
 fi
