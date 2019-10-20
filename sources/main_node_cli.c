@@ -206,7 +206,7 @@ int main(int argc, const char * argv[])
     cparam = node_cli_connect();
     if(!cparam)
     {
-        printf("Can't connected to kelvin-node\n");
+        printf("Can't connected to cellframe-node\n");
         exit(-1);
     }
 
