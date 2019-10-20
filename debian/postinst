@@ -76,10 +76,11 @@ if [ -e "/etc/systemd/system/$DAP_APP_NAME.service" ]; then
     systemctl daemon-reload || true
     systemctl --system start $DAP_APP_NAME || true
 else
+    echo "[!] Installing $DAP_APP_NAME as systemd service"
     ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service || true
     systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
 #    systemctl --system start $DAP_APP_NAME
-    echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'" 
+    echo "[ ] Execute 'systemctl start $DAP_APP_NAME' to start $DAP_APP_NAME service"
 
     #USERMAN=`users | awk '{print $1}'`
     adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
@@ -98,4 +99,5 @@ else
         fi
     done
     chmod 0774 $DAP_PREFIX/bin/*
+    echo "[*] Done
 fi
