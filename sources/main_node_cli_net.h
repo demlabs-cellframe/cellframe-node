@@ -47,4 +47,4 @@ connect_param* node_cli_connect(void);
  */
 int node_cli_post_command(connect_param *conn, cmd_state *cmd);
 
-int node_cli_desconnect(connect_param *conn);
+int node_cli_disconnect(connect_param *conn);

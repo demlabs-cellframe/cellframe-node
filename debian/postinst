@@ -6,16 +6,15 @@ DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
-DAP_CFG_TESTNET_TPL="$DAP_PREFIX/share/configs/network/kelvin-testnet.cfg.tpl"
 
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-DAP_CFG_TESTNET="$DAP_PREFIX/etc/network/kelvin-testnet.cfg"
+
 
 
 # Check profile.d symlink
 
-[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] || ln -s $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
+[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] && ln -sf $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
@@ -25,9 +24,6 @@ else
 fi
 
 cat $DAP_CFG_TPL > $DAP_CFG || true
-
-db_get cellframe-node/node_type || true
-sed -i "s/{NODE_TYPE}/$RET/" $DAP_CFG  || true
 
 db_get cellframe-node/debug_mode || true
 sed -i "s/{DEBUG_MODE}/$RET/" $DAP_CFG  || true
@@ -47,23 +43,44 @@ sed -i "s/{SERVER_PORT}/$RET/" $DAP_CFG  || true
 db_get cellframe-node/server_addr || true
 sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 
-mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/zerochain/ || true
-mkdir -p $DAP_PREFIX/var/lib/network/kelvin-testnet/plasma/ || true
+
+
+# Init kelvin-testnet
+NET_NAME="kelvin-testnet"
+
+db_get cellframe-node/kelvin_testnet_enable || true
+if [ "$RET"="true" ]; then
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/kelvin_testnet_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_NET_CFG  || true
+fi
+
 mkdir -p $DAP_PREFIX/var/log || true
 
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
 
-if [ -e "/etc/systemd/system/$DAP_APP_NAME.service" ]; then
-    echo "Restarting $DAP_APP_NAME to implement changes"
+if [ -e /etc/systemd/system/$DAP_APP_NAME.service ]; then
+    echo "[*] Restarting $DAP_APP_NAME to implement changes"
     systemctl --system stop $DAP_APP_NAME  >> /dev/null|| true
     systemctl daemon-reload || true
     systemctl --system start $DAP_APP_NAME || true
 else
+    echo "[!] Installing $DAP_APP_NAME as systemd service (haven't found /etc/systemd/system/$DAP_APP_NAME.service)"
     ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service || true
     systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
 #    systemctl --system start $DAP_APP_NAME
-    echo "For start $DAP_APP_NAME - run 'systemctl start $DAP_APP_NAME'" 
+    echo "[ ] Execute 'systemctl start $DAP_APP_NAME' to start $DAP_APP_NAME service"
 
     #USERMAN=`users | awk '{print $1}'`
     adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
@@ -82,4 +99,5 @@ else
         fi
     done
     chmod 0774 $DAP_PREFIX/bin/*
+    echo "[*] Done"
 fi

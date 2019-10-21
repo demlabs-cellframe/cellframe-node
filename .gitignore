@@ -1,7 +1,7 @@
 # Prerequisites
 build/*
+build_stretch/*
 test/build
-*.d
 *.txt.user
 *.txt.user.*
 *.autosave

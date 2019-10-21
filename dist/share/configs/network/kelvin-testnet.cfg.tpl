@@ -5,8 +5,9 @@ id=0x0000000000000001
 name=kelvin-testnet
 type=development
 # Possible values: light, full, archive, master, root
-node-role=full
+node-role={NODE_TYPE}
 #node-alias=addr-%node_addr%
+#node-addr=1234::1234::1234::1234
 gdb_groups_prefix=kelvin-testnet
 
 seed_nodes_hostnames=[0.root.testnet.klvn.io,1.root.testnet.klvn.io,2.root.testnet.klvn.io,3.root.testnet.klvn.io,4.root.testnet.klvn.io]
@@ -19,3 +20,4 @@ seed_nodes_port=[8079,8079,8079,8079,8079]
 
 #[dag-pos]
 #events-sign-wallet=mywallet
+

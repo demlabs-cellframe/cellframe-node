@@ -1,15 +1,3 @@
-Template: cellframe-node/node_type
-Type: select
-Default: full
-Choices: full, light, master, archive, root
-Description: Node type
- Select node type:. 
- Light - syncronize only local wallets 
- full - sync all its cell
- master - allow to store values in chains and take comission, sync all shards that will need to be synced
- archive - Sync all the network
- root - Special predefined root nodes, usualy produces zerochain and act like archive as well 
-
 Template: cellframe-node/auto_online
 Default: false
 Choices: true, false
@@ -49,3 +37,24 @@ Default: 0.0.0.0
 Type: string
 Description: Server address
  Server address to listen on
+
+
+Template: cellframe-node/kelvin_testnet_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Kelvin Testnet: Enable network
+ Kelvin Testnet: Enable network auto load on start
+
+Template: cellframe-node/kelvin_testnet_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Kelvin Testnet: Node type
+ Select node type:. 
+ Light - syncronize only local wallets 
+ full - sync all its cell
+ master - allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usualy produces zerochain and act like archive as well 
+

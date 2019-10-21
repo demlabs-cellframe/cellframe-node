@@ -177,7 +177,8 @@ int shell_reader_loop()
 
         DAP_DELETE(line);
     }
-    exit(0);
+
+    return 0;
 }
 
 int main(int argc, const char * argv[])
@@ -233,13 +234,13 @@ int main(int argc, const char * argv[])
             cmd.cmd_param = (char**) (argv + 2);
         // Send command
         int res = node_cli_post_command(cparam, &cmd);
-        node_cli_desconnect(cparam);
+        node_cli_disconnect(cparam);
         return res;
+    }else{
+        // command not found, start interactive shell
+        shell_reader_loop();
+        node_cli_disconnect(cparam);
     }
-
-    // command not found, start interactive shell
-    shell_reader_loop();
-    node_cli_desconnect(cparam);
     return 0;
 }
 
