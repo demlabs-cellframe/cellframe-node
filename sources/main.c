@@ -82,6 +82,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_srv_vpn.h"
+#include "dap_chain_net_vpn_client.h"
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node_cli.h"
@@ -272,7 +273,6 @@ int main( int argc, const char **argv )
         return -66;
     }
 
-#if 0
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
         return -67;
@@ -287,11 +287,18 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
         return -69;
     }
-    if( dap_chain_net_srv_vpn_init(g_config) !=0){
-        log_it(L_ERROR,"Can't init dap chain network service vpn module");
-        //return -70;
+    // vpn server
+    if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
+        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
+            log_it(L_ERROR, "Can't init dap chain network service vpn module");
+            return -70;
+        }
     }
-#endif
+    // vpn client
+    if(dap_chain_net_vpn_client_init(g_config) != 0) {
+        log_it(L_ERROR, "Can't init dap chain network service vpn client");
+        return -71;
+    }
 
 	if ( enc_http_init() != 0 ) {
 	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
