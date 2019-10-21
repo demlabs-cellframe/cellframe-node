@@ -198,7 +198,7 @@ int main(int argc, const char * argv[])
     memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
 
     if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
-        printf("Can't init general configurations\n");
+        printf("Can't init general configurations " DAP_APP_NAME ".cfg\n");
         exit(-1);
     }
 
@@ -206,7 +206,7 @@ int main(int argc, const char * argv[])
     cparam = node_cli_connect();
     if(!cparam)
     {
-        printf("Can't connected to cellframe-node\n");
+        printf("Can't connected to " DAP_APP_NAME "\n");
         exit(-1);
     }
 
