@@ -70,6 +70,7 @@ mkdir -p $DAP_PREFIX/var/log || true
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
 
+echo "[*] Check /etc/systemd/system/$DAP_APP_NAME.service file..."
 if [ -e /etc/systemd/system/$DAP_APP_NAME.service ]; then
     echo "[*] Restarting $DAP_APP_NAME to implement changes"
     systemctl --system stop $DAP_APP_NAME  >> /dev/null|| true
