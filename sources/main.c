@@ -86,6 +86,7 @@
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node_cli.h"
+#include "dap_chain_node_client.h"
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
