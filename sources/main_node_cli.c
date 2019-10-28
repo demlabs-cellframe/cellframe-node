@@ -177,7 +177,8 @@ int shell_reader_loop()
 
         DAP_DELETE(line);
     }
-    exit(0);
+
+    return 0;
 }
 
 int main(int argc, const char * argv[])
@@ -197,7 +198,7 @@ int main(int argc, const char * argv[])
     memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
 
     if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
-        printf("Can't init general configurations\n");
+        printf("Can't init general configurations " DAP_APP_NAME ".cfg\n");
         exit(-1);
     }
 
@@ -205,7 +206,7 @@ int main(int argc, const char * argv[])
     cparam = node_cli_connect();
     if(!cparam)
     {
-        printf("Can't connected to kelvin-node\n");
+        printf("Can't connected to " DAP_APP_NAME "\n");
         exit(-1);
     }
 
@@ -233,13 +234,13 @@ int main(int argc, const char * argv[])
             cmd.cmd_param = (char**) (argv + 2);
         // Send command
         int res = node_cli_post_command(cparam, &cmd);
-        node_cli_desconnect(cparam);
+        node_cli_disconnect(cparam);
         return res;
+    }else{
+        // command not found, start interactive shell
+        shell_reader_loop();
+        node_cli_disconnect(cparam);
     }
-
-    // command not found, start interactive shell
-    shell_reader_loop();
-    node_cli_desconnect(cparam);
     return 0;
 }
 
