@@ -62,6 +62,11 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+#include "db_core.h"
+#include "db_http.h"
+#include "db_http_file.h"
+#include "db_auth.h"
+
 #include "dap_events.h"
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
@@ -107,6 +112,8 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 
+#define DB_URL "/db"
+#define DB_FILE_URL "/db_file"
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
 
@@ -383,6 +390,24 @@ int main( int argc, const char **argv )
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
+            // If CDB module switched on
+            if( dap_config_get_item_str_default(g_config,"cdb","enabled",false) ) {
+                if((rc=db_core_init(dap_config_get_item_str_default(g_config,
+                                                                    "cdb",
+                                                                    "db_path",
+                                                                    "mongodb://localhost/db")))!=0 ){
+                    log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
+                    return -3;
+                }
+                if( dap_config_get_item_str_default( g_config,"cdb_auth","enabled",false) ){
+                    db_auth_init( dap_config_get_item_str_default(g_config,"cdb_auth","collection_name","cdb") );
+                }
+                db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
+                db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
+            }
+
+
+
 	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
 	                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
@@ -404,11 +429,11 @@ int main( int argc, const char **argv )
 
     // VPN channel
 
-///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
-///        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
-///                   dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
-///
-///    }
+    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
+        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
+                   dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
+
+    }
 
     // Chain Network init
 

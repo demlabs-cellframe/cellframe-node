@@ -20,6 +20,17 @@ listen_port_tcp={SERVER_PORT}
 [mempool]
 accept=false
 
+# Central Dataase
+[cdb]
+enabled=false
+db_path=mongodb://localhost/db
+
+# Central Database authorization
+[cdb_auth]
+enabled=false
+collection_name=mycollection
+
+
 # VPN stream channel processing module
 [vpn]
 #   Turn to true if you want to share VPN service from you node 
