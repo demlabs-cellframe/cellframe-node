@@ -46,7 +46,7 @@ SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
 SET( CPACK_PACKAGE_VERSION_MINOR 4)
-SET( CPACK_PACKAGE_VERSION_PATCH 28)
+SET( CPACK_PACKAGE_VERSION_PATCH 30)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -124,6 +124,7 @@ add_subdirectory(libdap-server-udp)
 add_subdirectory(libdap-server)
 
 if(NOT (WIN32))
+  add_subdirectory(libdap-server-http-db)
   add_subdirectory(libdap-server-http-db-auth)
 endif()
 
@@ -318,7 +319,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m pthread magic dap_server_http_db_auth)
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m pthread magic dap_server_http_db dap_server_http_db_auth)
 
 target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
 

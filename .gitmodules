@@ -134,3 +134,7 @@
 	path = test/libdap-test
 	url = https://gitlab.demlabs.net/cellframe/libdap-test.git
 	branch = master
+[submodule "libdap-server-http-db"]
+	path = libdap-server-http-db
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-http-db
+	branch = master
