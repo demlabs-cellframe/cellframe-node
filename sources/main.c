@@ -139,25 +139,23 @@ int main( int argc, const char **argv )
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-        dap_snprintf(l_log_file_path, sizeof (l_log_file_path),"%s/%s.log",SYSTEM_LOGS_DIR, DAP_APP_NAME );
-        dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
+        dap_snprintf(l_log_file_path + l_sys_dir_path_len, sizeof (l_log_file_path), "%s/%s.log", SYSTEM_LOGS_DIR, DAP_APP_NAME);
+        dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-        dap_snprintf(s_sys_dir_path,sizeof (s_sys_dir_path),"%s",SYSTEM_CONFIGS_DIR);
+        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof(s_sys_dir_path), "%s", SYSTEM_CONFIGS_DIR);
         dap_config_init( s_sys_dir_path );
-        log_it(L_DEBUG,"1");
+        memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;
         }
-        log_it(L_DEBUG,"2");
         dap_sprintf(s_pid_file_path + l_sys_dir_path_len, "%s", dap_config_get_item_str_default( g_config,
                                                                                    "resources",
                                                                                    "pid_path","/tmp") );
-        log_it(L_DEBUG,"3");
     }
     log_it(L_DEBUG, "Parsing command line args");
 	parse_args( argc, argv );
