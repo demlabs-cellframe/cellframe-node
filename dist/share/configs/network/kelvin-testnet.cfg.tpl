@@ -15,6 +15,9 @@ seed_nodes_aliases=[kelvin.testnet.root.0,kelvin.testnet.root.1,kelvin.testnet.r
 seed_nodes_addrs=[ffff::0000::0000::0001,ffff::0000::0000::0002,ffff::0000::0000::0003,ffff::0000::0000::0004,ffff::0000::0000::0005]
 seed_nodes_port=[8079,8079,8079,8079,8079]
 
+#[role-master]
+#proc_chains=[0x00000001]
+
 #[dag-poa]
 #events-sign-cert=mycert
 
