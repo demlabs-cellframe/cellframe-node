@@ -391,7 +391,7 @@ int main( int argc, const char **argv )
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
             // If CDB module switched on
-            if( dap_config_get_item_str_default(g_config,"cdb","enabled",false) ) {
+            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
                 if((rc=db_core_init(dap_config_get_item_str_default(g_config,
                                                                     "cdb",
                                                                     "db_path",
@@ -399,7 +399,7 @@ int main( int argc, const char **argv )
                     log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
                     return -3;
                 }
-                if( dap_config_get_item_str_default( g_config,"cdb_auth","enabled",false) ){
+                if( dap_config_get_item_bool_default( g_config,"cdb_auth","enabled",false) ){
                     db_auth_init( dap_config_get_item_str_default(g_config,"cdb_auth","collection_name","cdb") );
                 }
                 db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
