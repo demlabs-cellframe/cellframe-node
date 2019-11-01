@@ -87,7 +87,9 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_srv_vpn.h"
+#include "dap_chain_net_srv_vpn_cdb_server_list.h"
 #include "dap_chain_net_vpn_client.h"
+
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node_cli.h"
@@ -305,6 +307,21 @@ int main( int argc, const char **argv )
         return -71;
     }
 
+
+#ifdef DAP_OS_LINUX
+    if (dap_config_get_item_bool_default( g_config,
+                                                                "cdb",
+                                                                "servers_list_enabled",
+                                                                false)) {
+
+        if (dap_chain_net_srv_vpn_cdb_server_list_init(dap_config_get_item_str_default(g_config,
+                                                                    "resources", "servers_list_file", "" )) != 0) {
+            log_it(L_CRITICAL,"Can't init vpn servers list");
+            return -10;
+        }
+    }
+#endif
+
 	if ( enc_http_init() != 0 ) {
 	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
 	    return -81;
@@ -404,6 +421,14 @@ int main( int argc, const char **argv )
                 }
                 db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
                 db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
+
+                if (dap_config_get_item_bool_default( g_config,
+                                                                    "cdb",
+                                                                    "servers_list_enabled",
+                                                                    false)) {
+                    dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
+                }
+
             }
 
 

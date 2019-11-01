@@ -24,6 +24,7 @@ accept=false
 [cdb]
 enabled=false
 db_path=mongodb://localhost/db
+servers_list_enabled=false
 
 # Central Database authorization
 [cdb_auth]
@@ -58,5 +59,5 @@ wallets_path=/opt/cellframe-node/var/lib/wallet
 ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
 dap_global_db_path=/opt/cellframe-node/var/lib/global_db
 dap_global_db_driver=cdb
-
+#servers_list_file=/opt/cellframe-node/var/lib/servers/vpn-servers.xml
 
