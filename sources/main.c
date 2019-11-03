@@ -308,19 +308,6 @@ int main( int argc, const char **argv )
     }
 
 
-#ifdef DAP_OS_LINUX
-    if (dap_config_get_item_bool_default( g_config,
-                                                                "cdb",
-                                                                "servers_list_enabled",
-                                                                false)) {
-
-        if (dap_chain_net_srv_vpn_cdb_server_list_init(dap_config_get_item_str_default(g_config,
-                                                                    "resources", "servers_list_file", "" )) != 0) {
-            log_it(L_CRITICAL,"Can't init vpn servers list");
-            return -10;
-        }
-    }
-#endif
 
 	if ( enc_http_init() != 0 ) {
 	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
@@ -407,31 +394,6 @@ int main( int argc, const char **argv )
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
-            // If CDB module switched on
-            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-                if((rc=db_core_init(dap_config_get_item_str_default(g_config,
-                                                                    "cdb",
-                                                                    "db_path",
-                                                                    "mongodb://localhost/db")))!=0 ){
-                    log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
-                    return -3;
-                }
-                if( dap_config_get_item_bool_default( g_config,"cdb_auth","enabled",false) ){
-                    db_auth_init( dap_config_get_item_str_default(g_config,"cdb_auth","collection_name","cdb") );
-                }
-                db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
-                db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
-
-                if (dap_config_get_item_bool_default( g_config,
-                                                                    "cdb",
-                                                                    "servers_list_enabled",
-                                                                    false)) {
-                    dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
-                }
-
-            }
-
-
 
 	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
@@ -477,6 +439,44 @@ int main( int argc, const char **argv )
 
     // Load all chain networks
 	dap_chain_net_load_all();
+
+#ifdef DAP_OS_LINUX
+    if (dap_config_get_item_bool_default( g_config,
+                                                                "cdb",
+                                                                "servers_list_enabled",
+                                                                false)) {
+
+        if (dap_chain_net_srv_vpn_cdb_server_list_init() != 0) {
+            log_it(L_CRITICAL,"Can't init vpn servers list");
+            return -10;
+        }
+    }
+#endif
+
+    // If CDB module switched on
+    if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
+        if((rc=db_core_init(dap_config_get_item_str_default(g_config,
+                                                            "cdb",
+                                                            "db_path",
+                                                            "mongodb://localhost/db")))!=0 ){
+            log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
+            return -3;
+        }
+        if( dap_config_get_item_bool_default( g_config,"cdb_auth","enabled",false) ){
+            db_auth_init( dap_config_get_item_str_default(g_config,"cdb_auth","collection_name","cdb") );
+        }
+        db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
+        db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
+
+        if (dap_config_get_item_bool_default( g_config,
+                                                            "cdb",
+                                                            "servers_list_enabled",
+                                                            false)) {
+            dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
+        }
+
+    }
+
 
 	// Endless loop for server's requests processing
 	rc = dap_server_loop(l_server);
