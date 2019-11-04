@@ -46,7 +46,7 @@ SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
 SET( CPACK_PACKAGE_VERSION_MINOR 5)
-SET( CPACK_PACKAGE_VERSION_PATCH 13)
+SET( CPACK_PACKAGE_VERSION_PATCH 14)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -175,12 +175,12 @@ if(WIN32)
   add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
   add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
-  target_link_libraries(${PROJECT_NAME}-cli dap_chain_net 
+  target_link_libraries(${PROJECT_NAME}-cli dap_chain_net dap_cuttdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
@@ -219,13 +219,13 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool 
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
@@ -265,12 +265,12 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb 
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb dap_cuttdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
