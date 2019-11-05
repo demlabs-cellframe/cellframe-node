@@ -133,7 +133,7 @@ int rl_set_prompt(const char *prompt)
     free(rl_prompt);
     rl_prompt = prompt ? savestring(prompt) : (char *) NULL;
     rl_display_prompt = rl_prompt ? rl_prompt : "";
-    fprintf(stdout, prompt);
+    fprintf(stdout, "%s", prompt);
     fflush(stdout);
     //rl_visible_prompt_length = rl_expand_prompt (rl_prompt);
     return 0;

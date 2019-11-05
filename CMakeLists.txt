@@ -1,5 +1,9 @@
 project(cellframe-node C)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
+
+
+
+
 
 if(DAP_DEBUG_BUILD)
     set(DAP_RELEASE 0)
@@ -68,6 +72,8 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 add_definitions ("-DNODE_NETNAME=\"cellframe\"")
 
+include_directories(3rdparty/curl/include/)
+
 if(WIN32)
 
   add_definitions ("-DUNDEBUG")
@@ -79,7 +85,7 @@ if(WIN32)
   add_definitions ("-DCURL_STATICLIB")
 
   if(DAP_RELEASE)
-    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize  -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
   else()
     set(_CCOPT "-mconsole -static -Wall -pg")
     set(_LOPT "-mconsole -static -pg")
@@ -95,7 +101,6 @@ if(WIN32)
   include_directories(3rdparty/uthash/src/)
   include_directories(3rdparty/libjson-c/)
   include_directories(3rdparty/libmagic/src/)
-  include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libsqlite3/)
 
   include_directories(libdap-server-http-db-auth/)
@@ -106,7 +111,7 @@ if(UNIX)
   add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
 # add_definitions ("-DDAP_LOG_MT")
   if(DAP_RELEASE)
-    set(_CCOPT "-Wall -O3 -fPIC -fno-pie -no-pie -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+    set(_CCOPT "-Wall -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -fforce-enable-int128")
   else()
     set(_CCOPT "-Wall -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
     set(_LOPT "-pg")
@@ -115,6 +120,8 @@ if(UNIX)
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
+
+
 endif()
 
 add_subdirectory(libdap)
@@ -257,7 +264,8 @@ if(WIN32)
     Secur32
 	userenv
 )
-	set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+  set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+
 
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
@@ -310,6 +318,8 @@ endif()
 
 #add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
 #add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
+
+
 
 if(UNIX)
 
