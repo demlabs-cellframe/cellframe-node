@@ -466,17 +466,16 @@ int main( int argc, const char **argv )
         db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
         db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
 
+        // Load all chain networks
+        dap_chain_net_load_all();
         if (dap_config_get_item_bool_default( g_config,
                                                             "cdb",
                                                             "servers_list_enabled",
                                                             false)) {
             dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
         }
-
     }
 
-    // Load all chain networks
-    dap_chain_net_load_all();
 
 	// Endless loop for server's requests processing
 	rc = dap_server_loop(l_server);
