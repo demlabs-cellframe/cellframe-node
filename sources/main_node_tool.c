@@ -71,7 +71,10 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
+
+#ifndef _WIN32
 #include "dap_chain_net_srv_vpn.h"
+#endif
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
