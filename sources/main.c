@@ -62,10 +62,13 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+
+#ifndef _WIN32
 #include "db_core.h"
 #include "db_http.h"
 #include "db_http_file.h"
 #include "db_auth.h"
+#endif
 
 #include "dap_events.h"
 #include "dap_enc.h"
@@ -86,9 +89,12 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
+
+#ifndef _WIN32
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_srv_vpn_cdb_server_list.h"
 #include "dap_chain_net_vpn_client.h"
+#endif
 
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
@@ -180,7 +186,7 @@ int main( int argc, const char **argv )
 	else
  	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-	dap_log_level_set( bDebugMode ? L_DEBUG: L_NOTICE );
+    dap_log_level_set( bDebugMode ? L_DEBUG: L_INFO );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
@@ -295,6 +301,7 @@ int main( int argc, const char **argv )
         return -69;
     }
     // vpn server
+#ifndef _WIN32
     if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
@@ -306,7 +313,7 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
         return -71;
     }
-
+#endif
 
 
 	if ( enc_http_init() != 0 ) {
@@ -451,7 +458,6 @@ int main( int argc, const char **argv )
             return -10;
         }
     }
-#endif
 
     // If CDB module switched on
     if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
@@ -476,7 +482,7 @@ int main( int argc, const char **argv )
             dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
         }
     }
-
+#endif
 
 	// Endless loop for server's requests processing
 	rc = dap_server_loop(l_server);
