@@ -423,11 +423,12 @@ int main( int argc, const char **argv )
 
     // VPN channel
 
+    /*
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
         dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
                    dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
 
-    }
+    }*/
 
     // Chain Network init
 
