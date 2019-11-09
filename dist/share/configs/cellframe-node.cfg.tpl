@@ -31,6 +31,7 @@ networks=[kelvin-testnet,private]
 [cdb_auth]
 enabled=false
 collection_name=mycollection
+domain=mydomain
 
 
 # VPN stream channel processing module

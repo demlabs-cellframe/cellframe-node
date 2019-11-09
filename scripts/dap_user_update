@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo "Update user for dapserver authorization"
+
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+	echo "Need three or four parametrs ( login, first_name, last_name, password ( if want change) )."
+	exit 1
+fi
+
+if [ $# -eq 3 ]; then
+	mongo dapDb --eval "db.dap_users.update( { login : \"${1}\"}, { \$set: { \"profile.first_name\" : \"${2}\", \"profile.last_name\" : \"${3}\"  } } )"
+	exit 0
+fi
+
+password=${4}
+
+password_hash=$(/opt/cellframe-node/bin/dap_server_http_db_auth_tool password_hash ${password})
+echo "Password hash $password_hash"
+
+
+mongo dapDb --eval "db.dap_users.update( { login : \"${1}\"}, { \$set: { passwordHash : \"${password_hash}\", \"profile.first_name\" : \"${2}\", \"profile.last_name\" : \"${3}\"  } } )"
+
