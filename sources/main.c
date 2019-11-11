@@ -302,12 +302,13 @@ int main( int argc, const char **argv )
     }
     // vpn server
 #ifndef _WIN32
+    /*
     if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
             return -70;
         }
-    }
+    }*/
     // vpn client
     if(dap_chain_net_vpn_client_init(g_config) != 0) {
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
@@ -423,12 +424,12 @@ int main( int argc, const char **argv )
 
     // VPN channel
 
-    /*
+
     if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
         dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
                    dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
 
-    }*/
+    }
 
     // Chain Network init
 
