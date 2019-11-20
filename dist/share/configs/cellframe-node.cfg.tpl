@@ -32,7 +32,7 @@ networks=[kelvin-testnet,private]
 enabled=false
 collection_name=mycollection
 domain=mydomain
-
+tx_cond_create=false
 
 # VPN stream channel processing module
 [vpn]

@@ -138,12 +138,12 @@ int main(int argc, const char **argv) {
         exit( -2003 );
       }
 
-      dap_chain_net_id_t l_network_id = dap_chain_net_id_by_name( argv[3] );
+      /*dap_chain_net_id_t l_network_id = dap_chain_net_id_by_name( argv[3] );
       if ( !l_network_id.raw ) {
         log_it( L_ERROR, "No such network name '%s'", argv[3] );
         s_help() ;
         exit( -2005 );
-      }
+      }*/
 
       const char *l_wallet_name = argv[4];
       dap_chain_sign_type_t l_sig_type = dap_chain_sign_type_from_str( argv[5] );
@@ -159,7 +159,7 @@ int main(int argc, const char **argv) {
         dap_stpcpy(l_wallets_path, s_sys_dir_path);
 #endif
         dap_sprintf(l_wallets_path + l_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
-        l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_network_id, l_sig_type );
+        l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_sig_type );
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
 
