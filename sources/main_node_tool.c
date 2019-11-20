@@ -57,8 +57,8 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_cert.h"
-#include "dap_chain_cert_file.h"
+#include "dap_cert.h"
+#include "dap_cert_file.h"
 
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_event.h"
@@ -146,7 +146,7 @@ int main(int argc, const char **argv) {
       }*/
 
       const char *l_wallet_name = argv[4];
-      dap_chain_sign_type_t l_sig_type = dap_chain_sign_type_from_str( argv[5] );
+      dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[5] );
       dap_chain_wallet_t *l_wallet = NULL;
 
       if ( l_sig_type.type == SIG_TYPE_NULL ) {
@@ -198,10 +198,10 @@ int main(int argc, const char **argv) {
                    /* if ( strcmp( argv[2],"create_from") == 0 ){
                         }else if ( argc >=7){
                             // wallet create_from <wallet name> from <wallet ca1> [<wallet ca2> ...<wallet caN>]
-                            dap_chain_cert_t ** l_wallet_cert = NULL;
+                            dap_cert_t ** l_wallet_cert = NULL;
                             size_t l_wallet_cert_size = 0;
                             l_wallet_cert_size = (argc - 3 )
-                            l_wallet_cert = DAP_NEW_Z_SIZE (dap_chain_cert_t*, l_wallet_cert_size );
+                            l_wallet_cert = DAP_NEW_Z_SIZE (dap_cert_t*, l_wallet_cert_size );
                         }else {
                             log_it(L_ERROR,"Wrong 'wallet create_from' command params");
                             s_help();
@@ -211,7 +211,7 @@ int main(int argc, const char **argv) {
                         if ( l_wallet_cert ){
                             if (l_wallet_cert_size > 0)
                                 for (size_t i = 0; i < l_wallet_cert_size; i++)
-                                    dap_chain_cert_delete( l_wallet_cert[i]->);
+                                    dap_cert_delete( l_wallet_cert[i]->);
                         }
 
                     }*/
@@ -221,10 +221,10 @@ int main(int argc, const char **argv) {
       if ( strcmp( argv[2],"dump") == 0 ){
         if (argc>=4) {
           const char * l_cert_name = argv[3];
-          dap_chain_cert_t * l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
+          dap_cert_t * l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
           if ( l_cert ) {
-            dap_chain_cert_dump(l_cert);
-            dap_chain_cert_delete_by_name(l_cert_name);
+            dap_cert_dump(l_cert);
+            dap_cert_delete_by_name(l_cert_name);
             ret = 0;
           }
           else {
@@ -235,13 +235,13 @@ int main(int argc, const char **argv) {
        if (argc < 5) exit(-7023);
          const char *l_cert_name = argv[3];
          const char *l_cert_pkey_path = argv[4];
-         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
+         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
          if ( !l_cert ) exit( -7021 );
            l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
            if ( l_cert->enc_key->pub_key_data_size ) {
              //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
              //if ( dap_enc_gen_key_public(l_cert->key_private, l_cert->key_private->pub_key_data) == 0){
-             dap_chain_pkey_t * l_pkey = dap_chain_pkey_from_enc_key( l_cert->enc_key );
+             dap_pkey_t * l_pkey = dap_pkey_from_enc_key( l_cert->enc_key );
              if (l_pkey) {
                FILE *l_file = fopen(l_cert_pkey_path,"wb");
                if (l_file) {
@@ -252,7 +252,7 @@ int main(int argc, const char **argv) {
                log_it(L_ERROR, "Can't produce pkey from the certificate");
                exit(-7022);
              }
-             dap_chain_cert_delete_by_name(l_cert_name);
+             dap_cert_delete_by_name(l_cert_name);
              ret = 0;
              //}else{
              //    log_it(L_ERROR,"Can't produce public key with this key type");
@@ -266,11 +266,11 @@ int main(int argc, const char **argv) {
        if ( argc >= 5 ) {
          const char *l_cert_name = argv[3];
          const char *l_cert_new_name = argv[4];
-         dap_chain_cert_t *l_cert = dap_chain_cert_add_file(l_cert_name, s_system_ca_dir);
+         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
          if ( l_cert ) {
            if ( l_cert->enc_key->pub_key_data_size ) {
              // Create empty new cert
-             dap_chain_cert_t * l_cert_new = dap_chain_cert_new(l_cert_new_name);
+             dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
              l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
 
              // Copy only public key
@@ -279,9 +279,9 @@ int main(int argc, const char **argv) {
                                                                 l_cert->enc_key->pub_key_data_size );
              memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
 
-             dap_chain_cert_save_to_folder(l_cert_new, s_system_ca_dir);
-             //dap_chain_cert_delete_by_name(l_cert_name);
-             //dap_chain_cert_delete_by_name(l_cert_new_name);
+             dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
+             //dap_cert_delete_by_name(l_cert_name);
+             //dap_cert_delete_by_name(l_cert_new_name);
            } else {
              log_it(L_ERROR,"Can't produce pkey from this cert type");
              exit(-7023);
@@ -324,11 +324,11 @@ int main(int argc, const char **argv) {
 
        if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
          int l_key_length = argc >=6 ? atoi(argv[5]) : 0;
-         dap_chain_cert_t * l_cert = dap_chain_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
+         dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
          if (l_cert == NULL){
            log_it(L_ERROR, "Can't create %s",l_cert_path);
          }
-         dap_chain_cert_delete(l_cert);
+         dap_cert_delete(l_cert);
        } else {
            s_help();
            DAP_DELETE(l_cert_path);
@@ -394,7 +394,7 @@ static int s_init( int argc, const char **argv )
     return -3;
   }
 
-  if ( dap_chain_cert_init() != 0 ) {
+  if ( dap_cert_init() != 0 ) {
     log_it( L_ERROR, "Can't chain certificate storage module" );
     return -4;
   }
