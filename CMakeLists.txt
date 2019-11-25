@@ -1,9 +1,7 @@
 project(cellframe-node C)
 cmake_minimum_required(VERSION 3.1)
 
-
-
-
+include(scripts/OS_Detection.cmake)
 
 if(DAP_DEBUG_BUILD)
     set(DAP_RELEASE 0)
@@ -72,7 +70,7 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 add_definitions ("-DNODE_NETNAME=\"cellframe\"")
 
-include_directories(3rdparty/curl/include/)
+
 
 if(WIN32)
 
@@ -85,7 +83,7 @@ if(WIN32)
   add_definitions ("-DCURL_STATICLIB")
 
   if(DAP_RELEASE)
-    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize  -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize  -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
   else()
     set(_CCOPT "-mconsole -static -Wall -pg")
     set(_LOPT "-mconsole -static -pg")
@@ -95,10 +93,9 @@ if(WIN32)
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
 
   include_directories(libdap/src/win32/)
-  include_directories(3rdparty/libmemcached/)
-  include_directories(3rdparty/libmemcached/win32/)
   include_directories(3rdparty/wepoll/include/)
   include_directories(3rdparty/uthash/src/)
+  include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libjson-c/)
   include_directories(3rdparty/libmagic/src/)
   include_directories(3rdparty/libsqlite3/)
@@ -111,16 +108,30 @@ if(UNIX)
   add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
 # add_definitions ("-DDAP_LOG_MT")
   if(DAP_RELEASE)
-    set(_CCOPT "-Wall -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -fforce-enable-int128")
+    set(_CCOPT " -Wall -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
   else()
     set(_CCOPT "-Wall -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
     set(_LOPT "-pg")
     SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
   endif()
 
+  if (ANDROID)
+      set(_CCOPT "${_CCOPT} -fforce-enable-int128 -std=gnu11")
+  endif()
+
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
 
+
+  if (ANDROID)
+    add_subdirectory(lib/json-c)
+    add_subdirectory(lib/sqlite3)
+    add_subdirectory(lib/libev)
+    include_directories(lib/)
+  else()
+    add_subdirectory(libdap-server-http-db)
+    add_subdirectory(libdap-server-http-db-auth)
+  endif(ANDROID)
 
 endif()
 
@@ -130,10 +141,6 @@ add_subdirectory(libdap-server-core)
 add_subdirectory(libdap-server-udp)
 add_subdirectory(libdap-server)
 
-if(NOT (WIN32))
-  add_subdirectory(libdap-server-http-db)
-  add_subdirectory(libdap-server-http-db-auth)
-endif()
 
 add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
@@ -185,7 +192,6 @@ if(WIN32)
 
   target_link_libraries(${PROJECT_NAME}-cli dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
     #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
@@ -218,10 +224,10 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
+    userenv
   )
-	set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-  target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
+    set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
@@ -230,7 +236,6 @@ if(WIN32)
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
     #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
@@ -263,8 +268,8 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
-)
+    userenv
+  )
   set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
 
@@ -276,7 +281,6 @@ if(WIN32)
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
     #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
@@ -309,9 +313,9 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
-)
-	set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
+    userenv
+  )
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
 
@@ -324,38 +328,56 @@ endif()
 
 if(UNIX)
 
-target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
-    dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
-    dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
-    dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m pthread magic dap_server_http_db dap_server_http_db_auth)
 
-target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
+    target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
+        dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+        dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
+        dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
+        dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
+        dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
+        dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m magic
+        dap_cuttdb
+        #dap_server_http_db
+        )
 
-target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
-    dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
-    dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
-    dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool m pthread magic )
+    target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl dap_cuttdb )
+
+    target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
+        dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+        dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
+        dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
+        dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
+        dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
+        dap_chain_wallet dap_chain_global_db dap_chain_mempool m magic
+        dap_core
+        )
+
+    if(NOT ANDROID)
+        target_link_libraries(${PROJECT_NAME}
+            pthread
+            dap_server_http_db_auth
+            dap_cuttdb
+            )
+        target_link_libraries(${PROJECT_NAME}-cli pthread)
+        target_link_libraries(${PROJECT_NAME}-tool pthread)
+
+    endif()
+
 endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
 if(UNIX)
-target_include_directories(${PROJECT_NAME}-cli INTERFACE .)
-target_include_directories(${PROJECT_NAME}-tool INTERFACE .)
+    target_include_directories(${PROJECT_NAME}-cli INTERFACE .)
+    target_include_directories(${PROJECT_NAME}-tool INTERFACE .)
 endif()
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
 if(UNIX)
-INSTALL(TARGETS ${PROJECT_NAME}-cli DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-INSTALL(TARGETS ${PROJECT_NAME}-tool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    INSTALL(TARGETS ${PROJECT_NAME}-cli DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    INSTALL(TARGETS ${PROJECT_NAME}-tool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endif()
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )

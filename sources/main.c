@@ -62,10 +62,13 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+
+#ifndef __ANDROID__
 #include "db_core.h"
 #include "db_http.h"
 #include "db_http_file.h"
 #include "db_auth.h"
+#endif
 
 #include "dap_events.h"
 #include "dap_enc.h"
@@ -219,11 +222,6 @@ int main( int argc, const char **argv )
 	if ( dap_enc_init() != 0 ){
 	    log_it( L_CRITICAL, "Can't init encryption module" );
 	    return -56;
-	}
-
-	if ( dap_enc_ks_init( false, 60 *60 * 2 ) != 0 ) {
-		log_it( L_CRITICAL, "Can't init encryption key storage module" );
-		return -57;
 	}
     
 	if ( dap_chain_global_db_init(g_config) ) {
@@ -451,6 +449,7 @@ int main( int argc, const char **argv )
     }
 #endif
 
+#ifndef __ANDROID__
     // If CDB module switched on
     if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
         if((rc=db_core_init(dap_config_get_item_str_default(g_config,
@@ -475,7 +474,7 @@ int main( int argc, const char **argv )
             dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
         }
     }
-
+#endif
 
 	// Endless loop for server's requests processing
 	rc = dap_server_loop(l_server);
