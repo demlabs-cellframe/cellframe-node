@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "Creating the new user for dapserver authorization"
+
+if [ $# -eq 1 ]; then
+	domain=$1
+else
+	read -p "Enter domain name: " domain
+	if [ -z "$domain" ]; then
+    		echo "[CRITICAL] Need domain name to create new record in the database"
+    		exit 1
+	fi
+
+fi
+
+mongodomain=`mongo dapDb --eval "db.dap_domains.distinct( \"_id\", { domain : \"$domain\" })"`
+mongodomain=`echo "$mongodomain" | tail -1 | tr -d "[] "`
+
+if [ -z $mongodomain ]; then
+    mongo dapDb --eval "db.dap_domains.insert( {domain:\"$domain\" } )"
+else
+    echo "[CRITICAL] Domain name $domain is already present"
+fi
+

@@ -63,7 +63,7 @@
 #include "dap_http.h"
 #include "dap_http_folder.h"
 
-#ifndef __ANDROID__
+#if !defined (_WIN32) && !defined (__ANDROID__)
 #include "db_core.h"
 #include "db_http.h"
 #include "db_http_file.h"
@@ -89,9 +89,13 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_datum_pool.h"
+
+#ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
+#include "dap_chain_net_srv_vpn_cdb.h"
 #include "dap_chain_net_srv_vpn_cdb_server_list.h"
 #include "dap_chain_net_vpn_client.h"
+#endif
 
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
@@ -117,13 +121,11 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 
-#define DB_URL "/db"
-#define DB_FILE_URL "/db_file"
+
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
 
 #define STREAM_URL "/stream"
-#define SLIST_URL "/nodelist"
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
@@ -131,6 +133,7 @@ void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static char s_pid_file_path[MAX_PATH];
+static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
 int main( int argc, const char **argv )
 {
@@ -183,7 +186,7 @@ int main( int argc, const char **argv )
 	else
  	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-	dap_log_level_set( bDebugMode ? L_DEBUG: L_NOTICE );
+    dap_log_level_set( bDebugMode ? L_DEBUG: L_INFO );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
@@ -292,6 +295,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
         return -69;
     }
+#ifndef _WIN32
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
@@ -304,7 +308,7 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
         return -71;
     }
-
+#endif
 
 
 	if ( enc_http_init() != 0 ) {
@@ -413,10 +417,9 @@ int main( int argc, const char **argv )
 
 
     // VPN channel
-
-    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false)){
-        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn", "network_address", NULL),
-                   dap_config_get_item_str_default(g_config, "vpn", "network_mask", NULL));
+    if(dap_config_get_item_bool_default(g_config,"vpn_old","enabled",false)){
+        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn_old", "network_address", NULL),
+                   dap_config_get_item_str_default(g_config, "vpn_old", "network_mask", NULL));
 
     }
 
@@ -436,44 +439,20 @@ int main( int argc, const char **argv )
 ///        dap_stream_ch_vpn_deinit();
 
 
+    dap_chain_net_load_all();
+
 #ifdef DAP_OS_LINUX
-    if (dap_config_get_item_bool_default( g_config,
-                                                                "cdb",
-                                                                "servers_list_enabled",
-                                                                false)) {
-
-        if (dap_chain_net_srv_vpn_cdb_server_list_init() != 0) {
-            log_it(L_CRITICAL,"Can't init vpn servers list");
-            return -10;
-        }
-    }
-#endif
-
 #ifndef __ANDROID__
     // If CDB module switched on
     if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-        if((rc=db_core_init(dap_config_get_item_str_default(g_config,
-                                                            "cdb",
-                                                            "db_path",
-                                                            "mongodb://localhost/db")))!=0 ){
+        if ( (rc=dap_chain_net_srv_vpn_cdb_init(DAP_HTTP( l_server ))) != 0 ){
             log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
             return -3;
-        }
-        if( dap_config_get_item_bool_default( g_config,"cdb_auth","enabled",false) ){
-            db_auth_init( dap_config_get_item_str_default(g_config,"cdb_auth","collection_name","cdb") );
-        }
-        db_http_add_proc( DAP_HTTP( l_server ) , DB_URL );
-        db_http_file_proc_add( DAP_HTTP( l_server ) , DB_FILE_URL );
 
-        // Load all chain networks
-        dap_chain_net_load_all();
-        if (dap_config_get_item_bool_default( g_config,
-                                                            "cdb",
-                                                            "servers_list_enabled",
-                                                            false)) {
-            dap_chain_net_srv_vpn_cdb_server_list_add_proc ( DAP_HTTP(l_server), SLIST_URL);
         }
+        log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
     }
+#endif
 #endif
 
 	// Endless loop for server's requests processing

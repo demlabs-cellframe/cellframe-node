@@ -47,8 +47,8 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
-SET( CPACK_PACKAGE_VERSION_MINOR 5)
-SET( CPACK_PACKAGE_VERSION_PATCH 16)
+SET( CPACK_PACKAGE_VERSION_MINOR 6)
+SET( CPACK_PACKAGE_VERSION_PATCH 12)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -70,8 +70,6 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 add_definitions ("-DNODE_NETNAME=\"cellframe\"")
 
-
-
 if(WIN32)
 
   add_definitions ("-DUNDEBUG")
@@ -81,9 +79,12 @@ if(WIN32)
   add_definitions ("-D__WINDOWS__")
   add_definitions ("-D_CRT_SECURE_NO_WARNINGS")
   add_definitions ("-DCURL_STATICLIB")
+  add_definitions("-DHAVE_PREAD")
+  add_definitions("-DHAVE_MMAP")
+  add_definitions("-DHAVE_STRNDUP")
 
   if(DAP_RELEASE)
-    set(_CCOPT "-static -Wall -O3 -fno-ident -ffast-math -ftree-vectorize  -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
+    set(_CCOPT "-static -std=gnu11 -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
   else()
     set(_CCOPT "-mconsole -static -Wall -pg")
     set(_LOPT "-mconsole -static -pg")
@@ -95,9 +96,8 @@ if(WIN32)
   include_directories(libdap/src/win32/)
   include_directories(3rdparty/wepoll/include/)
   include_directories(3rdparty/uthash/src/)
-  include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libjson-c/)
-  include_directories(3rdparty/libmagic/src/)
+  include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libsqlite3/)
 
   include_directories(libdap-server-http-db-auth/)
@@ -121,7 +121,6 @@ if(UNIX)
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
-
 
   if (ANDROID)
     add_subdirectory(lib/json-c)
@@ -193,10 +192,7 @@ if(WIN32)
   target_link_libraries(${PROJECT_NAME}-cli dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
@@ -226,7 +222,7 @@ if(WIN32)
     Secur32
     userenv
   )
-    set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+  set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
@@ -237,10 +233,7 @@ if(WIN32)
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
@@ -282,10 +275,7 @@ if(WIN32)
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmagic[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/cuttdb[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/regex[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
@@ -324,8 +314,6 @@ endif()
 #add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
 #add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
-
-
 if(UNIX)
 
 
@@ -338,7 +326,7 @@ if(UNIX)
         dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m magic
         dap_cuttdb
         #dap_server_http_db
-        )
+    )
 
     target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl dap_cuttdb )
 
@@ -350,7 +338,7 @@ if(UNIX)
         dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
         dap_chain_wallet dap_chain_global_db dap_chain_mempool m magic
         dap_core
-        )
+    )
 
     if(NOT ANDROID)
         target_link_libraries(${PROJECT_NAME}
