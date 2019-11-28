@@ -80,6 +80,7 @@ if(WIN32)
   add_definitions("-DHAVE_PREAD")
   add_definitions("-DHAVE_MMAP")
   add_definitions("-DHAVE_STRNDUP")
+  add_definitions("-DWINVER=0x0600 -D_WIN32_WINNT=0x0600")
 
   if(DAP_RELEASE)
     set(_CCOPT "-static -std=gnu11 -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
@@ -94,12 +95,11 @@ if(WIN32)
   include_directories(libdap/src/win32/)
   include_directories(3rdparty/libmemcached/)
   include_directories(3rdparty/libmemcached/win32/)
-  include_directories(3rdparty/wepoll/include/)
   include_directories(3rdparty/uthash/src/)
   include_directories(3rdparty/libjson-c/)
   include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libsqlite3/)
-
+  include_directories(sources/wepoll/)
   include_directories(libdap-server-http-db-auth/)
   include_directories(libdap-chain-net-srv-vpn/)
 endif()
@@ -177,11 +177,9 @@ if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
   add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
   add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
-
   target_link_libraries(${PROJECT_NAME}-cli dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -210,9 +208,9 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
+        userenv
   )
-	set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+        set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
   target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
@@ -223,7 +221,6 @@ if(WIN32)
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -252,9 +249,9 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
+        userenv
 )
-	set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+        set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
@@ -265,7 +262,6 @@ if(WIN32)
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmemcached[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -294,9 +290,9 @@ if(WIN32)
     Bcrypt
     Crypt32
     Secur32
-	userenv
+        userenv
 )
-	set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
+        set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
 
@@ -315,7 +311,7 @@ target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m pthread magic dap_server_http_db dap_server_http_db_auth)
 
-target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl) 
+target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl)
 
 target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
