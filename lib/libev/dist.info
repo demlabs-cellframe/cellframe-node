@@ -1,0 +1,10 @@
+--- This file is part of LuaDist project
+
+name = "libev"
+version = "4.15"
+
+desc = "libev is a high-performance event loop/event model with lots of features."
+author = "Marc Lehmann, Emanuele Giaquinta"
+license = "GPL"
+url = "http://software.schmorp.de/pkg/libev"
+maintainer = "Peter Drahoš"
