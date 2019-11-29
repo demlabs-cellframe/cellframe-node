@@ -38,17 +38,17 @@ tx_cond_create=false
 # tx_cond_templates=[mywallet0:0.00001:3600:KELT:kelvin-testnet,mywallet1:0.000001:3600:cETH:kelvin-testnet,mywallet0:1:10:WOOD:private]
 
 # VPN stream channel processing module
-[vpn]
+[srv_vpn]
 #   Turn to true if you want to share VPN service from you node 
-enabled=false
+enabled=true
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
-access_groups=expats,services,admins 
 network_address=10.11.12.0
 network_mask=255.255.255.0
 
 # old VPN server
 [vpn_old]
-enabled=true
+enabled=false
+access_groups=expats,services,admins 
 network_address=10.11.11.0
 network_mask=255.255.255.0
 
