@@ -1,3 +1,34 @@
+/*
+ * wepoll - epoll for Windows
+ * https://github.com/piscisaureus/wepoll
+ *
+ * Copyright 2012-2019, Bert Belder <bertbelder@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef WEPOLL_H_
 #define WEPOLL_H_
 
@@ -6,8 +37,6 @@
 #endif
 
 #include <stdint.h>
-
-/* clang-format off */
 
 enum EPOLL_EVENTS {
   EPOLLIN      = (int) (1U <<  0),
@@ -41,8 +70,6 @@ enum EPOLL_EVENTS {
 #define EPOLL_CTL_MOD 2
 #define EPOLL_CTL_DEL 3
 
-/* clang-format on */
-
 typedef void* HANDLE;
 typedef uintptr_t SOCKET;
 
@@ -69,15 +96,15 @@ WEPOLL_EXPORT HANDLE epoll_create1(int flags);
 
 WEPOLL_EXPORT int epoll_close(HANDLE ephnd);
 
-WEPOLL_EXPORT int epoll_ctl( HANDLE ephnd,
+WEPOLL_EXPORT int epoll_ctl(HANDLE ephnd,
                             int op,
                             SOCKET sock,
-                            struct epoll_event* event );
+                            struct epoll_event* event);
 
-WEPOLL_EXPORT int epoll_wait( HANDLE ephnd,
+WEPOLL_EXPORT int epoll_wait(HANDLE ephnd,
                              struct epoll_event* events,
                              int maxevents,
-                             int timeout );
+                             int timeout);
 
 #ifdef __cplusplus
 } /* extern "C" */
