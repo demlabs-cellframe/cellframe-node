@@ -45,13 +45,6 @@ enabled=true
 network_address=10.11.12.0
 network_mask=255.255.255.0
 
-# old VPN server
-[vpn_old]
-enabled=false
-access_groups=expats,services,admins 
-network_address=10.11.11.0
-network_mask=255.255.255.0
-
 # Console interface server
 [conserver]
 enabled=true

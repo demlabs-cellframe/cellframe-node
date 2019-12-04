@@ -100,7 +100,6 @@
 #include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
-#include "dap_stream_ch_vpn.h"
 #include "dap_stream_ch_chain.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
@@ -293,7 +292,7 @@ int main( int argc, const char **argv )
     }
 #ifndef _WIN32
     // vpn server
-    if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
             return -70;
@@ -411,13 +410,6 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-
-    // VPN channel
-    if(dap_config_get_item_bool_default(g_config,"vpn_old","enabled",false)){
-        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn_old", "network_address", NULL),
-                   dap_config_get_item_str_default(g_config, "vpn_old", "network_mask", NULL));
-
-    }
 
     // Chain Network init
 

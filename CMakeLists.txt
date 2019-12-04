@@ -48,7 +48,7 @@ SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
 SET( CPACK_PACKAGE_VERSION_MINOR 6)
-SET( CPACK_PACKAGE_VERSION_PATCH 14)
+SET( CPACK_PACKAGE_VERSION_PATCH 17)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -165,8 +165,8 @@ add_subdirectory(libdap-stream)
 add_subdirectory(libdap-stream-ch)
 add_subdirectory(libdap-client)
 
-add_subdirectory(libdap-stream-ch-vpn)
 add_subdirectory(libdap-stream-ch-chain)
+#add_subdirectory(libdap-stream-ch-chat)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 
@@ -222,7 +222,7 @@ if(WIN32)
   )
   set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+    dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
@@ -263,7 +263,7 @@ if(WIN32)
   set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+    dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
@@ -311,7 +311,7 @@ endif()
 
 if(UNIX)
     target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-        dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+        dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
         dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
         dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
         dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
@@ -324,7 +324,7 @@ if(UNIX)
     target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl dap_cuttdb )
 
     target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
-        dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+        dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
         dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
         dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
         dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db

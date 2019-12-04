@@ -14,18 +14,6 @@
 	path = libdap-stream
 	url = https://gitlab.demlabs.net/cellframe/libdap-stream.git
 	branch = master
-[submodule "libdap-stream-ch-vpn"]
-	path = libdap-stream-ch-vpn
-	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-vpn.git
-	branch = master
-[submodule "libdap-stream-ch-av"]
-	path = libdap-stream-ch-av
-	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-av.git
-	branch = master
-[submodule "libdap-stream-ch-chat"]
-	path = libdap-stream-ch-chat
-	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chat.git
-	branch = master
 [submodule "libdap-server-core"]
 	path = libdap-server-core
 	url = https://gitlab.demlabs.net/cellframe/libdap-server-core.git
@@ -33,6 +21,10 @@
 [submodule "libdap-stream-ch-chain"]
 	path = libdap-stream-ch-chain
 	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chain.git
+	branch = master
+[submodule "libdap-stream-ch-chat"]
+	path = libdap-stream-ch-chat
+	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-chat.git
 	branch = master
 [submodule "libdap-chain-net"]
 	path = libdap-chain-net
@@ -121,14 +113,6 @@
 [submodule "libdap-crypto"]
 	path = libdap-crypto
 	url = https://gitlab.demlabs.net/cellframe/libdap-crypto.git
-	branch = master
-[submodule "libdap-stream-ch-iot"]
-	path = libdap-stream-ch-iot
-	url = https://gitlab.demlabs.net/cellframe/libdap-stream-ch-iot.git
-	branch = master
-[submodule "libdap-iot"]
-	path = libdap-iot
-	url = https://gitlab.demlabs.net/cellframe/libdap-iot.git
 	branch = master
 [submodule "test/libdap-test"]
 	path = test/libdap-test
