@@ -294,7 +294,7 @@ int main( int argc, const char **argv )
     }
 #ifndef _WIN32
     // vpn server
-    if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
             return -70;
