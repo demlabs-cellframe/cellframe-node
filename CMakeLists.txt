@@ -82,7 +82,7 @@ if(WIN32)
   add_definitions("-DHAVE_PREAD")
   add_definitions("-DHAVE_MMAP")
   add_definitions("-DHAVE_STRNDUP")
-  add_definitions("-DWINVER=0x0600 -D_WIN32_WINNT=0x0600")
+  add_compile_definitions(WINVER=0x0600 _WIN32_WINNT=0x0600)
 
   if(DAP_RELEASE)
     set(_CCOPT "-static -std=gnu11 -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
