@@ -122,3 +122,7 @@
 	path = libdap-server-http-db
 	url = https://gitlab.demlabs.net/cellframe/libdap-server-http-db
 	branch = master
+[submodule "libdap-chain-common"]
+	path = libdap-chain-common
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common
+	branch = master
