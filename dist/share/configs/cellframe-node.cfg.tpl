@@ -44,8 +44,7 @@ enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:m
-ywallet0]
+pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]
 
 # Console interface server
 [conserver]
