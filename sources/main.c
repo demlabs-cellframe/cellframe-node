@@ -366,19 +366,6 @@ int main( int argc, const char **argv )
     }
 
     if ( l_server ) { // If listener server is initialized
-        //bool is_traffick_track_enable = dap_config_get_item_bool_default(g_config, "traffic_track", "enable", false);
-
-#if 0
-        if ( is_traffick_track_enable ) {
-            time_t timeout = // TODO add default timeout (get_item_int32_default)
-                    dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
-
-            dap_traffic_track_init( l_server, timeout );
-            dap_traffic_callback_set( dap_chain_net_srv_traffic_callback );
-            //dap_traffic_callback_set(db_auth_traffic_track_callback);
-        }
-#endif
-
         // TCP-specific things
 		if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
             // Init HTTP-specific values
