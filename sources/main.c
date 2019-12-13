@@ -227,6 +227,7 @@ int main( int argc, const char **argv )
 	    return -58;
 	}
 
+	dap_chain_net_load_all();
 	dap_client_init();
 
 	dap_http_client_simple_init( );
@@ -416,7 +417,7 @@ int main( int argc, const char **argv )
 	dap_stream_ch_chain_init( );
 	dap_stream_ch_chain_net_init( );
 
-///    dap_stream_ch_chain_net_srv_init();
+    dap_stream_ch_chain_net_srv_init();
 
     // New event loop init
 	dap_events_init( 0, 0 );
@@ -427,7 +428,7 @@ int main( int argc, const char **argv )
 ///        dap_stream_ch_vpn_deinit();
 
 
-    dap_chain_net_load_all();
+    //dap_chain_net_load_all();
 
 #ifdef DAP_OS_LINUX
 #ifndef __ANDROID__
@@ -486,7 +487,7 @@ void parse_args( int argc, const char **argv ) {
 	    	if ( pid == 0 ) {
 	        	log_it( L_ERROR, "Can't read pid from file" );
 	        	exit( -20 );
-	      	} 
+	      	}
 
 	    	if ( kill_process(pid) ) {
 	        	log_it( L_INFO, "Server successfully stopped" );
@@ -497,7 +498,7 @@ void parse_args( int argc, const char **argv ) {
 	    	exit( -21 );
 	    }
 
-    	case 'D': 
+    	case 'D':
     	{
         	log_it( L_INFO, "Daemonize server starting..." );
         	exit_if_server_already_running( );
