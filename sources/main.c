@@ -416,7 +416,7 @@ int main( int argc, const char **argv )
 	dap_stream_ch_chain_init( );
 	dap_stream_ch_chain_net_init( );
 
-///    dap_stream_ch_chain_net_srv_init();
+    dap_stream_ch_chain_net_srv_init();
 
     // New event loop init
 	dap_events_init( 0, 0 );
