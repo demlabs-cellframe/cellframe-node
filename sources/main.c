@@ -142,21 +142,21 @@ int main( int argc, const char **argv )
 	#endif
 
     {
-        char l_log_file_path[MAX_PATH];
+        char l_log_file_path [ MAX_PATH ];
 #ifdef _WIN32
         dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
         l_sys_dir_path_len = strlen(s_sys_dir_path);
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-        dap_snprintf(l_log_file_path + l_sys_dir_path_len, sizeof (l_log_file_path), "%s/%s.log", SYSTEM_LOGS_DIR, DAP_APP_NAME);
-        dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
+        dap_snprintf( l_log_file_path + l_sys_dir_path_len , sizeof ( l_log_file_path ), "%s/%s.log", SYSTEM_LOGS_DIR , DAP_APP_NAME );
+        dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof(s_sys_dir_path), "%s", SYSTEM_CONFIGS_DIR);
+        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof( s_sys_dir_path ), "%s", SYSTEM_CONFIGS_DIR);
         dap_config_init( s_sys_dir_path );
         memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
@@ -181,7 +181,7 @@ int main( int argc, const char **argv )
 	else
  	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-    dap_log_level_set( bDebugMode ? L_DEBUG: L_INFO );
+    dap_log_level_set( bDebugMode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
