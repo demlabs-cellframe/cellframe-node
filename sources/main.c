@@ -133,7 +133,7 @@ static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 int main( int argc, const char **argv )
 {
 	dap_server_t *l_server = NULL; // DAP Server instance
-	bool bDebugMode = true;
+    bool l_debug_mode = true;
 	bool bServerEnabled = true;
 	int rc = 0;
 
@@ -173,15 +173,15 @@ int main( int argc, const char **argv )
         CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 	#endif
 
-      bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+      l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
-	if ( bDebugMode )
+    if ( l_debug_mode )
 	    log_it( L_ATT, "*** DEBUG MODE ***" );
 	else
  	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-    dap_log_level_set( bDebugMode ? L_DEBUG : L_NOTICE );
+    dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
