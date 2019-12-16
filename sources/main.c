@@ -227,7 +227,6 @@ int main( int argc, const char **argv )
 	    return -58;
 	}
 
-	dap_chain_net_load_all();
 	dap_client_init();
 
 	dap_http_client_simple_init( );
