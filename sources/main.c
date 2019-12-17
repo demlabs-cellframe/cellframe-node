@@ -129,13 +129,21 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
+#ifdef __ANDROID__
+    #include "cellframe_node.h"
+#endif
+
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static char s_pid_file_path[MAX_PATH];
 static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
+#ifdef __ANDROID__
+int cellframe_node_Main(int argc, const char **argv)
+#else
 int main( int argc, const char **argv )
+#endif
 {
 	dap_server_t *l_server = NULL; // DAP Server instance
 	bool bDebugMode = true;
@@ -154,6 +162,7 @@ int main( int argc, const char **argv )
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
+
         dap_snprintf(l_log_file_path + l_sys_dir_path_len, sizeof (l_log_file_path), "%s/%s.log", SYSTEM_LOGS_DIR, DAP_APP_NAME);
         dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
 
@@ -161,6 +170,7 @@ int main( int argc, const char **argv )
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
+
         dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof(s_sys_dir_path), "%s", SYSTEM_CONFIGS_DIR);
         dap_config_init( s_sys_dir_path );
         memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);

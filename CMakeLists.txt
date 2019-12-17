@@ -1,6 +1,10 @@
 project(cellframe-node C)
 cmake_minimum_required(VERSION 3.1)
 
+set(NODE_TARGET      "${PROJECT_NAME}"     )
+set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
+set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
+
 include(scripts/OS_Detection.cmake)
 
 if(DAP_DEBUG_BUILD)
@@ -170,7 +174,9 @@ add_subdirectory(libdap-stream-ch-chain)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 
-add_subdirectory(libdap-chain-global-db)
+#if (NOT ANDROID)
+    add_subdirectory(libdap-chain-global-db)
+#endif()
 #add_subdirectory(libdap-stream-ch-chat)
 
 if(BUILD_CELLFRAME_NODE_TESTS)
@@ -178,18 +184,40 @@ if(BUILD_CELLFRAME_NODE_TESTS)
     add_subdirectory(test)
 endif()
 
+set( NODE_SOURCES
+  sources/main.c
+  sources/sig_unix_handler.c
+)
+set( NODE_CLI_SOURCES
+  sources/main_node_cli.c
+  sources/main_node_cli_shell.c
+  sources/main_node_cli_net.c
+)
+set( NODE_TOOL_SOURCES
+  sources/main_node_tool.c
+)
+
 if(UNIX)
-  add_executable(${PROJECT_NAME} "sources/main.c" "sources/sig_unix_handler.c")
-  add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
-  add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
+  if(ANDROID)
+    add_library(${PROJECT_NAME} SHARED
+        ${NODE_SOURCES}
+        ${NODE_CLI_SOURCES}
+        ${NODE_TOOL_SOURCES}
+        sources/cellframe_node.h
+    )
+  else()
+    add_executable(${PROJECT_NAME} ${NODE_SOURCES})
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
+  endif()
 endif()
 
 if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
-  add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
-  add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
+  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
+  add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
-  target_link_libraries(${PROJECT_NAME}-cli dap_chain_net
+  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
@@ -222,8 +250,8 @@ if(WIN32)
     Secur32
     userenv
   )
-  set_property(TARGET ${PROJECT_NAME}-cli APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-    target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
+  set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    target_link_libraries(${NODE_TOOL_TARGET} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
     dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
@@ -263,7 +291,7 @@ if(WIN32)
     Secur32
     userenv
   )
-  set_property(TARGET ${PROJECT_NAME}-tool APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+  set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
 
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
@@ -315,22 +343,23 @@ endif()
 #add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
 if(UNIX)
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
 
-
-    target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
+    set(NODE_LIBRARIES
+        dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
         dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
         dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
         dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
         dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
         dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
         dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb m magic
-        dap_cuttdb
-        #dap_server_http_db
-    )
+        dap_cuttdb)
 
-    target_link_libraries(${PROJECT_NAME}-cli m dap_chain_net curl dap_cuttdb )
+    set(NODE_CLI_LIBRARIES
+        m dap_chain_net curl dap_cuttdb)
 
-    target_link_libraries(${PROJECT_NAME}-tool dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
+    set(NODE_TOOL_LIBRARIES
+        dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
         dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
         dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
         dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
@@ -340,32 +369,33 @@ if(UNIX)
         dap_core
     )
 
-    if(NOT ANDROID)
-        target_link_libraries(${PROJECT_NAME}
-            pthread
-            dap_server_http_db_auth
-            dap_cuttdb
-            )
-        target_link_libraries(${PROJECT_NAME}-cli pthread)
-        target_link_libraries(${PROJECT_NAME}-tool pthread)
+    if(ANDROID )
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
 
+        list(REMOVE_DUPLICATES ALL_LIBRARIES)
+
+        target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+
+    else()
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread dap_server_http_db_auth dap_cuttdb )
+        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
-
 endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
-if(UNIX)
-    target_include_directories(${PROJECT_NAME}-cli INTERFACE .)
-    target_include_directories(${PROJECT_NAME}-tool INTERFACE .)
+if(UNIX AND NOT ANDROID)
+    target_include_directories(${NODE_CLI_TARGET} INTERFACE .)
+    target_include_directories(${NODE_TOOL_TARGET} INTERFACE .)
 endif()
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
-if(UNIX)
-    INSTALL(TARGETS ${PROJECT_NAME}-cli DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${PROJECT_NAME}-tool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+if(UNIX AND NOT ANDROID)
+    INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endif()
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
