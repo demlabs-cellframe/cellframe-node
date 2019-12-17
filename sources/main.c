@@ -34,15 +34,11 @@
 #include <signal.h>
 
 #ifdef _WIN32
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
 #include <winsock2.h>
 #include <windows.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <io.h>
-//#include "wrappers.h"
-#include <wepoll.h>
 #include <pthread.h>
 #include "userenv.h"
 
@@ -104,7 +100,6 @@
 #include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
-#include "dap_stream_ch_vpn.h"
 #include "dap_stream_ch_chain.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
@@ -146,7 +141,7 @@ int main( int argc, const char **argv )
 #endif
 {
 	dap_server_t *l_server = NULL; // DAP Server instance
-	bool bDebugMode = true;
+    bool l_debug_mode = true;
 	bool bServerEnabled = true;
 	int rc = 0;
 
@@ -155,23 +150,21 @@ int main( int argc, const char **argv )
 	#endif
 
     {
-        char l_log_file_path[MAX_PATH];
+        char l_log_file_path [ MAX_PATH ];
 #ifdef _WIN32
         dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
         l_sys_dir_path_len = strlen(s_sys_dir_path);
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-
-        dap_snprintf(l_log_file_path + l_sys_dir_path_len, sizeof (l_log_file_path), "%s/%s.log", SYSTEM_LOGS_DIR, DAP_APP_NAME);
-        dap_mkdir_with_parents(SYSTEM_LOGS_DIR);
+        dap_snprintf( l_log_file_path + l_sys_dir_path_len , sizeof ( l_log_file_path ), "%s/%s.log", SYSTEM_LOGS_DIR , DAP_APP_NAME );
+        dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-
-        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof(s_sys_dir_path), "%s", SYSTEM_CONFIGS_DIR);
+        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof( s_sys_dir_path ), "%s", SYSTEM_CONFIGS_DIR);
         dap_config_init( s_sys_dir_path );
         memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
         if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
@@ -188,15 +181,15 @@ int main( int argc, const char **argv )
         CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 	#endif
 
-      bDebugMode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+      l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
-	if ( bDebugMode )
+    if ( l_debug_mode )
 	    log_it( L_ATT, "*** DEBUG MODE ***" );
 	else
  	   log_it( L_ATT, "*** NORMAL MODE ***" );
 
-    dap_log_level_set( bDebugMode ? L_DEBUG: L_INFO );
+    dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
@@ -286,7 +279,7 @@ int main( int argc, const char **argv )
         return -65;
     }
 
-    if( dap_chain_net_srv_init() !=0){
+    if( dap_chain_net_srv_init(g_config) !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
     }
@@ -307,7 +300,7 @@ int main( int argc, const char **argv )
     }
 #ifndef _WIN32
     // vpn server
-    if(dap_config_get_item_bool_default(g_config, "vpn", "enabled", false)) {
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
             return -70;
@@ -381,19 +374,6 @@ int main( int argc, const char **argv )
     }
 
     if ( l_server ) { // If listener server is initialized
-        //bool is_traffick_track_enable = dap_config_get_item_bool_default(g_config, "traffic_track", "enable", false);
-
-#if 0
-        if ( is_traffick_track_enable ) {
-            time_t timeout = // TODO add default timeout (get_item_int32_default)
-                    dap_config_get_item_int32(g_config, "traffic_track", "callback_timeout");
-
-            dap_traffic_track_init( l_server, timeout );
-            dap_traffic_callback_set( dap_chain_net_srv_traffic_callback );
-            //dap_traffic_callback_set(db_auth_traffic_track_callback);
-        }
-#endif
-
         // TCP-specific things
 		if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
             // Init HTTP-specific values
@@ -426,19 +406,12 @@ int main( int argc, const char **argv )
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
 
-    // VPN channel
-    if(dap_config_get_item_bool_default(g_config,"vpn_old","enabled",false)){
-        dap_stream_ch_vpn_init(dap_config_get_item_str_default(g_config, "vpn_old", "network_address", NULL),
-                   dap_config_get_item_str_default(g_config, "vpn_old", "network_mask", NULL));
-
-    }
-
     // Chain Network init
 
 	dap_stream_ch_chain_init( );
 	dap_stream_ch_chain_net_init( );
 
-///    dap_stream_ch_chain_net_srv_init();
+    dap_stream_ch_chain_net_srv_init();
 
     // New event loop init
 	dap_events_init( 0, 0 );
@@ -449,7 +422,7 @@ int main( int argc, const char **argv )
 ///        dap_stream_ch_vpn_deinit();
 
 
-    dap_chain_net_load_all();
+    //dap_chain_net_load_all();
 
 #ifdef DAP_OS_LINUX
 #ifndef __ANDROID__
@@ -508,7 +481,7 @@ void parse_args( int argc, const char **argv ) {
 	    	if ( pid == 0 ) {
 	        	log_it( L_ERROR, "Can't read pid from file" );
 	        	exit( -20 );
-	      	} 
+	      	}
 
 	    	if ( kill_process(pid) ) {
 	        	log_it( L_INFO, "Server successfully stopped" );
@@ -519,7 +492,7 @@ void parse_args( int argc, const char **argv ) {
 	    	exit( -21 );
 	    }
 
-    	case 'D': 
+    	case 'D':
     	{
         	log_it( L_INFO, "Daemonize server starting..." );
         	exit_if_server_already_running( );

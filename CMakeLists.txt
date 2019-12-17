@@ -51,8 +51,8 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
-SET( CPACK_PACKAGE_VERSION_MINOR 6)
-SET( CPACK_PACKAGE_VERSION_PATCH 12)
+SET( CPACK_PACKAGE_VERSION_MINOR 8)
+SET( CPACK_PACKAGE_VERSION_PATCH 7)
 
 SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -86,6 +86,7 @@ if(WIN32)
   add_definitions("-DHAVE_PREAD")
   add_definitions("-DHAVE_MMAP")
   add_definitions("-DHAVE_STRNDUP")
+  add_compile_definitions(WINVER=0x0600 _WIN32_WINNT=0x0600)
 
   if(DAP_RELEASE)
     set(_CCOPT "-static -std=gnu11 -Wall -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
@@ -98,12 +99,11 @@ if(WIN32)
   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
 
   include_directories(libdap/src/win32/)
-  include_directories(3rdparty/wepoll/include/)
   include_directories(3rdparty/uthash/src/)
   include_directories(3rdparty/libjson-c/)
   include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libsqlite3/)
-
+  include_directories(sources/wepoll/)
   include_directories(libdap-server-http-db-auth/)
   include_directories(libdap-chain-net-srv-vpn/)
 endif()
@@ -145,8 +145,9 @@ add_subdirectory(libdap-server-udp)
 add_subdirectory(libdap-server)
 
 
-add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-crypto)
+add_subdirectory(libdap-chain-common)
+add_subdirectory(libdap-chain)
 add_subdirectory(libdap-chain-wallet)
 add_subdirectory(libdap-chain-cs-dag)
 add_subdirectory(libdap-chain-cs-dag-poa)
@@ -169,8 +170,8 @@ add_subdirectory(libdap-stream)
 add_subdirectory(libdap-stream-ch)
 add_subdirectory(libdap-client)
 
-add_subdirectory(libdap-stream-ch-vpn)
 add_subdirectory(libdap-stream-ch-chain)
+#add_subdirectory(libdap-stream-ch-chat)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 
@@ -219,7 +220,6 @@ if(WIN32)
 
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -252,7 +252,7 @@ if(WIN32)
   )
   set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${NODE_TOOL_TARGET} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+    dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
@@ -260,7 +260,6 @@ if(WIN32)
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -293,16 +292,14 @@ if(WIN32)
   )
   set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-
   target_link_libraries(${PROJECT_NAME} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+    dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
     dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/wepoll[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
@@ -347,7 +344,7 @@ if(UNIX)
 
     set(NODE_LIBRARIES
         dap_core dap_crypto dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-        dap_enc_server dap_stream dap_stream_ch_vpn dap_stream_ch_chain dap_stream_ch_chain_net
+        dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
         dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
         dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
         dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
