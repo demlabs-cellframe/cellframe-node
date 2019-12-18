@@ -96,13 +96,23 @@
 #define MAIN_URL "/"
 #define LOG_TAG "main_node_tool"
 
+#ifdef __ANDROID__
+    #include "cellframe_node.h"
+#endif
+
 static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
 static char s_system_ca_dir[MAX_PATH];
 static const char *s_appname = "cellframe-node-tool";
 
-int main(int argc, const char **argv) {
+#ifdef __ANDROID__
+int cellframe_node_tool_Main(int argc, const char **argv)
+#else
+
+int main(int argc, const char **argv)
+#endif
+{
   int ret = s_init( argc, argv );
 
   if ( ret ) {
@@ -359,12 +369,14 @@ static int s_init( int argc, const char **argv )
 {
     char l_log_file_path[MAX_PATH];
     l_sys_dir_path_len = 0;
+
 #ifdef _WIN32
     dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
     l_sys_dir_path_len = strlen(s_sys_dir_path);
     memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
     memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
+
     memcpy(l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR));
     dap_sprintf(l_log_file_path + l_sys_dir_path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_tool_logs.txt", DAP_APP_NAME);
 

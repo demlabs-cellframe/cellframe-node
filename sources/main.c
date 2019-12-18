@@ -124,13 +124,21 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
+#ifdef __ANDROID__
+    #include "cellframe_node.h"
+#endif
+
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static char s_pid_file_path[MAX_PATH];
 static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
+#ifdef __ANDROID__
+int cellframe_node_Main(int argc, const char **argv)
+#else
 int main( int argc, const char **argv )
+#endif
 {
 	dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;

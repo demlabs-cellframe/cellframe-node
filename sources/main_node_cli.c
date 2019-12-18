@@ -34,6 +34,10 @@
 #include "main_node_cli_net.h"
 #include "main_node_cli_shell.h"
 
+#ifdef __ANDROID__
+    #include "cellframe_node.h"
+#endif
+
 #ifdef _WIN32
 #include "registry.h"
 #endif
@@ -181,9 +185,14 @@ int shell_reader_loop()
     return 0;
 }
 
-int main(int argc, const char * argv[])
+#ifdef __ANDROID__
+int cellframe_node__cli_Main(int argc, const char *argv[])
+#else
+
+int main(int argc, const char *argv[])
+#endif
 {
-#ifdef _WIN32
+#if defined (_WIN32)
     dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
     l_sys_dir_path_len = strlen(s_sys_dir_path);
 #endif
