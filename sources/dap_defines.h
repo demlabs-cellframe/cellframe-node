@@ -1,10 +1,17 @@
 #pragma once
+
+#define NODE_NETNAME "cellframe"
 #define DAP_APP_NAME NODE_NETNAME "-node"
 
 //#ifdef _WIN32
 //  #define SYSTEM_PREFIX "%USERPROFILE%/opt/"DAP_APP_NAME
 //#else
+#ifdef __ANDROID__
+    #define ANDROID_STORAGE_PATH "/storage/emulated/0"
+    #define SYSTEM_PREFIX ANDROID_STORAGE_PATH "/opt/" DAP_APP_NAME
+#else
   #define SYSTEM_PREFIX "/opt/" DAP_APP_NAME
+#endif
 //  #define SYSTEM_PREFIX "opt/"DAP_APP_NAME
 //#endif
 
@@ -13,6 +20,7 @@
 #define SYSTEM_CONFIGS_DIR SYSTEM_PREFIX"/etc"
 #define LOCAL_CONFIGS_DIR LOCAL_PREFIX"/etc"
 #define SYSTEM_LOGS_DIR SYSTEM_PREFIX"/var/log"
+#define SYSTEM_LOGS_PATH SYSTEM_LOGS_DIR "/" DAP_APP_NAME ".log"
 
 #define SYSTEM_CONFIG_GLOBAL_FILENAME SYSTEM_PREFIX"/etc/" DAP_APP_NAME".cfg"
 #define LOCAL_CONFIG_GLOBAL LOCAL_PREFIX"/etc/" DAP_APP_NAME".cfg"
