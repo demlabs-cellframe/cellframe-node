@@ -157,7 +157,8 @@ int main( int argc, const char **argv )
         memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
         memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
 #endif
-        dap_snprintf( l_log_file_path + l_sys_dir_path_len , sizeof ( l_log_file_path ), "%s/%s.log", SYSTEM_LOGS_DIR , DAP_APP_NAME );
+        dap_snprintf( l_log_file_path + l_sys_dir_path_len , sizeof ( l_log_file_path ), "%s", SYSTEM_LOGS_PATH );
+
         dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
 
         if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
