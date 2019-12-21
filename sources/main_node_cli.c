@@ -29,6 +29,8 @@
 
 //#include "dap_client.h"
 #include "dap_common.h"
+#include "dap_file_utils.h"
+#include "dap_strfuncs.h"
 #include "dap_chain_node_cli.h"
 #include "main_node_cli.h"
 #include "main_node_cli_net.h"
@@ -189,25 +191,38 @@ int shell_reader_loop()
 int cellframe_node__cli_Main(int argc, const char *argv[])
 #else
 
+static char * s_config_dir = NULL;
+static char * s_log_file_path= NULL;
 int main(int argc, const char *argv[])
 #endif
 {
-#if defined (_WIN32)
-    dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-    l_sys_dir_path_len = strlen(s_sys_dir_path);
+    dap_set_appname("cellframe-node-cli");
+
+#ifdef _WIN32
+    s_sys_dir_path =dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif DAP_OS_MAC
+    s_sys_dir_path =dap_strdup_printf( "/Applications/%s.app/Contents/Resources", dap_get_appname());
+#elif DAP_OS_ANDROID
+    s_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+#elif DAP_OS_UNIX
+    g_sys_dir_path =dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+    g_sys_dir_path_len = strlen(g_sys_dir_path);
 
-    //    set_default_locale();
-    //    command_execution_string = shell_script_filename = (char *) NULL;
+    s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
+    s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
 
-    memcpy(s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR) );
-    dap_common_init( DAP_APP_NAME " Console interface", NULL );
+    dap_mkdir_with_parents( s_log_file_path );
+
+    if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
+        printf( "Fatal Error: Can't init common functions module" );
+        return -2;
+    }
     dap_log_level_set( L_CRITICAL );
-    dap_config_init( s_sys_dir_path );
-    memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+    dap_config_init( s_config_dir );
 
-    if((g_config = dap_config_open(DAP_APP_NAME)) == NULL) {
-        printf("Can't init general configurations " DAP_APP_NAME ".cfg\n");
+    if((g_config = dap_config_open(dap_get_appname())) == NULL) {
+        printf("Can't init general configurations %s.cfg\n", dap_get_appname());
         exit(-1);
     }
 
@@ -215,7 +230,7 @@ int main(int argc, const char *argv[])
     cparam = node_cli_connect();
     if(!cparam)
     {
-        printf("Can't connected to " DAP_APP_NAME "\n");
+        printf("Can't connected to %s\n",dap_get_appname());
         exit(-1);
     }
 

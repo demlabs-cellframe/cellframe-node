@@ -87,7 +87,6 @@
 #ifdef _WIN32
 #include "registry.h"
 #endif
-#define DAP_APP_NAME NODE_NETNAME "-node"
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
@@ -104,7 +103,8 @@ static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
 static char s_system_ca_dir[MAX_PATH];
-static const char *s_appname = "cellframe-node-tool";
+static char * s_config_dir = NULL;
+static char * s_log_file_path= NULL;
 
 #ifdef __ANDROID__
 int cellframe_node_tool_Main(int argc, const char **argv)
@@ -163,7 +163,7 @@ int main(int argc, const char **argv)
 #ifdef _WIN32
         dap_stpcpy(l_wallets_path, s_sys_dir_path);
 #endif
-        dap_sprintf(l_wallets_path + l_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
+        dap_sprintf(l_wallets_path + g_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
         l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_sig_type );
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
@@ -178,7 +178,7 @@ int main(int argc, const char **argv)
 #ifdef _WIN32
         dap_stpcpy(l_wallets_path, s_sys_dir_path);
 #endif
-        dap_sprintf(l_wallets_path + l_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
+        dap_sprintf(l_wallets_path + g_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
       dap_chain_wallet_t *l_wallet = dap_chain_wallet_open( argv[3], l_wallets_path);
       if ( !l_wallet ) {
         log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
@@ -367,88 +367,89 @@ int main(int argc, const char **argv)
  */
 static int s_init( int argc, const char **argv )
 {
-    char l_log_file_path[MAX_PATH];
-    l_sys_dir_path_len = 0;
+    dap_set_appname("cellframe-node-tool");
 
 #ifdef _WIN32
-    dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-    l_sys_dir_path_len = strlen(s_sys_dir_path);
-    memcpy(s_system_ca_dir, s_sys_dir_path, l_sys_dir_path_len);
-    memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
+    s_sys_dir_path =dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif DAP_OS_MAC
+    s_sys_dir_path =dap_strdup_printf( "/Applications/%s.app/Contents/Resources", dap_get_appname());
+#elif DAP_OS_ANDROID
+    s_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+#elif DAP_OS_UNIX
+    g_sys_dir_path =dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+    g_sys_dir_path_len = strlen(g_sys_dir_path);
 
-    memcpy(l_log_file_path + l_sys_dir_path_len, SYSTEM_LOGS_DIR, sizeof(SYSTEM_LOGS_DIR));
-    dap_sprintf(l_log_file_path + l_sys_dir_path_len + sizeof(SYSTEM_LOGS_DIR) - 1, "/%s_tool_logs.txt", DAP_APP_NAME);
+    s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
+    s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
 
-    if (dap_common_init(DAP_APP_NAME, l_log_file_path) != 0) {
-        printf("Fatal Error: Can't init common functions module");
+    dap_mkdir_with_parents( s_log_file_path );
+
+    if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
+        printf( "Fatal Error: Can't init common functions module" );
         return -2;
     }
+    dap_log_level_set( L_CRITICAL );
+    dap_config_init( s_config_dir );
 
-    memcpy(s_sys_dir_path + l_sys_dir_path_len, SYSTEM_CONFIGS_DIR, sizeof(SYSTEM_CONFIGS_DIR));
-    dap_config_init( s_sys_dir_path );
-    memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
+    if((g_config = dap_config_open(dap_get_appname())) == NULL) {
+        printf("Can't init general configurations %s.cfg\n", dap_get_appname());
+        exit(-1);
+    }
 
-    //dap_sprintf(s_system_ca_dir + l_sys_dir_path_len, "%s", l_ca_folders[i]);
+    if ( dap_chain_init() != 0 ) {
+        log_it( L_ERROR, "Can't chain module" );
+        return -3;
+    }
 
-  if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
-    log_it( L_ERROR, "Can't init general configurations" );
-    return -1;
-  }
+    if ( dap_cert_init() != 0 ) {
+        log_it( L_ERROR, "Can't chain certificate storage module" );
+        return -4;
+    }
 
-  if ( dap_chain_init() != 0 ) {
-    log_it( L_ERROR, "Can't chain module" );
-    return -3;
-  }
+    if ( dap_chain_wallet_init() != 0 ) {
+        log_it( L_ERROR, "Can't chain wallet storage module" );
+        return -5;
+    }
 
-  if ( dap_cert_init() != 0 ) {
-    log_it( L_ERROR, "Can't chain certificate storage module" );
-    return -4;
-  }
-
-  if ( dap_chain_wallet_init() != 0 ) {
-    log_it( L_ERROR, "Can't chain wallet storage module" );
-    return -5;
-  }
-
- /* if ( dap_server_init(0) != 0 ) {
+    /* if ( dap_server_init(0) != 0 ) {
     log_it( L_ERROR, "Can't server module" );
     return -6;
-  }
+    }
 
-  if ( dap_stream_init(false) != 0 ) {
+    if ( dap_stream_init(false) != 0 ) {
     log_it( L_ERROR, "Can't init stream module" );
     return -7;
-  }
+    }
 
-  if ( dap_stream_ch_init() != 0 ) {
+    if ( dap_stream_ch_init() != 0 ) {
     log_it( L_ERROR, "Can't init stream ch module" );
     return -8;
-  }
+    }
 
-  if ( dap_stream_ch_chain_init() != 0 ) {
+    if ( dap_stream_ch_chain_init() != 0 ) {
     log_it( L_ERROR, "Can't init stream ch chain module" );
     return -9;
-  }
+    }
 
-  if ( dap_stream_ch_chain_net_init() != 0 ) {
+    if ( dap_stream_ch_chain_net_init() != 0 ) {
     log_it( L_ERROR, "Can't init stream ch chain net module" );
     return -10;
-  }
+    }
 
-  if ( dap_stream_ch_chain_net_srv_init() != 0 ) {
+    if ( dap_stream_ch_chain_net_srv_init() != 0 ) {
     log_it( L_ERROR, "Can't init stream ch chain net srv module" );
     return -11;
-  }
+    }
 
-  if ( dap_client_init() != 0 ) {
+    if ( dap_client_init() != 0 ) {
     log_it( L_ERROR, "Can't chain wallet storage module" );
     return -12;
-  } */
+    } */
 
     uint16_t l_ca_folders_size = 0;
     char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
-    memcpy(s_system_ca_dir + l_sys_dir_path_len, l_ca_folders[0], strlen(l_ca_folders[0]));
+    memcpy(s_system_ca_dir + g_sys_dir_path_len, l_ca_folders[0], strlen(l_ca_folders[0]));
     return 0;
 }
 
@@ -463,27 +464,27 @@ static void s_help()
 #endif
 
   printf( "\n" );
-  printf( "%s usage:\n\n", s_appname );
+  printf( "%s usage:\n\n", dap_get_appname() );
 
   printf(" * Create new key wallet and generate signatures with same names plus index \n" );
-  printf("\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", s_appname );
+  printf("\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", dap_get_appname() );
 
   printf(" * Create new key wallet from existent certificates in the system\n");
-  printf("\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]\n\n", s_appname );
+  printf("\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]\n\n", dap_get_appname() );
 
   printf(" * Create new key file with randomly produced key stored in\n");
-  printf("\t%s cert create <cert name> <key type> [<key length>]\n\n", s_appname );
+  printf("\t%s cert create <cert name> <key type> [<key length>]\n\n", dap_get_appname() );
 
   printf(" * Dump cert data stored in <file path>\n");
-  printf("\t%s cert dump <cert name>\n\n", s_appname );
+  printf("\t%s cert dump <cert name>\n\n", dap_get_appname() );
 
   printf(" * Sign some data with cert \n");
-  printf("\t%s cert sign <cert name> <data file path> <sign file output> [<sign data length>] [<sign data offset>]\n\n", s_appname );
+  printf("\t%s cert sign <cert name> <data file path> <sign file output> [<sign data length>] [<sign data offset>]\n\n", dap_get_appname() );
 
   printf(" * Create pkey from <cert name> and store it on <pkey path>\n");
-  printf("\t%s cert create_pkey <cert name> <pkey path>\n\n", s_appname );
+  printf("\t%s cert create_pkey <cert name> <pkey path>\n\n", dap_get_appname() );
 
   printf(" * Export only public key from <cert name> and stores it \n");
-  printf("\t%s cert create_cert_pkey <cert name> <new cert name>\n\n",s_appname);
+  printf("\t%s cert create_cert_pkey <cert name> <new cert name>\n\n",dap_get_appname());
 
 }

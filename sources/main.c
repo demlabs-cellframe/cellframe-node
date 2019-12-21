@@ -53,7 +53,7 @@
     #include "registry.h"
     void  S_SetExceptionFilter( void );
 #endif
-
+#include "dap_common.h"
 #include "dap_config.h"
 #include "dap_server.h"
 #include "dap_http.h"
@@ -131,7 +131,9 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
-static char s_pid_file_path[MAX_PATH];
+static char *s_config_dir = NULL;
+static char *s_pid_file_path = NULL;
+static char *s_log_file_path = NULL;
 static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
 #ifdef __ANDROID__
@@ -145,40 +147,43 @@ int main( int argc, const char **argv )
 	bool bServerEnabled = true;
 	int rc = 0;
 
+    dap_set_appname("cellframe-node");
 	#if defined(_WIN32) && defined(NDEBUG)
 		S_SetExceptionFilter( );
 	#endif
 
     {
-        char l_log_file_path [ MAX_PATH ];
 #ifdef _WIN32
-        dap_sprintf(s_sys_dir_path, "%s/%s", regGetUsrPath(), DAP_APP_NAME);
-        l_sys_dir_path_len = strlen(s_sys_dir_path);
-        memcpy(l_log_file_path, s_sys_dir_path, l_sys_dir_path_len);
-        memcpy(s_pid_file_path, s_sys_dir_path, l_sys_dir_path_len);
+        s_sys_dir_path =dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif DAP_OS_MAC
+        s_sys_dir_path =dap_strdup_printf( "/Applications/%s.app/Contents/Resources", dap_get_appname());
+#elif DAP_OS_ANDROID
+        s_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+#elif DAP_OS_UNIX
+        g_sys_dir_path =dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
-        dap_snprintf( l_log_file_path + l_sys_dir_path_len , sizeof ( l_log_file_path ), "%s", SYSTEM_LOGS_PATH );
+        g_sys_dir_path_len = strlen(g_sys_dir_path);
 
-        dap_mkdir_with_parents( SYSTEM_LOGS_DIR );
+        s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
+        s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
 
-        if ( dap_common_init( DAP_APP_NAME, l_log_file_path ) != 0 ) {
+        dap_mkdir_with_parents( s_log_file_path );
+
+        if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
         }
-        dap_snprintf(s_sys_dir_path + l_sys_dir_path_len, sizeof( s_sys_dir_path ), "%s", SYSTEM_CONFIGS_DIR);
-        dap_config_init( s_sys_dir_path );
-        memset(s_sys_dir_path + l_sys_dir_path_len, '\0', MAX_PATH - l_sys_dir_path_len);
-        if ( (g_config = dap_config_open(DAP_APP_NAME)) == NULL ) {
+        dap_config_init( s_config_dir );
+        if ( (g_config = dap_config_open(dap_get_appname())) == NULL ) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;
         }
-        dap_sprintf(s_pid_file_path + l_sys_dir_path_len, "%s", dap_config_get_item_str_default( g_config,
-                                                                                   "resources",
-                                                                                   "pid_path","/tmp") );
+        s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
+        dap_mkdir_with_parents( s_pid_file_path );
     }
     log_it(L_DEBUG, "Parsing command line args");
-	parse_args( argc, argv );
-	#ifdef _WIN32
+    parse_args( argc, argv );
+    #ifdef _WIN32
         CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
 	#endif
 
@@ -344,7 +349,7 @@ int main( int argc, const char **argv )
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
-                                                              SYSTEM_PID_FILE_PATH)) != 0) {
+                                                              "/tmp")) != 0) {
         log_it(L_CRITICAL,"Can't init sig unix handler module");
         return -12;
     }
@@ -378,7 +383,7 @@ int main( int argc, const char **argv )
         // TCP-specific things
 		if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
             // Init HTTP-specific values
-	    	dap_http_new( l_server, DAP_APP_NAME );
+            dap_http_new( l_server, dap_get_appname() );
 
 	        // Handshake URL
 	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
@@ -502,7 +507,7 @@ void parse_args( int argc, const char **argv ) {
         	break;
       	}
 
-      	default:
+        default:
         log_it( L_WARNING, "Unknown option from command line" );
 		}
 	}
