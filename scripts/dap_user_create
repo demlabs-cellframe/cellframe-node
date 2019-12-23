@@ -54,8 +54,6 @@ mongodomain=`echo "$mongodomain" | tail -1 | tr -d "[] "`
 if [ -z $mongodomain ]; then
 	echo "domain not find in database"
 	exit 3
-else
-
 fi
 
 password_hash=$(/opt/cellframe-node/bin/dap_server_http_db_auth_tool password_hash ${password})
