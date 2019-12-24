@@ -167,8 +167,6 @@ int main( int argc, const char **argv )
         s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
         s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
 
-        dap_mkdir_with_parents( s_log_file_path );
-
         if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
@@ -179,7 +177,6 @@ int main( int argc, const char **argv )
             return -1;
         }
         s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
-        dap_mkdir_with_parents( s_pid_file_path );
     }
     log_it(L_DEBUG, "Parsing command line args");
     parse_args( argc, argv );
