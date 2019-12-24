@@ -167,6 +167,10 @@ int main( int argc, const char **argv )
         s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
         s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
 
+        char *l_log_dir_path = dap_strdup_printf ("%s/var/log", g_sys_dir_path);
+        dap_mkdir_with_parents( l_log_dir_path );
+        DAP_DELETE(l_log_dir_path);
+
         if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
             printf( "Fatal Error: Can't init common functions module" );
             return -2;
