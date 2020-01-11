@@ -59,12 +59,6 @@
 #include "dap_http.h"
 #include "dap_http_folder.h"
 
-#if !defined (_WIN32) && !defined (__ANDROID__)
-#include "db_core.h"
-#include "db_http.h"
-#include "db_http_file.h"
-#include "db_auth.h"
-#endif
 
 #include "dap_events.h"
 #include "dap_enc.h"

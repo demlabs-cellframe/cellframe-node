@@ -51,10 +51,10 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
-SET( CPACK_PACKAGE_VERSION_MINOR 9)
-SET( CPACK_PACKAGE_VERSION_PATCH 5)
+SET( CPACK_PACKAGE_VERSION_MINOR 10)
+SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
-SET( CPACK_SYSTEM_NAME "debian-9.9-amd64")
+SET( CPACK_SYSTEM_NAME "debian-10.0-amd64")
 SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
 SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
 SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
@@ -104,7 +104,6 @@ if(WIN32)
   include_directories(3rdparty/curl/include/)
   include_directories(3rdparty/libsqlite3/)
   include_directories(sources/wepoll/)
-  include_directories(libdap-server-http-db-auth/)
   include_directories(libdap-chain-net-srv-vpn/)
 endif()
 
@@ -133,8 +132,6 @@ if(UNIX)
     add_subdirectory(lib/libev)
     include_directories(lib/)
   else()
-    add_subdirectory(libdap-server-http-db)
-    add_subdirectory(libdap-server-http-db-auth)
   endif(ANDROID)
 
 endif()
@@ -222,8 +219,6 @@ if(WIN32)
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
@@ -262,8 +257,6 @@ if(WIN32)
 
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
@@ -302,8 +295,6 @@ if(WIN32)
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_chain_gdb
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libmongoc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libbson[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
@@ -375,7 +366,7 @@ if(UNIX)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
 
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread dap_server_http_db_auth dap_cuttdb )
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread dap_cuttdb )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()

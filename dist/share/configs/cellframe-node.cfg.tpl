@@ -23,16 +23,15 @@ accept=false
 # Central Dataase
 [cdb]
 enabled=false
-db_path=mongodb://localhost/db
 servers_list_enabled=false
 servers_list_networks=[kelvin-testnet,private]
 
 # Central Database authorization
 [cdb_auth]
 enabled=false
-collection_name=mycollection
 domain=mydomain
 tx_cond_create=false
+registration_open=true
 # List of condition templates, created for authorized users. Format of condition:
 # <wallet name>:<Value per transaction>:<Minimum time(seconds) between transactions>:<network name> 
 # tx_cond_templates=[mywallet0:0.00001:3600:KELT:kelvin-testnet,mywallet1:0.000001:3600:cETH:kelvin-testnet,mywallet0:1:10:WOOD:private]
