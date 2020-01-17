@@ -451,7 +451,7 @@ static int s_init( int argc, const char **argv )
 
     uint16_t l_ca_folders_size = 0;
     char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
-    memcpy(s_system_ca_dir, l_ca_folders[0], strlen(l_ca_folders[0]));
+    dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);//memcpy(s_system_ca_dir, l_ca_folders[0], strlen(l_ca_folders[0]));
     return 0;
 }
 
