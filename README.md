@@ -25,6 +25,10 @@ Cellframe Blockchain node
   ```
   deb https://debian.pub.demlabs.net/ stretch main non-free
   ```
+* For Ubuntu 18.04 (Bionic):
+  ```
+  deb https://debian.pub.demlabs.net/ bionic main universe multiverse
+  ```
 * Then download public signature and install it:
   ```
   wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
