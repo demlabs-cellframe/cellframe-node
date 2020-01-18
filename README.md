@@ -27,7 +27,7 @@ Cellframe Blockchain node
   ```
 * Then download public signature and install it:
   ```
-  wget https://debian.pub.demlabs.net/demlabskey.asc
+  wget http://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
   apt-key add demlabskey.asc
   ```
 * Then update your apt cache and install the package:
