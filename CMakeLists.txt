@@ -173,6 +173,8 @@ add_subdirectory(libdap-stream-ch-chain)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 
+add_subdirectory(libdap-chain-plugins-python)
+
 #if (NOT ANDROID)
     add_subdirectory(libdap-chain-global-db)
 #endif()

@@ -126,3 +126,6 @@
 	path = libdap-chain-common
 	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common
 	branch = master
+[submodule "libdap-chain-plugins-python"]
+	path = libdap-chain-plugins-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-plugins-python.git
