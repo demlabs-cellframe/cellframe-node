@@ -1,104 +1,50 @@
-#!/bin/bash -e
-. /usr/share/debconf/confmodule
+#!/bin/bash -
 
-DAP_CHAINS_NAME="cellframe"
-DAP_APP_NAME="$DAP_CHAINS_NAME-node"
-DAP_PREFIX="/opt/$DAP_APP_NAME"
+case "$1" in
+    configure)
 
-DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
+    cp -f /opt/sap/ultrapad/share/init.d/UltraPadService.service /etc/init.d/ultrapadservice
+    chmod +x /etc/init.d/ultrapadservice
+	update-rc.d ultrapadservice defaults
+	service ultrapadservice restart
+    ln -s /opt/sap/ultrapad/bin/UltraPad /usr/local/bin/
+    cp -f /opt/sap/ultrapad/share/ultrapad.desktop /usr/share/applications/ultrapad.desktop
+	cp -f /opt/sap/ultrapad/share/ultrapad.png	/usr/share/pixmaps/ultrapad.png
+    update-menus
 
-# Store write config to new if present smth
-DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+<< --COMMENT--
+ --- It must be commented until we use rooted user. Uncomment to use UltraPAD user for service ---
 
-
-
-# Check profile.d symlink
-
-[ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] && ln -sf $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
-
-# Init node config
-if [ -e "$DAP_CFG" ]; then
-    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
-else
-    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-fi
-
-cat $DAP_CFG_TPL > $DAP_CFG || true
-
-db_get cellframe-node/debug_mode || true
-sed -i "s/{DEBUG_MODE}/$RET/" $DAP_CFG  || true
-
-db_get cellframe-node/auto_online || true
-sed -i "s/{AUTO_ONLINE}/$RET/" $DAP_CFG  || true
-
-db_get cellframe-node/debug_stream_headers || true
-sed -i "s/{DEBUG_STREAM_HEADERS}/$RET/" $DAP_CFG  || true
-
-db_get cellframe-node/server_enabled || true
-sed -i "s/{SERVER_ENABLED}/$RET/" $DAP_CFG  || true
-
-db_get cellframe-node/server_port || true
-sed -i "s/{SERVER_PORT}/$RET/" $DAP_CFG  || true
-
-db_get cellframe-node/server_addr || true
-sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
-
-
-
-# Init kelvin-testnet
-NET_NAME="kelvin-testnet"
-
-db_get cellframe-node/kelvin_testnet_enable || true
-if [ "$RET"="true" ]; then
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/kelvin_testnet_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_NET_CFG  || true
-fi
-
-mkdir -p $DAP_PREFIX/var/log || true
+	adduser --force-badname UltraPAD
+	adduser UltraPAD netdev
+	chown -R UltraPAD /opt/sap/ultrapad/
+	chown UltraPAD /sys/class/dmi/id/product_uuid
+    ln -s /opt/sap/ultrapad/bin/UltraPad /usr/local/bin/
+	chown -h UltraPAD /usr/local/bin/UltraPad
+	chown UltraPAD /var/run/
+	sudo touch /etc/rc.local
+	sudo grep -q '^#!/bin/bash' /etc/rc.local && sudo sed -i '1i#!/bin/bash\' /etc/rc.local
+	sudo grep -q '^exit 0' /etc/rc.local && sudo sed -i '/exit 0/i chown UltraPAD /sys/class/dmi/id/product_uuid' /etc/rc.local || sudo sh -c "printf 'chown UltraPAD /sys/class/dmi/id/product_uuid\nexit 0' >> /etc/rc.local" 
+    cp -f /opt/sap/ultrapad/share/init.d/UltraPadService.service /etc/init.d/ultrapadservice
+    chown UltraPAD /etc/init.d/ultrapadservice
+    chmod +x /etc/init.d/ultrapadservice
+	setcap 'CAP_MKNOD=epi CAP_NET_ADMIN=epi CAP_NET_BIND_SERVICE=epi CAP_NET_RAW=epi CAP_SYS_NICE=epi CAP_SYS_RAWIO=epi CAP_SYS_RESOURCE=epi CAP_SYSLOG=epi CAP_MAC_ADMIN=epi CAP_MAC_OVERRIDE=epi' /opt/sap/ultrapad/bin/UltraPadService
+    setcap 'CAP_MKNOD=epi CAP_NET_ADMIN=epi CAP_NET_BIND_SERVICE=epi CAP_NET_RAW=epi CAP_SYS_NICE=epi CAP_SYS_RAWIO=epi CAP_SYS_RESOURCE=epi CAP_SYSLOG=epi CAP_MAC_ADMIN=epi CAP_MAC_OVERRIDE=epi' /etc/init.d/ultrapadservice
+	setcap 'CAP_NET_ADMIN=epi' /bin/ip
+	update-menus
+	update-rc.d ultrapadservice defaults
+	service ultrapadservice start
+    cp -f /opt/sap/ultrapad/share/ultrapad.desktop /usr/share/applications/ultrapad.desktop
+	cp -f /opt/sap/ultrapad/share/ultrapad.png	/usr/share/pixmaps/ultrapad.png
+--COMMENT--
+;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 2
+    ;;
+esac
+exit 0
 
 
-cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
-
-echo "[*] Check /etc/systemd/system/$DAP_APP_NAME.service file..."
-if [ -f /etc/systemd/system/$DAP_APP_NAME.service ]; then
-    echo "[*] Restarting $DAP_APP_NAME to implement changes"
-    systemctl --system stop $DAP_APP_NAME  >> /dev/null|| true
-    systemctl daemon-reload || true
-    systemctl --system start $DAP_APP_NAME || true
-else
-    echo "[!] Installing $DAP_APP_NAME as systemd service (haven't found /etc/systemd/system/$DAP_APP_NAME.service)"
-    ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service || true
-    systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
-#    systemctl --system start $DAP_APP_NAME
-    echo "[ ] Execute 'systemctl start $DAP_APP_NAME' to start $DAP_APP_NAME service"
-
-    #USERMAN=`users | awk '{print $1}'`
-    adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
-    #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
-    for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
-        usermod -aG cellframe-node $username
-    done
-    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db} 
-    touch $DAP_PREFIX/var/run/cellframe-node.pid 
-    #chown -R $USERMAN:$USERMAN $DAP_PREFIX
-    for filename in $(find $DAP_PREFIX); do
-        if [ -d $filename ]; then
-            chmod 0775 $filename
-        else
-            chmod 0664 $filename
-        fi
-    done
-    chmod 0774 $DAP_PREFIX/bin/*
-    echo "[*] Done"
-fi
