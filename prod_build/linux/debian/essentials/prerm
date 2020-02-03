@@ -1,0 +1,26 @@
+#!/bin/bash
+
+case "$1" in
+    purge|remove|abort-upgrade|failed-upgrade|upgrade)
+    [ -f /etc/init.d/ultrapadservice ] && service ultrapadservice stop
+    [ -d /opt/sap ] && rm -rf /opt/sap/
+    [ -f /usr/local/bin/UltraPad ] && rm /usr/local/bin/UltraPad
+    [ -f /etc/init.d/ultrapadservice ] && rm /etc/init.d/ultrapadservice
+    systemctl daemon-reload
+    [ -f /usr/share/applications/ultrapad.desktop ] && rm /usr/share/applications/ultrapad.desktop
+    [ -f /usr/share/pixmaps/ultrapad.png ] && rm /usr/share/pixmaps/ultrapad.png
+<< --COMMENT--
+    killall UltraPAD
+	userdel --remove UltraPAD
+    systemctl daemon-reload
+    rm /usr/share/applications/ultrapad.desktop
+    rm /usr/share/pixmaps/ultrapad.png
+--COMMENT--
+    ;;
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
