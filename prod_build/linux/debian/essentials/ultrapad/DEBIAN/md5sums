@@ -1,0 +1,7 @@
+26399f4bf2673f6ce0fb04acfb88c8dd  opt/sap/ultrapad/bin/UltraPad
+bc71c5a997056f1f64c5c198bca6d3bf  opt/sap/ultrapad/bin/UltraPadService
+9490747d9b8706615318f3a42cce2d71  opt/sap/ultrapad/share/init.d/UltraPadService.service
+87225651d23a2e10f0eeb56324327a3d  opt/sap/ultrapad/share/ultrapad.desktop
+a280cdc80e5a55a97ac1c2474089ec9d  opt/sap/ultrapad/share/ultrapad.png
+cce7e66836738211cd5341cc14298a5d  usr/lib/libSapNetClientCommon.a
+54f8ba8f383dcaf80cd40d64ba8542da  usr/share/doc/ultrapad/changelog.Debian.gz

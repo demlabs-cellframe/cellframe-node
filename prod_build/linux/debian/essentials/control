@@ -1,0 +1,17 @@
+Source: sapnet-client
+Section: unknown
+Priority: optional
+Maintainer: support <support@ncodedcommunications.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: VER_MAJ.VER_MIN-VER_PAT
+Homepage: https://ncodedcommunications.com
+
+Package: ultrapad
+Architecture: any
+Depends: psmisc, menu, net-tools, ${shlibs:Depends}, ${misc:Depends}
+Replaces: UltraPAD
+Description: UltraPAD
+ Crossplatform VPN Application
+
+
+

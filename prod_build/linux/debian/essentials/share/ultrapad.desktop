@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=UltraPad
+Exec=/opt/sap/ultrapad/bin/UltraPad
+Icon=/opt/sap/ultrapad/share/ultrapad.png
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=Network;Application;
+Name[en_US]=UltraPad

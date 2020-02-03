@@ -1,0 +1,50 @@
+#!/bin/bash -
+
+case "$1" in
+    configure)
+
+    cp -f /opt/sap/ultrapad/share/init.d/UltraPadService.service /etc/init.d/ultrapadservice
+    chmod +x /etc/init.d/ultrapadservice
+	update-rc.d ultrapadservice defaults
+	service ultrapadservice restart
+    ln -s /opt/sap/ultrapad/bin/UltraPad /usr/local/bin/
+    cp -f /opt/sap/ultrapad/share/ultrapad.desktop /usr/share/applications/ultrapad.desktop
+	cp -f /opt/sap/ultrapad/share/ultrapad.png	/usr/share/pixmaps/ultrapad.png
+    update-menus
+
+<< --COMMENT--
+ --- It must be commented until we use rooted user. Uncomment to use UltraPAD user for service ---
+
+	adduser --force-badname UltraPAD
+	adduser UltraPAD netdev
+	chown -R UltraPAD /opt/sap/ultrapad/
+	chown UltraPAD /sys/class/dmi/id/product_uuid
+    ln -s /opt/sap/ultrapad/bin/UltraPad /usr/local/bin/
+	chown -h UltraPAD /usr/local/bin/UltraPad
+	chown UltraPAD /var/run/
+	sudo touch /etc/rc.local
+	sudo grep -q '^#!/bin/bash' /etc/rc.local && sudo sed -i '1i#!/bin/bash\' /etc/rc.local
+	sudo grep -q '^exit 0' /etc/rc.local && sudo sed -i '/exit 0/i chown UltraPAD /sys/class/dmi/id/product_uuid' /etc/rc.local || sudo sh -c "printf 'chown UltraPAD /sys/class/dmi/id/product_uuid\nexit 0' >> /etc/rc.local" 
+    cp -f /opt/sap/ultrapad/share/init.d/UltraPadService.service /etc/init.d/ultrapadservice
+    chown UltraPAD /etc/init.d/ultrapadservice
+    chmod +x /etc/init.d/ultrapadservice
+	setcap 'CAP_MKNOD=epi CAP_NET_ADMIN=epi CAP_NET_BIND_SERVICE=epi CAP_NET_RAW=epi CAP_SYS_NICE=epi CAP_SYS_RAWIO=epi CAP_SYS_RESOURCE=epi CAP_SYSLOG=epi CAP_MAC_ADMIN=epi CAP_MAC_OVERRIDE=epi' /opt/sap/ultrapad/bin/UltraPadService
+    setcap 'CAP_MKNOD=epi CAP_NET_ADMIN=epi CAP_NET_BIND_SERVICE=epi CAP_NET_RAW=epi CAP_SYS_NICE=epi CAP_SYS_RAWIO=epi CAP_SYS_RESOURCE=epi CAP_SYSLOG=epi CAP_MAC_ADMIN=epi CAP_MAC_OVERRIDE=epi' /etc/init.d/ultrapadservice
+	setcap 'CAP_NET_ADMIN=epi' /bin/ip
+	update-menus
+	update-rc.d ultrapadservice defaults
+	service ultrapadservice start
+    cp -f /opt/sap/ultrapad/share/ultrapad.desktop /usr/share/applications/ultrapad.desktop
+	cp -f /opt/sap/ultrapad/share/ultrapad.png	/usr/share/pixmaps/ultrapad.png
+--COMMENT--
+;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 2
+    ;;
+esac
+exit 0
+
+
