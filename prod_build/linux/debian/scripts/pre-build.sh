@@ -102,11 +102,17 @@ elif [ ! -e debian/changelog ]; then  ### I guess this what's supposed to be add
 	echo "[INF] Debian changelog does not exist. Nothing to be done there." #I supposed it should look somehow like that.
 #makes sense
 else
+<<<<<<< HEAD
 	echo "[INF] $VERSION_STRING is greater than $last_version_string"
 	echo "[INF] editing the changelog"
 	text=$(extract_gitlog_text)
 	IFS=$'\n'
 	echo "VERSION_STRING = $VERSION_STRING"
+=======
+	echo "[INF] editing the changelog"
+	text=$(extract_gitlog_text)
+	IFS=$'\n'
+>>>>>>> 6ec3383544fc3bfd7cdfe65b19cdd5626dd0bb83
 	for textline in $text; do
 		dch -v $VERSION_STRING $textline
 	done
@@ -119,6 +125,7 @@ else
 	controlfile_version=$(cat prod_build/linux/debian/essentials/control | grep "Standards" | cut -d ' ' -f2) #Add to control info.
 	sed -i "s/$controlfile_version/$VERSION_STRING/" prod_build/linux/debian/essentials/control
 	export UPDVER=1
+<<<<<<< HEAD
 
 fi
 
@@ -132,3 +139,5 @@ for distr in $HOST_DISTR_VERSIONS; do #we need to install required dependencies 
 	done
 done
 
+=======
+fi
