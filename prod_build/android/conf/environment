@@ -1,0 +1,7 @@
+ANDROID_NDK_HOME="/opt/android-ndk-r16b"
+SDKROOT="/opt/android-sdk/bin"
+NDKHOST="linux-x86_64"
+JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+ANDRQT_HOME="/usr/lib/crossdev"
+HOST_DISTR_VERSIONS="stretch"
+HOST_ARCH_VERSIONS="amd64"
