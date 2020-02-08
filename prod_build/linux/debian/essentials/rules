@@ -1,4 +1,9 @@
 #!/usr/bin/make -f
 
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/qmake.mk
+override_dh_fixperms:
+    dh_fixperms -X/opt/cellframe-node
+override_dh_auto_install:
+    dh_auto_install -- prefix=/opt/cellframe-node
+%:
+#    dh $@  --with=systemd
+    dh $@
