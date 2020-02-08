@@ -38,7 +38,7 @@ for platform in $PLATFORMS; do
 			fi
 		done
 	done
-#	[ -e prod_build/$platform/scripts/post-build.sh ] && prod_build/$platform/scripts/post-build.sh #For post-build actions not in chroot (global publish)
+	[ -e prod_build/$platform/scripts/post-build.sh ] && prod_build/$platform/scripts/post-build.sh #For post-build actions not in chroot (global publish)
 	PKG_FORMAT=$(echo $PKG_FORMAT | cut -d ' ' -f2-)
 #	export_variables clean
 done
