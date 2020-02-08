@@ -24,7 +24,9 @@
   #fi
 
 
-cmake -S . -B build && make -C build && cpack -B build
+#cmake -S . -B build && make -C build && cpack -B build
+pwd
+mkdir -p build && cd build && cmake ../ && make -j3 && cpack && cd ..
 
 ### touch /etc/apt/sources.list.d/demlabs.list deb https://debian.pub.demlabs.net/ bionic main universe multiverse
 

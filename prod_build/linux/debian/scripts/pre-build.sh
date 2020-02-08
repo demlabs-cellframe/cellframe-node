@@ -36,7 +36,7 @@ install_dependencies() {
 		echo ""
 		local PKG_DEPPIES=$(echo $PKG_DEPS | sed 's/\"//g')
 		echo "[DEBUGGA] Attempting to install $PKG_DEPPIES"
-		if sudo apt-get install $PKG_DEPPIES -y ; then
+		if sudo /usr/bin/apt-get install -y $PKG_DEPPIES ; then
 			echo ""
 			echo "[INF] Packages were installed successfully"
 		else
@@ -71,13 +71,13 @@ install_dependencies() {
 
 #. prod_build/general/install_dependencies
 . prod_build/general/pre-build.sh #VERSIONS and git
+export_variables "prod_build/general/conf/*"
 export_variables "prod_build/linux/debian/conf/*"
-install_dependencies
 
 VERSION_STRING=$(echo $VERSION_FORMAT | sed "s/\"//g" ) #Removing quotes
 VERSION_ENTRIES=$(echo $VERSION_ENTRIES | sed "s/\"//g" )
 extract_version_number
-last_version_string=$(cat prod_build/linux/debian/essentials/changelog | head -n 1 | cut -d '(' -f2 | cut -d ')' -f1)
+[ -e prod_build/linux/debian/essentials/changelog ] && last_version_string=$(cat prod_build/linux/debian/essentials/changelog | head -n 1 | cut -d '(' -f2 | cut -d ')' -f1)
 
 
 
@@ -96,23 +96,15 @@ last_version_string=$(cat prod_build/linux/debian/essentials/changelog | head -n
 if [ $( gitlab-runner -v 2> /dev/null ; echo $? ) == 0 ]; then  
 	echo "[WRN] on build platform. Version won't be changed" # okay, so this echo wont be outputted as the condition is not true
 
-elif [ "$last_version_string" == "$VERSION_STRING" ]; then
-	echo "[INF] Version $last_version_string is equal to $VERSION_STRING. Nothing to change"
 elif [ ! -e debian/changelog ]; then  ### I guess this what's supposed to be added in order to solve the issue with the changelog?+
 	echo "[INF] Debian changelog does not exist. Nothing to be done there." #I supposed it should look somehow like that.
 #makes sense
+elif [ "$last_version_string" == "$VERSION_STRING" ]; then
+	echo "[INF] Version $last_version_string is equal to $VERSION_STRING. Nothing to change"
 else
-<<<<<<< HEAD
-	echo "[INF] $VERSION_STRING is greater than $last_version_string"
 	echo "[INF] editing the changelog"
 	text=$(extract_gitlog_text)
 	IFS=$'\n'
-	echo "VERSION_STRING = $VERSION_STRING"
-=======
-	echo "[INF] editing the changelog"
-	text=$(extract_gitlog_text)
-	IFS=$'\n'
->>>>>>> 6ec3383544fc3bfd7cdfe65b19cdd5626dd0bb83
 	for textline in $text; do
 		dch -v $VERSION_STRING $textline
 	done
@@ -125,11 +117,8 @@ else
 	controlfile_version=$(cat prod_build/linux/debian/essentials/control | grep "Standards" | cut -d ' ' -f2) #Add to control info.
 	sed -i "s/$controlfile_version/$VERSION_STRING/" prod_build/linux/debian/essentials/control
 	export UPDVER=1
-<<<<<<< HEAD
-
 fi
 
-echo "workdir is $(pwd)"
 IFS=" "
 CHROOT_PREFIX=$1
 for distr in $HOST_DISTR_VERSIONS; do #we need to install required dependencies under schroot.
@@ -139,5 +128,4 @@ for distr in $HOST_DISTR_VERSIONS; do #we need to install required dependencies 
 	done
 done
 
-=======
-fi
+## Maybe we do have the version required? Then we don't need to build it again. CHECK IT THERE!

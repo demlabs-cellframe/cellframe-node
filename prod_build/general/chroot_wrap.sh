@@ -27,11 +27,11 @@ for platform in $PLATFORMS; do
 	#Check if chroots are present
 	echo $HOST_DISTR_VERSIONS
 	echo $HOST_ARCH_VERSIONS
-	[ -e prod_build/$platform/scripts/pre-build.sh ] && prod_build/$platform/scripts/pre-build.sh #For actions not in chroot (version update)
+	[ -e prod_build/$platform/scripts/pre-build.sh ] && prod_build/$platform/scripts/pre-build.sh $CHROOT_PREFIX #For actions not in chroot (version update)
 	for distr in $HOST_DISTR_VERSIONS; do
 		for arch in $HOST_ARCH_VERSIONS; do
 			if [ -e $CHROOTS_PATH/$CHROOT_PREFIX-$distr-$arch ]; then
-				schroot -c $CHROOT_PREFIX-$distr-$arch -- launcher.sh prod_build/$platform/scripts/$JOB.sh $PKG_TYPE || errcode=$?
+				schroot -c $CHROOT_PREFIX-$distr-$arch -- launcher.sh prod_build/$platform/scripts/$JOB.sh "$PKG_TYPE" || errcode=$?
 #				echo "schroot stub $PKG_TYPE"
 			else
 				echo "chroot $CHROOT_PREFIX-$distr-$arch not found. You should install it first"
