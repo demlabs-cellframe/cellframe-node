@@ -92,8 +92,9 @@ extract_version_number
 ### cause information from this changelog (version) is used to write package metadata. And we had messed up for a long time because of desyncing. 
 ### This is a solution. We modify the changelog only if there are updates and not on build servers. And of course if it's not cmake-based build project.
 ### let's keep those comments here for a while
-
-if [ $( gitlab-runner -v 2> /dev/null ; echo $? ) == 0 ]; then  
+NOTONBUILDSERVER=0
+gitlab-runner -v 2&>>/dev/null || NOTONBUILDSERVER=$?
+if [ $NOTONBUILDSERVER == 0 ]; then  
 	echo "[WRN] on build platform. Version won't be changed" # okay, so this echo wont be outputted as the condition is not true
 
 elif [ ! -e debian/changelog ]; then  ### I guess this what's supposed to be added in order to solve the issue with the changelog?+
