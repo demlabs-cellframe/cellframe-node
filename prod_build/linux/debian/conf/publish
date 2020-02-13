@@ -2,7 +2,7 @@ HOST_DISTR_VERSIONS="buster"
 HOST_ARCH_VERSIONS="amd64"
 PACKAGE_PATH=builds/deb/
 REPO_DIR_SRC=/var/tmp/repository
-DISTR_CODENAME=$HOST_DISTR_VERSIONS
+DISTR_CODENAME="stretch"
 REPO_ADDR=debian.pub.demlabs.net
-REPO_DIR=/var/www/html/$REPO_ADDR
-
+REPO_DIR=/var/www/html/debian.pub.demlabs.net
+DISTR_COMPONENT=main
