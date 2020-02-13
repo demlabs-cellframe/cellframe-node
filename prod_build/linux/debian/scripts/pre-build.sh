@@ -93,7 +93,9 @@ extract_version_number
 ### This is a solution. We modify the changelog only if there are updates and not on build servers. And of course if it's not cmake-based build project.
 ### let's keep those comments here for a while
 
-if [ $( gitlab-runner -v 2> /dev/null ; echo $? ) == 0 ]; then  
+NOTONBUILDSERVER=0
+gitlab-runner -v 2&>>/dev/null || NOTONBUILDSERVER=$?
+if [ $NOTONBUILDSERVER == 0 ]; then  
 	echo "[WRN] on build platform. Version won't be changed" # okay, so this echo wont be outputted as the condition is not true
 
 elif [ ! -e debian/changelog ]; then  ### I guess this what's supposed to be added in order to solve the issue with the changelog?+
@@ -124,8 +126,10 @@ CHROOT_PREFIX=$1
 for distr in $HOST_DISTR_VERSIONS; do #we need to install required dependencies under schroot.
 	for arch in $HOST_ARCH_VERSIONS; do
 		echo "$CHROOT_PREFIX-$distr-$arch"
-		schroot -c $CHROOT_PREFIX-$distr-$arch -- prod_build/linux/debian/scripts/chroot/pre-build.sh "$PKG_DEPS"
+		schroot -c $CHROOT_PREFIX-$distr-$arch -- prod_build/linux/debian/scripts/chroot/pre-build.sh "$PKG_DEPS" || errcode=$?
+		[[ $errcode != 0 ]] && echo "Problems with $CHROOT_PREFIX-$distr-$arch occured. You had installed it, right?"
 	done
 done
+exit 0
 
 ## Maybe we do have the version required? Then we don't need to build it again. CHECK IT THERE!
