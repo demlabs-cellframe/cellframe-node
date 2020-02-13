@@ -2,7 +2,7 @@
 
 echo "Deploying to $PACKAGE_PATH"
 echo $wd
-cd $REPO_DIR
+
 cd build
 PKGFILES=($(ls *.deb))
 cd ..
