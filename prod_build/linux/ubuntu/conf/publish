@@ -1,0 +1,8 @@
+HOST_DISTR_VERSIONS="bionic"
+HOST_ARCH_VERSIONS="amd64"
+PACKAGE_PATH=builds/deb/
+REPO_DIR_SRC=/var/tmp/repository
+DISTR_CODENAME="bionic"
+REPO_ADDR=debian.pub.demlabs.net
+REPO_DIR=/var/www/html/debian.pub.demlabs.net
+DISTR_COMPONENT=main
