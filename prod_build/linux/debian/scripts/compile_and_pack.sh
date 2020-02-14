@@ -16,17 +16,30 @@
 # }
 
 
+substitute_pkgname_postfix() {
 
-### dpkg-buildpackage -J -us --changes-option=--build=any -uc && mkdir -p build && mv ../*.deb build/ && make distclean || error=$? && make distclean && $(error_explainer $error) #2DO: Learn how to sign up the package.
+	#CODENAME=$(lsb_release -a | grep Codename | cut -f2)
+	#VERSION=$(lsb_release -a | grep Version | cut -f2)
+	#DISTRO_TYPE=$(lsb_release -a | grep Distributor | cut -f2)
+set -x
+	for variable in $(lsb_release -a 2>/dev/null | sed 's/\t//g' | sed 's/ //g' | sed 's/\:/\=/g'); do
+		echo "variable is $variable"
+		export $variable
+	done
+	sed -i "/ CPACK_SYSTEM_TYPE/s/\".*\"/\"$DistributorID\"/" CMakeLists.txt
+	sed -i "/ CPACK_SYSTEM_VERSION/s/\".*\"/\"$Release\"/" CMakeLists.txt
+	sed -i "/ CPACK_SYSTEM_CODENAME/s/\".*\"/\"$Codename\"/" CMakeLists.txt
+#	sed -i "/ CPACK_SYSTEM_ARCH/s/\".*\"/\"$Codename\"/" CMakeLists.txt No need to replace anything while we're on amd64 arch only.
+	export -n "DistributorID"
+	export -n "Release"
+	export -n "Codename"
+	export -n "Description"
+set +x
+}
 
-# if [ "$1" == "--static" ]; then
- #	export $QT_SELECT="default" #Returning back the shared library link
-  #fi
 
-
-#cmake -S . -B build && make -C build && cpack -B build
 pwd
-mkdir -p build && cd build && cmake ../ && make -j3 && cpack && cd ..
+substitute_pkgname_postfix && mkdir -p build && cd build && cmake ../ && make -j3 && cpack && cd ..
 
 ### touch /etc/apt/sources.list.d/demlabs.list deb https://debian.pub.demlabs.net/ bionic main universe multiverse
 

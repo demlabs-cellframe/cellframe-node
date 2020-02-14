@@ -1,0 +1,1 @@
+../../debian/scripts/test.sh
