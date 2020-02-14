@@ -191,37 +191,31 @@ int shell_reader_loop()
 int cellframe_node__cli_Main(int argc, const char *argv[])
 #else
 
-static char * s_config_dir = NULL;
-static char * s_log_file_path= NULL;
 int main(int argc, const char *argv[])
 #endif
 {
-    dap_set_appname("cellframe-node");
+    dap_set_appname("cellframe-node-cli");
 
 #ifdef _WIN32
-    s_sys_dir_path =dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    s_sys_dir_path =dap_strdup_printf( "/Applications/%s.app/Contents/Resources", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
 #elif DAP_OS_ANDROID
-    s_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
-    g_sys_dir_path =dap_strdup_printf("/opt/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
-    g_sys_dir_path_len = strlen(g_sys_dir_path);
-
-    s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
-    s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
-
-    char *l_log_dir_path = dap_strdup_printf ("%s/var/log", g_sys_dir_path);
-    dap_mkdir_with_parents( l_log_dir_path );
-    DAP_DELETE(l_log_dir_path);
-
-    if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
-        printf( "Fatal Error: Can't init common functions module" );
+    if (dap_common_init(dap_get_appname(), NULL) != 0) {
+        printf("Fatal Error: Can't init common functions module");
         return -2;
     }
-    dap_log_level_set( L_CRITICAL );
-    dap_config_init( s_config_dir );
+
+    {
+        char l_config_dir[MAX_PATH] = {'\0'};
+        dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        dap_config_init(l_config_dir);
+    }
+    dap_log_level_set(L_CRITICAL);
 
     if((g_config = dap_config_open(dap_get_appname())) == NULL) {
         printf("Can't init general configurations %s.cfg\n", dap_get_appname());
