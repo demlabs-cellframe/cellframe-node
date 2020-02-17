@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mongo dapDb --eval "db.dap_domains.find()"
