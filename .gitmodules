@@ -126,3 +126,7 @@
 	path = libdap-chain-common
 	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common
 	branch = master
+[submodule "libdap-chain-cli"]
+	path = libdap-chain-cli
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cli.git
+	branch = master
