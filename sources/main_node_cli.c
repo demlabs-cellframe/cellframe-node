@@ -194,7 +194,7 @@ int cellframe_node__cli_Main(int argc, const char *argv[])
 int main(int argc, const char *argv[])
 #endif
 {
-    dap_set_appname("cellframe-node-cli");
+    dap_set_appname("cellframe-node");
 
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());

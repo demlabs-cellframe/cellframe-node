@@ -356,7 +356,7 @@ int main(int argc, const char **argv)
  */
 static int s_init( int argc, const char **argv )
 {
-    dap_set_appname("cellframe-node-tool");
+    dap_set_appname("cellframe-node");
 
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
