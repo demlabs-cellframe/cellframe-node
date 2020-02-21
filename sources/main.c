@@ -239,7 +239,7 @@ int main( int argc, const char **argv )
 
 	dap_client_init();
 
-	dap_http_client_simple_init( );
+	//dap_http_client_simple_init( );
 
 	if ( dap_datum_mempool_init() ) {
 	    log_it( L_CRITICAL, "Can't init mempool module" );
