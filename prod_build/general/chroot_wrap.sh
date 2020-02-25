@@ -33,7 +33,7 @@ for platform in $PLATFORMS; do
 	for distr in $HOST_DISTR_VERSIONS; do
 		for arch in $HOST_ARCH_VERSIONS; do
 			if [ -e $CHROOTS_PATH/$CHROOT_PREFIX-$distr-$arch ]; then
-				schroot -c $CHROOT_PREFIX-$distr-$arch -- launcher.sh prod_build/$platform/scripts/$JOB.sh $PKG_TYPE || errcode=$?
+				schroot -c $CHROOT_PREFIX-$distr-$arch -- launcher.sh prod_build/$platform/scripts/$JOB.sh $PKG_TYPE || { errcode=$? && unexport_variables "./prod_build/$platform/conf/*"; exit $errcode; }
 #				echo "schroot stub $PKG_TYPE"
 			else
 				echo "chroot $CHROOT_PREFIX-$distr-$arch not found. You should install it first"
@@ -41,10 +41,11 @@ for platform in $PLATFORMS; do
 		done
 	done
 	echo "workdir before postinstall is $(pwd)"
-	[ -e prod_build/$platform/scripts/post-build.sh ] && prod_build/$platform/scripts/post-build.sh #For post-build actions not in chroot (global publish)
+	[ -e prod_build/$platform/scripts/post-build.sh ] && prod_build/$platform/scripts/post-build.sh errcode=$? #For post-build actions not in chroot (global publish)
 	PKG_FORMAT=$(echo $PKG_FORMAT | cut -d ' ' -f2-)
 	unexport_variables "./prod_build/$platform/conf/*"
 done
 #[ $(mount | grep "/run/schroot/mount") ] && sudo umount -l /run/schroot/mount && sudo rm -r /run/schroot/mount/* #Removing mountpoint odds.
 
 cd $wd
+exit $errcode
