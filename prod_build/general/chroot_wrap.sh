@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 PLATFORM_CANDIDATES=$2
 CHROOT_PREFIX="builder"
 CHROOTS_PATH=$1
