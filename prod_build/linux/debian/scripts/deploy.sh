@@ -40,8 +40,7 @@ if [[ $NOTONBUILDSERVER == 0 ]]; then
 		repack $pkgfile
 		echo "Attempting to add packages into $DISTR_COMPONENT section to $DISTR_CODENAME"
 		cd $REPO_DIR
-	    sudo reprepro -C "$DISTR_COMPONENT" --ask-passphrase includedeb "$DISTR_CODENAME" $REPO_DIR_SRC/*.deb
-	    sudo reprepro export "$DISTR_CODENAME"
+	    sudo reprepro -C "$DISTR_COMPONENT" --ask-passphrase includedeb "$DISTR_CODENAME" $REPO_DIR_SRC/*.deb && sudo reprepro export "$DISTR_CODENAME"
 	done
 
 	#Update into reprepro:
