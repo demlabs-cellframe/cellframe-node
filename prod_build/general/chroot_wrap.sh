@@ -48,4 +48,5 @@ done
 #[ $(mount | grep "/run/schroot/mount") ] && sudo umount -l /run/schroot/mount && sudo rm -r /run/schroot/mount/* #Removing mountpoint odds.
 
 cd $wd
+
 exit $errcode
