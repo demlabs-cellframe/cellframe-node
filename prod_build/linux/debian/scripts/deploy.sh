@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-set -x
 repack() {
 
 DEBNAME=$1
@@ -33,7 +31,7 @@ NOTONBUILDSERVER=0
 gitlab-runner -v 2&>> /dev/null || NOTONBUILDSERVER=$?
 if [[ $NOTONBUILDSERVER == 0 ]]; then
 	mkdir -p $REPO_DIR_SRC
-	for pkgfile in $PKGFILES; do
+	for pkgfile in ${PKGFILES[@]}; do
 	cd $REPO_DIR_SRC
 		cp -v $wd/$PACKAGE_PATH/$pkgfile $REPO_DIR_SRC
 		for variant in $HOST_DISTR_VERSIONS; do
@@ -53,7 +51,6 @@ fi
 	export -n "UPDVER"
 rm -r $REPO_DIR_SRC
 cd $wd
-set +x
 exit 0
 #symlink name-actual to the latest version.
 #build/deb/versions - for all files
