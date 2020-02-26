@@ -21,7 +21,6 @@ substitute_pkgname_postfix() {
 	#CODENAME=$(lsb_release -a | grep Codename | cut -f2)
 	#VERSION=$(lsb_release -a | grep Version | cut -f2)
 	#DISTRO_TYPE=$(lsb_release -a | grep Distributor | cut -f2)
-set -x
 	for variable in $(lsb_release -a 2>/dev/null | sed 's/\t//g' | sed 's/ //g' | sed 's/\:/\=/g'); do
 		echo "variable is $variable"
 		export $variable
@@ -34,7 +33,6 @@ set -x
 	export -n "Release"
 	export -n "Codename"
 	export -n "Description"
-set +x
 }
 
 

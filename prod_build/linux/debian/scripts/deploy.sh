@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+set -x
 repack() {
 
 DEBNAME=$1
@@ -24,21 +26,26 @@ PKGFILES=($(ls *.deb))
 cd ..
 mv build/*.deb $wd/$PACKAGE_PATH/ || echo "[ERR] Something went wrong in publishing the package. Now aborting."
 
+#echo "We have $DISTR_CODENAME there"
+echo "On path $REPO_DIR_SRC we have debian files."
+
 NOTONBUILDSERVER=0
 gitlab-runner -v 2&>> /dev/null || NOTONBUILDSERVER=$?
 if [[ $NOTONBUILDSERVER == 0 ]]; then
 	mkdir -p $REPO_DIR_SRC
-	cd $REPO_DIR_SRC
 	for pkgfile in $PKGFILES; do
+	cd $REPO_DIR_SRC
 		cp -v $wd/$PACKAGE_PATH/$pkgfile $REPO_DIR_SRC
 		for variant in $HOST_DISTR_VERSIONS; do
 			ls $pkgfile | grep $variant && DISTR_CODENAME=$variant #Since we add a postfix into every debpackage done, we'll extract it that way.
 		done
 		repack $pkgfile
+		echo "Attempting to add packages into $DISTR_COMPONENT section to $DISTR_CODENAME"
+		cd $REPO_DIR
+	    sudo reprepro -C "$DISTR_COMPONENT" --ask-passphrase includedeb "$DISTR_CODENAME" $REPO_DIR_SRC/*.deb
+	    sudo reprepro export "$DISTR_CODENAME"
 	done
-	cd $REPO_DIR
-	echo "Attempting to add packages into $DISTR_VARIANT section to $DISTR_CODENAME"
-	sudo reprepro -C "$DISTR_COMPONENT" --ask-passphrase includedeb "$DISTR_CODENAME" $REPO_DIR_SRC/*.deb
+
 	#Update into reprepro:
 	
 	#Need to create latest symlink to the project.
@@ -46,6 +53,8 @@ fi
 	export -n "UPDVER"
 rm -r $REPO_DIR_SRC
 cd $wd
+set +x
+exit 0
 #symlink name-actual to the latest version.
 #build/deb/versions - for all files
 #build/deb/${PROJECT}-latest - for symlinks.
