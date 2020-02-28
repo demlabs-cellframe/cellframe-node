@@ -6,6 +6,8 @@ wallets_default=default
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
 auto_online={AUTO_ONLINE}
+# type of node addr [auto, static, dinamic]
+node_addr_type=auto
 
 # Console
 
