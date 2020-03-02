@@ -50,8 +50,8 @@ Template: cellframe-node/kelvin_testnet_node_type
 Type: select
 Default: full
 Choices: full, light, master, archive, root
-Description: Kelvin Testnet: Node type
- Select node type:. 
+Description: Kelvin Testnet: Node role
+ Select node role:. 
  Light - syncronize only local wallets 
  full - sync all its cell
  master - allow to store values in chains and take comission, sync all shards that will need to be synced
