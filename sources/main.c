@@ -110,6 +110,10 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 
+#ifdef DAP_SUPPORT_PYTHON_PLUGINSv
+    #include "dap_chain_plugins.h"
+#endif
+
 
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
@@ -439,6 +443,12 @@ int main( int argc, const char **argv )
 #endif
 #endif
 
+    //Init python plugins
+    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+        log_it(L_NOTICE, "Loading python plugins");
+        dap_chain_plugins_init(g_config);
+    #endif
+
 	// Endless loop for server's requests processing
 	rc = dap_server_loop(l_server);
 	// After loop exit actions
@@ -448,6 +458,9 @@ int main( int argc, const char **argv )
 
 failure:
 
+    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+        dap_chain_plugins_deinit();
+    #endif
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
 	dap_http_folder_deinit();
