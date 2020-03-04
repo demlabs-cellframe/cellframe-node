@@ -3,9 +3,12 @@ Cellframe Node
 
 [Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
 
-## Build from sources:
 
-### Prerequsites:
+## Debian/Ununtu
+
+### Build from sources:
+
+#### Prerequsites:
 
 To successfully complete of the build, you must have following prerequisites preinstalled (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
@@ -19,13 +22,13 @@ To successfully complete of the build, you must have following prerequisites pre
 * libtalloc-dev
 * libtevent-dev
 
-### Prepare system
+#### Prepare system
 Comamnd to install them all with build tools
 ```
 sudo apt-get install build-essential cmake cpack dpkg-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev
 ```
 
-### Get all sources
+#### Get all sources
 
 This command fetch sources from gitlab and build them. 
   ```
@@ -35,7 +38,7 @@ This command fetch sources from gitlab and build them.
   git submodule update
   ```
 
-### Build sources
+#### Build sources
 Get into directory with cellframe-node and do
   ```
   mkdir build
@@ -45,20 +48,20 @@ Get into directory with cellframe-node and do
   ```
 Thats produce everything in build/ subdirectory.
 
-## Install package
+### Install package
 
-### Prepare for installation (Debian/Ubuntu)
+#### Prepare for installation
 To prepare node for installation we need to produce pacakge. Or - do ```sudo make install``` from build directory, then get config template from ```dist/share/configs``` and produce proper one in ```/opt/celllframe-node/etc```
 Anyway we suggest you to produce the package with command ```cpack``` from the build directory.
 
-#### Install from local package
+##### Install from local package
 If you downloaded or build from sources a debian pacakge, like ```cellframe-node_2.11-4-buster_amd64.deb``` you need to install it with ```dpkg``` command. Example:
 ```
-dpkg -i -plow  ./cellframe-node_2.11-4-buster_amd64.deb
+sudo dpkg -i -plow  ./cellframe-node_2.11-4-buster_amd64.deb
 ```
-#### Install from DemLabs official public repository
+##### Install from DemLabs official public repository
 
-* Create file /etc/apt/sources.list.d/demlabs.list with one line below for Debian 10:
+* Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` one line below for Debian 10:
   ```
   deb https://debian.pub.demlabs.net/ buster main
   ```
@@ -69,12 +72,12 @@ dpkg -i -plow  ./cellframe-node_2.11-4-buster_amd64.deb
 * Then download public signature and install it:
   ```
   wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
-  apt-key add demlabskey.asc
+  sudo apt-key add demlabskey.asc
   ```
 * Then update your apt cache and install the package:
   ```
-  apt-get update
-  apt-get install cellframe-node
+  sudo apt-get update
+  sudo apt-get install cellframe-node
   ```
 
 During installation it asks some questions
@@ -107,10 +110,89 @@ Set ```true``` if you want to connect your node with ```kelvin-testnet```
 * Kelvin-testnet: Node type (role)
 Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
 
+### How to configure VPN service share
 
-## How to run 
+#### Node base configuration
+Open ```/opt/cellframe-node/etc/cellframe-node.conf``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.conf``` and find next section:
 
-### Debian/Ubuntu
+```# VPN stream channel processing module
+[srv_vpn]
+#   Turn to true if you want to share VPN service from you node
+enabled=false
+#   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
+network_address=10.11.12.0
+network_mask=255.255.255.0
+#pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]```
+
+Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usualy you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
+Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below:
+Next line ```pricelist``` if commented out it shares service for free.
+
+#### Pricelist config
+Pricelist line has list of values, splitted with ```:``` symbol. What it means lets see in example ```kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0```:
+
+1. ```kelvin-testnet``` thats the chain network name where the price token issued
+2. ```0.00001``` price per units. Important: not for one unit but for all the units, in our example - for 1 hour.
+3. ```KELT``` token ticker thats will be used for payments
+4. ```3600``` units number thats costs price `0.00001`
+5. ```SEC``` unit type, could be ```SEC``` for seconds, ```DAY``` for days, ```MB``` for megabyte. IMPORTANT: if selected ```MB``` accounting would be not by time but by used traffic amount
+6.```mywallet``` wallet name for payments accomodation, should be created before. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
+
+You could enter any number of such prices
+
+#### DNS server install
+
+Install DNS server, it could be any other than Bind9 but for example we will use exactly thats one
+
+```sudo apt-get install bind9```
+
+#### Switch on IPv4 forwarding 
+
+Open ```/etc/sysctl.conf``` with command ```sudo nano /etc/sysctl.conf``` and find line 
+```
+# Uncomment the next line to enable packet forwarding for IPv4
+#net.ipv4.ip_forward=1
+```
+
+I had it on 27-28 line in config. Uncomment ```net.ipv4.ip_forward=1``` as the comment above suggests. Then after you've changed them and saved changes, implement them with:
+```
+sudo sysctl -p
+```
+Then after reboot they will be implemented automatically
+
+
+#### Configuring firewall with NAT
+
+Easiest way is to install ```arno-iptables-firewall``` with the next command:
+```
+sudo apt-get install arno-iptables-firewall
+```
+It would ask next questions:
+
+*  `External network interfaces` answer with you network interface thats used for internet access. Usualy its `eth0` or `wifi0` but could be different, examine you network configuration firt
+*  `Do you want to manage the firewall setup with debconf` answer `Yes`
+*  `External network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
+*  `Open external TCP-ports` answer `8079` or what the port do you configured for cellframe node when it was installed
+*  `Open external UDP-ports:` answer same as in previous
+*  `Internal network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
+*  `Internal subnets ` here should be network_adddres/network_mask from VPN service configuration, ```10.11.12.0/255.255.255.0``` in our example
+*  `Should be restarted` answer `No` becase we need some more configs
+
+Now lets increade config ask level and reconfigure the package with the next command:
+```
+sudo dpkg-reconfigure -plow arno-iptables-firewall
+``` 
+
+For answers where you'll see right answers just press enter to skip them. Then the next questions should appears:
+* `Is DHCP used on external interfaces? ` usualy answer `Yes`, answer `No` only if you have static network configuration for external connections
+* `Should the machine be pingable from the outside world?` answer `Yes` because we use pings for network speed measurements
+* `Do you want to enable NAT? ` answer `Yes`
+* `Internal networks with access to external networks:` here you list internal networks again, ```10.11.12.0/255.255.255.0``` in our example
+* `Should the firewall be (re)started now?` now answer `Yes` and have everything ready for routing
+
+
+### How to run 
+
 If the node is installed in your system you need only to check it if its runned on your system
 ```
   sudo service cellframe-node status
@@ -122,6 +204,59 @@ And if its not runned - start it. Start after reboot should be automaticaly exec
 
 To stop it use the next command:
 ```
-  sudo service cellframe-node start
+  sudo service cellframe-node stop
 ```
- 
+
+### How to publish service in network 
+
+
+#### Obtain node address
+First you need to publish you public IPv4 and/or IPv6 addresses (for current moment we support only IPv4)
+
+```
+sudo /opt/cellframe-node/bin/cellframe-node-cli net -net kelvin-testnet get status
+```
+
+It should print smth like this
+```
+Network "kelvin-testnet" has state NET_STATE_SYNC_CHAINS (target state NET_STATE_ONLINE), active links 3 from 4, cur node address 374C::CEB5::6740::D93B
+```
+
+#### Publish IP address in nodelist
+
+Look at the end of address, thats you node address, ```374C::CEB5::6740::D93B``` use it to update information about your node, as in example below:
+```
+sudo /opt/cellframe-node/bin/cellframe-node-cli node add -net kelvin-testnet -addr 374C::CEB5::6740::D93B -cell 0x0000000000000001 -ipv4 5.89.17.176
+```
+
+Here is cell `0x0000000000000001` used by default until we haven't finished cell autoselection. Then ipv4 address is `5.89.17.176` replace it with your public IPv4 address. Same could be added ipv6 address with argument `-ipv6`
+
+
+#### Create order for VPN service 
+
+To say world that you have VPN service you need to place order. First lets see the market, what orders are already present:
+```
+sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order find -srv_uid 0x0000000000000001 -direction sell
+```
+
+It should print list if you've syncronized well before (should happens automatically by default)
+Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg``` if you see in list thats market changed and you need to change prices as well.
+Here is exmaple based on our pricelist in previous examples:
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 0x0000000000000001 -srv_class PERM -price_unit 2 -price_token KELT -price 0.0000010```
+
+And then you just wait some for network syncronization and your order will see everybody.
+
+Description of arguments
+* ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
+* ```-srv_uid``` Service UID, for VPN service set ```0x0000000000000001```
+* ```-srv_class PERM``` depricated, left for compatibility as is
+* ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
+* ```-price_token``` Token ticker
+* ```-price``` Price for one unit, price for one second in our example
+
+Important: if you set price in configs for units set, 3600 in our example - here you set price for your single one unit, for one second in example.
+
+More details about order operations you could find with call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help net_srv```
+More details about cellframe node commands in call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help```
+
+
