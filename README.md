@@ -115,14 +115,16 @@ Select node type (or node role) from suggested list with short descriptions. By 
 #### Node base configuration
 Open ```/opt/cellframe-node/etc/cellframe-node.conf``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.conf``` and find next section:
 
-```# VPN stream channel processing module
+```
+# VPN stream channel processing module
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node
 enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-#pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]```
+#pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]
+```
 
 Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usualy you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
 Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below:
