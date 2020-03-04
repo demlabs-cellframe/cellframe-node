@@ -138,7 +138,7 @@ Pricelist line has list of values, splitted with ```:``` symbol. What it means l
 3. ```KELT``` token ticker thats will be used for payments
 4. ```3600``` units number thats costs price `0.00001`
 5. ```SEC``` unit type, could be ```SEC``` for seconds, ```DAY``` for days, ```MB``` for megabyte. IMPORTANT: if selected ```MB``` accounting would be not by time but by used traffic amount
-6.```mywallet``` wallet name for payments accomodation, should be created before. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
+6.```mywallet``` wallet name for payments accomodation, should be created before with ```cellframe-node-cli```. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
 
 You could enter any number of such prices
 
