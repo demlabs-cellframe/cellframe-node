@@ -4,7 +4,7 @@ Cellframe Node
 [Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
 
 
-## Debian/Ununtu
+## Debian/Ubuntu
 
 ### Build from sources:
 
