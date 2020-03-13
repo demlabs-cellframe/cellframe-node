@@ -173,8 +173,6 @@ add_subdirectory(libdap-stream-ch-chain)
 add_subdirectory(libdap-stream-ch-chain-net)
 add_subdirectory(libdap-stream-ch-chain-net-srv)
 
-add_subdirectory(libdap-chain-plugins-python)
-
 #if (NOT ANDROID)
     add_subdirectory(libdap-chain-global-db)
 #endif()
@@ -361,6 +359,7 @@ if(UNIX)
     )
 
     if (SUPPORT_PYTHON_PLUGINS)
+        add_subdirectory(libdap-chain-plugins-python)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
         message("Build with support python plugins")
         set(Python_ADDITIONAL_VERSION 3.7 3.6 3.5 3.4)
