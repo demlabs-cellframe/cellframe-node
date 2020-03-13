@@ -159,27 +159,16 @@ int main(int argc, const char **argv)
         s_help( );
         exit( -2004 );
       }
-      char l_wallets_path[MAX_PATH] = {'\0'};
-#ifdef _WIN32
-        dap_stpcpy(l_wallets_path, s_sys_dir_path);
-#endif
-        dap_sprintf(l_wallets_path + g_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
-        l_wallet = dap_chain_wallet_create( l_wallet_name, l_wallets_path, l_sig_type );
+      l_wallet = dap_chain_wallet_create(l_wallet_name, dap_config_get_item_str(g_config, "resources", "wallets_path"), l_sig_type);
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
-
       // wallet sign_file <wallet name> <cert index> <data file path> <data offset> <data length> <dsign file path>
       if ( argc < 8 ) {
         log_it(L_ERROR,"Wrong 'wallet sign_file' command params");
         s_help();
         exit(-3000);
       }
-      char l_wallets_path[MAX_PATH] = {'\0'};
-#ifdef _WIN32
-        dap_stpcpy(l_wallets_path, s_sys_dir_path);
-#endif
-        dap_sprintf(l_wallets_path + g_sys_dir_path_len, "%s", dap_config_get_item_str(g_config, "resources", "wallets_path"));
-      dap_chain_wallet_t *l_wallet = dap_chain_wallet_open( argv[3], l_wallets_path);
+      dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3], dap_config_get_item_str(g_config, "resources", "wallets_path"));
       if ( !l_wallet ) {
         log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
         s_help();
@@ -367,30 +356,28 @@ int main(int argc, const char **argv)
  */
 static int s_init( int argc, const char **argv )
 {
-    dap_set_appname("cellframe-node-tool");
+    dap_set_appname("cellframe-node");
 
 #ifdef _WIN32
-    s_sys_dir_path =dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    s_sys_dir_path =dap_strdup_printf( "/Applications/%s.app/Contents/Resources", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
 #elif DAP_OS_ANDROID
-    s_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
-    g_sys_dir_path =dap_strdup_printf("/opt/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
-    g_sys_dir_path_len = strlen(g_sys_dir_path);
-
-    s_config_dir = dap_strdup_printf ("%s/etc", g_sys_dir_path );
-    s_log_file_path = dap_strdup_printf ("%s/var/log/%s.log", g_sys_dir_path,dap_get_appname());
-
-    dap_mkdir_with_parents( s_log_file_path );
-
-    if ( dap_common_init( dap_get_appname(), s_log_file_path ) != 0 ) {
-        printf( "Fatal Error: Can't init common functions module" );
+    if (dap_common_init(dap_get_appname(), NULL) != 0) {
+        printf("Fatal Error: Can't init common functions module");
         return -2;
     }
-    dap_log_level_set( L_CRITICAL );
-    dap_config_init( s_config_dir );
+
+    {
+        char l_config_dir[MAX_PATH] = {'\0'};
+        dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        dap_config_init(l_config_dir);
+    }
+    dap_log_level_set(L_CRITICAL);
 
     if((g_config = dap_config_open(dap_get_appname())) == NULL) {
         printf("Can't init general configurations %s.cfg\n", dap_get_appname());
@@ -449,7 +436,7 @@ static int s_init( int argc, const char **argv )
 
     uint16_t l_ca_folders_size = 0;
     char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
-    memcpy(s_system_ca_dir + g_sys_dir_path_len, l_ca_folders[0], strlen(l_ca_folders[0]));
+    dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);//memcpy(s_system_ca_dir, l_ca_folders[0], strlen(l_ca_folders[0]));
     return 0;
 }
 

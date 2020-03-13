@@ -129,3 +129,8 @@
 [submodule "libdap-chain-plugins-python"]
 	path = libdap-chain-plugins-python
 	url = https://gitlab.demlabs.net/cellframe/libdap-chain-plugins-python.git
+[submodule "libdap-chain-cli"]
+	path = libdap-chain-cli
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cli.git
+	branch = master
+
