@@ -52,7 +52,7 @@ SET( CPACK_GENERATOR "DEB")
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
 SET( CPACK_PACKAGE_VERSION_MINOR 11)
-SET( CPACK_PACKAGE_VERSION_PATCH 4)
+SET( CPACK_PACKAGE_VERSION_PATCH 6)
 
 SET( CPACK_SYSTEM_TYPE "debian")
 SET( CPACK_SYSTEM_VERSION "10.0")
@@ -362,6 +362,16 @@ if(UNIX)
         dap_chain_wallet dap_chain_global_db dap_chain_mempool m magic
         dap_core
     )
+
+    if (SUPPORT_PYTHON_PLUGINS)
+        add_subdirectory(libdap-chain-plugins-python)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
+        message("Build with support python plugins")
+        set(Python_ADDITIONAL_VERSION 3.7 3.6 3.5 3.4)
+        find_package(PythonLibs REQUIRED)
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_chain_plugins_python)
+        include_directories(${PYTHON_INCLUDE_DIR} include/)
+    endif()
 
     if(ANDROID )
         set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)

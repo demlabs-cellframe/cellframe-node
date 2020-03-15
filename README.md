@@ -4,7 +4,7 @@ Cellframe Node
 [Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
 
 
-## Debian/Ununtu
+## Debian/Ubuntu
 
 ### Build from sources:
 
@@ -87,7 +87,7 @@ All this could be changed after in configs
 
 
 * Auto online
-If true, the node goes online after he starts and then try to keep this state automaticaly 
+If true, the node goes online after he starts and then try to keep this state automatically 
 
 * Debug mode
 If true - produce more log output in files. Suggested to set ```true``` until the testing period 
@@ -101,7 +101,7 @@ Enable/disable listening network address. Set ```false``` if you don't want to a
 * Server address
 Network address used for listentning. Set ```0.0.0.0``` if you want to listen all network interfaces on your computer
 
-* Server port (optional, usualy don't ask)
+* Server port (optional, usually don't ask)
 Server port, 8079 by default but sometimes better to set it to ```80``` or ```443``` to masquarade service as web service. 
 
 * Kelvin-testnet: Enable network
@@ -126,7 +126,7 @@ network_mask=255.255.255.0
 #pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]
 ```
 
-Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usualy you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
+Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usually you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
 Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below:
 Next line ```pricelist``` if commented out it shares service for free.
 
@@ -138,7 +138,7 @@ Pricelist line has list of values, splitted with ```:``` symbol. What it means l
 3. ```KELT``` token ticker thats will be used for payments
 4. ```3600``` units number thats costs price `0.00001`
 5. ```SEC``` unit type, could be ```SEC``` for seconds, ```DAY``` for days, ```MB``` for megabyte. IMPORTANT: if selected ```MB``` accounting would be not by time but by used traffic amount
-6.```mywallet``` wallet name for payments accomodation, should be created before with ```cellframe-node-cli```. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
+6.```mywallet``` wallet name for payments accommodation, should be created before with ```cellframe-node-cli```. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
 
 You could enter any number of such prices
 
@@ -171,7 +171,7 @@ sudo apt-get install arno-iptables-firewall
 ```
 It would ask next questions:
 
-*  `External network interfaces` answer with you network interface thats used for internet access. Usualy its `eth0` or `wifi0` but could be different, examine you network configuration firt
+*  `External network interfaces` answer with you network interface thats used for internet access. Usually its `eth0` or `wifi0` but could be different, examine you network configuration first
 *  `Do you want to manage the firewall setup with debconf` answer `Yes`
 *  `External network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
 *  `Open external TCP-ports` answer `8079` or what the port do you configured for cellframe node when it was installed
@@ -180,13 +180,13 @@ It would ask next questions:
 *  `Internal subnets ` here should be network_adddres/network_mask from VPN service configuration, ```10.11.12.0/255.255.255.0``` in our example
 *  `Should be restarted` answer `No` becase we need some more configs
 
-Now lets increade config ask level and reconfigure the package with the next command:
+Now lets increase config ask level and reconfigure the package with the next command:
 ```
 sudo dpkg-reconfigure -plow arno-iptables-firewall
 ``` 
 
 For answers where you'll see right answers just press enter to skip them. Then the next questions should appears:
-* `Is DHCP used on external interfaces? ` usualy answer `Yes`, answer `No` only if you have static network configuration for external connections
+* `Is DHCP used on external interfaces? ` usually answer `Yes`, answer `No` only if you have static network configuration for external connections
 * `Should the machine be pingable from the outside world?` answer `Yes` because we use pings for network speed measurements
 * `Do you want to enable NAT? ` answer `Yes`
 * `Internal networks with access to external networks:` here you list internal networks again, ```10.11.12.0/255.255.255.0``` in our example
@@ -246,12 +246,12 @@ Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg
 Here is exmaple based on our pricelist in previous examples:
 ```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 0x0000000000000001 -srv_class PERM -price_unit 2 -price_token KELT -price 0.0000010```
 
-And then you just wait some for network syncronization and your order will see everybody.
+And then you just wait some for network synchronisation and your order will see everybody.
 
 Description of arguments
 * ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
 * ```-srv_uid``` Service UID, for VPN service set ```0x0000000000000001```
-* ```-srv_class PERM``` depricated, left for compatibility as is
+* ```-srv_class PERM``` deprecated, left for compatibility as is
 * ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
 * ```-price_token``` Token ticker
 * ```-price``` Price for one unit, price for one second in our example
