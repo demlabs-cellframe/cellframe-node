@@ -32,9 +32,9 @@
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"
 #include "dap_chain_node_cli.h"
-#include "main_node_cli.h"
-#include "main_node_cli_net.h"
-#include "main_node_cli_shell.h"
+#include "dap_app_cli.h"
+#include "dap_app_cli_net.h"
+#include "dap_app_cli_shell.h"
 
 #ifdef __ANDROID__
     #include "cellframe_node.h"
@@ -46,7 +46,7 @@
 
 #include "dap_defines.h"
 
-static connect_param *cparam;
+static dap_app_cli_connect_param_t *cparam;
 
 /**
  * split string to argc and argv
@@ -91,7 +91,6 @@ static char** split_word(char *line, int *argc)
 int execute_line(char *line)
 {
     register int i;
-    dap_chain_node_cmd_item_t *command;
     char *word;
 
     /* Isolate the command word. */
@@ -124,14 +123,14 @@ int execute_line(char *line)
 
     // Call the function
     if(argc > 0) {
-        cmd_state cmd;
-        memset(&cmd, 0, sizeof(cmd_state));
+        dap_app_cli_cmd_state_t cmd;
+        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
         cmd.cmd_name = (char *) argv[0];
         cmd.cmd_param_count = argc - 1;
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 1);
         // Send command
-        int res = node_cli_post_command(cparam, &cmd);
+        int res = dap_app_cli_post_command(cparam, &cmd);
         return res;
     }
     fprintf(stderr, "No command\n");
@@ -141,7 +140,7 @@ int execute_line(char *line)
 /**
  * Clear and delete memory of structure cmd_state
  */
-void free_cmd_state(cmd_state *cmd) {
+void free_cmd_state(dap_app_cli_cmd_state_t *cmd) {
     if(!cmd->cmd_param)
         return;
     for(int i = 0; i < cmd->cmd_param_count; i++)
@@ -223,7 +222,14 @@ int main(int argc, const char *argv[])
     }
 
     // connect to node
-    cparam = node_cli_connect();
+
+#ifndef _WIN32
+    const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
+#else
+    const char* listen_socket = NULL;
+#endif
+
+    cparam = dap_app_cli_connect(listen_socket);
     if(!cparam)
     {
         printf("Can't connected to %s\n",dap_get_appname());
@@ -246,20 +252,20 @@ int main(int argc, const char *argv[])
     if(argc > 1){
         // Call the function
         //int res = ((*(command->func))(argc - 2, argv + 2));
-        cmd_state cmd;
-        memset(&cmd, 0, sizeof(cmd_state));
+        dap_app_cli_cmd_state_t cmd;
+        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
         cmd.cmd_name = strdup(argv[1]);
         cmd.cmd_param_count = argc - 2;
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 2);
         // Send command
-        int res = node_cli_post_command(cparam, &cmd);
-        node_cli_disconnect(cparam);
+        int res = dap_app_cli_post_command(cparam, &cmd);
+        dap_app_cli_disconnect(cparam);
         return res;
     }else{
         // command not found, start interactive shell
         shell_reader_loop();
-        node_cli_disconnect(cparam);
+        dap_app_cli_disconnect(cparam);
     }
     return 0;
 }
