@@ -113,9 +113,10 @@ int dap_node_run_action(scenario_t action) {
         str_reply = NULL;
 
         dap_chain_wallet_t *l_wallet_from   = dap_chain_wallet_open_file("./locale/var/lib/wallet/wallet_from.dwallet");
-        dap_chain_addr_t *l_addr_from       = dap_chain_wallet_get_addr(l_wallet_from);
+        dap_chain_net_id_t l_net_id        = dap_chain_net_id_by_name("local-testnet");
+        dap_chain_addr_t *l_addr_from       = dap_chain_wallet_get_addr(l_wallet_from, l_net_id);
         const char *l_addr_str_from         = dap_chain_addr_to_str(l_addr_from);
-        dap_test_msg(l_addr_str_from);
+        dap_test_msg("%s", l_addr_str_from);
         dap_chain_wallet_close(l_wallet_from);
 
         const char *token_decl_args[] = {
@@ -157,7 +158,8 @@ int dap_node_run_action(scenario_t action) {
         DAP_DELETE(l_addr_str_from);
     } else if (action == TX) {
         dap_chain_wallet_t *l_wallet_to = dap_chain_wallet_open_file("./locale/var/lib/wallet/wallet_to.dwallet");
-        dap_chain_addr_t *l_addr_to     = dap_chain_wallet_get_addr(l_wallet_to);
+        dap_chain_net_id_t l_net_id        = dap_chain_net_id_by_name("local-testnet");
+        dap_chain_addr_t *l_addr_to     = dap_chain_wallet_get_addr(l_wallet_to, l_net_id);
         const char *l_addr_str_to       = dap_chain_addr_to_str(l_addr_to);
         dap_test_msg(l_addr_str_to);
         dap_chain_wallet_close(l_wallet_to);
@@ -190,10 +192,11 @@ int dap_node_run_action(scenario_t action) {
     }
     else if (action == CHECK) {
         dap_chain_wallet_t *l_wallet_from   = dap_chain_wallet_open_file("./locale/var/lib/wallet/wallet_from.dwallet");
-        dap_chain_addr_t *l_addr_from       = dap_chain_wallet_get_addr(l_wallet_from);
+        dap_chain_net_id_t l_net_id        = dap_chain_net_id_by_name("local-testnet");
+        dap_chain_addr_t *l_addr_from       = dap_chain_wallet_get_addr(l_wallet_from, l_net_id);
 
         dap_chain_wallet_t *l_wallet_to     = dap_chain_wallet_open_file("./locale/var/lib/wallet/wallet_to.dwallet");
-        dap_chain_addr_t *l_addr_to         = dap_chain_wallet_get_addr(l_wallet_to);
+        dap_chain_addr_t *l_addr_to         = dap_chain_wallet_get_addr(l_wallet_to, l_net_id);
 
         dap_ledger_t *l_ledger = dap_chain_ledger_by_net_name("local-testnet");
         size_t l_addr_tokens_size = 0;
@@ -221,7 +224,7 @@ int dap_node_init() {
     dap_assert_PIF(dap_http_init() == 0,                    "Can't init HTTP cli submodule");
     dap_http_folder_init();
     dap_assert_PIF(dap_enc_init() == 0,                     "Can't init encryption module");
-    dap_assert_PIF(dap_enc_ks_init(false, 60 *60 * 2) == 0, "Can't init encryption key storage module");
+    //dap_assert_PIF(dap_enc_ks_init(false, 60 *60 * 2) == 0, "Can't init encryption key storage module");
     dap_assert_PIF(dap_chain_global_db_init(g_config) == 0, "Can't init DB");
     dap_client_init();
     dap_http_client_simple_init();
@@ -230,14 +233,14 @@ int dap_node_init() {
     dap_chain_wallet_init();
     dap_chain_gdb_init();
     dap_chain_net_init();
-    dap_chain_net_srv_init();
+    dap_chain_net_srv_init(g_config);
     enc_http_init();
     dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
     dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
     dap_http_simple_module_init();
 
-//    
-//    dap_assert_PIF(dap_chain_node_cli_init(g_config) == 0,  "Can't init server for console");
+
+    dap_assert_PIF(dap_chain_node_cli_init(g_config) == 0,  "Can't init server for console");
 
     dap_stream_ch_chain_init();
     dap_stream_ch_chain_net_init();
