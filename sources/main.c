@@ -221,6 +221,13 @@ int main( int argc, const char **argv )
 	    return -4;
 	}
 
+    // New event loop init
+    dap_events_init( 0, 0 );
+    dap_events_t *l_events = dap_events_new( );
+    dap_events_start( l_events );
+
+    dap_client_init();
+
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
 	    return -5;
@@ -241,7 +248,7 @@ int main( int argc, const char **argv )
 	    return -58;
 	}
 
-	dap_client_init();
+
 
 	//dap_http_client_simple_init( );
 
@@ -418,11 +425,6 @@ int main( int argc, const char **argv )
 	dap_stream_ch_chain_net_init( );
 
     dap_stream_ch_chain_net_srv_init();
-
-    // New event loop init
-	dap_events_init( 0, 0 );
-	dap_events_t *l_events = dap_events_new( );
-	dap_events_start( l_events );
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();

@@ -7,11 +7,13 @@ set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 
 include(scripts/OS_Detection.cmake)
 
-if(DAP_DEBUG_BUILD)
-    set(DAP_RELEASE 0)
+if( CMAKE_BUILD_TYPE MATCHES Debug)
+    set(DAP_RELEASE OFF)
+    set(DAP_DEBUG ON)
     message(STATUS "Debug build")
 else()
-    set(DAP_RELEASE 1)
+    set(DAP_RELEASE ON)
+    set(DAP_DEBUG OFF)
     message(STATUS "Release build")
 endif()
 
