@@ -151,6 +151,7 @@ add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain-crypto)
 add_subdirectory(libdap-chain-common)
 add_subdirectory(libdap-chain)
+add_subdirectory(libdap-chain-cli)
 add_subdirectory(libdap-chain-wallet)
 add_subdirectory(libdap-chain-cs-dag)
 add_subdirectory(libdap-chain-cs-dag-poa)
@@ -194,8 +195,6 @@ set( NODE_SOURCES
 )
 set( NODE_CLI_SOURCES
   sources/main_node_cli.c
-  sources/main_node_cli_shell.c
-  sources/main_node_cli_net.c
 )
 set( NODE_TOOL_SOURCES
   sources/main_node_tool.c
@@ -218,7 +217,7 @@ endif()
 
 if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
-  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
+  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
@@ -350,7 +349,7 @@ if(UNIX)
         dap_cuttdb)
 
     set(NODE_CLI_LIBRARIES
-        m dap_chain_net curl dap_cuttdb)
+        m dap_chain_net curl dap_cuttdb dap_app_cli)
 
     set(NODE_TOOL_LIBRARIES
         dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
