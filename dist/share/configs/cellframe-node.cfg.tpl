@@ -17,6 +17,7 @@ node_addr_type=auto
 enabled={SERVER_ENABLED}
 listen_address={SERVER_ADDR}
 listen_port_tcp={SERVER_PORT}
+builtin_dns_enabled=true #{BUILTIN_DNS_ENABLED}
 
 # Mempool
 [mempool]

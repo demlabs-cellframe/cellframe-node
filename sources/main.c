@@ -1,6 +1,6 @@
 /*
  * Authors:
- * Dmitriy A. Gearasimov <kahovski@gmail.com>
+ * Dmitriy A. Gerasimov <kahovski@gmail.com>
  * DeM Labs Inc.   https://demlabs.net
  * DeM Labs Open source community https://github.com/demlabsinc
  * Copyright  (c) 2017-2019
@@ -58,6 +58,7 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+#include "dap_dns_server.h"
 
 
 #include "dap_events.h"
@@ -221,6 +222,13 @@ int main( int argc, const char **argv )
 	    return -4;
 	}
 
+    // New event loop init
+    dap_events_init( 0, 0 );
+    dap_events_t *l_events = dap_events_new( );
+    dap_events_start( l_events );
+
+    dap_client_init();
+
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
 	    return -5;
@@ -235,13 +243,13 @@ int main( int argc, const char **argv )
 	    log_it( L_CRITICAL, "Can't init encryption module" );
 	    return -56;
 	}
-    
+
 	if ( dap_chain_global_db_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init global db module" );
 	    return -58;
 	}
 
-	dap_client_init();
+
 
 	//dap_http_client_simple_init( );
 
@@ -412,17 +420,20 @@ int main( int argc, const char **argv )
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
 
+    // DNS server start
+    bool bBuiltinDNSEnabled = dap_config_get_item_bool_default(g_config, "server", "builtin_dns_enabled", false);
+    log_it(L_DEBUG, "config server->builtin_dns_enabled = \"%u\" ", bBuiltinDNSEnabled);
+    dap_server_t *dns = NULL;
+    if (bBuiltinDNSEnabled) {
+        dns = dap_dns_server_start();
+    }
+
     // Chain Network init
 
 	dap_stream_ch_chain_init( );
 	dap_stream_ch_chain_net_init( );
 
     dap_stream_ch_chain_net_srv_init();
-
-    // New event loop init
-	dap_events_init( 0, 0 );
-	dap_events_t *l_events = dap_events_new( );
-	dap_events_start( l_events );
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
@@ -462,6 +473,7 @@ failure:
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_deinit();
     #endif
+    dap_dns_server_stop(dns);
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
 	dap_http_folder_deinit();
