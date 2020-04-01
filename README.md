@@ -21,11 +21,12 @@ To successfully complete of the build, you must have following prerequisites pre
 * libldb-dev
 * libtalloc-dev
 * libtevent-dev
+* traceroute
 
 #### Prepare system
 Comamnd to install them all with build tools
 ```
-sudo apt-get install build-essential cmake cpack dpkg-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev
+sudo apt-get install build-essential cmake dpkg-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
 ```
 
 #### Get all sources
@@ -44,8 +45,9 @@ Get into directory with cellframe-node and do
   mkdir build
   cd build
   cmake ../
-  make -j 8
+  make -j$(nproc)
   ```
+*-j$(nproc)* is optional and specifies the number of threads will be used in building process.
 Thats produce everything in build/ subdirectory.
 
 ### Install package
