@@ -1,4 +1,4 @@
-# General section
+﻿# General section
 [general]
 debug_mode={DEBUG_MODE}
 debug_dump_stream_headers={DEBUG_STREAM_HEADERS}
@@ -17,7 +17,10 @@ node_addr_type=auto
 enabled={SERVER_ENABLED}
 listen_address={SERVER_ADDR}
 listen_port_tcp={SERVER_PORT}
-builtin_dns_enabled=true #{BUILTIN_DNS_ENABLED}
+
+# Builtin DNS server
+[builtin_dns]
+enabled=true
 
 # Mempool
 [mempool]
