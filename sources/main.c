@@ -423,9 +423,8 @@ int main( int argc, const char **argv )
     // DNS server start
     bool bBuiltinDNSEnabled = dap_config_get_item_bool_default(g_config, "builtin_dns", "enabled", false);
     log_it(L_DEBUG, "config server->builtin_dns_enabled = \"%u\" ", bBuiltinDNSEnabled);
-    dap_server_t *dns = NULL;
     if (bBuiltinDNSEnabled) {
-        dns = dap_dns_server_start();
+        dap_dns_server_start();
     }
 
     // Chain Network init
@@ -473,7 +472,7 @@ failure:
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_deinit();
     #endif
-    dap_dns_server_stop(dns);
+    dap_dns_server_stop();
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
 	dap_http_folder_deinit();
