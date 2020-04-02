@@ -7,11 +7,13 @@ set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 
 include(scripts/OS_Detection.cmake)
 
-if(DAP_DEBUG_BUILD)
-    set(DAP_RELEASE 0)
+if( CMAKE_BUILD_TYPE MATCHES Debug)
+    set(DAP_RELEASE OFF)
+    set(DAP_DEBUG ON)
     message(STATUS "Debug build")
 else()
-    set(DAP_RELEASE 1)
+    set(DAP_RELEASE ON)
+    set(DAP_DEBUG OFF)
     message(STATUS "Release build")
 endif()
 
@@ -114,13 +116,14 @@ endif()
 if(UNIX)
   add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
 # add_definitions ("-DDAP_LOG_MT")
-  if(DAP_RELEASE)
-    set(_CCOPT " -Wall -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
-  else()
-    set(_CCOPT "-Wall -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
-    set(_LOPT "-pg")
-    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-  endif()
+
+   if(DAP_DEBUG)
+       set(_CCOPT "-DDAP_DEBUG -Wall -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
+       set(_LOPT "-pg")
+       SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+   else()
+     set(_CCOPT "-Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
+   endif()
 
   if (ANDROID)
       set(_CCOPT "${_CCOPT} -fforce-enable-int128 -std=gnu11")
@@ -150,6 +153,7 @@ add_subdirectory(libdap-server)
 add_subdirectory(libdap-chain-crypto)
 add_subdirectory(libdap-chain-common)
 add_subdirectory(libdap-chain)
+add_subdirectory(libdap-chain-cli)
 add_subdirectory(libdap-chain-wallet)
 add_subdirectory(libdap-chain-cs-dag)
 add_subdirectory(libdap-chain-cs-dag-poa)
@@ -193,8 +197,6 @@ set( NODE_SOURCES
 )
 set( NODE_CLI_SOURCES
   sources/main_node_cli.c
-  sources/main_node_cli_shell.c
-  sources/main_node_cli_net.c
 )
 set( NODE_TOOL_SOURCES
   sources/main_node_tool.c
@@ -217,7 +219,7 @@ endif()
 
 if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
-  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
+  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
@@ -349,7 +351,7 @@ if(UNIX)
         dap_cuttdb)
 
     set(NODE_CLI_LIBRARIES
-        m dap_chain_net curl dap_cuttdb)
+        m dap_chain_net curl dap_cuttdb dap_app_cli)
 
     set(NODE_TOOL_LIBRARIES
         dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
