@@ -421,9 +421,9 @@ int main( int argc, const char **argv )
 
 
     // DNS server start
-    bool bBuiltinDNSEnabled = dap_config_get_item_bool_default(g_config, "builtin_dns", "enabled", false);
-    log_it(L_DEBUG, "config server->builtin_dns_enabled = \"%u\" ", bBuiltinDNSEnabled);
-    if (bBuiltinDNSEnabled) {
+    bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
+    log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
+    if (bootstrap_balancer_enabled) {
         dap_dns_server_start();
     }
 
