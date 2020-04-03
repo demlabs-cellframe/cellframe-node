@@ -1,6 +1,6 @@
 /*
  * Authors:
- * Dmitriy A. Gearasimov <kahovski@gmail.com>
+ * Dmitriy A. Gerasimov <kahovski@gmail.com>
  * DeM Labs Inc.   https://demlabs.net
  * DeM Labs Open source community https://github.com/demlabsinc
  * Copyright  (c) 2017-2019
@@ -58,6 +58,7 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
+#include "dap_dns_server.h"
 
 
 #include "dap_events.h"
@@ -242,7 +243,7 @@ int main( int argc, const char **argv )
 	    log_it( L_CRITICAL, "Can't init encryption module" );
 	    return -56;
 	}
-    
+
 	if ( dap_chain_global_db_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init global db module" );
 	    return -58;
@@ -419,6 +420,13 @@ int main( int argc, const char **argv )
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
 
+    // DNS server start
+    bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
+    log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
+    if (bootstrap_balancer_enabled) {
+        dap_dns_server_start();
+    }
+
     // Chain Network init
 
 	dap_stream_ch_chain_init( );
@@ -464,6 +472,7 @@ failure:
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_deinit();
     #endif
+    dap_dns_server_stop();
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
 	dap_http_folder_deinit();
