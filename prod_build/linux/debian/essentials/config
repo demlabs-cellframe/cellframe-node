@@ -10,16 +10,16 @@ reconfigure|configure)
    db_input critical cellframe-node/debug_mode || true 
    db_go || true 
 
-   db_input low cellframe-node/debug_stream_headers || true 
+   db_input critical cellframe-node/debug_stream_headers || true 
    db_go || true 
 
    db_input critical cellframe-node/server_enabled || true 
    db_go || true 
 
-   db_input medium cellframe-node/server_addr || true 
+   db_input critical cellframe-node/server_addr || true 
    db_go || true 
 
-   db_input low cellframe-node/server_port || true 
+   db_input critical cellframe-node/server_port || true 
    db_go || true 
 
    db_input critical cellframe-node/kelvin_testnet_enabled || true 

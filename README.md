@@ -57,7 +57,7 @@ Anyway we suggest you to produce the package with command ```cpack``` from the b
 ##### Install from local package
 If you downloaded or build from sources a debian pacakge, like ```cellframe-node_2.11-4-buster_amd64.deb``` you need to install it with ```dpkg``` command. Example:
 ```
-sudo dpkg -i -plow  ./cellframe-node_2.11-4-buster_amd64.deb
+sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
 ```
 ##### Install from DemLabs official public repository
 
@@ -251,7 +251,6 @@ And then you just wait some for network synchronisation and your order will see 
 Description of arguments
 * ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
 * ```-srv_uid``` Service UID, for VPN service set ```0x0000000000000001```
-* ```-srv_class PERM``` deprecated, left for compatibility as is
 * ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
 * ```-price_token``` Token ticker
 * ```-price``` Price for one unit, price for one second in our example
