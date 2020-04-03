@@ -9,5 +9,5 @@ variables:
 kelvin-node-schedule:
     stage: build
     tags:
-    - kelvin-node
+    - cellframe-node
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 

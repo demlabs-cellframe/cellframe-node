@@ -1,4 +1,4 @@
-# General section
+﻿# General section
 [general]
 debug_mode={DEBUG_MODE}
 debug_dump_stream_headers={DEBUG_STREAM_HEADERS}
@@ -15,6 +15,15 @@ auto_online={AUTO_ONLINE}
 enabled={SERVER_ENABLED}
 listen_address={SERVER_ADDR}
 listen_port_tcp={SERVER_PORT}
+
+# Builtin DNS server
+[dns_server]
+enabled=false
+bootstrap_balancer=true
+
+[srv_dns]
+enabled=false
+pricelist=[]
 
 # Mempool
 [mempool]
@@ -33,12 +42,12 @@ domain=mydomain
 tx_cond_create=false
 registration_open=true
 # List of condition templates, created for authorized users. Format of condition:
-# <wallet name>:<Value per transaction>:<Minimum time(seconds) between transactions>:<network name> 
+# <wallet name>:<Value per transaction>:<Minimum time(seconds) between transactions>:<network name>
 # tx_cond_templates=[mywallet0:0.00001:3600:KELT:kelvin-testnet,mywallet1:0.000001:3600:cETH:kelvin-testnet,mywallet0:1:10:WOOD:private]
 
 # VPN stream channel processing module
 [srv_vpn]
-#   Turn to true if you want to share VPN service from you node 
+#   Turn to true if you want to share VPN service from you node
 enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
@@ -56,7 +65,7 @@ listen_unix_socket_path=/opt/cellframe-node/var/run/node_cli
 # Application Resources
 [resources]
 #   0 means auto detect
-threads_cnt=0 
+threads_cnt=0
 pid_path=/opt/cellframe-node/var/run/cellframe-node.pid
 log_file=/opt/cellframe-node/var/log/cellframe-node.log
 wallets_path=/opt/cellframe-node/var/lib/wallet
