@@ -65,7 +65,8 @@ if [ "$RET"="true" ]; then
     sed -i "s/{NODE_TYPE}/$NODE_TYPE/" $DAP_NET_CFG  || true
 fi
 
-mkdir -p $DAP_PREFIX/var/log || true
+mkdir -p $DAP_PREFIX/var/log     || true
+mkdir -p $DAP_PREFIX/var/plugins || true
 
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
@@ -89,7 +90,7 @@ else
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
         usermod -aG cellframe-node $username
     done
-    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db} 
+    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db,var/plugins} 
     touch $DAP_PREFIX/var/run/cellframe-node.pid 
     #chown -R $USERMAN:$USERMAN $DAP_PREFIX
     for filename in $(find $DAP_PREFIX); do

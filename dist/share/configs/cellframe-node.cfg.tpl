@@ -1,4 +1,4 @@
-﻿# General section
+# General section
 [general]
 debug_mode={DEBUG_MODE}
 debug_dump_stream_headers={DEBUG_STREAM_HEADERS}
@@ -73,3 +73,9 @@ ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
 dap_global_db_path=/opt/cellframe-node/var/lib/global_db
 dap_global_db_driver=cdb
 
+# Plugins
+[plugins]
+# Load Python plugins
+py_load=true
+# Plugins path
+py_path=/opt/cellframe-node/var/plugins

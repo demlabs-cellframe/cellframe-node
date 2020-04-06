@@ -8,6 +8,10 @@ notifications:
 before_install:
     - git submodule init
     - git submodule update
+    - cd cellframe-sdk
+    - git submodule init
+    - git submodule update
+    - cd ..
 
 script:
     - mkdir build
@@ -39,3 +43,5 @@ addons:
     - debconf-utils
     - dconf-cli
     - pv
+    - libpython3-dev
+

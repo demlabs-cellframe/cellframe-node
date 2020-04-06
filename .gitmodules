@@ -126,11 +126,91 @@
 	path = libdap-chain-common
 	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common
 	branch = master
-[submodule "libdap-chain-plugins-python"]
-	path = libdap-chain-plugins-python
-	url = https://gitlab.demlabs.net/cellframe/libdap-chain-plugins-python.git
 [submodule "libdap-chain-cli"]
 	path = libdap-chain-cli
 	url = https://gitlab.demlabs.net/cellframe/libdap-chain-cli.git
 	branch = master
-
+[submodule "libdap-plugins-python"]
+	path = libdap-plugins-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-plugins-python.git
+	branch = master
+[submodule "python-cellframe"]
+	path = python-cellframe
+	url = https://gitlab.demlabs.net/cellframe/python-cellframe.git
+	branch = master
+[submodule "cellrame-sdk-python/libdap-server-core-python"]
+	path = cellrame-sdk-python/libdap-server-core-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-core-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-python"]
+	path = cellrame-sdk-python/libdap-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-crypto-python"]
+	path = cellrame-sdk-python/libdap-crypto-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-crypto-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-chain-common-python"]
+	path = cellrame-sdk-python/libdap-chain-common-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-chain-net-python"]
+	path = cellrame-sdk-python/libdap-chain-net-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-chain-gdb-python"]
+	path = cellrame-sdk-python/libdap-chain-gdb-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-gdb-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-chain-python"]
+	path = cellrame-sdk-python/libdap-chain-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-client-python"]
+	path = cellrame-sdk-python/libdap-client-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-client-python
+	branch = master
+[submodule "cellrame-sdk-python/libdap-app-cli-python"]
+	path = cellrame-sdk-python/libdap-app-cli-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-app-cli-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-app-cli-python"]
+	path = cellframe-sdk-python/libdap-app-cli-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-app-cli-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-client-python"]
+	path = cellframe-sdk-python/libdap-client-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-client-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-chain-python"]
+	path = cellframe-sdk-python/libdap-chain-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-chain-common-python"]
+	path = cellframe-sdk-python/libdap-chain-common-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-common-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-chain-net-python"]
+	path = cellframe-sdk-python/libdap-chain-net-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-net-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-chain-gdb-python"]
+	path = cellframe-sdk-python/libdap-chain-gdb-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-chain-gdb-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-crypto-python"]
+	path = cellframe-sdk-python/libdap-crypto-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-crypto-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-python"]
+	path = cellframe-sdk-python/libdap-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-python
+	branch = master
+[submodule "cellframe-sdk-python/libdap-server-core-python"]
+	path = cellframe-sdk-python/libdap-server-core-python
+	url = https://gitlab.demlabs.net/cellframe/libdap-server-core-python
+	branch = master
+[submodule "cellframe-sdk"]
+	path = cellframe-sdk
+	url = https://gitlab.demlabs.net/cellframe/cellframe-sdk
+	branch = master
