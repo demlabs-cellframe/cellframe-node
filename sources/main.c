@@ -111,7 +111,7 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 
-#ifdef DAP_SUPPORT_PYTHON_PLUGINSv
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
     #include "dap_chain_plugins.h"
 #endif
 
