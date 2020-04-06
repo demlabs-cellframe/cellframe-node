@@ -35,9 +35,34 @@ substitute_pkgname_postfix() {
 	export -n "Description"
 }
 
+repack() {
+
+DEBNAME=$1
+DISTR_CODENAME=$2
+echo "Renaming controlde on $DEBNAME"
+mkdir tmp && cd tmp
+
+#Просматриваем архив и ищем строку с control.tar
+#Результат заносим в переменную
+CONTROL=$(ar t ../${DEBNAME} | grep control.tar)
+
+ar x ../$DEBNAME $CONTROL
+tar xf $CONTROL
+VERSION=$(cat control | grep Version | cut -d ':' -f2)
+echo "Version is $VERSION"
+sed -i "s/$VERSION/${VERSION}-${DISTR_CODENAME}/" control
+rm $CONTROL && tar cf $CONTROL *
+ar r ../$DEBNAME $CONTROL
+cd ..
+rm -rf tmp
+
+}
 
 pwd
-substitute_pkgname_postfix && mkdir -p build && cd build && cmake ../ && make -j3 && cpack && cd ..
+error=0
+mkdir -p packages
+substitute_pkgname_postfix && mkdir -p build && cd build && cmake ../ && make -j$(nproc) && cpack && repack *.deb && mv -v *.deb ../packages/ && cd .. && rm -r build || error=$?
+exit $error
 
 ### touch /etc/apt/sources.list.d/demlabs.list deb https://debian.pub.demlabs.net/ bionic main universe multiverse
 
@@ -46,4 +71,6 @@ substitute_pkgname_postfix && mkdir -p build && cd build && cmake ../ && make -j
 
 ### apt-get update
 ### apt-get install cellframe-node
+
+
 
