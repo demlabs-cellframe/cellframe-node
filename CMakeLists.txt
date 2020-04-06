@@ -32,6 +32,7 @@ set(CMAKE_C_STANDARD 11)
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 add_definitions ("-DNODE_NETNAME=\"cellframe\"")
+add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
