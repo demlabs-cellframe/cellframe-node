@@ -5,7 +5,7 @@ extract_version_number() {
 IFS=" "
 local VERSION_STRING=$VERSION_FORMAT
 for entry in $VERSION_ENTRIES; do
-	VERSION_STRING=$(echo $VERSION_STRING | sed "s/$entry/$( cat $VERSION_FILE | grep $entry | grep [0-9] | cut -d ' ' -f3 | cut -d ')' -f1 )/") #Replacing templates with numbers
+	VERSION_STRING=$(echo $VERSION_STRING | sed "s/$entry/$( cat $VERSION_FILE | grep $entry | grep [0-9] | cut -d ' ' -f3 | cut -d ")" -f1 )/") #Replacing templates with numbers
 done
 echo -e "$VERSION_STRING"
 
@@ -40,3 +40,9 @@ for variable in $(cat $1); do
 done
 
 }
+
+# init cellframe-sdk subs
+cd cellframe-sdk
+git submodule init
+git submodule update
+cd ..
