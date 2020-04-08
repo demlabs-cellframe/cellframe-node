@@ -29,10 +29,93 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
 
+if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
+    message("Debug build")
+    SET(DAP_DEBUG ON)
+else()
+    message("Release build")
+    SET(DAP_RELEASE ON)
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL "8")
+  set(DEFAULT_BUILD_64 ON)
+else()
+  set(DEFAULT_BUILD_64 OFF)
+endif()
+option(BUILD_64 "Build for 64-bit? 'OFF' builds for 32-bit." ${DEFAULT_BUILD_64})
+
+if(BUILD_64)
+  set(ARCH_WIDTH "64")
+else()
+  set(ARCH_WIDTH "32")
+endif()
+message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
+
+if(UNIX)
+  add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
+# add_definitions ("-DDAP_LOG_MT")
+  if(DAP_DEBUG)
+      set(_CCOPT "-DDAP_DEBUG -Wall -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
+      set(_LOPT "-pg")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+  else()
+    set(_CCOPT "-Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
+  endif()
+
+  if (ANDROID)
+      set(_CCOPT "${_CCOPT} -fforce-enable-int128 -std=gnu11")
+      add_definitions ("-DDAP_OS_ANDROID -DDAP_OS_UNIX")
+  endif()
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
+  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
+
+  if (ANDROID)
+    add_subdirectory(lib/json-c)
+    add_subdirectory(lib/sqlite3)
+    #add_subdirectory(lib/libev)
+    include_directories(lib/)
+  else()
+  endif(ANDROID)
+
+endif()
+
+
+
+if(WIN32)
+  message(STATUS "Building for Windows")
+
+  add_definitions ("-DUNDEBUG")
+  add_definitions ("-DNDEBUG")
+  add_definitions ("-DWIN32")
+  add_definitions ("-D_WINDOWS")
+  add_definitions ("-D__WINDOWS__")
+  add_definitions ("-D_CRT_SECURE_NO_WARNINGS")
+  add_definitions ("-DCURL_STATICLIB")
+  add_definitions("-DHAVE_PREAD")
+  add_definitions("-DHAVE_MMAP")
+  add_definitions("-DHAVE_STRNDUP")
+  add_definitions("-DNGHTTP2_STATICLIB")
+  add_compile_definitions(WINVER=0x0600 _WIN32_WINNT=0x0600)
+
+  if(DAP_DEBUG)
+      set(_CCOPT "-mconsole -static -Wall -std=gnu11 -Wextra -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -g3 -ggdb -fno-eliminate-unused-debug-symbols -pg")
+      set(_LOPT "-mconsole -static -pg")
+  else()
+      set(_CCOPT "-static -std=gnu11 -Wall -Wextra -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
+  endif()
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT} ")
+  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
+
+  include_directories(3rdparty/uthash/src/)
+  include_directories(3rdparty/wepoll/)
+  #include_directories(libdap-chain-net-srv-vpn/)
+endif()
+
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 add_definitions ("-DNODE_NETNAME=\"cellframe\"")
-add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
@@ -85,18 +168,15 @@ if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
   add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
-
-  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
+  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares ssh2 crypto z pthread # curl
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -123,18 +203,16 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 ssl cares ssh2 crypto z pthread # curl
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -155,18 +233,23 @@ if(WIN32)
     userenv
   )
   set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+  target_link_libraries(${PROJECT_NAME}
 
-  target_link_libraries(${PROJECT_NAME} cellframe-sdk
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libjson-c[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libsqlite3[x86_64CLANG].a
+
+
+      cellframe-sdk
+
+
+
+      json-c sqlite3 nghttp2 ssl cares z ssh2 crypto m # curl
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
+    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -195,9 +278,9 @@ endif()
 #add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
 #add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
-if(UNIX)
+if(UNIX AND NOT WIN32)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-
+    add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
     set(NODE_LIBRARIES
         cellframe-sdk )
 
@@ -252,7 +335,7 @@ endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
-if(UNIX AND NOT ANDROID)
+if(NOT ANDROID)
     target_include_directories(${NODE_CLI_TARGET} INTERFACE .)
     target_include_directories(${NODE_TOOL_TARGET} INTERFACE .)
 endif()
