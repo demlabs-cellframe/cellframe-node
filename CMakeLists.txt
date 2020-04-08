@@ -124,7 +124,7 @@ set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 include(scripts/OS_Detection.cmake)
 
 set(SUBMODULES_NO_BUILD ON)
-set(SUPPORT_PYTHON_PLUGINS OFF)
+set(SUPPORT_PYTHON_PLUGINS ON)
 
 add_subdirectory(cellframe-sdk)
 
