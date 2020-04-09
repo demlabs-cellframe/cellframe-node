@@ -35,8 +35,10 @@ This command fetch sources from gitlab and build them.
   ```
   git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git
   cd cellframe-node
-  git submodule init
-  git submodule update
+  git submodule update --init
+  cd cellframe-sdk
+  git submodule update --init
+  cd ../
   ```
 
 #### Build sources
@@ -246,13 +248,13 @@ sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet orde
 It should print list if you've syncronized well before (should happens automatically by default)
 Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg``` if you see in list thats market changed and you need to change prices as well.
 Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 0x0000000000000001 -srv_class PERM -price_unit 2 -price_token KELT -price 0.0000010```
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token KELT -price 100```
 
 And then you just wait some for network synchronisation and your order will see everybody.
 
 Description of arguments
 * ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
-* ```-srv_uid``` Service UID, for VPN service set ```0x0000000000000001```
+* ```-srv_uid``` Service UID, for VPN service set ```1```
 * ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
 * ```-price_token``` Token ticker
 * ```-price``` Price for one unit, price for one second in our example
