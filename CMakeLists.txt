@@ -280,7 +280,6 @@ endif()
 
 if(UNIX AND NOT WIN32)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-    add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
     set(NODE_LIBRARIES
         cellframe-sdk )
 
@@ -299,6 +298,7 @@ if(UNIX AND NOT WIN32)
     )
 
     if (SUPPORT_PYTHON_PLUGINS)
+        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
         message("Build with support python plugins")
         set(Python_ADDITIONAL_VERSION 3.7 3.6 3.5 3.4)
