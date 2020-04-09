@@ -35,8 +35,10 @@ This command fetch sources from gitlab and build them.
   ```
   git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git
   cd cellframe-node
-  git submodule init
-  git submodule update
+  git submodule update --init
+  cd cellframe-sdk
+  git submodule update --init
+  cd ../
   ```
 
 #### Build sources
