@@ -13,6 +13,7 @@ pwd
 cd packages
 PKGFILES=$(ls . | grep .deb)
 #cd ..
+#
 
 #echo "We have $DISTR_CODENAME there"
 #echo "On path $REPO_DIR_SRC we have debian files."
