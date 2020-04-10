@@ -21,6 +21,7 @@ To successfully complete of the build, you must have following prerequisites pre
 * libldb-dev
 * libtalloc-dev
 * libtevent-dev
+* libpython3-dev
 * traceroute
 
 #### Prepare system
