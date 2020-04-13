@@ -31,9 +31,6 @@ sed -i "s/{DEBUG_MODE}/$RET/" $DAP_CFG  || true
 db_get cellframe-node/auto_online || true
 sed -i "s/{AUTO_ONLINE}/$RET/" $DAP_CFG  || true
 
-db_get cellframe-node/debug_stream_headers || true
-sed -i "s/{DEBUG_STREAM_HEADERS}/$RET/" $DAP_CFG  || true
-
 db_get cellframe-node/server_enabled || true
 sed -i "s/{SERVER_ENABLED}/$RET/" $DAP_CFG  || true
 

@@ -10,9 +10,6 @@ reconfigure|configure)
    db_input critical cellframe-node/debug_mode || true 
    db_go || true 
 
-   db_input critical cellframe-node/debug_stream_headers || true 
-   db_go || true 
-
    db_input critical cellframe-node/server_enabled || true 
    db_go || true 
 

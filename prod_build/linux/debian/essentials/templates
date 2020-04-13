@@ -12,13 +12,6 @@ Type: select
 Description: Debug mode
  Debug mode for logs
 
-Template: cellframe-node/debug_stream_headers
-Default: false
-Choices: true, false
-Type: select
-Description: Debug stream headers
- Dump stream headers in log file
-
 Template: cellframe-node/server_enabled
 Default: false
 Choices: true, false

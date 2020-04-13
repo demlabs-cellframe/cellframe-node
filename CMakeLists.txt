@@ -1,132 +1,57 @@
 project(cellframe-node C)
 cmake_minimum_required(VERSION 3.1)
-SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(DESTDIR "/opt/${PROJECT_NAME}")
-
-SET( CPACK_GENERATOR "DEB")
-SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
-SET( CPACK_PACKAGE_VERSION_MAJOR 2)
-SET( CPACK_PACKAGE_VERSION_MINOR 14)
-SET( CPACK_PACKAGE_VERSION_PATCH 1)
-
-SET( CPACK_SYSTEM_TYPE "debian")
-SET( CPACK_SYSTEM_VERSION "10.0")
-SET( CPACK_SYSTEM_ARCH "amd64")
-SET( CPACK_SYSTEM_CODENAME "buster")
-SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_SYSTEM_ARCH}-${CPACK_SYSTEM_CODENAME}")
-SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
-SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
-SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
-SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
-SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc")
-SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
 
-if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
-    message("Debug build")
-    SET(DAP_DEBUG ON)
-else()
-    message("Release build")
-    SET(DAP_RELEASE ON)
-endif()
+# Predefine project
+SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
+SET( CPACK_PACKAGE_VERSION_MAJOR 2)
+SET( CPACK_PACKAGE_VERSION_MINOR 14)
+SET( CPACK_PACKAGE_VERSION_PATCH 4)
 
-if(CMAKE_SIZEOF_VOID_P EQUAL "8")
-  set(DEFAULT_BUILD_64 ON)
-else()
-  set(DEFAULT_BUILD_64 OFF)
-endif()
-option(BUILD_64 "Build for 64-bit? 'OFF' builds for 32-bit." ${DEFAULT_BUILD_64})
-
-if(BUILD_64)
-  set(ARCH_WIDTH "64")
-else()
-  set(ARCH_WIDTH "32")
-endif()
-message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
-
-if(UNIX)
-  add_definitions ("-DDAP_OS_LINUX -DDAP_OS_UNIX")
-# add_definitions ("-DDAP_LOG_MT")
-  if(DAP_DEBUG)
-      set(_CCOPT "-DDAP_DEBUG -Wall -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -pg -g3 -ggdb -fno-eliminate-unused-debug-symbols")
-      set(_LOPT "-pg")
-      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-  else()
-    set(_CCOPT "-Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -fPIC -fno-ident -ffast-math -ftree-vectorize -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all -std=gnu11")
-  endif()
-
-  if (ANDROID)
-      set(_CCOPT "${_CCOPT} -fforce-enable-int128 -std=gnu11")
-      add_definitions ("-DDAP_OS_ANDROID -DDAP_OS_UNIX")
-  endif()
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT}")
-  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
-
-  if (ANDROID)
-    add_subdirectory(lib/json-c)
-    add_subdirectory(lib/sqlite3)
-    #add_subdirectory(lib/libev)
-    include_directories(lib/)
-  else()
-  endif(ANDROID)
-
-endif()
-
-
-
-if(WIN32)
-  message(STATUS "Building for Windows")
-
-  add_definitions ("-DUNDEBUG")
-  add_definitions ("-DNDEBUG")
-  add_definitions ("-DWIN32")
-  add_definitions ("-D_WINDOWS")
-  add_definitions ("-D__WINDOWS__")
-  add_definitions ("-D_CRT_SECURE_NO_WARNINGS")
-  add_definitions ("-DCURL_STATICLIB")
-  add_definitions("-DHAVE_PREAD")
-  add_definitions("-DHAVE_MMAP")
-  add_definitions("-DHAVE_STRNDUP")
-  add_definitions("-DNGHTTP2_STATICLIB")
-  add_compile_definitions(WINVER=0x0600 _WIN32_WINNT=0x0600)
-
-  if(DAP_DEBUG)
-      set(_CCOPT "-mconsole -static -Wall -std=gnu11 -Wextra -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -g3 -ggdb -fno-eliminate-unused-debug-symbols -pg")
-      set(_LOPT "-mconsole -static -pg")
-  else()
-      set(_CCOPT "-static -std=gnu11 -Wall -Wextra -Wno-unused-function -Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -fno-ident -ffast-math -ftree-vectorize -mfpmath=sse -mmmx -msse2 -fno-asynchronous-unwind-tables -ffunction-sections -Wl,--gc-sections -Wl,--strip-all")
-  endif()
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_CCOPT} ")
-  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${_LOPT}")
-
-  include_directories(3rdparty/uthash/src/)
-  include_directories(3rdparty/wepoll/)
-  #include_directories(libdap-chain-net-srv-vpn/)
-endif()
-
+# init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
-add_definitions ("-DNODE_NETNAME=\"cellframe\"")
+set(SUBMODULES_NO_BUILD ON)
+set(SUPPORT_PYTHON_PLUGINS ON)
+add_subdirectory(cellframe-sdk)
+
+
+if(UNIX)
+
+  if(LINUX)
+    SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(DESTDIR "/opt/${PROJECT_NAME}")
+
+    SET( CPACK_GENERATOR "DEB")
+
+    SET( CPACK_SYSTEM_TYPE "debian")
+    SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
+    SET( CPACK_SYSTEM_ARCH "amd64")
+    SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
+    SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_SYSTEM_ARCH}-${CPACK_SYSTEM_CODENAME}")
+    SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
+    SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
+    SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
+    SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc")
+    SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
+
+  endif()
+
+endif()
+
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 
-include(scripts/OS_Detection.cmake)
 
-set(SUBMODULES_NO_BUILD ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
-
-add_subdirectory(cellframe-sdk)
 
 if(BUILD_CELLFRAME_NODE_TESTS)
     enable_testing()
@@ -145,10 +70,7 @@ set( NODE_TOOL_SOURCES
 )
 
 if(UNIX)
-   add_definitions ("-DDAP_OS_UNIX")
   if(ANDROID)
-    add_definitions ("-DDAP_OS_LINUX")
-    add_definitions ("-DDAP_OS_ANDROID")
     add_library(${PROJECT_NAME} SHARED
         ${NODE_SOURCES}
         ${NODE_CLI_SOURCES}
@@ -156,7 +78,6 @@ if(UNIX)
         sources/cellframe_node.h
     )
   else()
-    add_definitions ("-DDAP_OS_LINUX")
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
     add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
@@ -164,19 +85,11 @@ if(UNIX)
 endif()
 
 if(WIN32)
-   add_definitions ("-DDAP_OS_WINDOWS")
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
   add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares ssh2 crypto z pthread # curl
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -205,14 +118,7 @@ if(WIN32)
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
     dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 ssl cares ssh2 crypto z pthread # curl
 
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -233,15 +139,7 @@ if(WIN32)
     userenv
   )
   set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-  target_link_libraries(${PROJECT_NAME}
-
-
-
-      cellframe-sdk
-
-
-
-      json-c sqlite3 nghttp2 ssl cares z ssh2 crypto m # curl
+  target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c sqlite3 nghttp2 ssl cares z ssh2 crypto m 
     #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
@@ -348,5 +246,5 @@ if(UNIX AND NOT ANDROID)
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endif()
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 INCLUDE(CPack)

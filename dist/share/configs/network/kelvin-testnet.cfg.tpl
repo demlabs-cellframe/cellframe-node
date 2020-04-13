@@ -3,7 +3,6 @@
 [general]
 id=0x0000000000000001
 name=kelvin-testnet
-type=development
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 #node-alias=addr-%node_addr%
@@ -11,7 +10,7 @@ node-role={NODE_TYPE}
 gdb_groups_prefix=kelvin-testnet
 # node addr exired time in hours (168h=1w 720h=1m 8760h=1y), by default 720h(1week)
 #node-addr=0x10
-node-addr-expired=168
+#node-addr-expired=168
 # type of node addr [auto, static, dinamic]
 node_addr_type=auto
 

@@ -1,8 +1,7 @@
 # General section
 [general]
 debug_mode={DEBUG_MODE}
-debug_dump_stream_headers={DEBUG_STREAM_HEADERS}
-wallets_default=default
+debug_dump_stream_headers=false
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
 auto_online={AUTO_ONLINE}
