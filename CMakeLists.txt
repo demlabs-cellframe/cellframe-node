@@ -15,19 +15,19 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
+include (cellframe-sdk/cmake/OS_Detection.cmake)
 add_subdirectory(cellframe-sdk)
 
-
 if(UNIX)
-
   if(LINUX)
+    message("--Linux package setup")
     SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
     SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
     SET(DESTDIR "/opt/${PROJECT_NAME}")
 
     SET( CPACK_GENERATOR "DEB")
 
-    SET( CPACK_SYSTEM_TYPE "debian")
+    SET( CPACK_SYSTEM_TYPE "Debian")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
     SET( CPACK_SYSTEM_ARCH "amd64")
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
@@ -42,8 +42,11 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
 
+  else()
+    message("--Unix but not linux")
   endif()
-
+else()
+    message("-- Not UNIX")
 endif()
 
 
