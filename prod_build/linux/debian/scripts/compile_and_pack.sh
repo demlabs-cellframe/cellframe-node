@@ -38,7 +38,7 @@ substitute_pkgname_postfix() {
 repack() {
 
 DEBNAME=$1
-DISTR_CODENAME=$2
+DISTR_CODENAME="$Codename"
 echo "Renaming controlde on $DEBNAME"
 mkdir tmp && cd tmp
 
@@ -61,6 +61,7 @@ rm -rf tmp
 pwd
 error=0
 mkdir -p packages
+
 substitute_pkgname_postfix && mkdir -p build && cd build && cmake ../ && make -j$(nproc) && cpack && repack *.deb && mv -v *.deb ../packages/ && cd .. && rm -r build || error=$?
 exit $error
 
