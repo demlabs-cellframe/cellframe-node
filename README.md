@@ -27,7 +27,7 @@ To successfully complete of the build, you must have following prerequisites pre
 #### Prepare system
 Comamnd to install them all with build tools
 ```
-sudo apt-get install build-essential cmake dpkg-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
+sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
 ```
 
 #### Get all sources
