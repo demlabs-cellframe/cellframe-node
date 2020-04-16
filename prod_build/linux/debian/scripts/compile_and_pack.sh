@@ -51,7 +51,7 @@ tar xf $CONTROL
 VERSION=$(cat control | grep Version | cut -d ':' -f2)
 echo "Version is $VERSION"
 sed -i "s/$VERSION/${VERSION}-${DISTR_CODENAME}/" control
-rm $CONTROL && tar cf $CONTROL *
+rm $CONTROL && tar zcf $CONTROL *
 ar r ../$DEBNAME $CONTROL
 cd ..
 rm -rf tmp
