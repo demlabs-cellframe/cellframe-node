@@ -232,7 +232,7 @@ int main(int argc, const char *argv[])
     cparam = dap_app_cli_connect(listen_socket);
     if(!cparam)
     {
-        printf("Can't connected to %s\n",dap_get_appname());
+        printf("Can't connect to %s\n",dap_get_appname());
         exit(-1);
     }
 
