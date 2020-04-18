@@ -43,18 +43,38 @@ echo "Renaming controlde on $DEBNAME"
 mkdir tmp && cd tmp
 
 #Просматриваем архив и ищем строку с control.tar
-#Результат заносим в переменную
-CONTROL=$(ar t ../${DEBNAME} | grep control.tar)
+#Результат заносим в переменную в зависимости от вида компрессии
+CONTROL_GZ=$(ar t ../${DEBNAME} | grep control.tar.gz)
+CONTROL_XZ=$(ar t ../${DEBNAME} | grep control.tar.xz)
 
-ar x ../$DEBNAME $CONTROL
-tar xf $CONTROL
-VERSION=$(cat control | grep Version | cut -d ':' -f2)
-echo "Version is $VERSION"
-sed -i "s/$VERSION/${VERSION}-${DISTR_CODENAME}/" control
-rm $CONTROL && tar zcf $CONTROL *
-ar r ../$DEBNAME $CONTROL
-cd ..
-rm -rf tmp
+# Проверка на компрессию gz
+if [[ $CONTROL_GZ ]]; then 
+
+    ar x ../$DEBNAME $CONTROL_GZ
+    tar xf $CONTROL_GZ
+    VERSION=$(cat control | grep Version | cut -d ':' -f2)
+    echo "Version is $VERSION"
+    sed -i "s/$VERSION/${VERSION}-${DISTR_CODENAME}/" control
+    rm $CONTROL_GZ && tar zcf $CONTROL_GZ *
+    ar r ../$DEBNAME $CONTROL_GZ
+    cd ..  
+    rm -rf tmp
+
+# Проверка на компрессию xz
+elif [[ $CONTROL_XZ ]]; then 
+
+    echo "Success XZ!
+    ar x ../$DEBNAME $CONTROL_XZ
+    tar xf $CONTROL_XZ
+    VERSION=$(cat control | grep Version | cut -d ':' -f2)
+    echo "Version is $VERSION"
+    sed -i "s/$VERSION/${VERSION}-${DISTR_CODENAME}/" control
+    rm $CONTROL_XZ && tar Jcf $CONTROL_XZ *
+    ar r ../$DEBNAME $CONTROL_XZ
+    cd ..  
+    rm -rf tmp
+
+fi
 
 }
 
