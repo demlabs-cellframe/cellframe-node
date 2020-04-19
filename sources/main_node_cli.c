@@ -227,6 +227,8 @@ int main(int argc, const char *argv[])
     const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
 #else
     const char* listen_socket = NULL;
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
 
     cparam = dap_app_cli_connect(listen_socket);
@@ -261,12 +263,18 @@ int main(int argc, const char *argv[])
         // Send command
         int res = dap_app_cli_post_command(cparam, &cmd);
         dap_app_cli_disconnect(cparam);
+#ifdef _WIN32
+        WSACleanup();
+#endif
         return res;
     }else{
         // command not found, start interactive shell
         shell_reader_loop();
         dap_app_cli_disconnect(cparam);
     }
+#ifdef _WIN32
+        WSACleanup();
+#endif
     return 0;
 }
 
