@@ -98,6 +98,7 @@ else
         fi
     done
     chmod 0774 $DAP_PREFIX/bin/*
+    chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli
     service cellframe-node start || true
     echo "[!] Done"
 fi
