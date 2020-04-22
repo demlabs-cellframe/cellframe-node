@@ -1,10 +1,10 @@
 # cellframe-node
 Cellframe Node
 
-[Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
+[Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage) - article is being prepared.
 
 
-## Debian/Ubuntu
+## This guide will work on Debian/Ubuntu
 
 ### Build from sources:
 
@@ -24,13 +24,12 @@ To successfully complete of the build, you must have following prerequisites pre
 * libpython3-dev
 * traceroute
 
-#### Prepare system
-Comamnd to install them all with build tools
+### Please use the command below to install dependencies listed above
 ```
 sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
 ```
 
-#### Get all sources
+#### Get all cellframe-node sources
 
 This command fetch sources from gitlab and build them. 
   ```
@@ -42,29 +41,33 @@ This command fetch sources from gitlab and build them.
   cd ../
   ```
 
-#### Build sources
-Get into directory with cellframe-node and do
+#### Build cellframe using cmake framework
+Get into directory with cellframe-node and execute the following commands
   ```
   mkdir build
   cd build
   cmake ../
   make -j$(nproc)
   ```
-*-j$(nproc)* is optional and specifies the number of threads will be used in building process.
-Thats produce everything in build/ subdirectory.
+*-j$(nproc)* nrpoc parameter depends on your machine capacity - number of processor cores.
+As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
 
-### Install package
+
+
+### Build cellframe-node package
 
 #### Prepare for installation
-To prepare node for installation we need to produce pacakge. Or - do ```sudo make install``` from build directory, then get config template from ```dist/share/configs``` and produce proper one in ```/opt/celllframe-node/etc```
-Anyway we suggest you to produce the package with command ```cpack``` from the build directory.
+
+Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
 
 ##### Install from local package
-If you downloaded or build from sources a debian pacakge, like ```cellframe-node_2.11-4-buster_amd64.deb``` you need to install it with ```dpkg``` command. Example:
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node_2.11-4-buster_amd64.deb``` 
+
+Please use ```dpkg``` command to install it:
 ```
 sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
 ```
-##### Install from DemLabs official public repository
+##### Install from DemLabs official public repository - why do we need this section??? what does it stand for? Should that be moved to a separate md document?
 
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` one line below for Debian 10:
   ```
@@ -76,7 +79,7 @@ sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
   ```
 * Then download public signature and install it:
   ```
-  wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
+  wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg - this link is not working - 404 error
   sudo apt-key add demlabskey.asc
   ```
 * Then update your apt cache and install the package:
@@ -85,10 +88,10 @@ sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
   sudo apt-get install cellframe-node
   ```
 
-During installation it asks some questions
+During installation it asks some questions - some questions?? really?
 
 #### Debian package questions
-All this could be changed after in configs
+All this could be changed after in configs - could be? or must be? how critical is that? will cellfame-node work without it? if yes, I would suggest to remove this
 
 
 * Auto online
@@ -149,7 +152,7 @@ You could enter any number of such prices
 
 #### DNS server install
 
-Install DNS server, it could be any other than Bind9 but for example we will use exactly thats one
+Install DNS server, it could be any other than Bind9 but for example we will use exactly thats one - did we test this with any other? at a least a couple of others?
 
 ```sudo apt-get install bind9```
 
@@ -161,11 +164,11 @@ Open ```/etc/sysctl.conf``` with command ```sudo nano /etc/sysctl.conf``` and fi
 #net.ipv4.ip_forward=1
 ```
 
-I had it on 27-28 line in config. Uncomment ```net.ipv4.ip_forward=1``` as the comment above suggests. Then after you've changed them and saved changes, implement them with:
+Uncomment ```net.ipv4.ip_forward=1``` as the comment above suggests. Then after you've changed them and saved changes, implement them with:
 ```
 sudo sysctl -p
 ```
-Then after reboot they will be implemented automatically
+Then after reboot they will be implemented automatically - do we need to specify a reboot command?
 
 
 #### Configuring firewall with NAT
