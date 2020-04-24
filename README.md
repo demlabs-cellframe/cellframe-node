@@ -1,7 +1,7 @@
 # cellframe-node
 Cellframe Node
 
-[Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage) - article is being prepared.
+[Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
 
 
 ## This guide will work on Debian/Ubuntu
@@ -10,7 +10,8 @@ Cellframe Node
 
 #### Prerequsites:
 
-To successfully complete of the build, you must have following prerequisites preinstalled (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
+To successfully complete of the build, you need to have the following packages to be installed 
+(packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
 * libjson-c-dev
 * libsqlite3-dev
@@ -52,8 +53,6 @@ Get into directory with cellframe-node and execute the following commands
 *-j$(nproc)* nrpoc parameter depends on your machine capacity - number of processor cores.
 As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
 
-
-
 ### Build cellframe-node package
 
 #### Prepare for installation
@@ -67,7 +66,7 @@ Please use ```dpkg``` command to install it:
 ```
 sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
 ```
-##### Install from DemLabs official public repository - why do we need this section??? what does it stand for? Should that be moved to a separate md document?
+##### Install from DemLabs official public repository
 
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` one line below for Debian 10:
   ```
@@ -79,7 +78,7 @@ sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
   ```
 * Then download public signature and install it:
   ```
-  wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg - this link is not working - 404 error
+  wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
   sudo apt-key add demlabskey.asc
   ```
 * Then update your apt cache and install the package:
@@ -88,10 +87,10 @@ sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
   sudo apt-get install cellframe-node
   ```
 
-During installation it asks some questions - some questions?? really?
+During installation it asks some questions
 
 #### Debian package questions
-All this could be changed after in configs - could be? or must be? how critical is that? will cellfame-node work without it? if yes, I would suggest to remove this
+All this could be changed after in configs
 
 
 * Auto online
