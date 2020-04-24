@@ -86,3 +86,6 @@
 	path = cellframe-sdk
 	url = ../cellframe-sdk
 	branch = master
+[submodule "cellframe-sdk-python/libdap-chain-wallet-python"]
+	path = cellframe-sdk-python/libdap-chain-wallet-python
+	url = ../libdap-chain-wallet-python
