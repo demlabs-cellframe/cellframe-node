@@ -26,7 +26,8 @@ pricelist=[]
 
 # Mempool
 [mempool]
-accept=false
+# Automaticaly true if master node
+#auto_proc=false
 
 # Central Dataase
 [cdb]
