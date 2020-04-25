@@ -54,18 +54,21 @@ Get into directory with cellframe-node and execute the following commands
 As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
 
 ### Build cellframe-node package
-
-#### Prepare for installation
-
 Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
 
 ##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node_2.11-4-buster_amd64.deb``` 
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-2.14-9-Debian-10-amd64-buster.deb``` 
 
 Please use ```dpkg``` command to install it:
 ```
 sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
 ```
+
+In some cases there is a following command required to be executed
+```
+sudo apt --fix-broken install
+```
+
 ##### Install from DemLabs official public repository
 
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` one line below for Debian 10:
