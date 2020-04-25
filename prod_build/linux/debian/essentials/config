@@ -19,6 +19,12 @@ reconfigure|configure)
    db_input critical cellframe-node/server_port || true 
    db_go || true 
 
+   db_input critical cellframe-node/core_t_enabled || true 
+   db_go || true 
+
+   db_input critical cellframe-node/core_t_node_type || true 
+   db_go || true 
+
    db_input critical cellframe-node/kelvin_testnet_enabled || true 
    db_go || true 
 

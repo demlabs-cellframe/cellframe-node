@@ -90,6 +90,7 @@
 
 #include "dap_chain_global_db.h"
 #include "dap_chain_mempool.h"
+#include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
 
 #include "dap_stream_session.h"
@@ -368,6 +369,11 @@ int main( int argc, const char **argv )
     }
 #endif
 
+    if (dap_chain_node_mempool_init()) {
+        log_it( L_CRITICAL, "Can't init automatic mempool processing" );
+        return -13;
+    }
+
     save_process_pid_in_file(s_pid_file_path);
 
 	bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
@@ -479,6 +485,7 @@ failure:
 	dap_http_deinit();
 	dap_server_deinit();
 	dap_enc_ks_deinit();
+    dap_chain_node_mempool_deinit();
 
 	dap_config_close( g_config );
 	dap_common_deinit();

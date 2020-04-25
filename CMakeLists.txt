@@ -7,12 +7,11 @@ set(CMAKE_C_STANDARD 11)
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 2)
-SET( CPACK_PACKAGE_VERSION_MINOR 14)
-SET( CPACK_PACKAGE_VERSION_PATCH 9)
+SET( CPACK_PACKAGE_VERSION_MINOR 15)
+SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
-add_definitions ("-DDAP_SERVER -DDAP_LOG_MT")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
@@ -91,7 +90,7 @@ if(WIN32)
   add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
   add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
-  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares ssh2 crypto z pthread # curl
+  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares crypto z pthread # curl
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     KERNEL32
     USER32
@@ -119,9 +118,8 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 ssl cares ssh2 crypto z pthread # curl
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread # curl
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
@@ -142,15 +140,7 @@ if(WIN32)
     userenv
   )
   set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-  target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c sqlite3 nghttp2 ssl cares z ssh2 crypto m 
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/nghttp2[x86_64CLANG].a
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssl[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/c-ares[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/misc[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/zlib[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libssh2[x86_64CLANG].a
-    #${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/libcrypto[x86_64CLANG].a
+  target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c sqlite3 cares z m
     KERNEL32
     USER32
     SHELL32
@@ -215,6 +205,7 @@ if(UNIX AND NOT WIN32)
         add_subdirectory(cellframe-sdk-python/libdap-chain-python)
         add_subdirectory(cellframe-sdk-python/libdap-app-cli-python)
         add_subdirectory(cellframe-sdk-python/libdap-client-python)
+        add_subdirectory(cellframe-sdk-python/libdap-chain-wallet-python)
 	add_subdirectory(python-cellframe)
         add_subdirectory(libdap-plugins-python)
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)

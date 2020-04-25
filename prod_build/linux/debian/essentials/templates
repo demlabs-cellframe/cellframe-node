@@ -32,6 +32,26 @@ Description: Server address
  Server address to listen on
 
 
+Template: cellframe-node/core_t_enabled
+Default: false
+Choices: true, false
+Type: select
+Description: Core-T (Testnet): Enable network
+ Core Testnet: Enable network auto load on start
+
+Template: cellframe-node/core_t_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Core Testnet: Node role
+ Select node role:. 
+ Light - syncronize only local wallets 
+ full - sync all its cell
+ master - allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usualy produces zerochain and act like archive as well 
+
+
 Template: cellframe-node/kelvin_testnet_enabled
 Default: true
 Choices: true, false

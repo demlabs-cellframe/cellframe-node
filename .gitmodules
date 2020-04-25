@@ -12,9 +12,9 @@
 	branch = master
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
-	url = ../cellframe-sdk
+	url = ../cellframe-sdk.git
 	branch = master
 [submodule "cellframe-sdk-python"]
 	path = cellframe-sdk-python
-	url = https://gitlab.demlabs.net/cellframe/cellframe-sdk-python
+	url = ../cellframe-sdk-python
 	branch = master
