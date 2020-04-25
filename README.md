@@ -268,3 +268,9 @@ More details about order operations you could find with call ```sudo /opt/cellfr
 More details about cellframe node commands in call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help```
 
 
+#### Remove cellframe-node
+
+In order to remove cellframe-node, use the following command
+```
+sudo apt-get remove cellframe-node
+```
