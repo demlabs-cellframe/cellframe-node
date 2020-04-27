@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
 SET( CPACK_PACKAGE_VERSION_MINOR 0)
-SET( CPACK_PACKAGE_VERSION_PATCH 1)
+SET( CPACK_PACKAGE_VERSION_PATCH 2)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -91,7 +91,6 @@ if(WIN32)
   add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
   add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
   target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares crypto z pthread # curl
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/[x86_64CLANG]/curl[x86_64CLANG].a
     KERNEL32
     USER32
     SHELL32
