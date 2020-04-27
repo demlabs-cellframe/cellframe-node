@@ -16,5 +16,5 @@
 	branch = master
 [submodule "cellframe-sdk-python"]
 	path = cellframe-sdk-python
-	url = ../cellframe-sdk-python
+	url = ../cellframe-sdk-python.git
 	branch = master
