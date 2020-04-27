@@ -9,6 +9,12 @@ SRC_PATH=$4
 JOB=$5
 
 cd $SRC_PATH
+
+## Updating submodules for python sdk
+cd cellframe-sdk-python
+git submodule update --init
+cd ../
+## End of updating.
 echo "workdir is $(pwd)"
 . prod_build/general/pre-build.sh
 export_variables "./prod_build/general/conf/*"
