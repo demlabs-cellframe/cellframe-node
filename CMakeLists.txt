@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
 SET( CPACK_PACKAGE_VERSION_MINOR 0)
-SET( CPACK_PACKAGE_VERSION_PATCH 2)
+SET( CPACK_PACKAGE_VERSION_PATCH 3)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -117,8 +117,7 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread # curl
-
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread 
     KERNEL32
     USER32
     SHELL32
