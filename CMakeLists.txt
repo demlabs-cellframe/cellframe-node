@@ -117,8 +117,7 @@ if(WIN32)
     dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
     dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
     dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread # curl
-
+    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread 
     KERNEL32
     USER32
     SHELL32

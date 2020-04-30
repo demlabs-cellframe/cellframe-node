@@ -40,6 +40,9 @@ This command fetch sources from gitlab and build them.
   cd cellframe-sdk
   git submodule update --init
   cd ../
+  cd cellframe-sdk-python
+  git submodule update --init
+  cd ../
   ```
 
 #### Build cellframe using cmake framework
