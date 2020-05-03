@@ -8,12 +8,19 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
 SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 1)
+SET( CPACK_PACKAGE_VERSION_PATCH 2)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
+
+if (NOT(WIN32))
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-vpn")
+else()
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum")
+endif()
+
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 add_subdirectory(cellframe-sdk)
 
@@ -87,77 +94,18 @@ if(UNIX)
 endif()
 
 if(WIN32)
-  add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
-  add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
-  add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
-  target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli nghttp2 ssl cares crypto z pthread # curl
-    KERNEL32
-    USER32
-    SHELL32
-    WINMM
-    GDI32
-    ADVAPI32
-    Ole32
-    Version
-    Imm32
-    OleAut32
-    ws2_32
-    ntdll
-    psapi
-    Shlwapi
-    Bcrypt
-    Crypt32
-    Secur32
-    userenv
-  )
-  set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-    target_link_libraries(${NODE_TOOL_TARGET} dap_core dap_crypto dap_server_core dap_enc_server dap_udp_server dap_session
-    dap_enc_server dap_stream dap_stream_ch_chain dap_stream_ch_chain_net
-    dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-    dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
-    dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
-    dap_chain_net_srv_datum dap_chain_net_srv_datum_pool
-    dap_chain_wallet dap_chain_global_db dap_chain_mempool dap_cuttdb nghttp2 cares z pthread 
-    KERNEL32
-    USER32
-    SHELL32
-    WINMM
-    GDI32
-    ADVAPI32
-    Ole32
-    Version
-    Imm32
-    OleAut32
-    ws2_32
-    ntdll
-    psapi
-    Shlwapi
-    Bcrypt
-    Crypt32
-    Secur32
-    userenv
-  )
-  set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-  target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c sqlite3 cares z m
-    KERNEL32
-    USER32
-    SHELL32
-    WINMM
-    GDI32
-    ADVAPI32
-    Ole32
-    Version
-    Imm32
-    OleAut32
-    ws2_32
-    ntdll
-    psapi
-    Shlwapi
-    Bcrypt
-    Crypt32
-    Secur32
-    userenv
-  )
+    add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
+    add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
+    add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
+
+    target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
+			KERNEL32 USER32 SHELL32 WINMM GDI32 ADVAPI32 Ole32 Version Imm32
+			OleAut32 ws2_32 ntdll psapi Shlwapi Bcrypt Crypt32 Secur32 userenv )
+    set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
+    set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+
+    target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
@@ -169,22 +117,11 @@ endif()
 
 if(UNIX AND NOT WIN32)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-    set(NODE_LIBRARIES
-        cellframe-sdk )
+    set(NODE_LIBRARIES cellframe-sdk )
 
-    set(NODE_CLI_LIBRARIES
-        m dap_chain_net curl dap_cuttdb dap_app_cli)
+    set(NODE_CLI_LIBRARIES m dap_chain_net dap_cuttdb dap_app_cli)
 
-    set(NODE_TOOL_LIBRARIES
-        dap_core dap_crypto dap_server_core dap_enc_server  dap_udp_server dap_session
-        dap_enc_server dap_stream dap_chain_net_srv_vpn dap_stream_ch_chain dap_stream_ch_chain_net
-        dap_stream_ch_chain_net_srv dap_chain dap_chain_crypto dap_client
-        dap_chain_cs_dag dap_chain_cs_dag_poa dap_chain_cs_dag_pos
-        dap_chain_net dap_chain_net_srv dap_chain_net_srv_app dap_chain_net_srv_app_db
-        dap_chain_net_srv_datum dap_chain_net_srv_datum_pool dap_chain_net_srv_vpn
-        dap_chain_wallet dap_chain_global_db dap_chain_mempool m magic
-        dap_core
-    )
+    set(NODE_TOOL_LIBRARIES cellframe-sdk )
 
     if (SUPPORT_PYTHON_PLUGINS)
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
@@ -207,7 +144,7 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
 
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread dap_cuttdb )
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()

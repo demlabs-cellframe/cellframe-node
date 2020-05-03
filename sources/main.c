@@ -79,7 +79,6 @@
 #include "dap_chain_net_srv_app.h"
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
-#include "dap_chain_net_srv_datum_pool.h"
 #include "dap_chain_net_bugreport.h"
 
 #ifdef DAP_OS_LINUX
@@ -310,10 +309,6 @@ int main( int argc, const char **argv )
         return -68;
     }
 
-    if( dap_chain_net_srv_datum_pool_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service datum pool module");
-        return -69;
-    }
 #ifndef _WIN32
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
