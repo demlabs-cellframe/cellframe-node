@@ -72,7 +72,7 @@
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
-#include "dap_chain_gdb.h"
+#include "dap_chain_cs_none.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
