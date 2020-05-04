@@ -131,7 +131,7 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
-static char *s_pid_file_path = NULL;
+static const char *s_pid_file_path = NULL;
 static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
 #ifdef __ANDROID__

@@ -45,7 +45,7 @@ sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 NET_NAME="core-t"
 
 db_get cellframe-node/core_t_enabled || true
-if [ "$RET"="true" ]; then
+if [ "$RET"=="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
@@ -68,7 +68,7 @@ fi
 NET_NAME="kelvin-testnet"
 
 db_get cellframe-node/kelvin_testnet_enabled || true
-if [ "$RET"="true" ]; then
+if [ "$RET"=="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
