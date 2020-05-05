@@ -25,7 +25,7 @@ test/build
 *.a
 *.la
 *.lo
-
+*.autosave
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
