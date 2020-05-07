@@ -80,6 +80,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_bugreport.h"
+#include "dap_chain_net_news.h"
 
 #ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
@@ -406,6 +407,12 @@ int main( int argc, const char **argv )
             bool l_bugreport_url_enabled = dap_config_get_item_bool_default(g_config, "server", "bugreport_url_enabled", false);
             if(l_bugreport_url_enabled) {
                 dap_chain_net_bugreport_add_proc(DAP_HTTP(l_server));
+            }
+
+            // News URLs
+            bool l_news_url_enabled = dap_config_get_item_bool_default(g_config, "server", "l_news_url_enabled", false);
+            if(l_news_url_enabled) {
+                dap_chain_net_news_add_proc(DAP_HTTP(l_server));
             }
 
 	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
