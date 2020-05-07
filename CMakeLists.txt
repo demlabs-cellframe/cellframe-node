@@ -15,10 +15,10 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 
-if (NOT(WIN32))
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-vpn")
+if ((WIN32))
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-vpn srv-xchange")
 else()
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange")
 endif()
 
 include (cellframe-sdk/cmake/OS_Detection.cmake)
