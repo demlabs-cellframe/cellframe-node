@@ -133,7 +133,6 @@ void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
-static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -481,7 +480,7 @@ int main( int argc, const char **argv )
 
     // Deinit modules
 
-failure:
+//failure:
 
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_deinit();
