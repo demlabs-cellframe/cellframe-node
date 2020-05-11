@@ -387,7 +387,9 @@ int main( int argc, const char **argv )
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
 
-    }
+    }else{
+	    l_server = DAP_CALLOC(1, sizeof(dap_server_t));
+	}
 
     if ( l_server ) { // If listener server is initialized
         // TCP-specific things
