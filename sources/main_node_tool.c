@@ -283,13 +283,11 @@ int main(int argc, const char **argv)
            exit(-7021);
          }
        }
-     }
-     else if ( strcmp( argv[2],"create" ) == 0 ) {
+     } else if ( strcmp( argv[2],"create" ) == 0 ) {
        if ( argc < 5 ) {
          s_help();
          exit(-500);
        }
-       size_t l_key_length = 0;
        const char *l_cert_name = argv[3];
        size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
        char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
@@ -316,7 +314,6 @@ int main(int argc, const char **argv)
        }
 
        if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
-         int l_key_length = argc >=6 ? atoi(argv[5]) : 0;
          dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
          if (l_cert == NULL){
            log_it(L_ERROR, "Can't create %s",l_cert_path);
@@ -328,7 +325,28 @@ int main(int argc, const char **argv)
            exit(-500);
        }
        DAP_DELETE(l_cert_path);
-
+     } else if (strcmp(argv[2], "add_meta") == 0) {
+       if (argc >= 5) {
+         const char *l_cert_name = argv[3];
+         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+         if ( l_cert ) {
+           char **l_params = dap_strsplit(argv[3], ":", 4);
+           dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
+           if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
+             dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
+           } else {
+             dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
+                                      strtoull(l_params[3], NULL, 10), strtoul(l_params[2], NULL, 10));
+           }
+           dap_strfreev(l_params);
+           dap_cert_save_to_folder(l_cert, s_system_ca_dir);
+           dap_cert_delete_by_name(l_cert_name);
+           ret = 0;
+         }
+         else {
+           exit(-800);
+         }
+       }
      } else {
        log_it(L_ERROR,"Wrong params");
        s_help();
