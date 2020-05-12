@@ -80,6 +80,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_bugreport.h"
+#include "dap_chain_net_news.h"
 
 #ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
@@ -132,7 +133,6 @@ void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
-static void s_auth_callback(enc_http_delegate_t *a_delegate, void * a_arg);
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -408,6 +408,12 @@ int main( int argc, const char **argv )
                 dap_chain_net_bugreport_add_proc(DAP_HTTP(l_server));
             }
 
+            // News URLs
+            bool l_news_url_enabled = dap_config_get_item_bool_default(g_config, "server", "l_news_url_enabled", false);
+            if(l_news_url_enabled) {
+                dap_chain_net_news_add_proc(DAP_HTTP(l_server));
+            }
+
 	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
 	                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
@@ -474,7 +480,7 @@ int main( int argc, const char **argv )
 
     // Deinit modules
 
-failure:
+//failure:
 
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_deinit();
