@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
 SET( CPACK_PACKAGE_VERSION_MINOR 2)
-SET( CPACK_PACKAGE_VERSION_PATCH 16)
+SET( CPACK_PACKAGE_VERSION_PATCH 17)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -132,7 +132,6 @@ if(UNIX AND NOT WIN32)
         include_directories(${PYTHON_INCLUDE_DIR} include/)
 
 	add_subdirectory(python-cellframe)
-        add_subdirectory(libdap-plugins-python)
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 
