@@ -98,6 +98,9 @@
     #include "cellframe_node.h"
 #endif
 
+#undef log_it
+#define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
+
 static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
@@ -182,7 +185,7 @@ int main(int argc, const char **argv)
         if ( l_data_file ) {}
       } 
       else {
-        log_it( L_ERROR, "Cert index %d can't be found in wallet with %u certs inside"
+        log_it( L_ERROR, "Cert index %d can't be found in wallet with %lu certs inside"
                                            ,l_cert_index,l_wallet_certs_number );
         s_help();
         exit( -3002 );
@@ -283,13 +286,11 @@ int main(int argc, const char **argv)
            exit(-7021);
          }
        }
-     }
-     else if ( strcmp( argv[2],"create" ) == 0 ) {
+     } else if ( strcmp( argv[2],"create" ) == 0 ) {
        if ( argc < 5 ) {
          s_help();
          exit(-500);
        }
-       size_t l_key_length = 0;
        const char *l_cert_name = argv[3];
        size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
        char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
@@ -316,7 +317,6 @@ int main(int argc, const char **argv)
        }
 
        if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
-         int l_key_length = argc >=6 ? atoi(argv[5]) : 0;
          dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
          if (l_cert == NULL){
            log_it(L_ERROR, "Can't create %s",l_cert_path);
@@ -328,7 +328,28 @@ int main(int argc, const char **argv)
            exit(-500);
        }
        DAP_DELETE(l_cert_path);
-
+     } else if (strcmp(argv[2], "add_metadata") == 0) {
+       if (argc >= 5) {
+         const char *l_cert_name = argv[3];
+         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+         if ( l_cert ) {
+           char **l_params = dap_strsplit(argv[4], ":", 4);
+           dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
+           if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
+             dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
+           } else {
+             dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
+                                      strtoull(l_params[3], NULL, 10), strtoul(l_params[2], NULL, 10));
+           }
+           dap_strfreev(l_params);
+           dap_cert_save_to_folder(l_cert, s_system_ca_dir);
+           dap_cert_delete_by_name(l_cert_name);
+           ret = 0;
+         }
+         else {
+           exit(-800);
+         }
+       }
      } else {
        log_it(L_ERROR,"Wrong params");
        s_help();
@@ -472,5 +493,8 @@ static void s_help()
 
   printf(" * Export only public key from <cert name> and stores it \n");
   printf("\t%s cert create_cert_pkey <cert name> <new cert name>\n\n",dap_get_appname());
+
+  printf(" * Add metadata item to <cert name>\n");
+  printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n",dap_get_appname());
 
 }
