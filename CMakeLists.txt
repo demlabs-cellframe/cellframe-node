@@ -7,8 +7,8 @@ set(CMAKE_C_STANDARD 11)
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
-SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 2)
+SET( CPACK_PACKAGE_VERSION_MINOR 2)
+SET( CPACK_PACKAGE_VERSION_PATCH 17)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -26,7 +26,7 @@ add_subdirectory(cellframe-sdk)
 
 if(UNIX)
   if(LINUX)
-    message("--Linux package setup")
+    message("[*] Linux package setup")
     SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
     SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
     SET(DESTDIR "/opt/${PROJECT_NAME}")
@@ -49,10 +49,10 @@ if(UNIX)
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
 
   else()
-    message("--Unix but not linux")
+    message("[!] Unix but not linux")
   endif()
 else()
-    message("-- Not UNIX")
+    message("[ ] Not UNIX")
 endif()
 
 
@@ -126,13 +126,12 @@ if(UNIX AND NOT WIN32)
     if (SUPPORT_PYTHON_PLUGINS)
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-        message("Build with support python plugins")
+        message("[+] Build with support python plugins")
         set(Python_ADDITIONAL_VERSION 3.7 3.6 3.5 3.4)
         find_package(PythonLibs REQUIRED)
         include_directories(${PYTHON_INCLUDE_DIR} include/)
 
 	add_subdirectory(python-cellframe)
-        add_subdirectory(libdap-plugins-python)
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 

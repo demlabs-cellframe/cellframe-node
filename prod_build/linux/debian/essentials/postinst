@@ -45,7 +45,7 @@ sed -i "s/{SERVER_ADDR}/$RET/" $DAP_CFG  || true
 NET_NAME="core-t"
 
 db_get cellframe-node/core_t_enabled || true
-if [ "$RET"="true" ]; then
+if [ "$RET"=="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
@@ -68,7 +68,7 @@ fi
 NET_NAME="kelvin-testnet"
 
 db_get cellframe-node/kelvin_testnet_enabled || true
-if [ "$RET"="true" ]; then
+if [ "$RET"=="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
@@ -89,7 +89,7 @@ mkdir -p $DAP_PREFIX/var/log     || true
 mkdir -p $DAP_PREFIX/var/plugins || true
 
 
-cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node
+cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
 
 echo "[*] Check /etc/systemd/system/$DAP_APP_NAME.service file..."
 if [ -L /etc/systemd/system/$DAP_APP_NAME.service ]; then
@@ -110,10 +110,10 @@ else
     adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
     #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
-        usermod -aG cellframe-node $username
+        usermod -aG cellframe-node $username || true
     done
-    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db,var/plugins} 
-    touch $DAP_PREFIX/var/run/cellframe-node.pid 
+    mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db,var/plugins} || true
+    touch $DAP_PREFIX/var/run/cellframe-node.pid || true
     #chown -R $USERMAN:$USERMAN $DAP_PREFIX
     for filename in $(find $DAP_PREFIX); do
         if [ -d $filename ]; then

@@ -2,10 +2,6 @@
 	path = test/libdap-test
 	url = ../libdap-test.git
 	branch = master
-[submodule "libdap-plugins-python"]
-	path = libdap-plugins-python
-	url = ../libdap-plugins-python.git
-	branch = master
 [submodule "python-cellframe"]
 	path = python-cellframe
 	url = ../python-cellframe.git
@@ -13,8 +9,4 @@
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
 	url = ../cellframe-sdk.git
-	branch = master
-[submodule "cellframe-sdk-python"]
-	path = cellframe-sdk-python
-	url = ../cellframe-sdk-python.git
 	branch = master

@@ -76,6 +76,6 @@ dap_global_db_driver=cdb
 # Plugins
 [plugins]
 # Load Python plugins
-py_load=true
+py_load=false
 # Plugins path
 py_path=/opt/cellframe-node/var/plugins
