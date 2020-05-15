@@ -132,7 +132,6 @@ if(UNIX AND NOT WIN32)
         include_directories(${PYTHON_INCLUDE_DIR} include/)
 
 	add_subdirectory(python-cellframe)
-        add_subdirectory(libdap-plugins-python)
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 
