@@ -100,6 +100,7 @@
 #include "dap_stream_ch_chain.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
+#include "dap_chain_net_srv_xchange.h"
 
 #include "dap_common.h"
 #include "dap_client_remote.h"
@@ -446,6 +447,10 @@ int main( int argc, const char **argv )
 	dap_stream_ch_chain_net_init( );
 
     dap_stream_ch_chain_net_srv_init();
+
+    if (!dap_chain_net_srv_xchange_init()) {
+        log_it(L_ERROR, "Can't provide exchange capability");
+    }
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
