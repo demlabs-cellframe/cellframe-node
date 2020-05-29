@@ -135,6 +135,8 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
+bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { return true; }
+
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
 #else
@@ -295,6 +297,7 @@ int main( int argc, const char **argv )
     }
 
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
