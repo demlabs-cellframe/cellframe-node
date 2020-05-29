@@ -100,6 +100,7 @@
 #include "dap_stream_ch_chain.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
+#include "dap_chain_net_srv_xchange.h"
 
 #include "dap_common.h"
 #include "dap_client_remote.h"
@@ -133,6 +134,8 @@ void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
+
+bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { return true; }
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -293,6 +296,9 @@ int main( int argc, const char **argv )
         return -71;
     }
 
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
+
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
@@ -446,6 +452,10 @@ int main( int argc, const char **argv )
 	dap_stream_ch_chain_net_init( );
 
     dap_stream_ch_chain_net_srv_init();
+
+    if (!dap_chain_net_srv_xchange_init()) {
+        log_it(L_ERROR, "Can't provide exchange capability");
+    }
 
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
