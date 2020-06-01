@@ -14,6 +14,8 @@ auto_online={AUTO_ONLINE}
 enabled={SERVER_ENABLED}
 listen_address={SERVER_ADDR}
 listen_port_tcp={SERVER_PORT}
+news_url_enabled=false
+bugreport_url_enabled=false
 
 # Builtin DNS server
 [dns_server]
@@ -29,7 +31,7 @@ pricelist=[]
 # Automaticaly true if master node
 #auto_proc=false
 
-# Central Dataase
+# Central Database
 [cdb]
 enabled=false
 servers_list_enabled=false
@@ -49,6 +51,7 @@ registration_open=true
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node
 enabled=false
+geoip_enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
@@ -69,6 +72,7 @@ threads_cnt=0
 pid_path=/opt/cellframe-node/var/run/cellframe-node.pid
 log_file=/opt/cellframe-node/var/log/cellframe-node.log
 wallets_path=/opt/cellframe-node/var/lib/wallet
+geoip_db_path=share/geoip/GeoLite2-City.mmdb
 ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
 dap_global_db_path=/opt/cellframe-node/var/lib/global_db
 dap_global_db_driver=cdb

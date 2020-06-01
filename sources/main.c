@@ -81,6 +81,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_bugreport.h"
 #include "dap_chain_net_news.h"
+#include "dap_chain_net_srv_geoip.h"
 
 #ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
@@ -330,10 +331,16 @@ int main( int argc, const char **argv )
     // vpn client
     if(dap_chain_net_vpn_client_init(g_config) != 0) {
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
-        return -71;
+        return -72;
     }
 #endif
 
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
+        if(chain_net_geoip_init(g_config) != 0) {
+            log_it(L_CRITICAL, "Can't init geoip module");
+            return -73;
+        }
+    }
 
 	if ( enc_http_init() != 0 ) {
 	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
@@ -415,7 +422,7 @@ int main( int argc, const char **argv )
             }
 
             // News URLs
-            bool l_news_url_enabled = dap_config_get_item_bool_default(g_config, "server", "l_news_url_enabled", false);
+            bool l_news_url_enabled = dap_config_get_item_bool_default(g_config, "server", "news_url_enabled", false);
             if(l_news_url_enabled) {
                 dap_chain_net_news_add_proc(DAP_HTTP(l_server));
             }
