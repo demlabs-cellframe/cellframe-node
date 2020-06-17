@@ -22,6 +22,9 @@ bugreport_url_enabled=false
 enabled=false
 bootstrap_balancer=true
 
+[srv]
+order_signed_only=false
+
 [srv_dns]
 enabled=false
 pricelist=[]

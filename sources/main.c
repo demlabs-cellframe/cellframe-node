@@ -102,6 +102,7 @@
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
 #include "dap_chain_net_srv_xchange.h"
+#include "dap_chain_net_srv_stake.h"
 
 #include "dap_common.h"
 #include "dap_client_remote.h"
@@ -299,6 +300,7 @@ int main( int argc, const char **argv )
 
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
@@ -463,7 +465,9 @@ int main( int argc, const char **argv )
     if (!dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
-
+    if (!dap_chain_net_srv_stake_init()) {
+        log_it(L_ERROR, "Can't start delegated stake service");
+    }
 ///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
 ///        dap_stream_ch_vpn_deinit();
 
@@ -514,6 +518,8 @@ int main( int argc, const char **argv )
 	if (bServerEnabled) dap_server_deinit();
 	dap_enc_ks_deinit();
     dap_chain_node_mempool_deinit();
+    dap_chain_net_srv_xchange_deinit();
+    dap_chain_net_srv_stake_deinit();
 
 	dap_config_close( g_config );
 	dap_common_deinit();
