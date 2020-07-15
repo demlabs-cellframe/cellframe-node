@@ -13,11 +13,11 @@ seed_nodes_port=[8079,8079,8079,8079,8079]
 
 private=false
 
-[auth]
-type=ca
-acl_accept_ca_list=[]
-acl_accept_ca_gdb=
-acl_accept_ca_chains=all
+#[auth]
+#type=ca
+#acl_accept_ca_list=[]
+#acl_accept_ca_gdb=
+#acl_accept_ca_chains=all
 
 #[role-master]
 #proc_chains=[0x00000001]
