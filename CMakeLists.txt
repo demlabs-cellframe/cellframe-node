@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 3)
 SET( CPACK_PACKAGE_VERSION_MINOR 5)
-SET( CPACK_PACKAGE_VERSION_PATCH 6)
+SET( CPACK_PACKAGE_VERSION_PATCH 7)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -143,7 +143,7 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
 
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES}  ${CMAKE_DL_LIBS} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()

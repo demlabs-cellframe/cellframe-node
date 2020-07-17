@@ -84,6 +84,7 @@
 #include "dap_chain_net_srv_geoip.h"
 
 #ifdef DAP_OS_LINUX
+#include <dlfcn.h>
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_srv_vpn_cdb.h"
 #include "dap_chain_net_srv_vpn_cdb_server_list.h"
@@ -134,8 +135,10 @@
 
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
+bool s_node_load_cdb_lib(dap_http_t * a_server);
 
 static const char *s_pid_file_path = NULL;
+static const char *s_default_path_modules = NULL;
 
 bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { return true; }
 
@@ -164,6 +167,8 @@ int main( int argc, const char **argv )
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+    s_default_path_modules = dap_strdup_printf("%s/var/modules/", g_sys_dir_path);
+
     {
         char l_log_path[MAX_PATH] = {'\0'};
         int l_pos = dap_sprintf(l_log_path, "%s/var/log", g_sys_dir_path);
@@ -410,6 +415,19 @@ int main( int argc, const char **argv )
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
+            #ifdef DAP_OS_LINUX
+            #ifndef __ANDROID__
+            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
+                if(s_node_load_cdb_lib(DAP_HTTP( l_server )) == false){
+                    log_it(L_CRITICAL,"Can't init CDB module");
+                    return -3;
+                }else{
+                    log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
+                }
+            }
+            #endif
+            #endif
+
 	        // Handshake URL
 	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
 
@@ -474,19 +492,7 @@ int main( int argc, const char **argv )
 
     //dap_chain_net_load_all();
 
-#ifdef DAP_OS_LINUX
-#ifndef __ANDROID__
-    // If CDB module switched on
-    if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-        if ( (rc=dap_chain_net_srv_vpn_cdb_init(DAP_HTTP( l_server ))) != 0 ){
-            log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
-            return -3;
 
-        }
-        log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
-    }
-#endif
-#endif
 
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -598,3 +604,36 @@ void exit_if_server_already_running( void ) {
 	}
 }
 
+#ifdef DAP_OS_LINUX
+#ifndef __ANDROID__
+bool s_node_load_cdb_lib(dap_http_t * a_server){
+    char l_lib_path[MAX_PATH] = {'\0'};
+    const char * l_cdb_so_name = "libcellframe-node-cdb.so";
+    dap_sprintf(l_lib_path, "%s/%s", s_default_path_modules, l_cdb_so_name);
+
+    void* l_cdb_handle = NULL;
+    l_cdb_handle = dlopen(l_lib_path, RTLD_NOW);
+    if(!l_cdb_handle){
+        log_it(L_ERROR,"Can't load %s module: %s", l_cdb_so_name, dlerror());
+        return false;
+    }
+
+    int (*dap_chain_net_srv_vpn_cdb_init)(dap_http_t*);
+    const char * l_init_func_name = "dap_chain_net_srv_vpn_cdb_init";
+    *(void **) (&dap_chain_net_srv_vpn_cdb_init) = dlsym(l_cdb_handle, l_init_func_name);
+    char* error;
+    if (( error = dlerror()) != NULL) {
+        log_it(L_ERROR,"%s module: %s error loading %s (%s)", l_cdb_so_name, l_init_func_name, error);
+        return false;
+     }
+
+    int l_init_res = (*dap_chain_net_srv_vpn_cdb_init)(a_server);
+    if(l_init_res){
+        log_it(L_ERROR,"%s: %s returns %d", l_cdb_so_name, l_init_func_name, error);
+        return false;
+    }
+
+    return true;
+}
+#endif
+#endif
