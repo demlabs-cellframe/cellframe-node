@@ -59,6 +59,7 @@
 #include "dap_http.h"
 #include "dap_http_folder.h"
 #include "dap_dns_server.h"
+#include "dap_modules_dynamic_cdb.h"
 
 
 #include "dap_events.h"
@@ -79,8 +80,6 @@
 #include "dap_chain_net_srv_app.h"
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
-#include "dap_chain_net_bugreport.h"
-#include "dap_chain_net_news.h"
 #include "dap_chain_net_srv_geoip.h"
 
 #ifdef DAP_OS_LINUX
@@ -164,6 +163,7 @@ int main( int argc, const char **argv )
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+
     {
         char l_log_path[MAX_PATH] = {'\0'};
         int l_pos = dap_sprintf(l_log_path, "%s/var/log", g_sys_dir_path);
@@ -410,24 +410,21 @@ int main( int argc, const char **argv )
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
+            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
+                if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
+                    log_it(L_CRITICAL,"Can't init CDB module");
+                    return -3;
+                }else{
+                    log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
+                }
+            }
+
 	        // Handshake URL
 	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
 
 	        // Streaming URLs
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
-
-            // BugReport URLs
-            bool l_bugreport_url_enabled = dap_config_get_item_bool_default(g_config, "server", "bugreport_url_enabled", false);
-            if(l_bugreport_url_enabled) {
-                dap_chain_net_bugreport_add_proc(DAP_HTTP(l_server));
-            }
-
-            // News URLs
-            bool l_news_url_enabled = dap_config_get_item_bool_default(g_config, "server", "news_url_enabled", false);
-            if(l_news_url_enabled) {
-                dap_chain_net_news_add_proc(DAP_HTTP(l_server));
-            }
 
 	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
@@ -474,19 +471,7 @@ int main( int argc, const char **argv )
 
     //dap_chain_net_load_all();
 
-#ifdef DAP_OS_LINUX
-#ifndef __ANDROID__
-    // If CDB module switched on
-    if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-        if ( (rc=dap_chain_net_srv_vpn_cdb_init(DAP_HTTP( l_server ))) != 0 ){
-            log_it(L_CRITICAL,"Can't init CDB module, return code %d",rc);
-            return -3;
 
-        }
-        log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
-    }
-#endif
-#endif
 
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
