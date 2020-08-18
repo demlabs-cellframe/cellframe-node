@@ -1,0 +1,14 @@
+## KelvinVPN [5.1-11] - 2020-08-07 
+### Fixed 
+- #4308 Freeze on “connecting” after pressing ")" in the password field during sign in [crossplatform]  
+- #4280 Pressing on “eye” button removes the password input [Android] 
+- #4256 App isn’t opening after being minimized [Android] 
+- #4137 Password is visible even if was set to be hidden [Android] 
+### Add 
+- #3988 Include feedback option about sent bug on the account screen of the application 
+ 
+ 
+## KelvinVPN [5.1-0] - 2020-08-01 
+### Fixed 
+- #4125 Freeze after changing server in the stats window [crossplatform] 
+- #4253 App set up in Chinese language [Android]
