@@ -27,7 +27,7 @@ order_signed_only=false
 
 [srv_dns]
 enabled=false
-pricelist=[]
+#pricelist=[]
 
 # Mempool
 [mempool]
