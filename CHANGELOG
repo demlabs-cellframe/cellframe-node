@@ -1,0 +1,125 @@
+## Cellframe-node [3.5-12] - 2020-07-31 
+### Fixed 
+- #4220 Fix countries in Kelvin orders 
+- #4221 Node sometimes crashing during stream close 
+ 
+## Cellframe-node [3.5-7] - 2020-07-17 
+### Added 
+- #4218 Brand CDB nodes 
+- #4046 Private network mode with auth via certificate
+### Fixed 
+- #4073 Minor issues with epolling  
+ 
+ 
+## Cellframe-node [3.5-4] - 2020-07-08 
+### Fixed 
+- #4157 Segmentation fault when executing commands: token_update, token_decl_sign, tx_history 
+ 
+## Cellframe-node [3.5-3] - 2020-06-29 
+### Fixed 
+- #4028 VPN nodes stop working at some point (restarting required) 
+ 
+## Cellframe-node [3.4-6] - 2020-06-17 
+### Added 
+- #3975 Delegated Stake service
+- #3977 Signed orders (Add signature to expanded order to allow signature by key for all orders during creation)
+### Fixed 
+- #4013 VPN nodes stop working at some point 
+ 
+## Cellframe-node [3.4-4] - 2020-06-03 
+### Update 
+- #2844 Create exchange service for tokens inside the network
+ 
+## Cellframe-node [3.4-2] - 2020-06-01 
+### Added 
+- #3600 Regional rebalancing for CDB 
+ 
+## Cellframe-node [3.4-2] - 2020-05-30 
+### Fixed 
+- #3951 Change sent back to client key with service use 
+ 
+## Cellframe-node [3.4-1] - 2020-05-29 
+### Added 
+- #2844 Create exchange service for tokens inside the network 
+ 
+## Cellframe-node [3.3-8] - 2020-05-28 
+### Added 
+- #3927 Add additional checks to dap_chain_ledger_tx_cache_check() 
+ 
+## Cellframe-node [3.3-6] - 2020-05-26 
+### Added 
+- feature-autoproc  
+ 
+## Cellframe-node [3.3-5] - 2020-05-25 
+### Fixed 
+- #3903 server core blocks event loop у nodejs 
+### Added 
+- #3844 emit DAPT and KELT tokens to core-t, move their basic transactions into kelvin-testnet zerochains’ genesis events 
+ 
+## Cellframe-node [3.3-4] - 2020-05-21 
+### Fixed 
+- #3895 Network offline while auto_online=true 
+ 
+## Cellframe-node [3.3-2] - 2020-05-18 
+### Added 
+- #3782 Launch plasma for core-t сети 
+ 
+## Cellframe-node [3.2-17] - 2020-05-15 
+### Update 
+- Static event for genesis for zerochain in core-t network updated
+ 
+## Cellframe-node [3.2-16] - 2020-05-13 
+### Added 
+- #3584 instantiate addition, serialization and deserialization for certificates metadata 
+ 
+## Cellframe-node [3.2-13] - 2020-05-08 
+### Added 
+- #3707 dap interval timer support for MacOS added
+ 
+## Cellframe-node [3.2-8] - 2020-05-07 
+### Fixed 
+- #3757 Service freeze, unending wait for PVT(l_dag)->events_rwlock resource deallocation
+### Added 
+- #3650 Addition and sending news, newsticker
+ 
+## Cellframe-node [3.2-1] - 2020-05-01 
+### Fixed 
+- #3666 Error dap_client_http callback does not happen if timeout data was not received 
+ 
+## Cellframe-node [0.0-00] - 2020-04-29 
+### Update 
+- Updated README.md 
+### Added 
+- #3617 support for receiving and reading bugreports is added to CDB node
+ 
+## Cellframe-node [0.0-00] - 2020-04-27 
+### Fixed 
+- #3427 Make sure that sync with all nodes is done consequently.
+ 
+## Cellframe-node [0.0-00] - 2020-04-24 
+### Fixed 
+- #3560 Mempool chains processing is done incorrectly 
+ 
+## Cellframe-node [0.0-00] - 2020-04-23 
+### Added 
+- #2703 Mempool auto processing mode in Master Node role
+ 
+## Cellframe-node [0.0-00] - 2020-04-20 
+### Update 
+- Updated README.md 
+ 
+## Cellframe-node [0.0-00] - 2020-04-20 
+### Update 
+- Updated README.md 
+ 
+## Cellframe-node [0.0-00] - 2020-04-11 
+### Fixed 
+- #3380 Mistake in libdap-crypto  
+ 
+## Cellframe-node [0.0-00] - 2020-04-08 
+### Fixed 
+- Order creation command example fixed in README.md 
+ 
+## Cellframe-node [0.0-00] - 2020-04-02 
+### Added 
+- #3330 Add-in DNS server added
