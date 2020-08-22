@@ -12,11 +12,14 @@ pwd
 
 cd packages
 PKGFILES=$(ls . | grep .deb)
+MOD=$(echo $MOD | sed 's/-\?static-\?//') && [ ! $MOD = "" ] && MOD="-$MOD"
 #cd ..
+
+[[ -v CI_COMMIT_REF_NAME ]] && [[ $CI_COMMIT_REF_NAME != "master" ]] && SUBDIR="${CI_COMMIT_REF_NAME}" || SUBDIR=""
 
 #echo "We have $DISTR_CODENAME there"
 #echo "On path $REPO_DIR_SRC we have debian files."
-[[ $ONBUILDSERVER == 0 ]] && scp -i $CELLFRAME_REPO_KEY ../prod_build/linux/debian/scripts/publish_remote/reprepro.sh "$CELLFRAME_REPO_CREDS:~/tmp/"
+[[ $CI_COMMIT_REF_NAME == "master" ]] && scp -i $CELLFRAME_REPO_KEY ../prod_build/linux/debian/scripts/publish_remote/reprepro.sh "$CELLFRAME_REPO_CREDS:~/tmp/"
 for pkgfile in $PKGFILES; do
 	pkgname=$(echo $pkgfile | sed 's/.deb$//')
 	pkgname_public=$(echo $pkgname | cut -d '-' -f1-4,7-) #cutting away Debian-9.12
@@ -25,17 +28,19 @@ for pkgfile in $PKGFILES; do
 	CODENAME=$(echo $pkgname | rev | cut -d '-' -f1 | rev)
 	cp -r ../prod_build/general/essentials/weblink-latest ../prod_build/general/essentials/$pkgname_weblink
 	sed -i "/document/s/cellframe.*deb/$pkgname_public$MOD.deb/" ../prod_build/general/essentials/$pkgname_weblink/index.php
-	if [[ $ONBUILDSERVER == 0 ]]; then
-	#REPREPRO and file_cellframe_services
-		scp -i $CELLFRAME_REPO_KEY $wd/$PACKAGE_PATH/$pkgname$MOD.deb "$CELLFRAME_REPO_CREDS:~/tmp/apt/"
-		ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_REPO_CREDS" "chmod +x ~/tmp/reprepro.sh && ~/tmp/reprepro.sh main $CODENAME ~/tmp/apt/$pkgname_public$MOD.deb $CELLFRAME_REPO_PATH"
-		scp -i $CELLFRAME_REPO_KEY $wd/$PACKAGE_PATH/$pkgname$MOD.deb "$CELLFRAME_FILESERVER_CREDS:$CELLFRAME_FILESERVER_PATH/$pkgname_public$MOD.deb"
-		scp -r -i $CELLFRAME_REPO_KEY ../prod_build/general/essentials/$pkgname_weblink "$CELLFRAME_FILESERVER_CREDS:$CELLFRAME_FILESERVER_PATH/"
+	if [[ $(echo $CI_COMMIT_REF_NAME | grep "master\|^release") != "" ]]; then
+		echo "REF_NAME is $CI_COMMIT_REF_NAME"
+		scp -i $CELLFRAME_REPO_KEY $wd/$PACKAGE_PATH/$pkgname$MOD.deb "$CELLFRAME_FILESERVER_CREDS:$CELLFRAME_FILESERVER_PATH/$SUBDIR/$pkgname_public$MOD.deb"
+		scp -r -i $CELLFRAME_REPO_KEY ../prod_build/general/essentials/$pkgname_weblink "$CELLFRAME_FILESERVER_CREDS:$CELLFRAME_FILESERVER_PATH/$SUBDIR/"
+		if [[ $CI_COMMIT_REF_NAME == "master" ]]; then
+			scp -i $CELLFRAME_REPO_KEY $wd/$PACKAGE_PATH/$pkgname$MOD.deb "$CELLFRAME_REPO_CREDS:~/tmp/apt/"
+			ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_REPO_CREDS" "chmod +x ~/tmp/reprepro.sh && ~/tmp/reprepro.sh main $CODENAME ~/tmp/apt/$pkgname_public$MOD.deb $CELLFRAME_REPO_PATH"
+		fi
 #		ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_FILESERVER_CREDS" "ln -sf $CELLFRAME_FILESERVER_PATH/$pkgname$MOD.deb $CELLFRAME_FILESERVER_PATH/$pkgname$MOD-latest.deb"
 	fi
 	rm -r ../prod_build/general/essentials/$pkgname_weblink
 done
-[[ $ONBUILDSERVER == 0 ]] && ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_REPO_CREDS" "rm -v ~/tmp/reprepro.sh"
+[[ $CI_COMMIT_REF_NAME == "master" ]] && ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_REPO_CREDS" "rm -v ~/tmp/reprepro.sh"
 
 #	export -n "UPDVER"
 cd ..
