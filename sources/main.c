@@ -104,13 +104,12 @@
 #include "dap_chain_net_srv_stake.h"
 
 #include "dap_common.h"
-#include "dap_client_remote.h"
+#include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_client.h"
 //#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
-#include "dap_traffic_track.h"
 
 #include "dap_defines.h"
 #include "dap_file_utils.h"
@@ -223,21 +222,21 @@ int main( int argc, const char **argv )
     	#endif
   	}
 
-    bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
-
-    log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
-
-    if ( bServerEnabled && dap_server_init(l_thread_cnt) != 0 ) {
-    	log_it( L_CRITICAL, "Can't init socket server module" );
-	    return -4;
-	}
-
     // New event loop init
     dap_events_init( 0, 0 );
     dap_events_t *l_events = dap_events_new( );
     dap_events_start( l_events );
-
     dap_client_init();
+
+    bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
+
+    log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
+
+    if ( bServerEnabled && dap_server_init() != 0 ) {
+        log_it( L_CRITICAL, "Can't init socket server module" );
+        return -4;
+    }
+
 
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
@@ -396,7 +395,7 @@ int main( int argc, const char **argv )
         int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
 
         if( l_port > 0 ) {
-            l_server = dap_server_listen((dap_config_get_item_str(g_config, "server", "listen_address")),
+            l_server = dap_server_new(l_events,  (dap_config_get_item_str(g_config, "server", "listen_address")),
                                    (uint16_t) l_port,
                                    DAP_SERVER_TCP );
         } else
@@ -479,15 +478,8 @@ int main( int argc, const char **argv )
         dap_chain_plugins_init(g_config);
     #endif
 
-    if (bServerEnabled) {
-        // Endless loop for server's requests processing
-        rc = dap_server_loop(l_server);
-        // After loop exit actions
-        log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
-    } else {
-        dap_events_wait(l_events);
-    }
-
+    rc = dap_events_wait(l_events);
+    log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
 
 //failure:
