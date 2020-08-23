@@ -28,6 +28,7 @@ for pkgfile in $PKGFILES; do
 	CODENAME=$(echo $pkgname | rev | cut -d '-' -f1 | rev)
 	cp -r ../prod_build/general/essentials/weblink-latest ../prod_build/general/essentials/$pkgname_weblink
 	sed -i "/document/s/cellframe.*deb/$pkgname_public$MOD.deb/" ../prod_build/general/essentials/$pkgname_weblink/index.php
+set -x
 	if [[ $(echo $CI_COMMIT_REF_NAME | grep "master\|^release") != "" ]]; then
 		echo "REF_NAME is $CI_COMMIT_REF_NAME"
 		scp -i $CELLFRAME_REPO_KEY $wd/$PACKAGE_PATH/$pkgname$MOD.deb "$CELLFRAME_FILESERVER_CREDS:$CELLFRAME_FILESERVER_PATH/$SUBDIR/$pkgname_public$MOD.deb"
@@ -39,6 +40,7 @@ for pkgfile in $PKGFILES; do
 #		ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_FILESERVER_CREDS" "ln -sf $CELLFRAME_FILESERVER_PATH/$pkgname$MOD.deb $CELLFRAME_FILESERVER_PATH/$pkgname$MOD-latest.deb"
 	fi
 	rm -r ../prod_build/general/essentials/$pkgname_weblink
+set +x
 done
 [[ $CI_COMMIT_REF_NAME == "master" ]] && ssh -i $CELLFRAME_REPO_KEY "$CELLFRAME_REPO_CREDS" "rm -v ~/tmp/reprepro.sh"
 
