@@ -5,8 +5,8 @@
 [submodule "python-cellframe"]
 	path = python-cellframe
 	url = ../python-cellframe.git
-	branch = master
+	branch = testing
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
 	url = ../cellframe-sdk.git
-	branch = master
+	branch = testing
