@@ -383,10 +383,8 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if (dap_chain_node_mempool_init()) {
-        log_it( L_CRITICAL, "Can't init automatic mempool processing" );
-        return -13;
-    }
+    log_it(L_INFO, "Automatic mempool processing %s",
+           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
 
     save_process_pid_in_file(s_pid_file_path);
 
@@ -494,7 +492,7 @@ int main( int argc, const char **argv )
 	dap_http_deinit();
 	if (bServerEnabled) dap_server_deinit();
 	dap_enc_ks_deinit();
-    dap_chain_node_mempool_deinit();
+    dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
 
