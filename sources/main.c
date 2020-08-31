@@ -221,12 +221,15 @@ int main( int argc, const char **argv )
       		l_thread_cnt = si.dwNumberOfProcessors;
     	#endif
   	}
+    if ( dap_enc_init() != 0 ){
+        log_it( L_CRITICAL, "Can't init encryption module" );
+        return -56;
+    }
 
     // New event loop init
     dap_events_init( 0, 0 );
     dap_events_t *l_events = dap_events_new( );
     dap_events_start( l_events );
-    dap_client_init();
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
@@ -247,11 +250,28 @@ int main( int argc, const char **argv )
 	    log_it( L_CRITICAL, "Can't init http server module" );
 	    return -55;
 	}
+    if ( dap_http_simple_module_init() != 0 ) {
+        log_it(L_CRITICAL,"Can't init http simple module");
+        return -9;
+    }
 
-	if ( dap_enc_init() != 0 ){
-	    log_it( L_CRITICAL, "Can't init encryption module" );
-	    return -56;
-	}
+    if ( enc_http_init() != 0 ) {
+        log_it( L_CRITICAL, "Can't init encryption http session storage module" );
+        return -81;
+    }
+
+    if ( dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ) {
+        log_it( L_CRITICAL, "Can't init stream server module" );
+        return -82;
+    }
+
+    if ( dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32) != 0 ){
+        log_it( L_CRITICAL, "Can't init stream control module" );
+        return -83;
+    }
+
+    dap_client_init();
+
 
 	if ( dap_chain_global_db_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init global db module" );
@@ -342,26 +362,6 @@ int main( int argc, const char **argv )
             return -73;
         }
     }
-
-	if ( enc_http_init() != 0 ) {
-	    log_it( L_CRITICAL, "Can't init encryption http session storage module" );
-	    return -81;
-	}
-
-	if ( dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ) {
-	    log_it( L_CRITICAL, "Can't init stream server module" );
-	    return -82;
-	}
-
-	if ( dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32) != 0 ){
-	    log_it( L_CRITICAL, "Can't init stream control module" );
-	    return -83;
-	}
-
-	if ( dap_http_simple_module_init() != 0 ) {
-	    log_it(L_CRITICAL,"Can't init http simple module");
-	    return -9;
-	}
 
 	if ( dap_chain_node_cli_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init server for console" );
