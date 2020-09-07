@@ -20,7 +20,7 @@ bugreport_url_enabled=false
 # Builtin DNS server
 [dns_server]
 enabled=false
-bootstrap_balancer=true
+bootstrap_balancer=false
 
 [srv]
 order_signed_only=false
