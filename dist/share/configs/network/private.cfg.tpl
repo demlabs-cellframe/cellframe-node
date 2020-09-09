@@ -5,8 +5,8 @@ id=0xFF00000000000001
 name=private
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
+gdb_groups_prefix=my-private
 #node-alias=addr-%node_addr%
-gdb_groups_prefix=private
 #node-addr=0x10
 # node addr exired time in hours (168h=1w 720h=1m 8760h=1y), by default 720h(1week)
 # node-addr-expired=168
