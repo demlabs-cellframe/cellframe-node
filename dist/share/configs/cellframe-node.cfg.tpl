@@ -29,6 +29,9 @@ order_signed_only=false
 enabled=false
 #pricelist=[]
 
+[stream]
+preferred_encryption=IAES
+
 # Mempool
 [mempool]
 # Automaticaly true if master node
