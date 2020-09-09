@@ -260,12 +260,12 @@ int main( int argc, const char **argv )
         return -81;
     }
 
-    if ( dap_stream_init(dap_config_get_item_bool_default(g_config,"general","debug_dump_stream_headers",false)) != 0 ) {
+    if ( dap_stream_init(g_config) != 0 ) {
         log_it( L_CRITICAL, "Can't init stream server module" );
         return -82;
     }
 
-    if ( dap_stream_ctl_init(g_config, 32) != 0 ){
+    if ( dap_stream_ctl_init(32) != 0 ){
         log_it( L_CRITICAL, "Can't init stream control module" );
         return -83;
     }
