@@ -20,7 +20,7 @@ bugreport_url_enabled=false
 # Builtin DNS server
 [dns_server]
 enabled=false
-bootstrap_balancer=true
+bootstrap_balancer=false
 
 [srv]
 order_signed_only=false
@@ -55,6 +55,9 @@ registration_open=true
 #   Turn to true if you want to share VPN service from you node
 enabled=false
 geoip_enabled=false
+
+# Switch on debug_more to true if you want to see info about any packet passed through 
+debug_more=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
