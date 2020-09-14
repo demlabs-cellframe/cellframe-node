@@ -74,20 +74,26 @@ sudo apt --fix-broken install
 
 ##### Install from DemLabs official public repository
 
-* Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` one line below for Debian 10:
+* Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
+
+* For Debian 10:
   ```
-  deb https://debian.pub.demlabs.net/ buster main
+  deb https://debian.pub.demlabs.net/public buster main
+  ```
+* For Debian 9:
+  ```
+  deb https://debian.pub.demlabs.net/public stretch main
   ```
 * For Ubuntu 18 (Bionic):
   ```
-  deb https://debian.pub.demlabs.net/ bionic main universe
+  deb https://debian.pub.demlabs.net/public bionic main 
   ```
 * Then download public signature and install it:
   ```
-  wget https://debian.pub.demlabs.net/debian.pub.demlabs.net.gpg
-  sudo apt-key add demlabskey.asc
+  wget https://debian.pub.demlabs.net/public/public-key.gpg
+  sudo apt-key add public-key.gpg
   ```
-* Then update your apt cache and install the package:
+* Then update your apt cache and install the package (apt-transport-https should be installed):
   ```
   sudo apt-get update
   sudo apt-get install cellframe-node
