@@ -265,7 +265,7 @@ int main( int argc, const char **argv )
         return -82;
     }
 
-    if ( dap_stream_ctl_init(32) != 0 ){
+    if ( dap_stream_ctl_init() != 0 ){
         log_it( L_CRITICAL, "Can't init stream control module" );
         return -83;
     }
