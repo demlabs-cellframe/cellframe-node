@@ -10,3 +10,6 @@
 	path = cellframe-sdk
 	url = ../cellframe-sdk.git
 	branch = testing
+[submodule "prod_build"]
+	path = prod_build
+	url = https://gitlab.demlabs.net/murat.khabriev/prod_build_cellframe-node
