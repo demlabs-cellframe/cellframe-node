@@ -1,2 +1,0 @@
-ARCH_VERSIONS="arm64-v8a armv7 x86 x86_64 arm"
-PACKAGE_PATH=builds/apk/
