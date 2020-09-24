@@ -394,8 +394,7 @@ int main( int argc, const char **argv )
 
         if( l_port > 0 ) {
             l_server = dap_server_new(l_events,  (dap_config_get_item_str(g_config, "server", "listen_address")),
-                                   (uint16_t) l_port,
-                                   DAP_SERVER_TCP );
+                                      (uint16_t) l_port, DAP_SERVER_TCP, NULL );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
 
@@ -446,7 +445,7 @@ int main( int argc, const char **argv )
     bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
     log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
     if (bootstrap_balancer_enabled) {
-        dap_dns_server_start();
+        dap_dns_server_start(l_events);
     }
 
     // Chain Network init
