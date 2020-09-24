@@ -16,7 +16,7 @@ set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 
 if (NOT WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-block cs-block-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
 else()
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic")
 endif()
