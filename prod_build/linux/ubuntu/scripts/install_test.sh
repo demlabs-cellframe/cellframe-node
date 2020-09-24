@@ -1,1 +1,0 @@
-../../debian/scripts/install_test.sh
