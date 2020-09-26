@@ -1,1 +1,0 @@
-../../debian/scripts/compile_and_pack.sh
