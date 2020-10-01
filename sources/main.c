@@ -494,7 +494,9 @@ int main( int argc, const char **argv )
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
-
+    dap_chain_net_deinit();
+    dap_chain_global_db_deinit();
+    dap_chain_deinit();
 	dap_config_close( g_config );
 	dap_common_deinit();
 
