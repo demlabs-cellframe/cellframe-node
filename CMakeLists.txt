@@ -7,8 +7,8 @@ set(CMAKE_C_STANDARD 11)
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
-SET( CPACK_PACKAGE_VERSION_MINOR 0)
-SET( CPACK_PACKAGE_VERSION_PATCH 67)
+SET( CPACK_PACKAGE_VERSION_MINOR 1)
+SET( CPACK_PACKAGE_VERSION_PATCH 9)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
@@ -16,9 +16,9 @@ set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 
 if (NOT WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
 else()
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic")
 endif()
 
 include (cellframe-sdk/cmake/OS_Detection.cmake)
