@@ -440,12 +440,14 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-
-    // DNS server start
-    bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
-    log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
-    if (bootstrap_balancer_enabled) {
-        dap_dns_server_start(l_events);
+    if (dap_config_get_item_bool_default(g_config, "dns_server", "enabled", false))
+    {
+        // DNS server start
+        bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
+        log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
+        if (bootstrap_balancer_enabled) {
+            dap_dns_server_start(l_events);
+        }
     }
 
     // Chain Network init
