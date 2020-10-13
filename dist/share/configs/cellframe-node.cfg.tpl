@@ -6,6 +6,12 @@ debug_dump_stream_headers=false
 #seed_mode=false
 auto_online={AUTO_ONLINE}
 
+# Chain networking
+[chain_net]
+
+# Timeout for network status wait 
+status_wait_timeout=10
+
 # Console
 
 # Server part
