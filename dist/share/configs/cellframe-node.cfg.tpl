@@ -27,6 +27,7 @@ bugreport_url_enabled=false
 [dns_server]
 enabled=false
 bootstrap_balancer=false
+bootstrap_balancer_port=53
 
 [srv]
 order_signed_only=false
