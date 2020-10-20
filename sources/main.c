@@ -446,7 +446,7 @@ int main( int argc, const char **argv )
         bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
         log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
         if (bootstrap_balancer_enabled) {
-            dap_dns_server_start(l_events);
+            dap_dns_server_start(l_events, dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
         }
     }
 
