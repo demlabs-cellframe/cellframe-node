@@ -164,11 +164,10 @@ int main( int argc, const char **argv )
 #endif
 
     {
-        char l_log_path[MAX_PATH] = {'\0'};
-        int l_pos = dap_sprintf(l_log_path, "%s/var/log", g_sys_dir_path);
-        dap_mkdir_with_parents(l_log_path);
-        dap_sprintf(l_log_path + l_pos, "/%s.log", dap_get_appname());
-        if (dap_common_init(dap_get_appname(), l_log_path) != 0) {
+        char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
+        dap_mkdir_with_parents(l_log_dir);
+        char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
+        if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
             printf("Fatal Error: Can't init common functions module");
             return -2;
         }

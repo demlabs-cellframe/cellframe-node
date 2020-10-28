@@ -204,7 +204,7 @@ int main(int argc, const char *argv[])
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
-    if (dap_common_init(dap_get_appname(), NULL) != 0) {
+    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
     }
