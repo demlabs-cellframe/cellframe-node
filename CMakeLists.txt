@@ -8,12 +8,12 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
 SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 24)
+SET( CPACK_PACKAGE_VERSION_PATCH 25)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-set(SUPPORT_PYTHON_PLUGINS OFF)
+set(SUPPORT_PYTHON_PLUGINS ON)
 
 if (NOT WIN32)
     set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
