@@ -13,7 +13,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH 24)
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
+set(SUPPORT_PYTHON_PLUGINS OFF)
 
 if (NOT WIN32)
     set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
