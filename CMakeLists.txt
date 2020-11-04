@@ -8,12 +8,13 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
 SET( CPACK_PACKAGE_VERSION_MINOR 2)
-SET( CPACK_PACKAGE_VERSION_PATCH 3)
+SET( CPACK_PACKAGE_VERSION_PATCH 4)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
+set(DAPSDK_MODULES "core crypto network-core network-client network-server")
 
 if (NOT WIN32)
     set(CELLFRAME_MODULES "core chains mining network bridge-btc srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
@@ -22,6 +23,7 @@ else()
 endif()
 
 include (cellframe-sdk/cmake/OS_Detection.cmake)
+add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 
 if(UNIX)
