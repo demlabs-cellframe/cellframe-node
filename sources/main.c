@@ -75,6 +75,9 @@
 #include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
 
+#include "dap_chain_bridge.h"
+#include "dap_chain_bridge_btc.h"
+
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_app.h"
@@ -319,6 +322,11 @@ int main( int argc, const char **argv )
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
+
+    if (dap_chain_bridge_btc_init() != 0){
+        log_it(L_CRITICAL, "Can't init dap chain bridge btc module");
+        return -76;
+    }
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");

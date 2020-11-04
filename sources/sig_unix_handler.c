@@ -27,7 +27,7 @@ static void sig_exit_handler(int sig_code) {
 
 int sig_unix_handler_init(const char *pid_path) {
     l_pid_path = strdup(pid_path);
-    struct sigaction new_action, old_action;
+    struct sigaction new_action={0}, old_action={0};
     new_action.sa_handler = sig_exit_handler;
     new_action.sa_flags = 0;
     sigaction(SIGTERM, &new_action, &old_action);
