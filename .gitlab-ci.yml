@@ -13,6 +13,7 @@ kelvin-node-schedule:
     only:
     - master
     - /^release.*$/
+    - /^pubtest.*$/
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
 
 kelvin-node-test:
@@ -22,4 +23,5 @@ kelvin-node-test:
     except:
     - master
     - /^release.*$/
+    - /^pubtest.*$/
     script: ~/production/integration/gitlab-CI/build_test_handler.sh cellframe-node 
