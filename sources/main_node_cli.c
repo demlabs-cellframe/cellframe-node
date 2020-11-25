@@ -204,7 +204,7 @@ int main(int argc, const char *argv[])
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
-    if (dap_common_init(dap_get_appname(), NULL) != 0) {
+    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
     }
@@ -266,6 +266,21 @@ int main(int argc, const char *argv[])
 #ifdef _WIN32
         WSACleanup();
 #endif
+        switch (res) {
+            case DAP_CLI_ERROR_FORMAT:
+                printf("Response format error!\n");
+                break;
+            case DAP_CLI_ERROR_SOCKET:
+                printf("Socket read error!\n");
+                break;
+            case DAP_CLI_ERROR_TIMEOUT:
+                printf("No response recieved.\n");
+                break;
+            case DAP_CLI_ERROR_INCOMPLETE:
+                printf("Connection closed by peer");
+            default:
+                break;
+        }
         return res;
     }else{
         // command not found, start interactive shell

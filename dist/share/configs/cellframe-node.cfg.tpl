@@ -2,6 +2,9 @@
 [general]
 debug_mode={DEBUG_MODE}
 debug_dump_stream_headers=false
+# Debug I/O reactor, false by default
+#debug_reactor=false
+
 # seed mode. WARNING. Used true only when you start the new network
 #seed_mode=false
 auto_online={AUTO_ONLINE}

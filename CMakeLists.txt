@@ -8,10 +8,10 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
 SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 17)
+SET( CPACK_PACKAGE_VERSION_PATCH 46)
 
 # init CellFrame SDK
-add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}\"")
+add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 
@@ -126,8 +126,8 @@ if(UNIX AND NOT WIN32)
     if (SUPPORT_PYTHON_PLUGINS)
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-        message("[+] Build with support python plugins")
-        set(Python_ADDITIONAL_VERSION 3.7 3.6 3.5 3.4)
+        message("[+] Build with python plugins support")
+        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
         find_package(PythonLibs REQUIRED)
         include_directories(${PYTHON_INCLUDE_DIR} include/)
 
