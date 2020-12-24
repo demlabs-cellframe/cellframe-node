@@ -69,6 +69,10 @@ registration_open=true
 enabled=false
 geoip_enabled=false
 
+# Set to true if you want to use FlowControl optimization for IRQ balance
+# WARNING! For current moment its broken, don't use it if only you're not tester or developer
+auto_cpu_reassignment=false 
+
 # Switch on debug_more to true if you want to see info about any packet passed through 
 debug_more=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
