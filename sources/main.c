@@ -79,7 +79,6 @@
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_app.h"
 #include "dap_chain_net_srv_app_db.h"
-#include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
 #ifdef DAP_OS_LINUX
@@ -335,11 +334,6 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
         return -67;
-    }
-
-    if( dap_chain_net_srv_datum_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service datum module");
-        return -68;
     }
 
 #ifndef _WIN32
