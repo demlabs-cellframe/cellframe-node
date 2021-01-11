@@ -83,6 +83,8 @@ pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001
 # Console interface server
 [conserver]
 enabled=true
+# More debug output for all cli commands. False by default
+#debug_cli=false
 #listen_port_tcp=12345
 listen_unix_socket_path=/opt/cellframe-node/var/run/node_cli
 # Default permissions 770
