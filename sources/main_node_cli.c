@@ -194,7 +194,6 @@ int main(int argc, const char *argv[])
 #endif
 {
     dap_set_appname("cellframe-node");
-
 #ifdef _WIN32
     SetConsoleCP(1252);
     SetConsoleOutputCP(1252);
