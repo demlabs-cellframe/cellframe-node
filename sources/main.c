@@ -233,8 +233,6 @@ int main( int argc, const char **argv )
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
-    log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
-
     if ( bServerEnabled && dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
         return -4;
