@@ -15,7 +15,15 @@ auto_online={AUTO_ONLINE}
 # Timeout for network status wait 
 status_wait_timeout=10
 
-# Console
+# Ledger defaults
+[ledger]
+# More debug output
+debug_more=false
+
+# DAG defaults
+[dag]
+# More debug output
+debug_more=false
 
 # Server part
 [server]
