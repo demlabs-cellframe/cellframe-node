@@ -1,9 +1,9 @@
 /*
  * Authors:
  * Dmitriy A. Gerasimov <kahovski@gmail.com>
- * DeM Labs Inc.   https://demlabs.net
- * DeM Labs Open source community https://github.com/demlabsinc
- * Copyright  (c) 2017-2019
+ * DeM Labs Ltd.   https://demlabs.net
+ * CellFrame         https://cellframe.net
+ * Copyright  (c) 2017-2020
  * All rights reserved.
 
  This file is part of DAP (Deus Applications Prototypes) the open source project
@@ -58,7 +58,8 @@
 #include "dap_server.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
-#include "dap_dns_server.h"
+#include "dap_chain_node_dns_client.h"
+#include "dap_chain_node_dns_server.h"
 #include "dap_modules_dynamic_cdb.h"
 
 
@@ -172,6 +173,8 @@ int main( int argc, const char **argv )
             printf("Fatal Error: Can't init common functions module");
             return -2;
         }
+        DAP_DELETE(l_log_dir);
+        DAP_DELETE(l_log_file);
     }
 
     {
@@ -314,17 +317,31 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
-
     dap_chain_ledger_verificator_rwlock_init();
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
 
+    // Chain Network init
+
+    dap_stream_ch_chain_init( );
+    dap_stream_ch_chain_net_init( );
+
+    dap_stream_ch_chain_net_srv_init();
+
+    if (!dap_chain_net_srv_xchange_init()) {
+        log_it(L_ERROR, "Can't provide exchange capability");
+    }
+    if (!dap_chain_net_srv_stake_init()) {
+        log_it(L_ERROR, "Can't start delegated stake service");
+    }
+///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
+///        dap_stream_ch_vpn_deinit();
+
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
-
     if( dap_chain_net_srv_init(g_config) !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
@@ -339,6 +356,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
     }
+
 
 #ifndef _WIN32
     // vpn server
@@ -421,7 +439,7 @@ int main( int argc, const char **argv )
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
-	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+            const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
 	                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
 	        }
@@ -449,21 +467,7 @@ int main( int argc, const char **argv )
         }
     }
 
-    // Chain Network init
 
-	dap_stream_ch_chain_init( );
-	dap_stream_ch_chain_net_init( );
-
-    dap_stream_ch_chain_net_srv_init();
-
-    if (!dap_chain_net_srv_xchange_init()) {
-        log_it(L_ERROR, "Can't provide exchange capability");
-    }
-    if (!dap_chain_net_srv_stake_init()) {
-        log_it(L_ERROR, "Can't start delegated stake service");
-    }
-///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
-///        dap_stream_ch_vpn_deinit();
 
 
     //dap_chain_net_load_all();
@@ -473,7 +477,7 @@ int main( int argc, const char **argv )
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         log_it(L_NOTICE, "Loading python plugins");
-        dap_plugins_python_app_content_init(l_server);
+	dap_plugins_python_app_content_init(l_server);
         dap_chain_plugins_init(g_config);
     #endif
 
