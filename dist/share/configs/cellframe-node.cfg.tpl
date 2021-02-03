@@ -21,26 +21,33 @@ news_url_enabled=false
 bugreport_url_enabled=false
 listen_address={SERVER_ADDR}
 listen_port_tcp={SERVER_PORT}
+# External IPv4 address
+#ext_address=8.9.10.11
+# External IPv6 address
+#ext_address6=aaaa:bbbb:deee:96ff:feee:3fff
+#
+# If not set - used listen_port_tcp for node table auto fill
+#ext_port_tcp=8089
 
 
 # Build in DNS client (need for bootstraping)
 [dns_client]
-request_timeout=10
+#request_timeout=10
 
 # Builtin DNS server
 [dns_server]
-enabled=false
-bootstrap_balancer=false
+#enabled=false
+#bootstrap_balancer=false
 
 # Ledger defaults
 [ledger]
 # More debug output
-debug_more=false
+# debug_more=true
 
 # DAG defaults
 [dag]
 # More debug output
-debug_more=false
+# debug_more=true
 
 [srv]
 order_signed_only=false
@@ -56,12 +63,7 @@ pricelist=[]
 
 # Chain network settings
 [chain_net]
-# How often rerun network state check sequence, in seconds. 180 by default
-net_check_timeout=10
-net_sync_timeout=180
-debug_more=true
-# Timeout for network status wait
-status_wait_timeout=10
+# debug_more=true
 
 [stream_ch_chain]
 # Uncomment to have more debug information in stream channel Chain
@@ -71,7 +73,7 @@ status_wait_timeout=10
 # Number of hashes packed into the one update packet
 # Increase it to reduce update latency
 # Decrease if bad networking
-update_pack_size=100
+# update_pack_size=100
 
 
 # Central Dataase
