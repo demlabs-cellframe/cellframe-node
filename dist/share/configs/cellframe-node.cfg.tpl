@@ -75,25 +75,6 @@ pricelist=[]
 # Decrease if bad networking
 # update_pack_size=100
 
-
-# Central Dataase
-[cdb]
-enabled=false
-servers_list_enabled=false
-servers_list_networks=[dapcash-testnet]
-
-# Central Database authorization
-[cdb_auth]
-enabled=false
-domain=mydomain
-# auth mode=passwd[default] or serial
-mode=passwd
-registration_open=true
-tx_cond_create=false
-# List of condition templates, created for authorized users. Format of condition:
-# <wallet name>:<Value per transaction>:<Minimum time(seconds) between transactions>:<network name> 
-# tx_cond_templates=[mywallet0:0.00001:3600:DAPT:dapcash-testnet,mywallet1:0.000001:3600:KELT:dapcash-testnet]
-
 # VPN stream channel processing module
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node 
@@ -105,13 +86,13 @@ debug_more=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-pricelist=[dapcash-testnet:100:DAPT:3600:SEC:mywallet0,dapcash-testnet:100:DAPB:3600:SEC:mywallet1]
+pricelist=[cellframe-testnet:100:KELT:3600:SEC:mywallet0]
 
 # Console interface server
 [conserver]
 enabled=true
 #listen_port_tcp=12345
-listen_unix_socket_path=/opt/dapcash-node/var/run/node_cli
+listen_unix_socket_path=/opt/cellframe-node/var/run/node_cli
 # Default permissions 770
 #listen_unix_socket_permissions=770
 
@@ -119,11 +100,17 @@ listen_unix_socket_path=/opt/dapcash-node/var/run/node_cli
 [resources]
 #   0 means auto detect
 threads_cnt=0 
-pid_path=/opt/dapcash-node/var/run/dapcash-node.pid
-log_file=/opt/dapcash-node/var/log/dapcash-node.log
-wallets_path=/opt/dapcash-node/var/lib/wallet
+# By default notify opens at /tmp/cellframe-node-notify
+#notify_path=/home/myuser/cellframe-node-notify
+#notify_permissions=770
+#notify_user=myuser
+#notify_group=mygroup
+
+pid_path=/opt/cellframe-node/var/run/cellframe-node.pid
+log_file=/opt/cellframe-node/var/log/cellframe-node.log
+wallets_path=/opt/cellframe-node/var/lib/wallet
 geoip_db_path=share/geoip/GeoLite2-City.mmdb
-ca_folders=[/opt/dapcash-node/var/lib/ca,/opt/dapcash-node/share/ca]
-dap_global_db_path=/opt/dapcash-node/var/lib/global_db
-dap_global_db_driver=cdb
+ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
+dap_global_db_path=/opt/cellframe-node/var/lib/global_db
+dap_global_db_driver=sqlite3
 

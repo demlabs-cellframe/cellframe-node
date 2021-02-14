@@ -56,6 +56,7 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_server.h"
+#include "dap_notify_srv.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
@@ -272,6 +273,14 @@ int main( int argc, const char **argv )
     }
 
     dap_client_init();
+
+    // Create and init notify server
+    size_t l_notify_path_default_size = dap_snprintf(NULL,0,"/tmp/%s-notify",dap_get_appname() )+1;
+    char * l_notify_path_default = DAP_NEW_SIZE(char,l_notify_path_default_size);
+    dap_snprintf(l_notify_path_default,l_notify_path_default_size,"/tmp/%s-notify",dap_get_appname() );
+    if ( dap_notify_server_init( dap_config_get_item_str_default(g_config,"resourses","notify_path",l_notify_path_default)) != 0 ){
+        log_it( L_ERROR, "Can't init notify server module" );
+    }
 
 
 	if ( dap_chain_global_db_init(g_config) ) {
