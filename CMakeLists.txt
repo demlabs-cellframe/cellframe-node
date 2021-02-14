@@ -13,16 +13,29 @@ SET( CPACK_PACKAGE_VERSION_PATCH 26)
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
+include (cellframe-sdk/cmake/OS_Detection.cmake)
 
-if (NOT WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic srv-vpn")
-else()
-    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-blocks-poa cs-dag-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-xchange srv-stake modules-dynamic")
+if(BUILD_WITH_GDB_DRIVER_MDBX)
+add_subdirectory(3rdparty/libmdbx)
 endif()
 
-include (cellframe-sdk/cmake/OS_Detection.cmake)
+if(LINUX)
+set(SUPPORT_PYTHON_PLUGINS ON)
+endif()
+
+
+if (WIN32)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic")
+elseif(BSD)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic")
+elseif(ANDROID)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
+elseif(LINUX)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic srv-vpn")
+endif()
+
 add_subdirectory(cellframe-sdk)
+
 
 if(UNIX)
   if(LINUX)
@@ -47,14 +60,14 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
-
-  else()
-    message("[!] Unix but not linux")
-  endif()
+    elseif(BSD)
+        message("[*] BSD family system ${CMAKE_SYSTEM} ")
+    else()
+        message("[!] Unknown UNIX")
+    endif()
 else()
     message("[ ] Not UNIX")
 endif()
-
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
@@ -110,6 +123,11 @@ if(WIN32)
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
 
+endif()
+
+if(BSD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -L /usr/local/lib ")
+    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
 #add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )

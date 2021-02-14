@@ -367,7 +367,7 @@ int main( int argc, const char **argv )
     }
 
 
-#ifndef _WIN32
+#if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
@@ -380,7 +380,6 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
         return -72;
     }
-#endif
 
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
         if(chain_net_geoip_init(g_config) != 0) {
@@ -388,6 +387,7 @@ int main( int argc, const char **argv )
             return -73;
         }
     }
+#endif
 
 	if ( dap_chain_node_cli_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init server for console" );
