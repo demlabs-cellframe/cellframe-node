@@ -67,7 +67,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 
-#ifndef _WIN32
+#ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
 #endif
 
