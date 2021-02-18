@@ -4,6 +4,7 @@
 
 #include "dap_common.h"
 #include "dap_events.h"
+#include "dap_chain_global_db.h"
 #include "sig_unix_handler.h"
 
 #define LOG_TAG "sig_unix_handler"
@@ -21,6 +22,7 @@ static void clear_pid_file() {
 static void sig_exit_handler(int sig_code) {
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
     clear_pid_file();
+    dap_chain_global_db_deinit();
     //dap_events_stop_all();
     exit(0);
 }
