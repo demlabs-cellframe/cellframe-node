@@ -197,7 +197,7 @@ if(UNIX AND NOT WIN32)
 
     set(NODE_CLI_LIBRARIES m dap_chain_net dap_cuttdb dap_app_cli)
 
-    set(NODE_TOOL_LIBRARIES m dap-sdk)
+    set(NODE_TOOL_LIBRARIES m cellframe-sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
