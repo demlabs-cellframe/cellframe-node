@@ -27,8 +27,13 @@ static void sig_exit_handler(int sig_code) {
     exit(0);
 }
 
-int sig_unix_handler_init(const char *pid_path) {
-    l_pid_path = strdup(pid_path);
+int sig_unix_handler_init(const char *a_pid_path) 
+{
+    char * l_pid_dir = dap_path_get_dirname(a_pid_path);
+    dap_mkdir_with_parents(l_pid_dir);
+    DAP_DELETE(l_pid_dir);
+    l_pid_path = strdup(a_pid_path);
+    
     struct sigaction new_action, old_action;
     new_action.sa_handler = sig_exit_handler;
     new_action.sa_flags = 0;
