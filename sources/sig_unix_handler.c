@@ -29,10 +29,10 @@ static void sig_exit_handler(int sig_code) {
 
 int sig_unix_handler_init(const char *a_pid_path) 
 {
-    char * l_pid_dir = dap_path_get_dirname(a_pid_path);
-    sleep(200); // Don't know why but without it it crashes O_o 
-    dap_mkdir_with_parents(l_pid_dir);
-    DAP_DELETE(l_pid_dir);
+    //char * l_pid_dir = dap_path_get_dirname(a_pid_path);
+    //sleep(1); // Don't know why but without it it crashes O_o 
+    //dap_mkdir_with_parents(l_pid_dir);
+    //DAP_DELETE(l_pid_dir);
 
     s_pid_path = strdup(a_pid_path);
     
