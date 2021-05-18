@@ -47,7 +47,7 @@ int sig_unix_handler_init(const char *a_pid_path)
 
 int sig_unix_handler_deinit() {
     if( s_pid_path )
-	DAP_DELETE(s_pid_path);
+    DAP_DELETE((void *)s_pid_path);
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
     signal(SIGHUP, SIG_DFL);
