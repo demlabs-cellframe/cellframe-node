@@ -1,27 +1,32 @@
+# You can override the included template(s) by including variable overrides
+# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
 stages:
-    - prepare
-    - build
-    - test
-
+- prepare
+- build
+- test
 variables:
-    GIT_SUBMODULE_STRATEGY: normal
-
+  GIT_SUBMODULE_STRATEGY: normal
 kelvin-node-schedule:
-    stage: build
-    tags:
-    - cellframe-node
-    only:
-    - master
-    - /^release.*$/
-    - /^pubtest.*$/
-    script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
-
+  stage: build
+  tags:
+  - cellframe-node
+  only:
+  - master
+  - "/^release.*$/"
+  - "/^pubtest.*$/"
+  script: "~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node"
 kelvin-node-test:
-    stage: build
-    tags:
-    - cellframe-node
-    except:
-    - master
-    - /^release.*$/
-    - /^pubtest.*$/
-    script: ~/production/integration/gitlab-CI/build_test_handler.sh cellframe-node 
+  stage: build
+  tags:
+  - cellframe-node
+  except:
+  - master
+  - "/^release.*$/"
+  - "/^pubtest.*$/"
+  script: "~/production/integration/gitlab-CI/build_test_handler.sh cellframe-node"
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml
