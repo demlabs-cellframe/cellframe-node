@@ -8,27 +8,33 @@ Cellframe Node
 
 ### Build from sources:
 
-#### Prerequsites:
+#### Linux Prerequsites 
 
 To successfully complete of the build, you need to have the following packages to be installed 
 (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
 * libjson-c-dev
 * libsqlite3-dev
-* libmemcached-dev
-* libev-dev
 * libmagic-dev
-* libcurl4-openssl-dev | libcurl4-nss-dev | libcurl4-gnutls-dev  ( depricated modules, soon will be removed)
-* libldb-dev
-* libtalloc-dev
-* libtevent-dev
 * libpython3-dev
 * traceroute
 
-### Please use the command below to install dependencies listed above
+Please use the command below to install dependencies listed above
 ```
 sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
 ```
+
+#### MacOS Prerequsites 
+
+Install latest XCode from App Store or directly from official Apple site.
+Install Homebrew from brew.sh, if you have Apple Sillicon chipset pls setup it to /opt/homebrew as recommendent on the Homebrew site.
+Then install cmake and sqlite
+```
+brew install cmake sqlite3
+```
+
+Generaly thats all what you need
+
 
 #### Get all cellframe-node sources
 
@@ -56,7 +62,10 @@ Get into directory with cellframe-node and execute the following commands
 *-j$(nproc)* nrpoc parameter depends on your machine capacity - number of processor cores.
 As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
 
-### Build cellframe-node package
+#### Build cellframe-node packages for MacOS
+Right now you can't, just type ```make install``` and it will install all the files in your system at /Users/<your username>/Applications/CellFrame.app
+
+#### Build cellframe-node package for Linux
 Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
 
 ##### Install from local package

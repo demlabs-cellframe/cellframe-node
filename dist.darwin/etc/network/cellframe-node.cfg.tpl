@@ -81,7 +81,6 @@ pricelist=[]
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node 
 enabled=false
-geoip_enabled=false
 debug_more=false
 # Grace period for service , 60 second by default
 #grace_period=60 
@@ -94,7 +93,7 @@ pricelist=[cellframe-testnet:100:KELT:3600:SEC:mywallet0]
 [conserver]
 enabled=true
 #listen_port_tcp=12345
-listen_unix_socket_path=/Applications/Cellframe.app/Contents/Resources/var/run/node_cli
+listen_unix_socket_path={PREFIX}/var/run/node_cli
 # Default permissions 770
 #listen_unix_socket_permissions=770
 
@@ -103,16 +102,15 @@ listen_unix_socket_path=/Applications/Cellframe.app/Contents/Resources/var/run/n
 #   0 means auto detect
 threads_cnt=0 
 # By default notify opens at /tmp/cellframe-node-notify
-#notify_path=/home/myuser/cellframe-node-notify
+#notify_path={PREFIX}/var/run/cellframe-node-notify
 #notify_permissions=770
 #notify_user=myuser
 #notify_group=mygroup
 
-pid_path=/Applications/Cellframe.app/Contents/Resources/var/run/cellframe-node.pid
-log_file=/Applications/Cellframe.app/Contents/Resources/var/log/cellframe-node.log
-wallets_path=/Applications/Cellframe.app/Contents/Resources/var/lib/wallet
-geoip_db_path=share/geoip/GeoLite2-City.mmdb
-ca_folders=[/Applications/Cellframe.app/Contents/Resources/var/lib/ca,/opt/cellframe-node/share/ca]
-dap_global_db_path=/Applications/Cellframe.app/Contents/Resources/var/lib/global_db
+pid_path={PREFIX}/var/run/cellframe-node.pid
+log_file={PREFIX}/var/log/cellframe-node.log
+wallets_path={PREFIX}/var/lib/wallet
+ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
+dap_global_db_path={PREFIX}/var/lib/global_db
 dap_global_db_driver=sqlite3
 
