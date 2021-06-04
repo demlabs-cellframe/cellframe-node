@@ -493,7 +493,7 @@ int main( int argc, const char **argv )
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         log_it(L_NOTICE, "Loading python plugins");
-	dap_plugins_python_app_content_init(l_server);
+        dap_plugins_python_app_content_init(l_server);
         dap_chain_plugins_init(g_config);
     #endif
 

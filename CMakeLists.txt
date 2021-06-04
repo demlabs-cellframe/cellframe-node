@@ -19,7 +19,7 @@ if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
 endif()
 
-if(LINUX)
+if((LINUX))
 set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 

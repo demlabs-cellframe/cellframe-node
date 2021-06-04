@@ -81,7 +81,6 @@ pricelist=[]
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node 
 enabled=false
-geoip_enabled=false
 debug_more=false
 # Grace period for service , 60 second by default
 #grace_period=60 
@@ -111,8 +110,13 @@ threads_cnt=0
 pid_path=/opt/cellframe-node/var/run/cellframe-node.pid
 log_file=/opt/cellframe-node/var/log/cellframe-node.log
 wallets_path=/opt/cellframe-node/var/lib/wallet
-geoip_db_path=share/geoip/GeoLite2-City.mmdb
 ca_folders=[/opt/cellframe-node/var/lib/ca,/opt/cellframe-node/share/ca]
 dap_global_db_path=/opt/cellframe-node/var/lib/global_db
 dap_global_db_driver=sqlite3
 
+# Plugins
+#[plugins]
+# Load Python-based plugins
+#py_load=false   
+# Path to Pyhon-based plugins
+#py_path=/opt/cellframe-node/var/lib/plugins
