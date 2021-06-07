@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_server_http_python_module.a  CMakeFiles/dap_server_http_python_module.dir/src/wrapping_dap_http_simple.c.o CMakeFiles/dap_server_http_python_module.dir/src/wrapping_http.c.o
+/usr/bin/ranlib libdap_server_http_python_module.a

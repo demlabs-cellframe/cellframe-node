@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/dap_chain_net.dir/dap_chain_net.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_net_remote.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_cli.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_cli_cmd.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_cli_cmd_tx.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_client.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_dns_client.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_dns_server.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_ping.c.o"
+  "CMakeFiles/dap_chain_net.dir/dap_chain_node_remote.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/iputils.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/ping.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/ping6_common.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/ping_common.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/tracepath.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/as_lookups.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/clif.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/csum.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/extension.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-dccp.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-icmp.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-raw.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-tcp.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-tcpconn.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/mod-udp.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/module.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/poll.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/random.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/time.c.o"
+  "CMakeFiles/dap_chain_net.dir/__/__/3rdparty/iputils/traceroute/traceroute.c.o"
+  "libdap_chain_net.pdb"
+  "libdap_chain_net.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/dap_chain_net.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

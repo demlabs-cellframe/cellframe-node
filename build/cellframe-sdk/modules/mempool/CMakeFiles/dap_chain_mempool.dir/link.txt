@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_mempool.a  CMakeFiles/dap_chain_mempool.dir/dap_chain_mempool.c.o
+/usr/bin/ranlib libdap_chain_mempool.a

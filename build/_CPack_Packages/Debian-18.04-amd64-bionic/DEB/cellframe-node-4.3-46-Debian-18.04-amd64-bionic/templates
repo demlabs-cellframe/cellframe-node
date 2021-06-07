@@ -1,0 +1,73 @@
+Template: cellframe-node/auto_online
+Default: false
+Choices: true, false
+Type: select
+Description: Auto online
+ Bring up links automaticly and go to the ONLINE network state
+
+Template: cellframe-node/debug_mode
+Default: false
+Choices: true, false
+Type: select
+Description: Debug mode
+ Debug mode for logs
+
+Template: cellframe-node/server_enabled
+Default: false
+Choices: true, false
+Type: select
+Description: Accept connections
+ Accept connections 
+
+Template: cellframe-node/server_port
+Default: 8079
+Type: string
+Description: Server port
+ Server port to listen on, recomended 8079 
+
+Template: cellframe-node/server_addr
+Default: 0.0.0.0
+Type: string
+Description: Server address
+ Server address to listen on
+
+
+Template: cellframe-node/core_t_enabled
+Default: false
+Choices: true, false
+Type: select
+Description: Core-T (Testnet): Enable network
+ Core Testnet: Enable network auto load on start
+
+Template: cellframe-node/core_t_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Core Testnet: Node role
+ Select node role:. 
+ Light - syncronize only local wallets 
+ full - sync all its cell
+ master - allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usualy produces zerochain and act like archive as well 
+
+
+Template: cellframe-node/kelvin_testnet_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Kelvin Testnet: Enable network
+ Kelvin Testnet: Enable network auto load on start
+
+Template: cellframe-node/kelvin_testnet_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Kelvin Testnet: Node role
+ Select node role:. 
+ Light - syncronize only local wallets 
+ full - sync all its cell
+ master - allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usualy produces zerochain and act like archive as well 
+

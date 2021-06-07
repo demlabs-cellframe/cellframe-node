@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_net_srv_stake.a  CMakeFiles/dap_chain_net_srv_stake.dir/dap_chain_net_srv_stake.c.o
+/usr/bin/ranlib libdap_chain_net_srv_stake.a

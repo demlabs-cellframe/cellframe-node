@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_wallet.a  CMakeFiles/dap_chain_wallet.dir/dap_chain_coin.c.o CMakeFiles/dap_chain_wallet.dir/dap_chain_wallet.c.o CMakeFiles/dap_chain_wallet.dir/dap_chain_wallet_ops.c.o
+/usr/bin/ranlib libdap_chain_wallet.a

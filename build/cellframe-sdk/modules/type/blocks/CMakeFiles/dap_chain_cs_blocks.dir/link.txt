@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_cs_blocks.a  CMakeFiles/dap_chain_cs_blocks.dir/dap_chain_block.c.o CMakeFiles/dap_chain_cs_blocks.dir/dap_chain_block_cache.c.o CMakeFiles/dap_chain_cs_blocks.dir/dap_chain_block_chunk.c.o CMakeFiles/dap_chain_cs_blocks.dir/dap_chain_cs_blocks.c.o
+/usr/bin/ranlib libdap_chain_cs_blocks.a

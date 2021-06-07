@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_app_cli_python_module.a  CMakeFiles/dap_app_cli_python_module.dir/src/libdap-app-cli-python.c.o
+/usr/bin/ranlib libdap_app_cli_python_module.a

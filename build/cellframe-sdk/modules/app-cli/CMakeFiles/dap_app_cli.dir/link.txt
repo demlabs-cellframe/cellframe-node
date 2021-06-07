@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_app_cli.a  CMakeFiles/dap_app_cli.dir/dap_app_cli.c.o CMakeFiles/dap_app_cli.dir/dap_app_cli_net.c.o CMakeFiles/dap_app_cli.dir/dap_app_cli_shell.c.o
+/usr/bin/ranlib libdap_app_cli.a

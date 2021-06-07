@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_modules_dynamic_cdb.a  CMakeFiles/dap_modules_dynamic_cdb.dir/dap_modules_dynamic_cdb.c.o
+/usr/bin/ranlib libdap_modules_dynamic_cdb.a

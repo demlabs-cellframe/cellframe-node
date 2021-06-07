@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_net_python_module.a  CMakeFiles/dap_chain_net_python_module.dir/src/libdap_chain_net_python.c.o CMakeFiles/dap_chain_net_python_module.dir/src/wrapping_dap_app_cli_server.c.o CMakeFiles/dap_chain_net_python_module.dir/src/wrapping_dap_chain_net_node.c.o CMakeFiles/dap_chain_net_python_module.dir/src/wrapping_dap_chain_net_node_client.c.o CMakeFiles/dap_chain_net_python_module.dir/src/wrapping_dap_chain_net_node_info.c.o CMakeFiles/dap_chain_net_python_module.dir/src/wrapping_dap_chain_net_state.c.o
+/usr/bin/ranlib libdap_chain_net_python_module.a

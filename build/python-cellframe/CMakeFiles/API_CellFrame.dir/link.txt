@@ -1,0 +1,2 @@
+/usr/bin/ar qc libAPI_CellFrame.a  CMakeFiles/API_CellFrame.dir/CellFrame/generator_config_file.c.o CMakeFiles/API_CellFrame.dir/CellFrame/python-cellframe.c.o CMakeFiles/API_CellFrame.dir/CellFrame/wrapping_dap_http_folder.c.o CMakeFiles/API_CellFrame.dir/CellFrame/wrapping_dap_mempool.c.o CMakeFiles/API_CellFrame.dir/CellFrame/wrapping_dap_stream.c.o CMakeFiles/API_CellFrame.dir/CellFrame/wrapping_dap_stream_ctl.c.o
+/usr/bin/ranlib libAPI_CellFrame.a

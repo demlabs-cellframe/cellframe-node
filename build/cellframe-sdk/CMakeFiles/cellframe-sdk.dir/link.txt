@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcellframe-sdk.a  CMakeFiles/cellframe-sdk.dir/cellframe-sdk.c.o
+/usr/bin/ranlib libcellframe-sdk.a

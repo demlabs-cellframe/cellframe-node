@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_cuttdb.a  CMakeFiles/dap_cuttdb.dir/src/cdb_bgtask.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_bloomfilter.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_core.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_crc64.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_errno.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_hashtable.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_lock.c.o CMakeFiles/dap_cuttdb.dir/src/cdb_vio.c.o CMakeFiles/dap_cuttdb.dir/src/cuttdb.c.o CMakeFiles/dap_cuttdb.dir/src/vio_apnd2.c.o
+/usr/bin/ranlib libdap_cuttdb.a

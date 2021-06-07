@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_stream.a  CMakeFiles/dap_stream.dir/dap_stream.c.o CMakeFiles/dap_stream.dir/dap_stream_ctl.c.o CMakeFiles/dap_stream.dir/dap_stream_pkt.c.o CMakeFiles/dap_stream.dir/dap_stream_worker.c.o
+/usr/bin/ranlib libdap_stream.a

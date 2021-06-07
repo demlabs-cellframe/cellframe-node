@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_client_python_module.a  CMakeFiles/dap_client_python_module.dir/src/libdap_client_python.c.o CMakeFiles/dap_client_python_module.dir/src/wrapping_dap_client_stage.c.o CMakeFiles/dap_client_python_module.dir/src/wrapping_dap_client_stage_status.c.o
+/usr/bin/ranlib libdap_client_python_module.a

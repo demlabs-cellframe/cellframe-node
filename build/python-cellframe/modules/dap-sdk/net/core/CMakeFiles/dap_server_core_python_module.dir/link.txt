@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_server_core_python_module.a  CMakeFiles/dap_server_core_python_module.dir/src/dap_events_python.c.o CMakeFiles/dap_server_core_python_module.dir/src/dap_events_socket_python.c.o CMakeFiles/dap_server_core_python_module.dir/src/libdap-server-core-python.c.o
+/usr/bin/ranlib libdap_server_core_python_module.a

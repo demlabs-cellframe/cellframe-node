@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_wallet_python_module.a  CMakeFiles/dap_chain_wallet_python_module.dir/src/dap_chain_wallet_python.c.o
+/usr/bin/ranlib libdap_chain_wallet_python_module.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_client.a  CMakeFiles/dap_client.dir/dap_client.c.o CMakeFiles/dap_client.dir/dap_client_http.c.o CMakeFiles/dap_client.dir/dap_client_pool.c.o CMakeFiles/dap_client.dir/dap_client_pvt.c.o CMakeFiles/dap_client.dir/dap_client_pvt_hh.c.o
+/usr/bin/ranlib libdap_client.a

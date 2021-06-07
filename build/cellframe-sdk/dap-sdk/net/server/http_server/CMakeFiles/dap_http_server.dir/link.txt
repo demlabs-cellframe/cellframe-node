@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_http_server.a  CMakeFiles/dap_http_server.dir/dap_http.c.o CMakeFiles/dap_http_server.dir/dap_http_cache.c.o CMakeFiles/dap_http_server.dir/dap_http_folder.c.o CMakeFiles/dap_http_server.dir/dap_http_simple.c.o CMakeFiles/dap_http_server.dir/http_client/dap_http_client.c.o CMakeFiles/dap_http_server.dir/http_client/dap_http_header.c.o CMakeFiles/dap_http_server.dir/http_client/dap_http_user_agent.c.o
+/usr/bin/ranlib libdap_http_server.a

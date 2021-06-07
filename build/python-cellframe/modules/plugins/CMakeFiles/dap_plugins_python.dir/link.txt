@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_plugins_python.a  CMakeFiles/dap_plugins_python.dir/src/dap_chain_plugins.c.o CMakeFiles/dap_plugins_python.dir/src/dap_chain_plugins_command.c.o CMakeFiles/dap_plugins_python.dir/src/dap_chain_plugins_list.c.o CMakeFiles/dap_plugins_python.dir/src/dap_chain_plugins_manifest.c.o CMakeFiles/dap_plugins_python.dir/src/dap_plugins_python_app_context.c.o
+/usr/bin/ranlib libdap_plugins_python.a

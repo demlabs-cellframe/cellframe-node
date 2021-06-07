@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_cs_dag.a  CMakeFiles/dap_chain_cs_dag.dir/dap_chain_cs_dag.c.o CMakeFiles/dap_chain_cs_dag.dir/dap_chain_cs_dag_event.c.o
+/usr/bin/ranlib libdap_chain_cs_dag.a

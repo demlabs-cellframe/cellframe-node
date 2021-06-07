@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_btc_rpc.a  CMakeFiles/dap_chain_btc_rpc.dir/dap_chain_btc_rpc.c.o CMakeFiles/dap_chain_btc_rpc.dir/dap_chain_btc_rpc_handlers.c.o
+/usr/bin/ranlib libdap_chain_btc_rpc.a

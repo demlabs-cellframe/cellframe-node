@@ -1,0 +1,10 @@
+Package: cellframe-node
+Version: 4.3-46
+Section: extra
+Priority: optional
+Architecture: amd64
+Depends: debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc, logrotate, irqbalance, libc6 (>= 2.14), libjson-c3 (>= 0.10), libmagic1 (>= 5.12), libpython3.6 (>= 3.6.5), libsqlite3-0 (>= 3.7.15)
+Installed-Size: 14152
+Maintainer: Dmitriy Gerasimov <naeper@demlabs.net>
+Description: CellFrame Node
+

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_enc_server_python_module.a  CMakeFiles/dap_enc_server_python_module.dir/src/wrapping_dap_enc_http.c.o
+/usr/bin/ranlib libdap_enc_server_python_module.a

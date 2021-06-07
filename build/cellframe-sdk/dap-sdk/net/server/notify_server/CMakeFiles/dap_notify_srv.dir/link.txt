@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_notify_srv.a  CMakeFiles/dap_notify_srv.dir/src/dap_notify_srv.c.o
+/usr/bin/ranlib libdap_notify_srv.a

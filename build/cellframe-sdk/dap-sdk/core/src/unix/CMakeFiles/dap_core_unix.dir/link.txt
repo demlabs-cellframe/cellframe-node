@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_core_unix.a  CMakeFiles/dap_core_unix.dir/dap_cpu_monitor.c.o CMakeFiles/dap_core_unix.dir/dap_process_manager.c.o CMakeFiles/dap_core_unix.dir/dap_process_memory.c.o CMakeFiles/dap_core_unix.dir/linux/dap_network_monitor.c.o
+/usr/bin/ranlib libdap_core_unix.a

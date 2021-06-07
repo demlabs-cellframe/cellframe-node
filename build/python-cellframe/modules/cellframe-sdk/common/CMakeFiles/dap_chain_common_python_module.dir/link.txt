@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_common_python_module.a  CMakeFiles/dap_chain_common_python_module.dir/src/wrapping_dap_chain_common.c.o CMakeFiles/dap_chain_common_python_module.dir/src/wrapping_dap_chain_datum.c.o CMakeFiles/dap_chain_common_python_module.dir/src/wrapping_dap_chain_datum_tx.c.o
+/usr/bin/ranlib libdap_chain_common_python_module.a

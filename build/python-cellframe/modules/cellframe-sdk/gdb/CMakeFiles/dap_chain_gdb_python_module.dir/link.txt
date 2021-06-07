@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_gdb_python_module.a  CMakeFiles/dap_chain_gdb_python_module.dir/src/wrapping_dap_chain_gdb.c.o
+/usr/bin/ranlib libdap_chain_gdb_python_module.a

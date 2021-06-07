@@ -1,0 +1,41 @@
+#!/bin/bash -e
+. /usr/share/debconf/confmodule
+
+case "$1" in
+reconfigure|configure)
+
+   db_input critical cellframe-node/auto_online || true 
+   db_go || true 
+
+   db_input critical cellframe-node/debug_mode || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_enabled || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_addr || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_port || true 
+   db_go || true 
+
+   db_input critical cellframe-node/core_t_enabled || true 
+   db_go || true 
+
+   db_input critical cellframe-node/core_t_node_type || true 
+   db_go || true 
+
+   db_input critical cellframe-node/kelvin_testnet_enabled || true 
+   db_go || true 
+
+   db_input critical cellframe-node/kelvin_testnet_node_type || true 
+   db_go || true 
+
+;;
+*)
+   echo "config called with unknown argument \`$1'" >&2
+   exit 1
+;;
+esac
+
+

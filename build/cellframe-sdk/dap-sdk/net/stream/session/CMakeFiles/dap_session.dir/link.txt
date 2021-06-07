@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_session.a  CMakeFiles/dap_session.dir/dap_stream_session.c.o
+/usr/bin/ranlib libdap_session.a

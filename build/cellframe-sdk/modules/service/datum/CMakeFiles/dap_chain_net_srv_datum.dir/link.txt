@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_net_srv_datum.a  CMakeFiles/dap_chain_net_srv_datum.dir/dap_chain_net_srv_datum.c.o
+/usr/bin/ranlib libdap_chain_net_srv_datum.a

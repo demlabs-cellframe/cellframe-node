@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_net_srv_vpn.a  CMakeFiles/dap_chain_net_srv_vpn.dir/dap_chain_net_srv_vpn.c.o CMakeFiles/dap_chain_net_srv_vpn.dir/dap_chain_net_srv_vpn_cmd.c.o CMakeFiles/dap_chain_net_srv_vpn.dir/dap_chain_net_vpn_client.c.o CMakeFiles/dap_chain_net_srv_vpn.dir/dap_chain_net_vpn_client_tun.c.o
+/usr/bin/ranlib libdap_chain_net_srv_vpn.a

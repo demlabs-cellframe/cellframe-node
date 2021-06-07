@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_global_db.a  CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db.c.o CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db_driver.c.o CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db_driver_cdb.c.o CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db_driver_sqlite.c.o CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db_hist.c.o CMakeFiles/dap_chain_global_db.dir/dap_chain_global_db_remote.c.o
+/usr/bin/ranlib libdap_chain_global_db.a

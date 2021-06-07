@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_net_srv_xchange.a  CMakeFiles/dap_chain_net_srv_xchange.dir/dap_chain_net_srv_xchange.c.o
+/usr/bin/ranlib libdap_chain_net_srv_xchange.a

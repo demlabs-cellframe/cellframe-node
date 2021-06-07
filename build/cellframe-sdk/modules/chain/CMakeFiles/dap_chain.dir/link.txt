@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain.a  CMakeFiles/dap_chain.dir/dap_chain.c.o CMakeFiles/dap_chain.dir/dap_chain_cell.c.o CMakeFiles/dap_chain.dir/dap_chain_cs.c.o CMakeFiles/dap_chain.dir/dap_chain_ledger.c.o CMakeFiles/dap_chain.dir/dap_chain_pvt.c.o CMakeFiles/dap_chain.dir/dap_chain_vf.c.o
+/usr/bin/ranlib libdap_chain.a

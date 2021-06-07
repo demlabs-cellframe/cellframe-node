@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_python_module.a  CMakeFiles/dap_python_module.dir/src/libdap-python.c.o
+/usr/bin/ranlib libdap_python_module.a

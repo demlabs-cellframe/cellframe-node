@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_cs_none.a  CMakeFiles/dap_chain_cs_none.dir/dap_chain_cs_none.c.o
+/usr/bin/ranlib libdap_chain_cs_none.a

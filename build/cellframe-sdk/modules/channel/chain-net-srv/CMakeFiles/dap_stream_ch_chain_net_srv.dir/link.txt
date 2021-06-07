@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_stream_ch_chain_net_srv.a  CMakeFiles/dap_stream_ch_chain_net_srv.dir/dap_stream_ch_chain_net_srv.c.o CMakeFiles/dap_stream_ch_chain_net_srv.dir/dap_stream_ch_chain_net_srv_pkt.c.o
+/usr/bin/ranlib libdap_stream_ch_chain_net_srv.a

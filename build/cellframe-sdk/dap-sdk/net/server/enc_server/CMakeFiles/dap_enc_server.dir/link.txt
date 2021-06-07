@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_enc_server.a  CMakeFiles/dap_enc_server.dir/dap_enc_http.c.o CMakeFiles/dap_enc_server.dir/dap_enc_ks.c.o
+/usr/bin/ranlib libdap_enc_server.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_chain_crypto.a  CMakeFiles/dap_chain_crypto.dir/dap_hash_slow.c.o
+/usr/bin/ranlib libdap_chain_crypto.a

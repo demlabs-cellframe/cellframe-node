@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_server_core.a  CMakeFiles/dap_server_core.dir/dap_events.c.o CMakeFiles/dap_server_core.dir/dap_events_socket.c.o CMakeFiles/dap_server_core.dir/dap_net.c.o CMakeFiles/dap_server_core.dir/dap_proc_queue.c.o CMakeFiles/dap_server_core.dir/dap_proc_thread.c.o CMakeFiles/dap_server_core.dir/dap_server.c.o CMakeFiles/dap_server_core.dir/dap_timerfd.c.o CMakeFiles/dap_server_core.dir/dap_worker.c.o
+/usr/bin/ranlib libdap_server_core.a

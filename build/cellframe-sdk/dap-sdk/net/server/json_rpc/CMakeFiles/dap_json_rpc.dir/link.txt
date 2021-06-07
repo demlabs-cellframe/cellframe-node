@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdap_json_rpc.a  CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_errors.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_notification.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_params.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_request.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_request_handler.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_response.c.o CMakeFiles/dap_json_rpc.dir/src/dap_json_rpc_response_handler.c.o
+/usr/bin/ranlib libdap_json_rpc.a
