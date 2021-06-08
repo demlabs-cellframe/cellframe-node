@@ -46,6 +46,9 @@ static void sig_exit_handler(int sig_code) {
     dap_config_close( g_config );
     dap_common_deinit();
 
+    log_it(L_NOTICE,"Stopped Cellframe Node");
+    fflush(stdout);
+
     exit(0);
 }
 
