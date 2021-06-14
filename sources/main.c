@@ -496,9 +496,9 @@ int main( int argc, const char **argv )
 
 //failure:
 
-    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        dap_chain_plugins_deinit();
-    #endif
+//    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+//        dap_chain_plugins_deinit();
+//    #endif
     dap_dns_server_stop();
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();

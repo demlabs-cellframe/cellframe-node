@@ -25,9 +25,9 @@ static void sig_exit_handler(int sig_code) {
 
     clear_pid_file();
 
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-    dap_chain_plugins_deinit();
-#endif
+//#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+//    dap_chain_plugins_deinit();
+//#endif
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
@@ -46,8 +46,8 @@ static void sig_exit_handler(int sig_code) {
     dap_config_close( g_config );
     dap_common_deinit();
 
-    log_it(L_NOTICE,"Stopped Cellframe Node");
-    fflush(stdout);
+    //log_it(L_NOTICE,"Stopped Cellframe Node");
+    //fflush(stdout);
 
     exit(0);
 }
