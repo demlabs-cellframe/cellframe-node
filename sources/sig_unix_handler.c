@@ -5,6 +5,17 @@
 #include "dap_common.h"
 #include "dap_events.h"
 #include "dap_chain_global_db.h"
+#include "dap_chain_plugins.h"
+#include "dap_chain_node.h"
+#include "dap_chain_net_srv_xchange.h"
+#include "dap_chain_net_srv_stake.h"
+#include "dap_chain.h"
+#include "dap_stream.h"
+#include "dap_stream_ctl.h"
+#include "dap_enc_ks.h"
+#include "dap_enc_http.h"
+#include "dap_http.h"
+#include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
 
 #define LOG_TAG "sig_unix_handler"
@@ -75,7 +86,7 @@ int sig_unix_handler_deinit() {
     //log_it(L_DEBUG, "Deinit");
 
     if( s_pid_path )
-	DAP_DELETE(s_pid_path);
+    DAP_DELETE((void *)s_pid_path);
 
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
