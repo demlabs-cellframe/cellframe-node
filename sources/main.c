@@ -1,9 +1,9 @@
 /*
  * Authors:
  * Dmitriy A. Gerasimov <kahovski@gmail.com>
- * DeM Labs Inc.   https://demlabs.net
- * DeM Labs Open source community https://github.com/demlabsinc
- * Copyright  (c) 2017-2019
+ * DeM Labs Ltd.   https://demlabs.net
+ * CellFrame         https://cellframe.net
+ * Copyright  (c) 2017-2020
  * All rights reserved.
 
  This file is part of DAP (Deus Applications Prototypes) the open source project
@@ -56,9 +56,11 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_server.h"
+#include "dap_notify_srv.h"
 #include "dap_http.h"
 #include "dap_http_folder.h"
-#include "dap_dns_server.h"
+#include "dap_chain_node_dns_client.h"
+#include "dap_chain_node_dns_server.h"
 #include "dap_modules_dynamic_cdb.h"
 
 
@@ -75,8 +77,8 @@
 #include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
 
-#include "dap_chain_bridge.h"
-#include "dap_chain_bridge_btc.h"
+//#include "dap_chain_bridge.h"
+//#include "dap_chain_bridge_btc.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -119,6 +121,7 @@
 
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     #include "dap_chain_plugins.h"
+    #include "dap_plugins_python_app_context.h"
 #endif
 
 
@@ -159,7 +162,14 @@ int main( int argc, const char **argv )
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
+    char * l_username = NULL;
+    exec_with_ret(&l_username,"whoami|tr -d '\n'");
+    if (!l_username){
+        printf("Fatal Error: Can't obtain username");
+    return 2;
+    }
+    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
+    DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
@@ -174,6 +184,8 @@ int main( int argc, const char **argv )
             printf("Fatal Error: Can't init common functions module");
             return -2;
         }
+        DAP_DELETE(l_log_dir);
+        DAP_DELETE(l_log_file);
     }
 
     {
@@ -235,8 +247,6 @@ int main( int argc, const char **argv )
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
-    log_it ( L_DEBUG,"config server->enabled = \"%u\" ", bServerEnabled );
-
     if ( bServerEnabled && dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
         return -4;
@@ -273,6 +283,14 @@ int main( int argc, const char **argv )
     }
 
     dap_client_init();
+
+    // Create and init notify server
+    size_t l_notify_path_default_size = dap_snprintf(NULL,0,"/tmp/%s-notify",dap_get_appname() )+1;
+    char * l_notify_path_default = DAP_NEW_SIZE(char,l_notify_path_default_size);
+    dap_snprintf(l_notify_path_default,l_notify_path_default_size,"/tmp/%s-notify",dap_get_appname() );
+    if ( dap_notify_server_init( dap_config_get_item_str_default(g_config,"resourses","notify_path",l_notify_path_default)) != 0 ){
+        log_it( L_ERROR, "Can't init notify server module" );
+    }
 
 
 	if ( dap_chain_global_db_init(g_config) ) {
@@ -318,21 +336,15 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
-
+    dap_chain_ledger_verificator_rwlock_init();
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
-
-    if (dap_chain_bridge_btc_init() != 0){
-        log_it(L_CRITICAL, "Can't init dap chain bridge btc module");
-        return -76;
-    }
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
-
     if( dap_chain_net_srv_init(g_config) !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
@@ -348,7 +360,8 @@ int main( int argc, const char **argv )
         return -68;
     }
 
-#ifndef _WIN32
+
+#if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
@@ -361,7 +374,6 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't init dap chain network service vpn client");
         return -72;
     }
-#endif
 
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
         if(chain_net_geoip_init(g_config) != 0) {
@@ -369,6 +381,7 @@ int main( int argc, const char **argv )
             return -73;
         }
     }
+#endif
 
 	if ( dap_chain_node_cli_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init server for console" );
@@ -401,7 +414,7 @@ int main( int argc, const char **argv )
 
         if( l_port > 0 ) {
             l_server = dap_server_new(l_events,  (dap_config_get_item_str(g_config, "server", "listen_address")),
-                                      (uint16_t) l_port, DAP_SERVER_TCP, NULL );
+                                      (uint16_t) l_port, SERVER_TCP, NULL );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
 
@@ -429,7 +442,7 @@ int main( int argc, const char **argv )
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
 
-	        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+            const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
 	                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
 	        }
@@ -457,21 +470,7 @@ int main( int argc, const char **argv )
         }
     }
 
-    // Chain Network init
 
-	dap_stream_ch_chain_init( );
-	dap_stream_ch_chain_net_init( );
-
-    dap_stream_ch_chain_net_srv_init();
-
-    if (!dap_chain_net_srv_xchange_init()) {
-        log_it(L_ERROR, "Can't provide exchange capability");
-    }
-    if (!dap_chain_net_srv_stake_init()) {
-        log_it(L_ERROR, "Can't start delegated stake service");
-    }
-///    if (dap_config_get_item_bool_default(g_config,"vpn","enabled",false))
-///        dap_stream_ch_vpn_deinit();
 
 
     //dap_chain_net_load_all();
@@ -481,6 +480,7 @@ int main( int argc, const char **argv )
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         log_it(L_NOTICE, "Loading python plugins");
+        dap_plugins_python_app_content_init(l_server);
         dap_chain_plugins_init(g_config);
     #endif
 

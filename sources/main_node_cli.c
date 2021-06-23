@@ -194,8 +194,9 @@ int main(int argc, const char *argv[])
 #endif
 {
     dap_set_appname("cellframe-node");
-
 #ifdef _WIN32
+    SetConsoleCP(1252);
+    SetConsoleOutputCP(1252);
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
     g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
