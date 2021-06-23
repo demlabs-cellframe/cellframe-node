@@ -14,10 +14,9 @@ cellframe-node-schedule:
     - master
     - /^release.*$/
     - /^pubtest.*$/
-    - /^hotfix.*$/
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
 
-cellframe-node-test:
+kelvin-node-test:
     stage: build
     tags:
     - cellframe-node
@@ -25,5 +24,4 @@ cellframe-node-test:
     - master
     - /^release.*$/
     - /^pubtest.*$/
-    - /^hotfix.*$/
     script: ~/production/integration/gitlab-CI/build_test_handler.sh cellframe-node 
