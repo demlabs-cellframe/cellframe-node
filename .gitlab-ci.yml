@@ -6,7 +6,7 @@ stages:
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-cellframe-node-schedule:
+kelvin-node-schedule:
     stage: build
     tags:
     - cellframe-node
