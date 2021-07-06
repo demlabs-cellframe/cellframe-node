@@ -10,10 +10,6 @@ kelvin-node-schedule:
     stage: build
     tags:
     - cellframe-node
-    only:
-    - master
-    - /^release.*$/
-    - /^pubtest.*$/
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
 
 kelvin-node-test:
