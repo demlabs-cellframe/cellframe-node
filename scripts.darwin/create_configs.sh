@@ -17,4 +17,5 @@ export DAP_SERVER_PORT=8089
 export DAP_CORE_T_ENABLED=true
 export DAP_CORE_T_ROLE=full
 
+echo "Init configs with prefix " $DAP_PREFIX
 ../scripts/create_configs_from_tpl.sh
