@@ -59,7 +59,7 @@ static char** split_word(char *line, int *argc)
             *argc = 0;
         return NULL ;
     }
-    char **argv = calloc(sizeof(char*), strlen(line));
+    char **argv = DAP_NEW_Z_SIZE(char*, sizeof(char*) * strlen(line));
     int n = 0;
     char *s, *start = line;
     size_t len = strlen(line);
@@ -131,9 +131,11 @@ int execute_line(char *line)
             cmd.cmd_param = (char**) (argv + 1);
         // Send command
         int res = dap_app_cli_post_command(cparam, &cmd);
+        DAP_DELETE(argv);
         return res;
     }
     fprintf(stderr, "No command\n");
+    DAP_DELETE(argv);
     return -1; //((*(command->func))(argc, (const char **) argv, NULL));
 }
 
