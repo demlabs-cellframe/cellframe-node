@@ -31,6 +31,11 @@ listen_port_tcp={SERVER_PORT}
 # If not set - used listen_port_tcp for node table auto fill
 #ext_port_tcp=8089
 
+[stream]
+# For now its IAES but thats depricated
+#preferred_encryption=SALSA2012 
+# Debug stream protocol
+#debug=true
 
 # Build in DNS client (need for bootstraping)
 [dns_client]
