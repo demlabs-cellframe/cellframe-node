@@ -481,11 +481,6 @@ int main( int argc, const char **argv )
         }
     }
 
-
-    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "161.35.145.253", NULL, 80, -1, -1, -1);
-    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "135.181.37.253", NULL, 80, -1, -1, -1);
-    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "164.90.189.80", NULL, 80, -1, -1, -1);
-
     //dap_chain_net_load_all();
 
     //Init python plugins
