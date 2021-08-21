@@ -86,8 +86,6 @@
 
 #ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
-#include "dap_chain_net_srv_vpn_cdb.h"
-#include "dap_chain_net_srv_vpn_cdb_server_list.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
 
@@ -484,11 +482,11 @@ int main( int argc, const char **argv )
     }
 
 
-
+    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "161.35.145.253", NULL, 80, -1, -1, -1);
+    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "135.181.37.253", NULL, 80, -1, -1, -1);
+    //dap_chain_net_vpn_client_check(dap_chain_net_by_name("kelvin-testnet"), "164.90.189.80", NULL, 80, -1, -1, -1);
 
     //dap_chain_net_load_all();
-
-
 
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -517,6 +515,7 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
     dap_chain_net_deinit();
+    dap_modules_dynamic_close_cdb();
     dap_chain_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );
