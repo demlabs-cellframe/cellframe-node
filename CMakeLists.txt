@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
 SET( CPACK_PACKAGE_VERSION_MINOR 4)
-SET( CPACK_PACKAGE_VERSION_PATCH 30)
+SET( CPACK_PACKAGE_VERSION_PATCH 31)
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
@@ -25,11 +25,11 @@ endif()
 
 
 if (WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 elseif(BSD)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 elseif(DARWIN)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic")
+    set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 elseif(ANDROID)
     set(CELLFRAME_MODULES "core chains mining network srv cs-blocks cs-dag-poa cs-block-poa cs-dag-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 elseif(LINUX)

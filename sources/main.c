@@ -61,8 +61,10 @@
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
-#include "dap_modules_dynamic_cdb.h"
 
+#ifdef DAP_MODULES_DYNAMIC
+#include "dap_modules_dynamic_cdb.h"
+#endif
 
 #include "dap_events.h"
 #include "dap_enc.h"
@@ -437,6 +439,7 @@ int main( int argc, const char **argv )
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
+#ifdef DAP_MODULES_DYNAMIC
             if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
                 if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
                     log_it(L_CRITICAL,"Can't init CDB module");
@@ -445,6 +448,7 @@ int main( int argc, const char **argv )
                     log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
                 }
             }
+#endif
 
 	        // Handshake URL
 	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
@@ -510,7 +514,10 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
     dap_chain_net_deinit();
+
+#ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
+#endif
     dap_chain_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );

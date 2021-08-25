@@ -17,7 +17,9 @@
 #include "dap_http.h"
 #include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
+#ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
+#endif
 
 #define LOG_TAG "sig_unix_handler"
 
@@ -50,7 +52,9 @@ static void sig_exit_handler(int sig_code) {
     dap_enc_ks_deinit();
     enc_http_deinit();
     dap_http_deinit();
+#ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
+#endif
     dap_dns_server_stop();
     dap_server_deinit();
     dap_events_stop_all();
