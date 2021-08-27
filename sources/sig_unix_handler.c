@@ -21,6 +21,8 @@
 
 #define LOG_TAG "sig_unix_handler"
 
+void dap_chain_plugins_deinit();
+
 static const char *s_pid_path = NULL;
 
 static void clear_pid_file() {
@@ -56,6 +58,7 @@ static void sig_exit_handler(int sig_code) {
     dap_events_stop_all();
     dap_events_deinit();
     dap_config_close( g_config );
+    dap_interval_timer_deinit();
     dap_common_deinit();
 
     log_it(L_NOTICE,"Stopped Cellframe Node");
