@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "dap_common.h"
 #include "dap_events.h"
@@ -37,7 +38,7 @@ static void clear_pid_file() {
 
 static void sig_exit_handler(int sig_code) {
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
-	
+
     clear_pid_file();
 	
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -57,11 +58,6 @@ static void sig_exit_handler(int sig_code) {
 #ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
 #endif
-    dap_dns_server_stop();
-    dap_server_deinit();
-    dap_events_stop_all();
-    dap_events_deinit();
-    dap_config_close( g_config );
     dap_interval_timer_deinit();
     dap_common_deinit();
 
@@ -95,7 +91,7 @@ int sig_unix_handler_deinit() {
     //log_it(L_DEBUG, "Deinit");
 
     if( s_pid_path )
-    DAP_DELETE((void *)s_pid_path);
+	DAP_DELETE(s_pid_path);
 
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
