@@ -520,6 +520,7 @@ int main( int argc, const char **argv )
     dap_chain_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );
+    dap_interval_timer_deinit();
 	dap_common_deinit();
 
 	return rc * 10;
