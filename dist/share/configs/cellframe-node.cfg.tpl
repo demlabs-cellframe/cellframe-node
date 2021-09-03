@@ -100,7 +100,8 @@ enabled=true
 #listen_port_tcp=12345
 listen_unix_socket_path={PREFIX}/var/run/node_cli
 # Default permissions 770
-#listen_unix_socket_permissions=770
+# IMPORTANT! Its accessible for all the users in system!
+listen_unix_socket_permissions=777
 
 # Application Resources
 [resources]
