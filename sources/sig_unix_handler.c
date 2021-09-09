@@ -91,7 +91,7 @@ int sig_unix_handler_deinit() {
     //log_it(L_DEBUG, "Deinit");
 
     if( s_pid_path )
-	DAP_DELETE(s_pid_path);
+    DAP_DELETE((void *)s_pid_path);
 
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
