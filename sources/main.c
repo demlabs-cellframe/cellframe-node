@@ -157,7 +157,7 @@ int main( int argc, const char **argv )
 	#endif
 
 #ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("%s/%s", "opt/", dap_get_appname());
 #elif DAP_OS_MAC
     char * l_username = NULL;
     exec_with_ret(&l_username,"whoami|tr -d '\n'");

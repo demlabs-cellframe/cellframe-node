@@ -384,10 +384,10 @@ static int s_init( int argc, const char **argv )
     g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("/Library/%s.app/Logs", dap_get_appname() ) ;
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("./opt/%s", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #endif
     char * s_log_file_path = dap_strdup_printf("%s/%s.log",s_log_dir_path, dap_get_appname());
