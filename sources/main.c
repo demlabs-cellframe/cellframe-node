@@ -134,6 +134,7 @@
 #endif
 
 void parse_args( int argc, const char **argv );
+int  parse_prefix( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
@@ -157,7 +158,7 @@ int main( int argc, const char **argv )
 	#endif
 
 #ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", "opt/", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
     char * l_username = NULL;
     exec_with_ret(&l_username,"whoami|tr -d '\n'");
@@ -170,7 +171,18 @@ int main( int argc, const char **argv )
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    if (parse_prefix( argc, argv )) {
+        char * l_username = NULL;
+        exec_with_ret(&l_username, "whoami | tr -d '\n'");
+        if (!l_username) {
+            printf("Fatal Error: Can't obtain username");
+        return 2;
+        }
+        g_sys_dir_path = dap_strdup_printf("/home/%s/.%s", l_usernaem, dap_get_appname());
+        DAP_DELETE(l_username);
+    }
+    else
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
 
     {
@@ -529,6 +541,7 @@ int main( int argc, const char **argv )
 static struct option long_options[] = {
 
 	{ "stop", 0, NULL, 0 },
+    { "prefix", 0, NULL, 1},
 	{ NULL,   0, NULL, 0 } // must be a last element
 };
 
@@ -557,6 +570,9 @@ void parse_args( int argc, const char **argv ) {
 	    	log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
 	    	exit( -21 );
 	    }
+
+        case 1: // skipped prefix
+            ;
 
     	case 'D':
     	{
@@ -597,3 +613,20 @@ void exit_if_server_already_running( void ) {
 	}
 }
 
+int parse_prefix( int argc, const char **argv ) {
+
+	int opt, option_index = 0;
+
+	while ( (opt = getopt_long(argc, (char *const *)argv, "1",
+                              long_options, &option_index)) != -1) {
+	    switch ( opt ) {
+
+	    case 1: // --prefix
+            return 1;
+
+        default:
+            ;
+	    }
+    return 0;
+    }
+}
