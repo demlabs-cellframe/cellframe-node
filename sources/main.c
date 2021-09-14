@@ -178,7 +178,7 @@ int main( int argc, const char **argv )
             printf("Fatal Error: Can't obtain username");
         return 2;
         }
-        g_sys_dir_path = dap_strdup_printf("/home/%s/.%s", l_usernaem, dap_get_appname());
+        g_sys_dir_path = dap_strdup_printf("/home/%s/.%s", l_username, dap_get_appname());
         DAP_DELETE(l_username);
     }
     else
