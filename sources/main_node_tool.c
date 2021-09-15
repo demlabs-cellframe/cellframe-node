@@ -388,7 +388,7 @@ static int s_init( int argc, const char **argv )
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_UNIX
 
-    g_sys_dir_path = dap_strdup_printf("/home/kema/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/home/kema/.%s", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #endif
     char * s_log_file_path = dap_strdup_printf("%s/%s.log",s_log_dir_path, dap_get_appname());

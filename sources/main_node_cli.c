@@ -205,7 +205,7 @@ int main(int argc, const char *argv[])
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/home/kema/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/home/kema/.%s", dap_get_appname());
 #endif
     if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
