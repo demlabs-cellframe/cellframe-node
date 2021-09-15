@@ -387,7 +387,8 @@ static int s_init( int argc, const char **argv )
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("./opt/%s", dap_get_appname());
+
+    g_sys_dir_path = dap_strdup_printf("/home/kema/%s", dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #endif
     char * s_log_file_path = dap_strdup_printf("%s/%s.log",s_log_dir_path, dap_get_appname());
@@ -501,4 +502,22 @@ static void s_help()
   printf(" * Add metadata item to <cert name>\n");
   printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n",dap_get_appname());
 
+}
+
+int parse_prefix( int argc, const char **argv ) {
+
+	int opt, option_index = 0;
+
+	while ( (opt = getopt_long(argc, (char *const *)argv, "",
+                              long_options, &option_index)) != -1) {
+	    switch ( opt ) {
+
+	    case 1: // --prefix
+            return 1;
+
+        default:
+            ;
+	    }
+    return 0;
+    }
 }
