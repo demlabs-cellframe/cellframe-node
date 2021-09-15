@@ -503,21 +503,3 @@ static void s_help()
   printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n",dap_get_appname());
 
 }
-
-int parse_prefix( int argc, const char **argv ) {
-
-	int opt, option_index = 0;
-
-	while ( (opt = getopt_long(argc, (char *const *)argv, "",
-                              long_options, &option_index)) != -1) {
-	    switch ( opt ) {
-
-	    case 1: // --prefix
-            return 1;
-
-        default:
-            ;
-	    }
-    return 0;
-    }
-}
