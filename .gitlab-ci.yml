@@ -10,10 +10,11 @@ Prepare docker:
   stage: prepare
   variables:
     DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "support-4862"
-    - changes:
-      - $DOCKERFILES_DIR/*
+  when: manual
+#  rules:
+#    - if: $CI_COMMIT_REF_NAME == "support-4862"
+#    - changes:
+#      - $DOCKERFILES_DIR/*
   script:
     - docker build -f $DOCKERFILES_DIR/linuxbuild.Dockerfile -t localhost:5000/debian_prepared .
     - docker push localhost:5000/debian_prepared
