@@ -1,13 +1,22 @@
-stages:
-    - prepare
-    - build
-    - test
+#stages:
+#    - prepare
+#    - build
+#    - test
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-cellframe-node-schedule:
-    stage: build
-    tags:
-    - cellframe-node
-    script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
+docker build:
+  variables:
+    BRANCH_NAME: "support-4862"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $BRANCH_NAME
+  script:
+    - echo "$CI_COMMIT_REF_NAME"
+    - echo "Running on branch $BRANCH_NAME"
+#    - docker build -f $CI_PROJECT_DIR/ubuntu_ansible.dockerfile -t localhost:5000/ubuntu_ansible .
+#    - docker push localhost:5000/ubuntu_ansible
+#    - docker image remove ubuntu:20.04
+#    - docker image remove localhost:5000/ubuntu_ansible
+  tags:
+    - docker
