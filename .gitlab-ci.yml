@@ -1,30 +1,31 @@
-stages:
-    - prepare
-    - build
-    - test
+#stages:
+#    - prepare
+#    - build
+#    - test
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-Prepare docker:
-  stage: prepare
-  variables:
-    DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
-  when: manual
+#Prepare docker:
+#  stage: prepare
+#  variables:
+#    DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
+#  when: manual
 #  rules:
 #    - if: $CI_COMMIT_REF_NAME == "support-4862"
 #    - changes:
 #      - $DOCKERFILES_DIR/*
-  script:
-    - docker build -f $DOCKERFILES_DIR/linuxbuild.Dockerfile -t localhost:5000/debian_prepared .
-    - docker push localhost:5000/debian_prepared
-    - docker image remove debian:stretch
-    - docker image remove localhost:5000/debian_prepared
-  tags:
-    - docker
+#  script:
+#    - docker build -f $DOCKERFILES_DIR/linuxbuild.Dockerfile -t localhost:5000/debian_prepared .
+#    - docker push localhost:5000/debian_prepared
+#    - docker image remove debian:stretch
+#    - docker image remove localhost:5000/debian_prepared
+#  tags:
+#    - docker
 
 Building project:
-  stage: build
+#  stage: build
+#  image: localhost:5000/debian_prepared
   rules:
     - if: $CI_COMMIT_REF_NAME == "support-4862"
   script:
