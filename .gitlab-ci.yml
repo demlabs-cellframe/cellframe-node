@@ -1,22 +1,24 @@
-#stages:
-#    - prepare
-#    - build
-#    - test
+stages:
+    - prepare
+    - build
+    - test
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-docker build:
+docker prepare:
+  stage: prepare
   variables:
-    BRANCH_NAME: "support-4862"
+    DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
   rules:
-    - if: $CI_COMMIT_REF_NAME == $BRANCH_NAME
+    - if: $CI_COMMIT_REF_NAME == "support-4862"
+    - changes:
+      - $DOCKERFILES_DIR/*
+  when: manual
   script:
-    - echo "$CI_COMMIT_REF_NAME"
-    - echo "Running on branch $BRANCH_NAME"
-#    - docker build -f $CI_PROJECT_DIR/ubuntu_ansible.dockerfile -t localhost:5000/ubuntu_ansible .
-#    - docker push localhost:5000/ubuntu_ansible
-#    - docker image remove ubuntu:20.04
-#    - docker image remove localhost:5000/ubuntu_ansible
+    - docker build -f $DOCKERFILES_DIR/linuxbuild.Dockerfile -t localhost:5000/debian_prepared .
+    - docker push localhost:5000/debian_prepared
+    - docker image remove debian:stretch
+    - docker image remove localhost:5000/debian_prepared
   tags:
     - docker
