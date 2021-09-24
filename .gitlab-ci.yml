@@ -6,7 +6,7 @@ stages:
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-docker prepare:
+Prepare docker:
   stage: prepare
   variables:
     DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
@@ -21,3 +21,14 @@ docker prepare:
     - docker image remove localhost:5000/debian_prepared
   tags:
     - docker
+
+Building project:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "support-4862"
+  script:
+    - echo "$CI_JOB_STAGE"
+    - echo "$CI_COMMIT_REF_NAME"
+  tags:
+    - docker
+
