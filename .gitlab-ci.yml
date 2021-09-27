@@ -11,6 +11,11 @@ cellframe-node-schedule:
     tags:
     - cellframe-node
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node
+
+trigger-dashboard:
+    only:
+     - support-4958
     trigger:
-        project: cellframe/cellframe-dashboard
-        stage: update
+     project: cellframe/cellframe-dashboard
+     branch: support-4958
+
