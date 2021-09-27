@@ -2,6 +2,7 @@ stages:
     - prepare
     - build
     - test
+    - update-dashboard
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
@@ -13,6 +14,7 @@ cellframe-node-schedule:
     script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node
 
 trigger-dashboard:
+    stage: update-dashboard
     only:
      - support-4958
     variables:
