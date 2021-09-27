@@ -15,7 +15,8 @@ cellframe-node-schedule:
 trigger-dashboard:
     only:
      - support-4958
+    variables:
+      UPDATE: "true"
     trigger:
      project: cellframe/cellframe-dashboard
      branch: support-4958
-
