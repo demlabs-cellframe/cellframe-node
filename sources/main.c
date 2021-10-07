@@ -159,6 +159,7 @@ int main( int argc, const char **argv )
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
+    printf("Compile for mac\n");
     char * l_username = NULL;
     exec_with_ret(&l_username,"whoami|tr -d '\n'");
     if (!l_username){
@@ -170,6 +171,7 @@ int main( int argc, const char **argv )
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
+    printf("Compile for linux\n");
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
 
