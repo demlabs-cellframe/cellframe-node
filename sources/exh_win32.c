@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <conio.h>
 
 #include "dap_common.h"
 
-DWORD ExceptionFilter( EXCEPTION_POINTERS *ep );
+LONG ExceptionFilter( EXCEPTION_POINTERS *ep );
 
 void  S_SetExceptionFilter( void )
 {
@@ -33,7 +34,7 @@ typedef struct _EXCEPTION_RECORD {
 } EXCEPTION_RECORD;
 #endif
 
-DWORD ExceptionFilter( EXCEPTION_POINTERS *ep )
+LONG ExceptionFilter( EXCEPTION_POINTERS *ep )
 {
 //  printf( "\r\nExceptionCode = 0x%0X[%s]\r\n", ep->ExceptionRecord->ExceptionCode, buff );
 
@@ -85,7 +86,7 @@ DWORD ExceptionFilter( EXCEPTION_POINTERS *ep )
   HANDLE hConOut = GetStdHandle( STD_OUTPUT_HANDLE );
   SetConsoleTextAttribute( hConOut, 12 );
 
-  printf( "\r\nExceptionCode = 0x%0X[%s]\r\n", ep->ExceptionRecord->ExceptionCode, buff );
+  printf( "\r\nExceptionCode = 0x%0lX[%s]\r\n", ep->ExceptionRecord->ExceptionCode, buff );
 
   SetConsoleTextAttribute( hConOut, 7 );
 

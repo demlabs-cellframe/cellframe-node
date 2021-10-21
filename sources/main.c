@@ -138,7 +138,7 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
-bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { return true; }
+bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { UNUSED(a_cond); UNUSED(a_tx); return true; }
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -146,6 +146,7 @@ int cellframe_node_Main(int argc, const char **argv)
 int main( int argc, const char **argv )
 #endif
 {
+    __mingw_printf("%zd",0x8fffffffLL);
 	dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
 	bool bServerEnabled = false;
@@ -591,8 +592,8 @@ void exit_if_server_already_running( void ) {
 	#endif
 
 	if ( (pid != 0 && is_process_running(pid)) || mf ) {
-    	log_it( L_WARNING, "Proccess %d is running, don't allow "
-        	                "to run more than one copy of DapServer, exiting...", pid );
+        log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
+                            "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
 		exit( -2 );
 	}
 }
