@@ -116,6 +116,8 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 
+#include "dap_json_rpc.h"
+
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     #include "dap_chain_plugins.h"
     #include "dap_plugins_python_app_context.h"
@@ -127,6 +129,7 @@
 
 #define STREAM_URL "/stream"
 #define MEMPOOL_URL "/mempool"
+#define JSON_RPC "/jrpc/"
 #define MAIN_URL "/"
 
 #ifdef __ANDROID__
@@ -456,6 +459,7 @@ int main( int argc, const char **argv )
 	        // Streaming URLs
 	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
 	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
+            dap_json_rpc_add_proc_http(DAP_HTTP(l_server), JSON_RPC);
 
             const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
