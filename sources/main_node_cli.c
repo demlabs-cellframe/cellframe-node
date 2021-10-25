@@ -27,11 +27,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dap_chain_node_cli.h"
 //#include "dap_client.h"
 #include "dap_common.h"
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"
-#include "dap_chain_node_cli.h"
 #include "dap_app_cli.h"
 #include "dap_app_cli_net.h"
 #include "dap_app_cli_shell.h"
