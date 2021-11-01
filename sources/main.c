@@ -146,7 +146,6 @@ int cellframe_node_Main(int argc, const char **argv)
 int main( int argc, const char **argv )
 #endif
 {
-    __mingw_printf("%zd",0x8fffffffLL);
 	dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
 	bool bServerEnabled = false;
