@@ -16,6 +16,7 @@ set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+#set(BUILD_CRYPTO_TESTS ON)
 
 if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
