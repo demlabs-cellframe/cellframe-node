@@ -155,7 +155,6 @@ int main( int argc, const char **argv )
 	#if defined(_WIN32) && defined(NDEBUG)
 		S_SetExceptionFilter( );
 	#endif
-
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
