@@ -6,8 +6,8 @@ stages:
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-kelvin-node-schedule:
+cellframe-node-schedule:
     stage: build
     tags:
     - cellframe-node
-    script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node 
+    script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node

@@ -31,6 +31,11 @@ listen_port_tcp={SERVER_PORT}
 # If not set - used listen_port_tcp for node table auto fill
 #ext_port_tcp=8089
 
+[stream]
+# For now its IAES but thats depricated
+#preferred_encryption=SALSA2012 
+# Debug stream protocol
+#debug=true
 
 # Build in DNS client (need for bootstraping)
 [dns_client]
@@ -95,7 +100,8 @@ enabled=true
 #listen_port_tcp=12345
 listen_unix_socket_path={PREFIX}/var/run/node_cli
 # Default permissions 770
-#listen_unix_socket_permissions=770
+# IMPORTANT! Its accessible for all the users in system!
+listen_unix_socket_permissions=777
 
 # Application Resources
 [resources]

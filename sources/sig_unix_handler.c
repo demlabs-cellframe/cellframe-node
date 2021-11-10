@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "dap_common.h"
 #include "dap_events.h"
@@ -16,8 +17,13 @@
 #include "dap_http.h"
 #include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
+#ifdef DAP_MODULES_DYNAMIC
+#include "dap_modules_dynamic_cdb.h"
+#endif
 
 #define LOG_TAG "sig_unix_handler"
+
+void dap_chain_plugins_deinit();
 
 static const char *s_pid_path = NULL;
 
@@ -31,10 +37,10 @@ static void clear_pid_file() {
 
 static void sig_exit_handler(int sig_code) {
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
-	
+
     clear_pid_file();
 	
- #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
     dap_chain_plugins_deinit();
 #endif
     dap_chain_node_mempool_autoproc_deinit();
@@ -48,11 +54,10 @@ static void sig_exit_handler(int sig_code) {
     dap_enc_ks_deinit();
     enc_http_deinit();
     dap_http_deinit();
-    dap_dns_server_stop();
-    dap_server_deinit();
-    dap_events_stop_all();
-    dap_events_deinit();
-    dap_config_close( g_config );
+#ifdef DAP_MODULES_DYNAMIC
+    dap_modules_dynamic_close_cdb();
+#endif
+    dap_interval_timer_deinit();
     dap_common_deinit();
 
     log_it(L_NOTICE,"Stopped Cellframe Node");

@@ -61,8 +61,10 @@
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
-#include "dap_modules_dynamic_cdb.h"
 
+#ifdef DAP_MODULES_DYNAMIC
+#include "dap_modules_dynamic_cdb.h"
+#endif
 
 #include "dap_events.h"
 #include "dap_enc.h"
@@ -89,8 +91,6 @@
 
 #ifdef DAP_OS_LINUX
 #include "dap_chain_net_srv_vpn.h"
-#include "dap_chain_net_srv_vpn_cdb.h"
-#include "dap_chain_net_srv_vpn_cdb_server_list.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
 
@@ -141,7 +141,7 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
-bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { return true; }
+bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { UNUSED(a_cond); UNUSED(a_tx); return true; }
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -158,7 +158,6 @@ int main( int argc, const char **argv )
 	#if defined(_WIN32) && defined(NDEBUG)
 		S_SetExceptionFilter( );
 	#endif
-
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
@@ -426,6 +425,7 @@ int main( int argc, const char **argv )
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
+#ifdef DAP_MODULES_DYNAMIC
             if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
                 if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
                     log_it(L_CRITICAL,"Can't init CDB module");
@@ -434,6 +434,7 @@ int main( int argc, const char **argv )
                     log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
                 }
             }
+#endif
 
 	        // Handshake URL
 	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
@@ -470,12 +471,7 @@ int main( int argc, const char **argv )
         }
     }
 
-
-
-
     //dap_chain_net_load_all();
-
-
 
     //Init python plugins
     #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -490,9 +486,9 @@ int main( int argc, const char **argv )
 
 //failure:
 
-    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        dap_chain_plugins_deinit();
-    #endif
+//    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+//        dap_chain_plugins_deinit();
+//    #endif
     dap_dns_server_stop();
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
@@ -504,9 +500,13 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
     dap_chain_net_deinit();
+#ifdef DAP_MODULES_DYNAMIC
+    dap_modules_dynamic_close_cdb();
+#endif
     dap_chain_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );
+    dap_interval_timer_deinit();
 	dap_common_deinit();
 
 	return rc * 10;
@@ -577,8 +577,8 @@ void exit_if_server_already_running( void ) {
 	#endif
 
 	if ( (pid != 0 && is_process_running(pid)) || mf ) {
-    	log_it( L_WARNING, "Proccess %d is running, don't allow "
-        	                "to run more than one copy of DapServer, exiting...", pid );
+        log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
+                            "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
 		exit( -2 );
 	}
 }

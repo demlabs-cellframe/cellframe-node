@@ -27,11 +27,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dap_chain_node_cli.h"
 //#include "dap_client.h"
 #include "dap_common.h"
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"
-#include "dap_chain_node_cli.h"
 #include "dap_app_cli.h"
 #include "dap_app_cli_net.h"
 #include "dap_app_cli_shell.h"
@@ -59,7 +59,7 @@ static char** split_word(char *line, int *argc)
             *argc = 0;
         return NULL ;
     }
-    char **argv = calloc(sizeof(char*), strlen(line));
+    char **argv = DAP_NEW_Z_SIZE(char*, sizeof(char*) * strlen(line));
     int n = 0;
     char *s, *start = line;
     size_t len = strlen(line);
@@ -131,9 +131,11 @@ int execute_line(char *line)
             cmd.cmd_param = (char**) (argv + 1);
         // Send command
         int res = dap_app_cli_post_command(cparam, &cmd);
+        DAP_DELETE(argv);
         return res;
     }
     fprintf(stderr, "No command\n");
+    DAP_DELETE(argv);
     return -1; //((*(command->func))(argc, (const char **) argv, NULL));
 }
 
@@ -199,7 +201,14 @@ int main(int argc, const char *argv[])
     SetConsoleOutputCP(1252);
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
+    char * l_username = NULL;
+    exec_with_ret(&l_username,"whoami|tr -d '\n'");
+    if (!l_username){
+        printf("Fatal Error: Can't obtain username");
+        return 2;
+    }
+    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
+    DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX

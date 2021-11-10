@@ -21,7 +21,7 @@ To successfully complete of the build, you need to have the following packages t
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute
+sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv
 ```
 
 #### MacOS Prerequsites 
@@ -46,7 +46,7 @@ This command fetch sources from gitlab and build them.
   cd cellframe-sdk
   git submodule update --init
   cd ../
-  cd cellframe-sdk-python
+  cd python-cellframe
   git submodule update --init
   cd ../
   ```
@@ -132,6 +132,12 @@ Network address used for listentning. Set ```0.0.0.0``` if you want to listen al
 * Server port (optional, usually don't ask)
 Server port, 8079 by default but sometimes better to set it to ```80``` or ```443``` to masquarade service as web service. 
 
+* Core-testnet: Enable network
+Set ```true``` if you want to connect your node with ```Core-T testnet```
+
+* Core-testnet: Node type (role)
+Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
+
 * Kelvin-testnet: Enable network
 Set ```true``` if you want to connect your node with ```kelvin-testnet```
 
@@ -141,7 +147,7 @@ Select node type (or node role) from suggested list with short descriptions. By 
 ### How to configure VPN service share
 
 #### Node base configuration
-Open ```/opt/cellframe-node/etc/cellframe-node.conf``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.conf``` and find next section:
+Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.cfg``` and find next section:
 
 ```
 # VPN stream channel processing module
