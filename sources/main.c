@@ -74,6 +74,9 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
+#include "dap_chain_cs_blocks.h"
+#include "dap_chain_cs_block_poa.h"
+#include "dap_chain_cs_block_pos.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
@@ -327,7 +330,22 @@ int main( int argc, const char **argv )
     }
 
     if( dap_chain_cs_dag_pos_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoS module");
+        return -64;
+    }
+
+    if (dap_chain_cs_blocks_init() != 0) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
+        return -62;
+    }
+
+    if (dap_chain_cs_block_poa_init() != 0) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoA module");
+        return -63;
+    }
+
+    if (dap_chain_cs_block_pos_init() != 0) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoS module");
         return -64;
     }
 
