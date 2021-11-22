@@ -393,7 +393,7 @@ static int s_init( int argc, const char **argv )
     }
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
-    char * s_log_dir_path = dap_strdup_printf("/Library/%s.app/Logs", dap_get_appname() ) ;
+    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path ) ;
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
     char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
