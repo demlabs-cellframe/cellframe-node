@@ -68,6 +68,7 @@ if [ "$DAP_CORE_T_ENABLED"="true" ]; then
     rm $DAP_NET_CFG.old
 fi
 
+NET_NAME="kelvin-testnet"
 if [ "$DAP_KELVIN_TESTNET_ENABLED"="true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
