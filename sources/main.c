@@ -129,7 +129,7 @@
 
 #define STREAM_URL "/stream"
 #define MEMPOOL_URL "/mempool"
-#define JSON_RPC "/jrpc/"
+#define JSON_RPC "/jrpc"
 #define MAIN_URL "/"
 
 #ifdef __ANDROID__
