@@ -144,7 +144,8 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
-bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx) { UNUSED(a_cond); UNUSED(a_tx); return true; }
+bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx, bool a_owner)
+{ UNUSED(a_cond); UNUSED(a_tx); UNUSED(a_owner); return true; }
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -290,7 +291,7 @@ int main( int argc, const char **argv )
     size_t l_notify_path_default_size = dap_snprintf(NULL,0,"/tmp/%s-notify",dap_get_appname() )+1;
     char * l_notify_path_default = DAP_NEW_SIZE(char,l_notify_path_default_size);
     dap_snprintf(l_notify_path_default,l_notify_path_default_size,"/tmp/%s-notify",dap_get_appname() );
-    if ( dap_notify_server_init( dap_config_get_item_str_default(g_config,"resourses","notify_path",l_notify_path_default)) != 0 ){
+    if ( dap_notify_server_init() != 0 ){
         log_it( L_ERROR, "Can't init notify server module" );
     }
 
@@ -357,6 +358,7 @@ int main( int argc, const char **argv )
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_UPDATE, dap_chain_net_srv_stake_updater);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
