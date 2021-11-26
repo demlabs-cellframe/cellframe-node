@@ -240,6 +240,25 @@ int main(int argc, const char **argv)
           }
       }
     if ( argc >=3 ) {
+        if (argc >= 5) {
+            if (strcmp (argv[2], "pkey") == 0 && strcmp (argv[3], "show") == 0) {
+                dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+                if (!l_cert) {
+                    printf("Not found cert: %s\n", argv[4]);
+                    exit(-134);
+                }
+
+                size_t l_buf_len;
+                uint8_t *l_pub_enc_key = dap_enc_key_serealize_pub_key(l_cert->enc_key, &l_buf_len);
+                dap_hash_fast_t l_hash;
+
+                dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
+
+                char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
+                printf("%s\n", l_hash_str);
+                exit(0);
+            }
+        }
       if ( strcmp( argv[2],"dump") == 0 ){
         if (argc>=4) {
           const char * l_cert_name = argv[3];
@@ -586,4 +605,6 @@ static void s_help()
   printf(" * Add metadata item to <cert name>\n");
   printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n",dap_get_appname());
 
+  printf(" * Print hash of cert <cert name>\n");
+  printf("\t%s cert pkey show <cert name>\n\n",dap_get_appname());
 }
