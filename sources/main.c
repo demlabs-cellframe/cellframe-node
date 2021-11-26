@@ -364,7 +364,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
-    if( dap_chain_net_srv_init(g_config) !=0){
+    if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
     }
