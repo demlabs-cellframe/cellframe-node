@@ -228,8 +228,8 @@ int main(int argc, const char **argv)
 
                 size_t l_buf_len;
                 uint8_t *l_pub_enc_key = dap_enc_key_serealize_pub_key(l_cert->enc_key, &l_buf_len);
-                dap_hash_fast_t l_hash;
 
+                dap_hash_fast_t l_hash;
                 dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
 
                 char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
