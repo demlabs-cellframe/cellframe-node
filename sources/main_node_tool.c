@@ -217,28 +217,6 @@ int main(int argc, const char **argv)
                     }*/
   } // wallet
   else if (strcmp (argv[1],"cert") == 0 ) {
-      if (argc == 3) {
-          if (strcmp (argv[2], "create_pkey_hash") == 0) {
-              dap_config_t *l_config = dap_config_open("network/private");
-              if (!l_config) {
-                  log_it(L_ERROR, "Not found a private config - private.cfg");
-                  exit(-111);
-              }
-              uint16_t ui_acl_list_len;
-              dap_cert_t *l_cert = NULL;
-
-              l_cert = dap_cert_find_by_name(dap_config_get_item_str(l_config, "general", "auth_cert"));
-
-              size_t st_size = sizeof(dap_hash_fast_t);
-              unsigned char *l_data = DAP_NEW_Z_SIZE(unsigned char, st_size + 1);
-              s_fill_hash_key_for_data(l_cert->enc_key, l_data);
-              for (int i = 0; i < st_size; i++) {
-                  printf("%02x", l_data[i]);
-              }
-              printf("\n");
-              exit(0);
-          }
-      }
     if ( argc >=3 ) {
         if (argc >= 5) {
             if (strcmp (argv[2], "pkey") == 0 && strcmp (argv[3], "show") == 0) {
