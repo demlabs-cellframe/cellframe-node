@@ -107,6 +107,8 @@
 
 static int s_init( int argc, const char * argv[] );
 static void s_help( );
+static int s_is_file_available (char *l_path, const char *name, const char *ext);
+static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 
 static char s_system_ca_dir[MAX_PATH];
 
@@ -215,6 +217,28 @@ int main(int argc, const char **argv)
                     }*/
   } // wallet
   else if (strcmp (argv[1],"cert") == 0 ) {
+      if (argc == 3) {
+          if (strcmp (argv[2], "create_pkey_hash") == 0) {
+              dap_config_t *l_config = dap_config_open("network/private");
+              if (!l_config) {
+                  log_it(L_ERROR, "Not found a private config - private.cfg");
+                  exit(-111);
+              }
+              uint16_t ui_acl_list_len;
+              dap_cert_t *l_cert = NULL;
+
+              l_cert = dap_cert_find_by_name(dap_config_get_item_str(l_config, "general", "auth_cert"));
+
+              size_t st_size = sizeof(dap_hash_fast_t);
+              unsigned char *l_data = DAP_NEW_Z_SIZE(unsigned char, st_size + 1);
+              s_fill_hash_key_for_data(l_cert->enc_key, l_data);
+              for (int i = 0; i < st_size; i++) {
+                  printf("%02x", l_data[i]);
+              }
+              printf("\n");
+              exit(0);
+          }
+      }
     if ( argc >=3 ) {
       if ( strcmp( argv[2],"dump") == 0 ){
         if (argc>=4) {
@@ -383,7 +407,6 @@ static int s_init( int argc, const char **argv )
     dap_set_appname("cellframe-node");
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_MAC
     char * l_username = NULL;
     exec_with_ret(&l_username,"whoami|tr -d '\n'");
@@ -393,14 +416,12 @@ static int s_init( int argc, const char **argv )
     }
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
-    char * s_log_dir_path = dap_strdup_printf("/Library/%s.app/Logs", dap_get_appname() ) ;
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #endif
+    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
     char * s_log_file_path = dap_strdup_printf("%s/%s.log",s_log_dir_path, dap_get_appname());
     if (dap_common_init(dap_get_appname(), s_log_file_path, s_log_dir_path ) != 0) {
         printf("Fatal Error: Can't init common functions module");
@@ -473,6 +494,59 @@ static int s_init( int argc, const char **argv )
     char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
     dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);//memcpy(s_system_ca_dir, l_ca_folders[0], strlen(l_ca_folders[0]));
     return 0;
+}
+
+/**
+ * @brief static_is_file_available
+ * @param l_path
+ * @param name
+ * @return
+ */
+static int s_is_file_available (char *l_path, const char *name, const char *ext)
+{
+    char l_buf_path[255];
+    snprintf (l_buf_path, 255, "%s/%s%s", l_path, name, ext ? ext : 0);
+    if (access (l_buf_path, F_OK)) return -1;
+    return 0;
+}
+
+/**
+ * @brief s_fill_hash_key_for_data
+ * @param key
+ * @param data
+ */
+static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
+{
+    size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key, sizeof(dap_hash_fast_t));
+    if(l_sign_unserialized_size > 0) {
+        size_t l_pub_key_size = 0;
+        uint8_t *l_pub_key = dap_enc_key_serealize_pub_key(l_key, &l_pub_key_size);
+        if (!l_pub_key)
+            return;
+        uint8_t* l_sign_unserialized = DAP_NEW_Z_SIZE(uint8_t, l_sign_unserialized_size);
+        size_t l_sign_ser_size = l_sign_unserialized_size;
+        uint8_t *l_sign_ser = dap_enc_key_serealize_sign(l_key->type, l_sign_unserialized, &l_sign_ser_size);
+        if ( l_sign_ser ) {
+            dap_sign_t *l_ret = DAP_NEW_Z_SIZE(dap_sign_t,
+                                               sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size);
+            // write serialized public key to dap_sign_t
+            memcpy(l_ret->pkey_n_sign, l_pub_key, l_pub_key_size);
+            l_ret->header.type = dap_sign_type_from_key_type(l_key->type);
+            // write serialized signature to dap_sign_t
+            memcpy(l_ret->pkey_n_sign + l_pub_key_size, l_sign_ser, l_sign_ser_size);
+            l_ret->header.sign_pkey_size = (uint32_t) l_pub_key_size;
+            l_ret->header.sign_size = (uint32_t) l_sign_ser_size;
+            DAP_DELETE(l_sign_ser);
+            dap_enc_key_signature_delete(l_key->type, l_sign_unserialized);
+            DAP_DELETE(l_pub_key);
+            dap_chain_hash_fast_t fast_hash;
+            dap_hash_fast(l_ret->pkey_n_sign, l_ret->header.sign_pkey_size, &fast_hash);
+            uint8_t *s = (uint8_t *) l_data;
+            for (int i = 0; i < DAP_CHAIN_HASH_FAST_SIZE; i++) {
+                s[i] = fast_hash.raw[i];
+            }
+        }
+    }
 }
 
 /**
