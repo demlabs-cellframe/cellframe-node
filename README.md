@@ -346,11 +346,13 @@ cellframe-node-cli tx_create -net subzero -chain support -from_wallet subzero_wa
 - to_addr - address of 2nd wallet (you can see it using command ```cellframe-node-cli wallet info -w <wallet_name> -net subzero ```)
 - value - amount of tokens
 
-2. Waiting for a while root node have processed you request
-3. Execute command for database syncing
+2. Execute command for database syncing
 
 ```cellframe-node-cli net sync all -net subzero```
-    
+
+3. Waiting for a while root node have processed you request
+4. Don't create more then one request on balance changing, until you get confirmation about processing current request. That requests will not be processed (it can be fixed in future)
+      
 and see your updated balance
 
 ```cellframe-node-cli wallet info -w subzero_wallet -net subzero``` 
