@@ -1,7 +1,7 @@
 # cellframe-node
 Cellframe Node
 
-[Cellframe Node usage Wiki](https://wiki.cellframe.net/index.php/Node_usage)
+[Cellframe Node usage Wiki](https://wiki.cellframe.net/en/soft)
 
 
 ## This guide will work on Debian/Ubuntu
@@ -40,15 +40,7 @@ Generaly thats all what you need
 
 This command fetch sources from gitlab and build them. 
   ```
-  git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git
-  cd cellframe-node
-  git submodule update --init
-  cd cellframe-sdk
-  git submodule update --init
-  cd ../
-  cd python-cellframe
-  git submodule update --init
-  cd ../
+  git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git --recursive
   ```
 
 #### Build cellframe using cmake framework
@@ -69,11 +61,11 @@ Right now you can't, just type ```make install``` and it will install all the fi
 Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
 
 ##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node-2.14-9-Debian-10-amd64-buster.deb``` 
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb``` 
 
 Please use ```dpkg``` command to install it:
 ```
-sudo dpkg -i ./cellframe-node_2.11-4-buster_amd64.deb
+sudo dpkg -i ./cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb
 ```
 
 In some cases there is a following command required to be executed
@@ -85,6 +77,10 @@ sudo apt --fix-broken install
 
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
 
+* For Debian 11:
+  ```
+  deb https://debian.pub.demlabs.net/public bullseye main
+  ```
 * For Debian 10:
   ```
   deb https://debian.pub.demlabs.net/public buster main
@@ -141,7 +137,10 @@ Select node type (or node role) from suggested list with short descriptions. By 
 * Kelvin-testnet: Enable network
 Set ```true``` if you want to connect your node with ```kelvin-testnet```
 
-* Kelvin-testnet: Node type (role)
+* SubZero: Enable network
+Set ```true``` if you want to connect your node with ```subzero```
+
+* SubZero: Node role
 Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
 
 ### How to configure VPN service share
@@ -205,9 +204,8 @@ sudo apt-get install arno-iptables-firewall
 ```
 It would ask next questions:
 
-*  `External network interfaces` answer with you network interface thats used for internet access. Usually its `eth0` or `wifi0` but could be different, examine you network configuration first
 *  `Do you want to manage the firewall setup with debconf` answer `Yes`
-*  `External network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
+*  `External network interfaces` answer with you network interface thats used for internet access. Usually its `eth0` or `wifi0` but could be different, examine you network configuration first.
 *  `Open external TCP-ports` answer `8079` or what the port do you configured for cellframe node when it was installed
 *  `Open external UDP-ports:` answer same as in previous
 *  `Internal network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
@@ -293,6 +291,69 @@ Important: if you set price in configs for units set, 3600 in our example - here
 
 More details about order operations you could find with call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help net_srv```
 More details about cellframe node commands in call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help```
+
+# SubZero testnet
+
+## Create wallet and token request
+
+1. Install node according instructions above.
+2. Create wallet
+   
+```
+    cellframe-node-cli wallet new -w subzero_wallet
+    Wallet 'subzero_wallet' (type=sig_dil) successfully created
+```
+
+3. Get wallet address:
+   
+```
+cellframe-node-cli wallet info -w subzero_wallet -net subzero 
+addr: mJUUJk6Yk2gBSTjcDHXxAerggncSK7DP8ZViVG2zrtbuW6uiCtTvXXn9kdcoBadGeBiujC7VsfemGv5BLbq2zcxoCR8GVRKfCmLtaedd
+network: subzero
+balance: 0
+```
+
+4. Send wallet address and request for tCELL amount of money to telegram channel: t.me/cellframe_dev_en
+5. Waiting for answer from admin and execute command for network chains and gdb syncronization:
+
+```cellframe-node-cli net sync all -net subzero```
+
+6. See wallet balance:
+   
+```
+cellframe-node-cli wallet info -w subzero_wallet -net subzero 
+wallet: subzero_wallet
+addr: mJUUJk6Yk2gBSTjcDHXxAerggncSK7DP8ZViVG2zrtbuW6uiCtTvXXn9kdcoBadGeBiujC7VsfemGv5BLbq2zcxoCR8GVRKfCmLtaedd
+network: subzero
+balance:
+	5500000.000000000 (5500000000000000) tCELL
+```
+
+## Balance replenishment 
+
+If you want increase amount of tCell on your wallet, you can wrote about it to SubZero admin.
+
+## Tokens transfer
+
+1. You can transfer tokens from your wallet to other wallet. For doing this you need to know address of 2nd wallet. Execute command
+
+```
+cellframe-node-cli tx_create -net subzero -chain support -from_wallet subzero_wallet -to_addr rTDbDdeStfpodpLUevvYaxJBh2k739fjwusqtmAU72VoUCm88ERPw555jHXtrkoEGJfYEZ7Mmwssc3ajijG9eEqEZxV2FmZvYcvnAVZz -value 32100000
+        transfer=Ok
+        tx_hash=0x4E6D540F86CD46CBFA551F219A04BA2248FF474BB795EB5B2C524299458AD709
+```
+
+- to_addr - address of 2nd wallet (you can see it using command ```cellframe-node-cli wallet info -w <wallet_name> -net subzero ```)
+- value - amount of tokens
+
+2. Send transaction hash (0x4E6D540F86CD46CBFA551F219A04BA2248FF474BB795EB5B2C524299458AD709) to SubZero admin and waiting for answer.
+3. After you receive confirmation, that your transaction was approved, make command
+
+```cellframe-node-cli net sync all -net subzero```
+    
+and see your updated balance
+
+```cellframe-node-cli wallet info -w subzero_wallet -net subzero``` 
 
 
 #### Remove cellframe-node
