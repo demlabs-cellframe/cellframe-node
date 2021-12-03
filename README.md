@@ -346,8 +346,8 @@ cellframe-node-cli tx_create -net subzero -chain support -from_wallet subzero_wa
 - to_addr - address of 2nd wallet (you can see it using command ```cellframe-node-cli wallet info -w <wallet_name> -net subzero ```)
 - value - amount of tokens
 
-2. Send transaction hash (0x4E6D540F86CD46CBFA551F219A04BA2248FF474BB795EB5B2C524299458AD709) to SubZero admin and waiting for answer.
-3. After you receive confirmation, that your transaction was approved, make command
+2. Waiting for a while root node have processed you request
+3. Execute command for database syncing
 
 ```cellframe-node-cli net sync all -net subzero```
     
