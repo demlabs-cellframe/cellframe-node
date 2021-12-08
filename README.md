@@ -357,6 +357,11 @@ and see your updated balance
 
 ```cellframe-node-cli wallet info -w subzero_wallet -net subzero``` 
 
+# Node notes
+
+Token declaration operations, executing on node client (token_decl command) will be approved manually.
+Token emission operations (token_emit command) will be processing automatically only for token owners.
+Transactions (tx_create command) will be automatically processing as usual.
 
 #### Remove cellframe-node
 
