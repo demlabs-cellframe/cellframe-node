@@ -1,8 +1,6 @@
 # cellframe-node
-Cellframe Node
 
 [Cellframe Node usage Wiki](https://wiki.cellframe.net/en/soft)
-
 
 ## This guide will work on Debian/Ubuntu
 
