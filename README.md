@@ -357,9 +357,9 @@ and see your updated balance
 
 # Node notes
 
-Token declaration operations, executing on node client (token_decl command) will be approved manually.
-Token emission operations (token_emit command) will be processing automatically only for token owners.
-Transactions (tx_create command) will be automatically processing as usual.
+1. Token declaration operations, executing on node client (token_decl command) will be approved manually.
+2. Token emission operations (token_emit command) will be processing automatically only for token owners.
+3. Transactions (tx_create command) will be automatically processing as usual.
 
 #### Remove cellframe-node
 
