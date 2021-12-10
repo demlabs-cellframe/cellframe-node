@@ -1,8 +1,6 @@
 # cellframe-node
-Cellframe Node
 
 [Cellframe Node usage Wiki](https://wiki.cellframe.net/en/soft)
-
 
 ## This guide will work on Debian/Ubuntu
 
@@ -357,6 +355,11 @@ and see your updated balance
 
 ```cellframe-node-cli wallet info -w subzero_wallet -net subzero``` 
 
+# Node notes
+
+1. Token declaration operations, executing on node client (token_decl command) will be approved manually.
+2. Token emission operations (token_emit command) will be processing automatically only for token owners.
+3. Transactions (tx_create command) will be automatically processing as usual.
 
 #### Remove cellframe-node
 
