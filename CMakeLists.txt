@@ -9,6 +9,25 @@ SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 4)
 SET( CPACK_PACKAGE_VERSION_MINOR 4)
 SET( CPACK_PACKAGE_VERSION_PATCH 65)
+if (CMAKE_BUILD_ARCH MATCHES arm)
+    SET( CPACK_PACKAGE_ARCHITECTURE "$CMAKE_BUILD_ARCH")
+    SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "$CMAKE_BUILD_ARCH")
+endif()
+
+# Crossbuild configs
+
+if (CMAKE_BUILD_ARCH MATCHES arm)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+    if (CMAKE_BUILD_ARCH MATCHES armhf)
+        set(CMAKE_C_COMPILER "/usr/bin/arm-linux-gnueabihf-gcc")
+        set(CMAKE_CXX_COMPILER "/usr/bin/arm-linux-gnueabihf-g++")
+        set(CMAKE_SYSROOT "/raspi-sysroot/")
+    else
+        set(CMAKE_C_COMPILER "/usr/bin/aarch64-linux-gnu-gcc")
+        set(CMAKE_CXX_COMPILER "/usr/bin/aarch64-linux-gnueabihf-g++")
+        set(CMAKE_SYSROOT "/arm64-sysroot/")
+    endif()
+endif()
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
@@ -76,7 +95,11 @@ if(UNIX)
 
     SET( CPACK_SYSTEM_TYPE "Debian")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
-    SET( CPACK_SYSTEM_ARCH "amd64")
+    if (CMAKE_BUILD_ARCH MATCHES arm)
+        SET( CPACK_SYSTEM_ARCH CMAKE_BUILD_ARCH)
+    else
+        SET( CPACK_SYSTEM_ARCH "amd64")
+    endif()
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
     SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_SYSTEM_ARCH}-${CPACK_SYSTEM_CODENAME}")
     if(BUILD_WITH_GDB_DRIVER_PGSQL)

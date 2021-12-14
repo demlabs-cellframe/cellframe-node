@@ -1,36 +1,23 @@
-#stages:
-#    - prepare
-#    - build
-#    - test
+stages:
+    - prepare
+    - build
+    - test
+    - deploy
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-#Prepare docker:
-#  stage: prepare
-#  variables:
-#    DOCKERFILES_DIR: "$CI_PROJECT_DIR/dockerfiles/linux/"
-#  when: manual
-#  rules:
-#    - if: $CI_COMMIT_REF_NAME == "support-4862"
-#    - changes:
-#      - $DOCKERFILES_DIR/*
-#  script:
-#    - docker build -f $DOCKERFILES_DIR/linuxbuild.Dockerfile -t localhost:5000/debian_prepared .
-#    - docker push localhost:5000/debian_prepared
-#    - docker image remove debian:stretch
-#    - docker image remove localhost:5000/debian_prepared
-#  tags:
-#    - docker
 
-Building project:
-#  stage: build
-#  image: localhost:5000/debian_prepared
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "support-4862"
-  script:
-    - echo "$CI_JOB_STAGE"
-    - echo "$CI_COMMIT_REF_NAME"
-  tags:
-    - docker
-
+cellframe-node_stretch:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node stretch
