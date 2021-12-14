@@ -99,14 +99,16 @@
 #endif
 
 #undef log_it
+#ifdef DAP_OS_WINDOWS
+#define log_it(_log_level, string, ...) __mingw_printf(string, ##__VA_ARGS__)
+#else
 #define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
+#endif
 
 static int s_init( int argc, const char * argv[] );
 static void s_help( );
 
 static char s_system_ca_dir[MAX_PATH];
-static char * s_config_dir = NULL;
-static char * s_log_file_path= NULL;
 
 #ifdef __ANDROID__
 int cellframe_node_tool_Main(int argc, const char **argv)
@@ -185,7 +187,7 @@ int main(int argc, const char **argv)
         if ( l_data_file ) {}
       } 
       else {
-        log_it( L_ERROR, "Cert index %d can't be found in wallet with %lu certs inside"
+        log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
                                            ,l_cert_index,l_wallet_certs_number );
         s_help();
         exit( -3002 );
@@ -376,20 +378,26 @@ int main(int argc, const char **argv)
  */
 static int s_init( int argc, const char **argv )
 {
+    UNUSED(argc);
+    UNUSED(argv);
     dap_set_appname("cellframe-node");
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("/Library/%s.app/Logs", dap_get_appname() ) ;
+    char * l_username = NULL;
+    exec_with_ret(&l_username,"whoami|tr -d '\n'");
+    if (!l_username){
+        printf("Fatal Error: Can't obtain username");
+    return 2;
+    }
+    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
+    DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
 #endif
+    char * s_log_dir_path = dap_strdup_printf("%s/var/log", g_sys_dir_path) ;
     char * s_log_file_path = dap_strdup_printf("%s/%s.log",s_log_dir_path, dap_get_appname());
     if (dap_common_init(dap_get_appname(), s_log_file_path, s_log_dir_path ) != 0) {
         printf("Fatal Error: Can't init common functions module");

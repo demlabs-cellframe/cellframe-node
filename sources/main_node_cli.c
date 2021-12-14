@@ -27,11 +27,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dap_chain_node_cli.h"
 //#include "dap_client.h"
 #include "dap_common.h"
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"
-#include "dap_chain_node_cli.h"
 #include "dap_app_cli.h"
 #include "dap_app_cli_net.h"
 #include "dap_app_cli_shell.h"
@@ -201,7 +201,14 @@ int main(int argc, const char *argv[])
     SetConsoleOutputCP(1252);
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/%s.app/Contents/Resources", dap_get_appname());
+    char * l_username = NULL;
+    exec_with_ret(&l_username,"whoami|tr -d '\n'");
+    if (!l_username){
+        printf("Fatal Error: Can't obtain username");
+    return 2;
+    }
+    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
+    DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
