@@ -2,12 +2,92 @@ stages:
     - prepare
     - build
     - test
+    - deploy
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
-cellframe-node-schedule:
+
+cellframe-node_stretch:
     stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
     tags:
-    - cellframe-node
-    script: ~/production/integration/gitlab-CI/build_all_handler.sh cellframe-node
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node stretch
+
+cellframe-node_buster:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node buster
+
+cellframe-node_bullseye:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
+
+cellframe-node_bionic:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bionic
+
+cellframe-node_focal:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node focal
+
+cellframe-node_hirsuite:
+    stage: build
+    only:
+     - develop
+     - master
+     - /^release.*$/
+     - /^bugfix.*$/
+     - /^hotfix.*$/
+     - /^feature.*$/
+     - /^support.*$/
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node hirsuite
