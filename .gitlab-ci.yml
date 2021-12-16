@@ -3,6 +3,7 @@ stages:
     - build
     - test
     - deploy
+    - update
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
@@ -91,3 +92,11 @@ cellframe-node_hirsuite:
     tags:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node hirsuite
+
+cellframe-dashboard_update:
+    stage: update
+    only:
+     - master
+    tags:
+     - cellframe-node
+    script: ~/production-docker/integration/gitlab-CI/update_dashboard.sh
