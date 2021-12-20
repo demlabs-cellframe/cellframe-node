@@ -369,6 +369,14 @@ int main( int argc, const char **argv )
         return -66;
     }
 
+    if (!dap_chain_net_srv_xchange_init()) {
+        log_it(L_ERROR, "Can't provide exchange capability");
+    }
+
+    if (!dap_chain_net_srv_stake_init()) {
+        log_it(L_ERROR, "Can't start delegated stake service");
+    }
+
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
         return -67;
