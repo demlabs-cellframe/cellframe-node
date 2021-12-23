@@ -20,9 +20,6 @@ fi
 [ "$DAP_SERVER_ENABLED" ] || DAP_SERVER_ENABLED="false"
 [ "$DAP_SERVER_PORT" ] || DAP_SERVER_PORT="8079"
 [ "$DAP_SERVER_ADDR" ] || DAP_SERVER_ADDR="0.0.0.0"
-[ "$DAP_CORE_T_ENABLED" ] || DAP_CORE_T_ENABLED="true"
-[ "$DAP_CORE_T_ROLE" ] || DAP_CORE_T_ROLE="full"
-
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
 
@@ -66,3 +63,37 @@ if [ "$DAP_CORE_T_ENABLED"="true" ]; then
     rm $DAP_NET_CFG.old
 fi
 
+# Init chains
+NET_NAME="kelvin-testnet"
+
+if [ "$DAP_KELVIN_TESTNET_ENABLED"="true" ]; then
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    sed -i .old "s/{NODE_TYPE}/$DAP_KELVIN_TESTNET_ROLE/" $DAP_NET_CFG  || true
+    rm $DAP_NET_CFG.old
+fi
+
+NET_NAME="subzero"
+
+if [ "$DAP_SUBZERO_ENABLED"="true" ]; then
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
+    rm $DAP_NET_CFG.old
+fi
