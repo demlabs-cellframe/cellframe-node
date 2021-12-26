@@ -76,6 +76,7 @@ pricelist=[]
 # Uncomment to have more debug information in stream channel Chain
 # False by default
 #debug_more=true
+ban_list_sync_groups=[*.orders-test-stat]
 
 # Number of hashes packed into the one update packet
 # Increase it to reduce update latency
