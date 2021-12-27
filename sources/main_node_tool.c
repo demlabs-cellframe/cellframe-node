@@ -117,6 +117,35 @@ static char s_system_wallet_dir[MAX_PATH];
 int cellframe_node_tool_Main(int argc, const char **argv)
 #else
 
+static int s_wallet_create(int argc, const char **argv);
+static int s_wallet_create_from(int argc, const char **argv);
+static int s_wallet_sign_file(int argc, const char **argv);
+static int s_cert_create(int argc, const char **argv);
+static int s_cert_dump(int argc, const char **argv);
+static int s_cert_create_pkey(int argc, const char **argv);
+static int s_cert_create_cert_pkey(int argc, const char **argv);
+static int s_cert_add_metadata(int argc, const char **argv);
+static int s_cert_sign(int argc, const char **argv);
+static int s_cert_pkey_show(int argc, const char **argv);
+
+struct options {
+    char *cmd;
+    char *subcmd[5];
+    int count_of_subcommands;
+    int (*handler) (int argc, const char **argv);
+} s_opts[] = {
+{ "wallet", {"create"}, 1, s_wallet_create },
+{ "wallet", {"create_from"}, 1, s_wallet_create_from },
+{ "wallet", {"sign_file"}, 1, s_wallet_sign_file },
+{ "cert", {"create"}, 1, s_cert_create },
+{ "cert", {"dump"}, 1, s_cert_dump },
+{ "cert", {"create_pkey"}, 1, s_cert_create_pkey },
+{ "cert", {"create_cert_pkey"}, 1, s_cert_create_cert_pkey },
+{ "cert", {"add_metadata"}, 1, s_cert_add_metadata },
+{ "cert", {"sign"}, 1, s_cert_sign },
+{ "cert", {"pkey", "show"}, 2, s_cert_pkey_show }
+};
+
 int main(int argc, const char **argv)
 #endif
 {
@@ -133,236 +162,247 @@ int main(int argc, const char **argv)
     exit( -1000 );
   }
 
-  if ( strcmp ( argv[1], "wallet" ) == 0 ) {
+  size_t l_size = sizeof(s_opts) / sizeof(struct options);
+  for (int i = 0; i < l_size; i++) {
+      int argv_index = 1;
+      if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
+          int match = 1;
+          for (int isub = 0; isub < s_opts[i].count_of_subcommands; isub++) {
+              if ((argc - 1) < ++argv_index) {
+                  match = 0;
+                  break;
+              }
+              if (strncmp(s_opts[i].subcmd[isub], argv[argv_index], strlen(argv[argv_index]) + 1)) {
+                  match = 0;
+                  break;
+              }
+          }
+          if (match) {
+              int l_ret = s_opts[i].handler(argc, argv);
+              return l_ret;
+          }
+      }
+  }
 
-    if ( argc < 3 ) {
-      log_it(L_ERROR,"Wrong 'wallet' command params");
+  s_help();
+  return -1;
+}
+
+static int s_wallet_create(int argc, const char **argv) {
+    if ( argc < 5 ) {
+      log_it( L_ERROR, "Wrong 'wallet create' command params" );
+      s_help( );
+      exit( -2003 );
+    }
+
+    const char *l_wallet_name = argv[3];
+    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    dap_chain_wallet_t *l_wallet = NULL;
+
+    if ( l_sig_type.type == SIG_TYPE_NULL ) {
+      log_it( L_ERROR, "Wrong signature '%s'", argv[4] );
+      s_help( );
+      exit( -2004 );
+    }
+    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type);
+
+    return 0;
+}
+
+static int s_wallet_create_from(int argc, const char **argv) {
+    return 0;
+}
+
+static int s_wallet_sign_file(int argc, const char **argv) {
+    if ( argc < 8 ) {
+      log_it(L_ERROR,"Wrong 'wallet sign_file' command params");
       s_help();
-      exit(-2001);
+      exit(-3000);
+    }
+    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3], s_system_wallet_dir);
+    if ( !l_wallet ) {
+      log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
+      s_help();
+      exit(-3001);
     }
 
-    if ( strcmp( argv[2],"create") == 0 ) {
+    int l_cert_index = atoi(argv[4]);
 
-      // wallet create <network name> <wallet name> <wallet_sign>
-      if ( argc < 5 ) {
-        log_it( L_ERROR, "Wrong 'wallet create' command params" );
-        s_help( );
-        exit( -2003 );
-      }
-
-      const char *l_wallet_name = argv[3];
-      dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
-      dap_chain_wallet_t *l_wallet = NULL;
-
-      if ( l_sig_type.type == SIG_TYPE_NULL ) {
-        log_it( L_ERROR, "Wrong signature '%s'", argv[4] );
-        s_help( );
-        exit( -2004 );
-      }
-      l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type);
+    size_t l_wallet_certs_number = dap_chain_wallet_get_certs_number( l_wallet );
+    if ( (l_cert_index > 0) && (l_wallet_certs_number > (size_t)l_cert_index) ) {
+      FILE *l_data_file = fopen( argv[5],"rb" );
+      if ( l_data_file ) {}
     }
-    else if ( strcmp( argv[2],"sign_file") == 0 ) {
-      // wallet sign_file <wallet name> <cert index> <data file path> <data offset> <data length> <dsign file path>
-      if ( argc < 8 ) {
-        log_it(L_ERROR,"Wrong 'wallet sign_file' command params");
-        s_help();
-        exit(-3000);
-      }
-      dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3], s_system_wallet_dir);
-      if ( !l_wallet ) {
-        log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
-        s_help();
-        exit(-3001);
-      }
+    else {
+      log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
+                                         ,l_cert_index,l_wallet_certs_number );
+      s_help();
+      exit( -3002 );
+    }
+    return 0;
+}
 
-      int l_cert_index = atoi(argv[4]);
+static int s_cert_create(int argc, const char **argv) {
+    if ( argc < 5 ) {
+      s_help();
+      exit(-500);
+    }
+    const char *l_cert_name = argv[3];
+    size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
+    char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
+    snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
+    if ( access( l_cert_path, F_OK ) != -1 ) {
+      log_it (L_ERROR, "File %s is already exists! Who knows, may be its smth important?", l_cert_path);
+      exit(-700);
+    }
 
-      size_t l_wallet_certs_number = dap_chain_wallet_get_certs_number( l_wallet );
-      if ( (l_cert_index > 0) && (l_wallet_certs_number > (size_t)l_cert_index) ) {
-        FILE *l_data_file = fopen( argv[5],"rb" );
-        if ( l_data_file ) {}
+    dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
+
+    if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
+      l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
+    } else if ( dap_strcmp (argv[4],"sig_tesla") == 0) {
+      l_key_type = DAP_ENC_KEY_TYPE_SIG_TESLA;
+    } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
+      l_key_type = DAP_ENC_KEY_TYPE_SIG_PICNIC;
+    } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
+     l_key_type = DAP_ENC_KEY_TYPE_SIG_DILITHIUM;
+    }
+    else {
+      log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
+      exit(-600);
+    }
+
+    if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
+      dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
+      if (l_cert == NULL){
+        log_it(L_ERROR, "Can't create %s",l_cert_path);
+      }
+      dap_cert_delete(l_cert);
+    } else {
+        s_help();
+        DAP_DELETE(l_cert_path);
+        exit(-500);
+    }
+    DAP_DELETE(l_cert_path);
+    return 0;
+}
+static int s_cert_dump(int argc, const char **argv) {
+    if (argc>=4) {
+      const char * l_cert_name = argv[3];
+      dap_cert_t * l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      if ( l_cert ) {
+        dap_cert_dump(l_cert);
+        dap_cert_delete_by_name(l_cert_name);
       }
       else {
-        log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
-                                           ,l_cert_index,l_wallet_certs_number );
-        s_help();
-        exit( -3002 );
+        exit(-702);
       }
     }
-  } // wallet
-  else if (strcmp (argv[1],"cert") == 0 ) {
-    if ( argc >=3 ) {
-        if (argc >= 5) {
-            if (strcmp (argv[2], "pkey") == 0 && strcmp (argv[3], "show") == 0) {
-                dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
-                if (!l_cert) {
-                    printf("Not found cert: %s\n", argv[4]);
-                    exit(-134);
-                }
+    return 0;
+}
 
-                size_t l_buf_len;
-                uint8_t *l_pub_enc_key = dap_enc_key_serealize_pub_key(l_cert->enc_key, &l_buf_len);
-
-                dap_hash_fast_t l_hash;
-                dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
-
-                char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
-                printf("%s\n", l_hash_str);
-                exit(0);
+static int s_cert_create_pkey(int argc, const char **argv) {
+    if (argc < 5) exit(-7023);
+      const char *l_cert_name = argv[3];
+      const char *l_cert_pkey_path = argv[4];
+      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      if ( !l_cert ) exit( -7021 );
+        l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
+        if ( l_cert->enc_key->pub_key_data_size ) {
+          //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
+          //if ( dap_enc_gen_key_public(l_cert->key_private, l_cert->key_private->pub_key_data) == 0){
+          dap_pkey_t * l_pkey = dap_pkey_from_enc_key( l_cert->enc_key );
+          if (l_pkey) {
+            FILE *l_file = fopen(l_cert_pkey_path,"wb");
+            if (l_file) {
+              fwrite(l_pkey,1,l_pkey->header.size + sizeof(l_pkey->header),l_file);
+              fclose(l_file);
             }
-        }
-      if ( strcmp( argv[2],"dump") == 0 ){
-        if (argc>=4) {
-          const char * l_cert_name = argv[3];
-          dap_cert_t * l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-          if ( l_cert ) {
-            dap_cert_dump(l_cert);
-            dap_cert_delete_by_name(l_cert_name);
-            ret = 0;
+          } else {
+            log_it(L_ERROR, "Can't produce pkey from the certificate");
+            exit(-7022);
           }
-          else {
-            exit(-702);
-          }
+          dap_cert_delete_by_name(l_cert_name);
+          return 0;
+        } else {
+          log_it(L_ERROR,"Can't produce pkey from this cert type");
+          exit(-7023);
         }
-     } else if ( strcmp( argv[2],"create_pkey") == 0 ){
-       if (argc < 5) exit(-7023);
-         const char *l_cert_name = argv[3];
-         const char *l_cert_pkey_path = argv[4];
-         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-         if ( !l_cert ) exit( -7021 );
-           l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
-           if ( l_cert->enc_key->pub_key_data_size ) {
-             //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
-             //if ( dap_enc_gen_key_public(l_cert->key_private, l_cert->key_private->pub_key_data) == 0){
-             dap_pkey_t * l_pkey = dap_pkey_from_enc_key( l_cert->enc_key );
-             if (l_pkey) {
-               FILE *l_file = fopen(l_cert_pkey_path,"wb");
-               if (l_file) {
-                 fwrite(l_pkey,1,l_pkey->header.size + sizeof(l_pkey->header),l_file);
-                 fclose(l_file);
-               }
-             } else {
-               log_it(L_ERROR, "Can't produce pkey from the certificate");
-               exit(-7022);
-             }
-             dap_cert_delete_by_name(l_cert_name);
-             ret = 0;
-             //}else{
-             //    log_it(L_ERROR,"Can't produce public key with this key type");
-             //    exit(-7024);
-             //}
-           } else {
-             log_it(L_ERROR,"Can't produce pkey from this cert type");
-             exit(-7023);
-           }
-     } else if ( strcmp( argv[2],"create_cert_pkey") == 0 ) {
-       if ( argc >= 5 ) {
-         const char *l_cert_name = argv[3];
-         const char *l_cert_new_name = argv[4];
-         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-         if ( l_cert ) {
-           if ( l_cert->enc_key->pub_key_data_size ) {
-             // Create empty new cert
-             dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
-             l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
+}
+static int s_cert_create_cert_pkey(int argc, const char **argv) {
+    if ( argc >= 5 ) {
+      const char *l_cert_name = argv[3];
+      const char *l_cert_new_name = argv[4];
+      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      if ( l_cert ) {
+        if ( l_cert->enc_key->pub_key_data_size ) {
+          // Create empty new cert
+          dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
+          l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
 
-             // Copy only public key
-             l_cert_new->enc_key->pub_key_data = DAP_NEW_Z_SIZE(uint8_t,
-                                                                l_cert_new->enc_key->pub_key_data_size =
-                                                                l_cert->enc_key->pub_key_data_size );
-             memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
+          // Copy only public key
+          l_cert_new->enc_key->pub_key_data = DAP_NEW_Z_SIZE(uint8_t,
+                                                             l_cert_new->enc_key->pub_key_data_size =
+                                                             l_cert->enc_key->pub_key_data_size );
+          memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
 
-             dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
-             //dap_cert_delete_by_name(l_cert_name);
-             //dap_cert_delete_by_name(l_cert_new_name);
-           } else {
-             log_it(L_ERROR,"Can't produce pkey from this cert type");
-             exit(-7023);
-           }
-         } else {
-           exit(-7021);
-         }
-       }
-     } else if ( strcmp( argv[2],"create" ) == 0 ) {
-       if ( argc < 5 ) {
-         s_help();
-         exit(-500);
-       }
-       const char *l_cert_name = argv[3];
-       size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
-       char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
-       snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
-       if ( access( l_cert_path, F_OK ) != -1 ) {
-         log_it (L_ERROR, "File %s is already exists! Who knows, may be its smth important?", l_cert_path);
-         exit(-700);
-       }
+          dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
+          //dap_cert_delete_by_name(l_cert_name);
+          //dap_cert_delete_by_name(l_cert_new_name);
+        } else {
+          log_it(L_ERROR,"Can't produce pkey from this cert type");
+          exit(-7023);
+        }
+      } else {
+        exit(-7021);
+      }
+    }
+    return 0;
+}
+static int s_cert_add_metadata(int argc, const char **argv) {
+    if (argc >= 5) {
+      const char *l_cert_name = argv[3];
+      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      if ( l_cert ) {
+        char **l_params = dap_strsplit(argv[4], ":", 4);
+        dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
+        if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
+          dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
+        } else {
+          dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
+                                   strtoull(l_params[3], NULL, 10), strtoul(l_params[2], NULL, 10));
+        }
+        dap_strfreev(l_params);
+        dap_cert_save_to_folder(l_cert, s_system_ca_dir);
+        dap_cert_delete_by_name(l_cert_name);
+        return 0;
+      }
+      else {
+        exit(-800);
+      }
+    }
+    return -1;
+}
+static int s_cert_sign(int argc, const char **argv) {
+    return 0;
+}
+static int s_cert_pkey_show(int argc, const char **argv) {
+    dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+    if (!l_cert) {
+        printf("Not found cert: %s\n", argv[4]);
+        exit(-134);
+    }
 
-       dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
+    size_t l_buf_len;
+    uint8_t *l_pub_enc_key = dap_enc_key_serealize_pub_key(l_cert->enc_key, &l_buf_len);
 
-       if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
-         l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
-       } else if ( dap_strcmp (argv[4],"sig_tesla") == 0) {
-         l_key_type = DAP_ENC_KEY_TYPE_SIG_TESLA;
-       } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
-         l_key_type = DAP_ENC_KEY_TYPE_SIG_PICNIC;
-       } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
-        l_key_type = DAP_ENC_KEY_TYPE_SIG_DILITHIUM;
-       }
-       else {
-         log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
-         exit(-600);
-       }
+    dap_hash_fast_t l_hash;
+    dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
 
-       if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
-         dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
-         if (l_cert == NULL){
-           log_it(L_ERROR, "Can't create %s",l_cert_path);
-         }
-         dap_cert_delete(l_cert);
-       } else {
-           s_help();
-           DAP_DELETE(l_cert_path);
-           exit(-500);
-       }
-       DAP_DELETE(l_cert_path);
-     } else if (strcmp(argv[2], "add_metadata") == 0) {
-       if (argc >= 5) {
-         const char *l_cert_name = argv[3];
-         dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-         if ( l_cert ) {
-           char **l_params = dap_strsplit(argv[4], ":", 4);
-           dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
-           if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
-             dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
-           } else {
-             dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
-                                      strtoull(l_params[3], NULL, 10), strtoul(l_params[2], NULL, 10));
-           }
-           dap_strfreev(l_params);
-           dap_cert_save_to_folder(l_cert, s_system_ca_dir);
-           dap_cert_delete_by_name(l_cert_name);
-           ret = 0;
-         }
-         else {
-           exit(-800);
-         }
-       }
-     } else {
-       log_it(L_ERROR,"Wrong params");
-       s_help();
-       exit(-1000);
-     }
-   } else {
-     log_it(L_ERROR,"Wrong params");
-     s_help();
-     exit(-1000);
-   }
- }else {
-   log_it(L_ERROR,"Wrong params");
-   s_help();
-   exit(-1000);
- }
+    char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
+    printf("%s\n", l_hash_str);
 
+    return 0;
 }
 
 /**
