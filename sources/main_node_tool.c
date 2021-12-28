@@ -518,8 +518,13 @@ static void s_help()
     printf(" * Create new key wallet and generate signatures with same names plus index \n" );
     printf("\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
+#if 0
     printf(" * Create new key wallet from existent certificates in the system\n");
     printf("\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]\n\n", l_tool_appname);
+#endif
+
+    printf(" * Sign file\n");
+    printf("\t%s wallet sign_file <wallet name> <cert index> <data file>", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
     printf("\t%s cert create <cert name> <key type> [<key length>]\n\n", l_tool_appname);
