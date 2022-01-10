@@ -276,7 +276,7 @@ if(UNIX AND NOT WIN32)
 
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread z util expat )
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
