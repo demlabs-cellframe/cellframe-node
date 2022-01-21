@@ -9,21 +9,7 @@ variables:
     GIT_SUBMODULE_STRATEGY: normal
 
 
-cellframe-node_buster:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node buster
-
-cellframe-node_stretch:
+cellframe-node_amd64:
     stage: build
     only:
      - develop
@@ -37,7 +23,7 @@ cellframe-node_stretch:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node stretch
 
-cellframe-node_bullseye:
+cellframe-node_arm64-amrhf:
     stage: build
     only:
      - develop
