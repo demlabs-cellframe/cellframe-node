@@ -23,19 +23,19 @@ cellframe-node_amd64:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_test
 
-cellframe-node_arm64-amrhf:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
+# cellframe-node_arm64-amrhf:
+#     stage: build
+#     only:
+#      - develop
+#      - master
+#      - /^release.*$/
+#      - /^bugfix.*$/
+#      - /^hotfix.*$/
+#      - /^feature.*$/
+#      - /^support.*$/
+#     tags:
+#      - cellframe-node
+#     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
 
 cellframe-dashboard_update:
     stage: update
