@@ -276,7 +276,7 @@ if(UNIX AND NOT WIN32)
         find_package(PythonLibs REQUIRED)
         include_directories(${PYTHON_INCLUDE_DIR} include/)
 	add_subdirectory(python-cellframe)
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} -lssl -lcrypto ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 
     if(ANDROID )
