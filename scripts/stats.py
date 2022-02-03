@@ -1,4 +1,4 @@
-#!/usr/bin/env /opt/cellframe-node/etc/bin/python3
+#!/usr/bin/env /usr/bin/python3
 # -*- coding: utf-8 -*- 
 
 
