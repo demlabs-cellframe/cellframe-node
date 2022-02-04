@@ -314,11 +314,7 @@ if(DARWIN)
 
 else() 
     if(BUILD_WITH_PYTHON_ENV)
-<<<<<<< HEAD
        INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/share )
-=======
-       INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/etc )
->>>>>>> master
     endif()
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
