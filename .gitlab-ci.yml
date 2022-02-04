@@ -21,7 +21,7 @@ cellframe-node_amd64:
      - /^support.*$/
     tags:
      - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_test
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
 
 # cellframe-node_arm64-amrhf:
 #     stage: build
