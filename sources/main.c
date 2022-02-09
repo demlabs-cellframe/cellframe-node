@@ -501,12 +501,12 @@ int main( int argc, const char **argv )
 
     //dap_chain_net_load_all();
 
-    //Init python plugins
-    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        log_it(L_NOTICE, "Loading python plugins");
-        dap_plugins_python_app_content_init(l_server);
-        dap_chain_plugins_init(g_config);
-    #endif
+//Init python plugins
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+    log_it(L_NOTICE, "Loading python plugins");
+    dap_plugins_python_app_content_init(l_server);
+    dap_chain_plugins_init(g_config);
+#endif
 
     rc = dap_events_wait(l_events);
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
