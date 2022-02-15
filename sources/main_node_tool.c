@@ -156,7 +156,7 @@ int main(int argc, const char **argv)
       // Check if wallet name has only digits and English letters
       //
 
-      size_t is_str = s_isstralnum(l_wallet_name);
+      size_t is_str = dap_isstralnum(l_wallet_name);
 
       if (!is_str)
       {
