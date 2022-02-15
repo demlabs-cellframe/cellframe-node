@@ -152,6 +152,18 @@ int main(int argc, const char **argv)
       dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
       dap_chain_wallet_t *l_wallet = NULL;
 
+      //
+      // Check if wallet name has only digits and English letters
+      //
+
+      size_t is_str = s_isstralnum(l_wallet_name);
+
+      if (!is_str)
+      {
+          log_it( L_ERROR, "Wallet name must contain digits and alphabet symbols");
+          exit( -2004 );
+      }
+
       if ( l_sig_type.type == SIG_TYPE_NULL ) {
         log_it( L_ERROR, "Wrong signature '%s'", argv[4] );
         s_help( );
