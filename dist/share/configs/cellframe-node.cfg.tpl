@@ -31,6 +31,13 @@ listen_port_tcp={SERVER_PORT}
 # If not set - used listen_port_tcp for node table auto fill
 #ext_port_tcp=8089
 
+[notify_server]
+# Listening path have priority above listening address 
+listen_path={PREFIX}/var/run/node_notify
+listen_path_mode=600
+#listen_addr=0.0.0.0
+#listen_port=18888
+
 [stream]
 # For now its IAES but thats depricated
 #preferred_encryption=SALSA2012 
@@ -108,12 +115,6 @@ listen_unix_socket_permissions=777
 [resources]
 #   0 means auto detect
 threads_cnt=0 
-# By default notify opens at {PREFIX}/var/run/node_notify
-notify_path={PREFIX}/var/run/node_notify
-#notify_permissions=770
-#notify_user=myuser
-#notify_group=mygroup
-
 pid_path={PREFIX}/var/run/cellframe-node.pid
 log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
