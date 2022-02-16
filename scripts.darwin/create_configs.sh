@@ -21,5 +21,13 @@ export DAP_CORE_T_ROLE=full
 export DAP_KELVIN_TESTNET_ENABLED=true
 export DAP_KELVIN_TESTNET_ROLE=full
 
+# Subzero testnet
+export DAP_SUBZERO_ENABLED=true
+export DAP_SUBZERO_ROLE=full
+
+# Kelvpn-minkowski testnet
+export DAP_KELVPN_MINKOWSKI_ENABLED=true
+export DAP_KELVPN_MINKOWSKI_ROLE=full
+
 echo "Init configs with prefix " $DAP_PREFIX
 ../scripts/create_configs_from_tpl.sh
