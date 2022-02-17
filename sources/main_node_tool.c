@@ -169,6 +169,17 @@ int main(int argc, const char **argv)
         s_help( );
         exit( -2004 );
       }
+
+      //
+      // Check unsupported tesla algorithm
+      //
+
+      if (l_sig_type.type == SIG_TYPE_TESLA)
+      {
+          log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+          exit( -2004 );
+      }
+
       l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type);
     }
     else if ( strcmp( argv[2],"sign_file") == 0 ) {
@@ -290,10 +301,18 @@ int main(int argc, const char **argv)
 
        dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
 
+       //
+       // Check unsupported tesla algorithm
+       //
+
+       if (dap_strcmp (argv[4],"sig_tesla") == 0)
+       {
+          log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+          exit(-600);
+       }
+
        if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
          l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
-       } else if ( dap_strcmp (argv[4],"sig_tesla") == 0) {
-         l_key_type = DAP_ENC_KEY_TYPE_SIG_TESLA;
        } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
          l_key_type = DAP_ENC_KEY_TYPE_SIG_PICNIC;
        } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
