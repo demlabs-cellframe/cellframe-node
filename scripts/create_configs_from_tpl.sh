@@ -97,3 +97,20 @@ if [ "$DAP_SUBZERO_ENABLED"="true" ]; then
     sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
     rm $DAP_NET_CFG.old
 fi
+
+NET_NAME="kelvpn-minkowski"
+
+if [ "$DAP_KELVPN_MINKOWSKI_ENABLED"="true" ]; then
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_MINKOWSKI_ROLE/" $DAP_NET_CFG  || true
+    rm $DAP_NET_CFG.old
+fi
