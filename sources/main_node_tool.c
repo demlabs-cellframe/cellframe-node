@@ -268,15 +268,13 @@ int main(int argc, const char **argv)
              dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
              l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
 
-             // Copy only public key
+             // Copy only public key pointer
              l_cert_new->enc_key->pub_key_data = DAP_NEW_Z_SIZE(uint8_t,
                                                                 l_cert_new->enc_key->pub_key_data_size =
                                                                 l_cert->enc_key->pub_key_data_size );
              memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
 
              dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
-             //dap_cert_delete_by_name(l_cert_name);
-             //dap_cert_delete_by_name(l_cert_new_name);
            } else {
              log_it(L_ERROR,"Can't produce pkey from this cert type");
              exit(-7023);
