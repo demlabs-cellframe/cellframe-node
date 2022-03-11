@@ -35,7 +35,7 @@ listen_port_tcp={SERVER_PORT}
 # Listening path have priority above listening address 
 listen_path={PREFIX}/var/run/node_notify
 listen_path_mode=600
-#listen_addr=0.0.0.0
+#listen_address=0.0.0.0
 #listen_port=18888
 
 [stream]
