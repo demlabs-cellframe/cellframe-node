@@ -144,9 +144,6 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
-bool dap_chain_net_srv_pay_verificator(dap_chain_tx_out_cond_t *a_cond, dap_chain_datum_tx_t *a_tx, bool a_owner)
-{ UNUSED(a_cond); UNUSED(a_tx); UNUSED(a_owner); return true; }
-
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
 #else
