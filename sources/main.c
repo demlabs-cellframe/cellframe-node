@@ -285,20 +285,14 @@ int main( int argc, const char **argv )
     dap_client_init();
 
     // Create and init notify server
-    size_t l_notify_path_default_size = dap_snprintf(NULL,0,"/tmp/%s-notify",dap_get_appname() )+1;
-    char * l_notify_path_default = DAP_NEW_SIZE(char,l_notify_path_default_size);
-    dap_snprintf(l_notify_path_default,l_notify_path_default_size,"/tmp/%s-notify",dap_get_appname() );
     if ( dap_notify_server_init() != 0 ){
         log_it( L_ERROR, "Can't init notify server module" );
     }
-
 
 	if ( dap_chain_global_db_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init global db module" );
 	    return -58;
 	}
-
-
 
 	//dap_http_client_simple_init( );
 
