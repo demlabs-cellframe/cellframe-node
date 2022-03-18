@@ -241,7 +241,8 @@ int main( int argc, const char **argv )
     }
 
     // New event loop init
-    dap_events_init( 0, 0 );
+    rc = dap_config_get_item_uint32_default (g_config, "server", "conn_timeout", 240);
+    dap_events_init( 0, rc );
     dap_events_t *l_events = dap_events_new( );
     dap_events_start( l_events );
 
