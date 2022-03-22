@@ -299,14 +299,16 @@ int main(int argc, const char **argv)
 
        dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
 
-       //
        // Check unsupported tesla algorithm
-       //
-
-       if (dap_strcmp (argv[4],"sig_tesla") == 0)
-       {
+       if (dap_strcmp (argv[4],"sig_tesla") == 0){
           log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
           exit(-600);
+       }
+
+       //Check if certificate name has only digits and English letters
+       if (!dap_isstralnum(l_cert_name)){
+          log_it( L_ERROR, "Certificate name must contains digits and alphabet symbols");
+          exit( -2004 );
        }
 
        if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
