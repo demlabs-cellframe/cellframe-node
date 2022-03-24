@@ -67,7 +67,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 
-#ifdef DAP_OS_LINUX
+#if defined (DAP_OS_LINUX) && (!DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #endif
 

@@ -92,7 +92,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#ifdef DAP_OS_LINUX
+#if defined (DAP_OS_LINUX) && (!DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
