@@ -35,8 +35,8 @@ listen_port_tcp={SERVER_PORT}
 # Listening path have priority above listening address 
 #listen_path={PREFIX}/var/run/node_notify
 #listen_path_mode=600
-listen_address=0.0.0.0
-listen_port=18888
+listen_address={NOTIFY_SRV_ADDR}
+listen_port={NOTIFY_SRV_PORT}
 
 [stream]
 # For now its IAES but thats depricated
