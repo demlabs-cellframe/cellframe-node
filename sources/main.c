@@ -77,6 +77,7 @@
 #include "dap_chain_cs_blocks.h"
 #include "dap_chain_cs_block_poa.h"
 #include "dap_chain_cs_block_pos.h"
+#include "dap_chain_cs_block_ton.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
@@ -339,6 +340,11 @@ int main( int argc, const char **argv )
     if (dap_chain_cs_block_pos_init() != 0) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoS module");
         return -64;
+    }
+
+    if (dap_chain_cs_block_ton_init() != 0) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus TON module");
+        return -69;
     }
 
     if(dap_chain_gdb_init() != 0) {
