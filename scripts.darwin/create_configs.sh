@@ -12,6 +12,8 @@ export DAP_AUTO_ONLINE=true
 export DAP_SERVER_ENABLED=false
 export DAP_SERVER_ADDRESS=0.0.0.0
 export DAP_SERVER_PORT=8089
+export DAP_NOTIFY_SRV_ADDRESS=127.0.0.1
+export DAP_NOTIFY_SRV_PORT=8080
 
 # DapCash testnet
 export DAP_CORE_T_ENABLED=true
