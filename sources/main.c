@@ -241,6 +241,17 @@ int main( int argc, const char **argv )
         return -56;
     }
 
+    dap_chain_addr_t l_addr;
+    dap_chain_datum_token_emission_t *ems = dap_chain_datum_emission_create(dap_chain_coins_to_balance("100.0"), "ABC", &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+    ems = dap_chain_datum_emission_add_tsd(ems, 1, sizeof(l_addr), &l_addr);
+
     // New event loop init
     dap_events_init( 0, 0 );
     dap_events_t *l_events = dap_events_new( );
