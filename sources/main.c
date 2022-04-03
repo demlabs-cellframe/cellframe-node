@@ -295,7 +295,7 @@ int main( int argc, const char **argv )
 	    return -58;
 	}
 
-	//dap_http_client_simple_init( );
+    //dap_http_client_simple_init( );
 
 	if ( dap_datum_mempool_init() ) {
 	    log_it( L_CRITICAL, "Can't init mempool module" );
@@ -496,8 +496,6 @@ int main( int argc, const char **argv )
             dap_dns_server_start(l_events, dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
         }
     }
-
-    //dap_chain_net_load_all();
 
 //Init python plugins
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
