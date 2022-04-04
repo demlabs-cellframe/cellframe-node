@@ -31,6 +31,13 @@ listen_port_tcp={SERVER_PORT}
 # If not set - used listen_port_tcp for node table auto fill
 #ext_port_tcp=8089
 
+[notify_server]
+# Listening path have priority above listening address 
+#listen_path={PREFIX}/var/run/node_notify
+#listen_path_mode=600
+listen_address={NOTIFY_SRV_ADDR}
+listen_port={NOTIFY_SRV_PORT}
+
 [stream]
 # For now its IAES but thats depricated
 #preferred_encryption=SALSA2012 
@@ -76,6 +83,7 @@ pricelist=[]
 # Uncomment to have more debug information in stream channel Chain
 # False by default
 #debug_more=true
+ban_list_sync_groups=[*.orders-test-stat]
 
 # Number of hashes packed into the one update packet
 # Increase it to reduce update latency
@@ -107,11 +115,6 @@ listen_unix_socket_permissions=777
 [resources]
 #   0 means auto detect
 threads_cnt=0 
-# By default notify opens at {PREFIX}/var/run/node_notify
-notify_path={PREFIX}/var/run/node_notify
-#notify_permissions=770
-#notify_user=myuser
-#notify_group=mygroup
 
 pid_path={PREFIX}/var/run/cellframe-node.pid
 log_file={PREFIX}/var/log/cellframe-node.log
