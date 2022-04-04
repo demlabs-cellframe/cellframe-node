@@ -1,7 +1,7 @@
 # General section
 [general]
 # General debug mode
-debug_mode={DEBUG_MODE}
+debug_mode=false
 # Debug stream packets
 debug_dump_stream_headers=false
 # Debug I/O reactor, false by default
@@ -57,6 +57,7 @@ listen_port={NOTIFY_SRV_PORT}
 [ledger]
 # More debug output
 # debug_more=true
+cached=false
 
 # DAG defaults
 [dag]
@@ -73,7 +74,7 @@ pricelist=[]
 # Mempool
 [mempool]
 # Automaticaly should be true for master ad root node role
-# auto_proc=false
+auto_proc=false
 
 # Chain network settings
 [chain_net]
@@ -100,7 +101,7 @@ debug_more=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-pricelist=[cellframe-testnet:100:KELT:3600:SEC:mywallet0]
+pricelist=[scorpion:1:CELL:3600:SEC:mywallet0]
 
 # Console interface server
 [conserver]
@@ -121,7 +122,7 @@ log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 dap_global_db_path={PREFIX}/var/lib/global_db
-dap_global_db_driver=sqlite3
+dap_global_db_driver=cdb
 
 # Plugins
 #[plugins]

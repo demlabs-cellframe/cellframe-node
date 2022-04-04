@@ -297,11 +297,6 @@ int main( int argc, const char **argv )
 
     //dap_http_client_simple_init( );
 
-	if ( dap_datum_mempool_init() ) {
-	    log_it( L_CRITICAL, "Can't init mempool module" );
-	    return -59;
-	}
-
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
         return -60;
@@ -362,6 +357,12 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
+
+    if ( dap_datum_mempool_init() ) {
+        log_it( L_CRITICAL, "Can't init mempool module" );
+        return -59;
+    }
+
     if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
@@ -503,14 +504,6 @@ int main( int argc, const char **argv )
     dap_plugins_python_app_content_init(l_server);
     dap_chain_plugins_init(g_config);
 #endif
-
-    /* Test code for service client
-    #include "dap_chain_net_srv_client.h"
-    dap_chain_net_srv_client_callbacks_t l_callbacks = {};
-    dap_chain_net_srv_client_t *l_client = dap_chain_net_srv_client_create_n_connect(
-                                                dap_chain_net_by_name("kelvin-testnet"),
-                                                "51.89.133.15", 80, &l_callbacks, NULL);
-    */
 
     rc = dap_events_wait(l_events);
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
