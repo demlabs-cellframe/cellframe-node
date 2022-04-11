@@ -4,7 +4,6 @@
 [general]
 id=0x0404202200000000
 name=Backbone
-auth_cert=scorpion.root.0
 gdb_groups_prefix=scorpion
 
 # Possible values: light, full, archive, master, root
@@ -27,10 +26,10 @@ private=false
 
 
 [dag-poa]
-events-sign-cert=scorpion.root.0
+#events-sign-cert=scorpion.root.0
 
 [block-ton]
-blocks-sign-cert=scorpion.root.0
+#blocks-sign-cert=scorpion.root.0
 
 #[block-poa]
 #blocks-sign-cert=mycert
