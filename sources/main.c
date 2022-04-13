@@ -142,6 +142,7 @@
 
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
+void events_init(void);
 
 static const char *s_pid_file_path = NULL;
 
@@ -220,29 +221,15 @@ int main( int argc, const char **argv )
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
-	// change to dap_config_get_item_int_default when it's will be possible
-	size_t l_thread_cnt = 0;
-
-	const char *s_thrd_cnt = dap_config_get_item_str( g_config, "resources", "threads_cnt" );
-	if ( s_thrd_cnt != NULL )
-	    l_thread_cnt = (size_t)atoi( s_thrd_cnt );
-
-	if ( !l_thread_cnt ) {
-    	#ifndef _WIN32
-      		l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
-    	#else
-      		SYSTEM_INFO si;
-      		GetSystemInfo( &si );
-      		l_thread_cnt = si.dwNumberOfProcessors;
-    	#endif
-  	}
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
         return -56;
     }
 
+    events_init();
+
     // New event loop init
-    dap_events_init( 0, 0 );
+
     dap_events_t *l_events = dap_events_new( );
     dap_events_start( l_events );
 
@@ -542,6 +529,33 @@ static struct option long_options[] = {
 	{ "stop", 0, NULL, 0 },
 	{ NULL,   0, NULL, 0 } // must be a last element
 };
+
+void events_init()
+{
+    // change to dap_config_get_item_int_default when it's will be possible
+    size_t l_thread_cnt = 0;
+
+    const char* s_thrd_cnt = dap_config_get_item_str(g_config, "resources", "threads_cnt");
+    if (s_thrd_cnt != NULL)
+        l_thread_cnt = (size_t)atoi(s_thrd_cnt);
+
+    if (!l_thread_cnt) {
+#ifndef _WIN32
+        l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
+#else
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        l_thread_cnt = si.dwNumberOfProcessors;
+#endif
+        // New event loop init
+        dap_events_init(0, 0);
+}
+    else {
+        // New event loop init
+        dap_events_init(l_thread_cnt, 0);
+    }
+    return;
+}
 
 void parse_args( int argc, const char **argv ) {
 
