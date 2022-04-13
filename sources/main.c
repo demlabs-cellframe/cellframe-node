@@ -140,11 +140,15 @@
     #include "cellframe_node.h"
 #endif
 
-void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 void events_init(void);
 
+#ifndef _WIN32
 static const char *s_pid_file_path = NULL;
+void parse_args( int argc, const char **argv );
+#else
+HANDLE hLocalEv;
+#endif
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -201,13 +205,13 @@ int main( int argc, const char **argv )
         return -1;
     }
 
-    s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
-
     log_it(L_DEBUG, "Parsing command line args");
-    parse_args( argc, argv );
-    #ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-	#endif
+#ifndef _WIN32
+    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
+    parse_args(argc, argv);
+#else
+    exit_if_server_already_running();
+#endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -409,6 +413,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init sig unix handler module");
         return -12;
     }
+    save_process_pid_in_file(s_pid_file_path);
 #else
     if ( sig_win32_handler_init( NULL ) ) {
         log_it( L_CRITICAL,"Can't init sig win32 handler module" );
@@ -418,8 +423,6 @@ int main( int argc, const char **argv )
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
-
-    save_process_pid_in_file(s_pid_file_path);
 
 	if ( bServerEnabled ) {
 
@@ -557,10 +560,9 @@ void events_init()
     return;
 }
 
+#ifndef _WIN32
 void parse_args( int argc, const char **argv ) {
-
 	int opt, option_index = 0, is_daemon = 0;
-
 	while ( (opt = getopt_long(argc, (char *const *)argv, "D0",
                               long_options, &option_index)) != -1) {
 	    switch ( opt ) {
@@ -600,24 +602,16 @@ void parse_args( int argc, const char **argv ) {
 	if( !is_daemon )
 		exit_if_server_already_running( );
 }
+#endif
 
-void exit_if_server_already_running( void ) {
-
-    pid_t pid = get_pid_from_file(s_pid_file_path);
-
-	bool  mf = false;
-
-	#ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-
-		if ( GetLastError( ) == 183 ) {
-      		mf = true;
-    	}
-	#endif
-
-	if ( (pid != 0 && is_process_running(pid)) || mf ) {
-        log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
-                            "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
+void exit_if_server_already_running(void) {
+#ifdef _WIN32
+    hLocalEv = CreateEventA(NULL, FALSE, FALSE, "Local\\cellframe-node");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+#else
+    if (get_pid_from_file(s_pid_file_path)) {
+#endif
+        log_it(L_ERROR, "Running more than one instance of dap_server is not allowed");
 		exit( -2 );
 	}
 }
