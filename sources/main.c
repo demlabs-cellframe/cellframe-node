@@ -609,7 +609,8 @@ void exit_if_server_already_running(void) {
     hLocalEv = CreateEventA(NULL, FALSE, FALSE, "Local\\cellframe-node");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 #else
-    if (get_pid_from_file(s_pid_file_path)) {
+    pid_t l_pid = get_pid_from_file(s_pid_file_path);
+    if (l_pid && is_process_running(l_pid)) {
 #endif
         log_it(L_ERROR, "Running more than one instance of dap_server is not allowed");
 		exit( -2 );
