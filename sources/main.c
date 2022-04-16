@@ -232,6 +232,8 @@ int main( int argc, const char **argv )
 
     events_init();
 
+    uint256_t l_tst = dap_chain_balance_scan("99.888E+15");
+
     // New event loop init
 
     dap_events_t *l_events = dap_events_new( );
