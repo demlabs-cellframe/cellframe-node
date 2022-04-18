@@ -73,7 +73,7 @@ pricelist=[]
 
 # Mempool
 [mempool]
-# Automaticaly should be true for master ad root node role
+# Automaticaly false, for enabling need role master or higher
 auto_proc=false
 
 # Chain network settings
