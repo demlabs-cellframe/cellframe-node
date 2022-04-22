@@ -114,3 +114,6 @@ if [ "$DAP_KELVPN_MINKOWSKI_ENABLED"="true" ]; then
     sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_MINKOWSKI_ROLE/" $DAP_NET_CFG  || true
     rm $DAP_NET_CFG.old
 fi
+
+chmod 0666 $DAP_CFG
+chmod 0666 $DAP_CFG_TPL
