@@ -161,7 +161,8 @@ int main(int argc, const char **argv)
     s_help( );
     exit( -1000 );
   }
-
+#ifdef __ANDROID__
+#else
   size_t l_size = sizeof(s_opts) / sizeof(struct options);
   for (int i = 0; i < l_size; i++) {
       int argv_index = 1;
@@ -183,6 +184,7 @@ int main(int argc, const char **argv)
           }
       }
   }
+#endif
 
   s_help();
   return -1;

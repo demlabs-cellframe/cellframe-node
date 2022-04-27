@@ -38,7 +38,7 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
 #set(BUILD_WITH_PYTHON_ENV ON)
-set(BUILD_WITH_ZIP ON)
+set(BUILD_WITH_ZIP OFF)
 
 if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
