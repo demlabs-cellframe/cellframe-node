@@ -20,8 +20,6 @@ fi
 [ "$DAP_SERVER_ENABLED" ] || DAP_SERVER_ENABLED="false"
 [ "$DAP_SERVER_PORT" ] || DAP_SERVER_PORT="8079"
 [ "$DAP_SERVER_ADDR" ] || DAP_SERVER_ADDR="0.0.0.0"
-[ "$DAP_NOTIFY_SRV_PORT" ] || DAP_SERVER_PORT="8080"
-[ "$DAP_NOTIFY_SRV_ADDR" ] || DAP_SERVER_ADDR="127.0.0.1"
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
 
@@ -44,8 +42,6 @@ sed -i .old "s/{AUTO_ONLINE}/$DAP_AUTO_ONLINE/g" $DAP_CFG  || true
 sed -i .old "s/{SERVER_ENABLED}/$DAP_SERVER_ENABLED/g" $DAP_CFG  || true
 sed -i .old "s/{SERVER_PORT}/$DAP_SERVER_PORT/g" $DAP_CFG  || true
 sed -i .old "s/{SERVER_ADDR}/$DAP_SERVER_ADDR/g" $DAP_CFG  || true
-sed -i .old "s/{NOTIFY_SRV_PORT}/$DAP_NOTIFY_SRV_PORT/g" $DAP_CFG  || true
-sed -i .old "s/{NOTIFY_SRV_ADDR}/$DAP_NOTIFY_SRV_ADDR/g" $DAP_CFG  || true
 sed -i .old "s/{PREFIX}/$DAP_PREFIX_TPL/g" $DAP_CFG  || true
 rm $DAP_CFG.old
 
@@ -118,3 +114,6 @@ if [ "$DAP_KELVPN_MINKOWSKI_ENABLED"="true" ]; then
     sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_MINKOWSKI_ROLE/" $DAP_NET_CFG  || true
     rm $DAP_NET_CFG.old
 fi
+
+chmod 0666 $DAP_CFG
+chmod 0666 $DAP_CFG_TPL

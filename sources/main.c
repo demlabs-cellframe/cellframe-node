@@ -77,6 +77,7 @@
 #include "dap_chain_cs_blocks.h"
 #include "dap_chain_cs_block_poa.h"
 #include "dap_chain_cs_block_pos.h"
+#include "dap_chain_cs_block_ton.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
@@ -139,10 +140,15 @@
     #include "cellframe_node.h"
 #endif
 
-void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
+void events_init(void);
 
+#ifndef _WIN32
 static const char *s_pid_file_path = NULL;
+void parse_args( int argc, const char **argv );
+#else
+HANDLE hLocalEv;
+#endif
 
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
@@ -199,13 +205,13 @@ int main( int argc, const char **argv )
         return -1;
     }
 
-    s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
-
     log_it(L_DEBUG, "Parsing command line args");
-    parse_args( argc, argv );
-    #ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-	#endif
+#ifndef _WIN32
+    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
+    parse_args(argc, argv);
+#else
+    exit_if_server_already_running();
+#endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -219,29 +225,15 @@ int main( int argc, const char **argv )
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
-	// change to dap_config_get_item_int_default when it's will be possible
-	size_t l_thread_cnt = 0;
-
-	const char *s_thrd_cnt = dap_config_get_item_str( g_config, "resources", "threads_cnt" );
-	if ( s_thrd_cnt != NULL )
-	    l_thread_cnt = (size_t)atoi( s_thrd_cnt );
-
-	if ( !l_thread_cnt ) {
-    	#ifndef _WIN32
-      		l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
-    	#else
-      		SYSTEM_INFO si;
-      		GetSystemInfo( &si );
-      		l_thread_cnt = si.dwNumberOfProcessors;
-    	#endif
-  	}
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
         return -56;
     }
 
+    events_init();
+
     // New event loop init
-    dap_events_init( 0, 0 );
+
     dap_events_t *l_events = dap_events_new( );
     dap_events_start( l_events );
 
@@ -285,27 +277,16 @@ int main( int argc, const char **argv )
     dap_client_init();
 
     // Create and init notify server
-    size_t l_notify_path_default_size = dap_snprintf(NULL,0,"/tmp/%s-notify",dap_get_appname() )+1;
-    char * l_notify_path_default = DAP_NEW_SIZE(char,l_notify_path_default_size);
-    dap_snprintf(l_notify_path_default,l_notify_path_default_size,"/tmp/%s-notify",dap_get_appname() );
     if ( dap_notify_server_init() != 0 ){
         log_it( L_ERROR, "Can't init notify server module" );
     }
-
 
 	if ( dap_chain_global_db_init(g_config) ) {
 	    log_it( L_CRITICAL, "Can't init global db module" );
 	    return -58;
 	}
 
-
-
-	//dap_http_client_simple_init( );
-
-	if ( dap_datum_mempool_init() ) {
-	    log_it( L_CRITICAL, "Can't init mempool module" );
-	    return -59;
-	}
+    //dap_http_client_simple_init( );
 
     if( dap_chain_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain modules");
@@ -347,20 +328,32 @@ int main( int argc, const char **argv )
         return -64;
     }
 
+    if (dap_chain_cs_block_ton_init() != 0) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus TON module");
+        return -69;
+    }
+
     if(dap_chain_gdb_init() != 0) {
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
     dap_chain_ledger_verificator_rwlock_init();
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
+    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_FEE, dap_chain_ledger_fee_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_UPDATE, dap_chain_net_srv_stake_updater);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
+
+    if ( dap_datum_mempool_init() ) {
+        log_it( L_CRITICAL, "Can't init mempool module" );
+        return -59;
+    }
+
     if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
@@ -420,6 +413,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init sig unix handler module");
         return -12;
     }
+    save_process_pid_in_file(s_pid_file_path);
 #else
     if ( sig_win32_handler_init( NULL ) ) {
         log_it( L_CRITICAL,"Can't init sig win32 handler module" );
@@ -429,8 +423,6 @@ int main( int argc, const char **argv )
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
-
-    save_process_pid_in_file(s_pid_file_path);
 
 	if ( bServerEnabled ) {
 
@@ -496,8 +488,6 @@ int main( int argc, const char **argv )
         }
     }
 
-    //dap_chain_net_load_all();
-
 //Init python plugins
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     log_it(L_NOTICE, "Loading python plugins");
@@ -543,10 +533,36 @@ static struct option long_options[] = {
 	{ NULL,   0, NULL, 0 } // must be a last element
 };
 
+void events_init()
+{
+    // change to dap_config_get_item_int_default when it's will be possible
+    size_t l_thread_cnt = 0;
+
+    const char* s_thrd_cnt = dap_config_get_item_str(g_config, "resources", "threads_cnt");
+    if (s_thrd_cnt != NULL)
+        l_thread_cnt = (size_t)atoi(s_thrd_cnt);
+
+    if (!l_thread_cnt) {
+#ifndef _WIN32
+        l_thread_cnt = (size_t)sysconf(_SC_NPROCESSORS_ONLN);
+#else
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        l_thread_cnt = si.dwNumberOfProcessors;
+#endif
+        // New event loop init
+        dap_events_init(0, 0);
+}
+    else {
+        // New event loop init
+        dap_events_init(l_thread_cnt, 0);
+    }
+    return;
+}
+
+#ifndef _WIN32
 void parse_args( int argc, const char **argv ) {
-
 	int opt, option_index = 0, is_daemon = 0;
-
 	while ( (opt = getopt_long(argc, (char *const *)argv, "D0",
                               long_options, &option_index)) != -1) {
 	    switch ( opt ) {
@@ -586,24 +602,17 @@ void parse_args( int argc, const char **argv ) {
 	if( !is_daemon )
 		exit_if_server_already_running( );
 }
+#endif
 
-void exit_if_server_already_running( void ) {
-
-    pid_t pid = get_pid_from_file(s_pid_file_path);
-
-	bool  mf = false;
-
-	#ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-
-		if ( GetLastError( ) == 183 ) {
-      		mf = true;
-    	}
-	#endif
-
-	if ( (pid != 0 && is_process_running(pid)) || mf ) {
-        log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
-                            "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
+void exit_if_server_already_running(void) {
+#ifdef _WIN32
+    hLocalEv = CreateEventA(NULL, FALSE, FALSE, "Local\\cellframe-node");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+#else
+    pid_t l_pid = get_pid_from_file(s_pid_file_path);
+    if (l_pid && is_process_running(l_pid)) {
+#endif
+        log_it(L_ERROR, "Running more than one instance of dap_server is not allowed");
 		exit( -2 );
 	}
 }
