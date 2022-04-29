@@ -123,7 +123,7 @@ wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 dap_global_db_path={PREFIX}/var/lib/global_db
 dap_global_db_driver=cdb
-dap_global_db_drvmode_async=true
+dap_global_db_drvmode_async=false
 
 # Plugins
 #[plugins]
