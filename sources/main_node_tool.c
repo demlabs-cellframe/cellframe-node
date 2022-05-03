@@ -162,7 +162,7 @@ int main(int argc, const char **argv)
     exit( -1000 );
   }
 
-  size_t l_size = sizeof(s_opts) / sizeof(struct options);
+  int l_size = sizeof(s_opts) / sizeof(struct options);
   for (int i = 0; i < l_size; i++) {
       int argv_index = 1;
       if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
