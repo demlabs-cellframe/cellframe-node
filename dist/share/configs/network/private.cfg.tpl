@@ -2,7 +2,6 @@
 # General section
 [general]
 id=0xFF00000000000001
-auth_cert=
 name=private
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}

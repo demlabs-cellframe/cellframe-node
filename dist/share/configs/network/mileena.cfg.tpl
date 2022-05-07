@@ -4,7 +4,6 @@
 [general]
 id=0x000000000000cccc
 name=mileena
-auth_cert=mileena.0.root
 gdb_groups_prefix=mileena
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
@@ -13,7 +12,6 @@ seed_nodes_hostnames=[0.root.mileena.cellframe.net,1.root.mileena.cellframe.net,
 seed_nodes_addrs=[CCCC::0000::0000::0000,CCCC::0000::0000::0001,CCCC::0000::0000::0002,CCCC::0000::0000::0003,CCCC::0000::0000::0004]
 seed_nodes_port=[8079,8079,8079,8079,8079]
 require_links=4
-private=false
 
 #[auth]
 #type=ca

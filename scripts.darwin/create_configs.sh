@@ -29,5 +29,9 @@ export DAP_SUBZERO_ROLE=full
 export DAP_KELVPN_MINKOWSKI_ENABLED=true
 export DAP_KELVPN_MINKOWSKI_ROLE=full
 
+# Milena testnet
+export DAP_MILEENA_ENABLED=true
+export DAP_MILEENA_ROLE=full
+
 echo "Init configs with prefix " $DAP_PREFIX
 ../scripts/create_configs_from_tpl.sh
