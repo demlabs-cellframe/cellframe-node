@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(cellframe-node C)
+set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
