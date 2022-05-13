@@ -43,9 +43,9 @@ if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
 endif()
 
-if(LINUX)
+#if(LINUX)
 set(SUPPORT_PYTHON_PLUGINS ON)
-endif()
+#endif()
 
 
 if (WIN32)
@@ -190,64 +190,7 @@ if(BSD)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
-#if(DARWIN)
-## 3rd party
-#    include_directories(cellframe-sdk/3rdparty/cuttdb/src)
-#    include_directories(cellframe-sdk/3rdparty/json-c/)
-#    include_directories(cellframe-sdk/3rdparty/libmagic/file)
-#    include_directories(cellframe-sdk/3rdparty/uthash/src)
-#    include_directories(cellframe-sdk/dap-sdk/crypto/src/XKCP/lib/high/Keccak/FIPS202)
 
-## DAP SDK
-#    include_directories(cellframe-sdk/dap-sdk/core/include)
-#    include_directories(cellframe-sdk/dap-sdk/crypto/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/include)
-#    include_directories(cellframe-sdk/dap-sdk/core/src/common)
-#    include_directories(cellframe-sdk/dap-sdk/core/src/darwin/macos)
-#    include_directories(cellframe-sdk/dap-sdk/core/src/unix)
-#    include_directories(cellframe-sdk/dap-sdk/net/core/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/client/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/server/enc_server/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/server/http_server/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/server/http_server/http_client/include)
-#    include_directories(cellframe-sdk/dap-sdk/net/server/json_rpc/)
-#    include_directories(cellframe-sdk/dap-sdk/net/server/notify_server/include)
-#    include_directories(cellframe-sdk/dap-sdk/stream/ch/include)
-#    include_directories(cellframe-sdk/dap-sdk/stream/session/include)
-#    include_directories(cellframe-sdk/dap-sdk/stream/stream/include)
-##CellFrame SDK
-#    include_directories(cellframe-sdk/modules/app-cli/include)
-#    include_directories(cellframe-sdk/modules/chain/include)
-#    include_directories(cellframe-sdk/modules/chain/btc_rpc/include)
-#    include_directories(cellframe-sdk/modules/channel/chain/include)
-#    include_directories(cellframe-sdk/modules/channel/chain-net/include)
-#    include_directories(cellframe-sdk/modules/channel/chain-net-srv/include)
-#    include_directories(cellframe-sdk/modules/common/include)
-#    include_directories(cellframe-sdk/modules/consensus/block-poa/include)
-#    include_directories(cellframe-sdk/modules/consensus/block-pow/include)
-#    include_directories(cellframe-sdk/modules/consensus/dag-poa/include)
-#    include_directories(cellframe-sdk/modules/consensus/dag-pos/include)
-#    include_directories(cellframe-sdk/modules/consensus/none/include)
-#    include_directories(cellframe-sdk/modules/global-db/include)
-#    include_directories(cellframe-sdk/modules/mempool/include)
-#    include_directories(cellframe-sdk/modules/mining/include)
-#    include_directories(cellframe-sdk/modules/modules_dynamic/cdb/include)
-#    include_directories(cellframe-sdk/modules/net/include)
-#    include_directories(cellframe-sdk/modules/net/srv/include)
-#    include_directories(cellframe-sdk/modules/service/app/include)
-#    include_directories(cellframe-sdk/modules/service/app-db/include)
-#    include_directories(cellframe-sdk/modules/service/datum/include)
-#    include_directories(cellframe-sdk/modules/service/mining-pool/include)
-#    include_directories(cellframe-sdk/modules/service/stake/include)
-#    include_directories(cellframe-sdk/modules/service/vpn/include)
-#    include_directories(cellframe-sdk/modules/service/xchange/include)
-#    include_directories(cellframe-sdk/modules/service/type/blocks/include)
-#    include_directories(cellframe-sdk/modules/service/type/dag/include)
-#    include_directories(cellframe-sdk/modules/service/wallet/include)
-#endif()
-
-#add_executable(${PROJECT_NAME}-cli "sources/main_node_cli.c" "sources/main_node_cli_shell.c" "sources/main_node_cli_net.c" )
-#add_executable(${PROJECT_NAME}-tool "sources/main_node_tool.c" )
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -269,9 +212,47 @@ if(UNIX AND NOT WIN32)
             set(CMAKE_PREFIX_PATH "/opt/cellframe-node")
         endif()
         message("[+] Build with python plugins support")
-        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
-        find_package(PythonLibs REQUIRED)
-        include_directories(${PYTHON_INCLUDE_DIR} include/)
+#        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
+#        find_package(PythonLibs REQUIRED)
+        set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
+        set(PYTHON_SRC ${PYTHON_PREFIX}/src/libpython_static)
+        set(PYTHON_STATIC_BUILD ${PYTHON_PREFIX}/src/libpython_static-build)
+        set(PYTHON_STATIC_LIB ${PYTHON_PREFIX}/lib/libpython3.10.a)
+
+        include(ExternalProject)
+
+        set (libpython libpython_static)
+
+        ExternalProject_Add(${libpython}
+            PREFIX ${PYTHON_PREFIX}
+#            URL ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.7.13.tar.xz
+           #URL     https://www.python.org/ftp/python/3.7.13/Python-3.7.13.tar.xz
+           URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
+            #URL_HASH_SHA256 10822726f75fd7efe05a94fbd6ac2258
+            CONFIGURE_HANDLED_BY_BUILD ON  # avoid constant reconfigure
+            INSTALL_DIR ${PYTHON_PREFIX}
+            BUILD_COMMAND "${MAKE}"
+            BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB}
+            LOG_CONFIGURE ON
+            LOG_BUILD ON
+            LOG_OUTPUT_ON_FAILURE ON
+            CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX}
+#            LIST_SEPARATOR ' '
+            )
+
+        add_dependencies(${PROJECT_NAME} ${libpython})
+
+        SET(PYTHON_INCLUDE_PATH ${PYTHON_SRC}/Include)
+        SET(PYTHON_INCLUDE_DIR  ${PYTHON_SRC}/Include)
+        add_library(python_static STATIC IMPORTED GLOBAL)
+        add_dependencies(python_static ${libpython})
+        set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
+#        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
+
+        SET(PYTHON_LIBRARIES python_static)
+
+
+        include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )
 	add_subdirectory(python-cellframe)
         if (BUILD_WITH_PYTHON_ENV)
             set(PYTHON_LIBRARIES -lssl -lcrypto -lcrypt -lnsl ${PYTHON_LIBRARIES} -lz -lutil -lexpat )
