@@ -5,6 +5,12 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
 
+#
+#@RRL: #6089 - Please keep follows directive to correct working .SO modules like CDB LIB
+#
+set(CMAKE_ENABLE_EXPORTS ON)
+
+
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 5)
