@@ -14,12 +14,12 @@ To successfully complete of the build, you need to have the following packages t
 * libjson-c-dev
 * libsqlite3-dev
 * libmagic-dev
-* libpython3-dev
+* zlib1g-dev
 * traceroute
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv
+sudo apt-get install build-essential cmake dpkg-dev zlib1g-dev traceroute debconf-utils 
 ```
 
 #### MacOS Prerequsites 
