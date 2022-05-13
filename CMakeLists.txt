@@ -222,9 +222,10 @@ if(UNIX AND NOT WIN32)
         include(ExternalProject)
 
         set (libpython libpython_static)
+#            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
 
         ExternalProject_Add(${libpython}
-            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
+            URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.10.4.tgz 
             PREFIX ${PYTHON_PREFIX} 
             INSTALL_DIR ${PYTHON_PREFIX} 
             BUILD_COMMAND ${MAKE} 
@@ -246,7 +247,7 @@ if(UNIX AND NOT WIN32)
         set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
 #        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
 
-        SET(PYTHON_LIBRARIES python_static)
+        SET(PYTHON_LIBRARIES python_static util)
 
 
         include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )

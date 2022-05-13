@@ -19,7 +19,7 @@ To successfully complete of the build, you need to have the following packages t
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev zlib1g-dev traceroute debconf-utils 
+sudo apt-get install build-essential cmake dpkg-dev zlib1g-dev libmagic-dev libsqlite3-dev traceroute debconf-utils 
 ```
 
 #### MacOS Prerequsites 
