@@ -16,7 +16,7 @@ cellframe-node_amd64:
     
     tags:
      - ci-polygon
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
+    script: ./build.sh
 
 cellframe-node_arm64-amrhf:
     stage: build
@@ -24,4 +24,4 @@ cellframe-node_arm64-amrhf:
      - ci-polygon
     tags:
      - ci-polygon
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
+    script: ./build.sh
