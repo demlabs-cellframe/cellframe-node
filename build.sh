@@ -6,7 +6,7 @@ else
 	CMD=`pwd`/$0
 	HERE=`dirname ${CMD}`
 fi
-
+apt-get update
  apt-get install cmake \
     python \
     libsqlite3-dev \
