@@ -226,8 +226,8 @@ if(UNIX AND NOT WIN32)
         ExternalProject_Add(${libpython}
             PREFIX ${PYTHON_PREFIX}
 #            URL ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.7.13.tar.xz
-           #URL     https://www.python.org/ftp/python/3.7.13/Python-3.7.13.tar.xz
-           URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
+            #URL     https://www.python.org/ftp/python/3.7.13/Python-3.7.13.tar.xz
+            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
             #URL_HASH_SHA256 10822726f75fd7efe05a94fbd6ac2258
             CONFIGURE_HANDLED_BY_BUILD ON  # avoid constant reconfigure
             INSTALL_DIR ${PYTHON_PREFIX}
