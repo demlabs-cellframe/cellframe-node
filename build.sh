@@ -7,7 +7,7 @@ else
 	HERE=`dirname ${CMD}`
 fi
 apt-get update
- apt-get install cmake \
+ apt-get install -y cmake \
     python \
     libsqlite3-dev \
     libmemcached-dev \
