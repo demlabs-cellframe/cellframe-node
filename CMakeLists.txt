@@ -222,21 +222,19 @@ if(UNIX AND NOT WIN32)
         include(ExternalProject)
 
         set (libpython libpython_static)
+#            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
 
         ExternalProject_Add(${libpython}
-            PREFIX ${PYTHON_PREFIX}
-#            URL ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.7.13.tar.xz
-            #URL     https://www.python.org/ftp/python/3.7.13/Python-3.7.13.tar.xz
-            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
-            #URL_HASH_SHA256 10822726f75fd7efe05a94fbd6ac2258
-            CONFIGURE_HANDLED_BY_BUILD ON  # avoid constant reconfigure
-            INSTALL_DIR ${PYTHON_PREFIX}
-            BUILD_COMMAND "${MAKE}"
-            BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB}
-            LOG_CONFIGURE ON
-            LOG_BUILD ON
+            URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.10.4.tgz 
+            PREFIX ${PYTHON_PREFIX} 
+            INSTALL_DIR ${PYTHON_PREFIX} 
+            BUILD_COMMAND ${MAKE} 
+            BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB} 
+            LOG_CONFIGURE ON 
+            LOG_BUILD ON 
             LOG_OUTPUT_ON_FAILURE ON
-            CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX}
+            CONFIGURE_HANDLED_BY_BUILD ON 
+            CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
 #            LIST_SEPARATOR ' '
             )
 
@@ -249,7 +247,7 @@ if(UNIX AND NOT WIN32)
         set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
 #        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
 
-        SET(PYTHON_LIBRARIES python_static)
+        SET(PYTHON_LIBRARIES python_static util)
 
 
         include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )

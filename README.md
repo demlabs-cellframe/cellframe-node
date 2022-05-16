@@ -14,12 +14,16 @@ To successfully complete of the build, you need to have the following packages t
 * libjson-c-dev
 * libsqlite3-dev
 * libmagic-dev
-* libpython3-dev
+* libz-dev
 * traceroute
+* build-essential
+* cmake
+* dpkg-dev
+* debconf-utils
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv
+sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils 
 ```
 
 #### MacOS Prerequsites 
@@ -28,7 +32,7 @@ Install latest XCode from App Store or directly from official Apple site.
 Install Homebrew from brew.sh, if you have Apple Sillicon chipset pls setup it to /opt/homebrew as recommendent on the Homebrew site.
 Then install cmake and sqlite
 ```
-brew install cmake sqlite3
+brew install cmake sqlite3 zlib
 ```
 
 Generaly thats all what you need
@@ -59,11 +63,11 @@ Right now you can't, just type ```make install``` and it will install all the fi
 Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
 
 ##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb``` 
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb``` 
 
 Please use ```dpkg``` command to install it:
 ```
-sudo dpkg -i ./cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb
+sudo dpkg -i ./cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb
 ```
 
 In some cases there is a following command required to be executed
@@ -126,20 +130,18 @@ Network address used for listentning. Set ```0.0.0.0``` if you want to listen al
 * Server port (optional, usually don't ask)
 Server port, 8079 by default but sometimes better to set it to ```80``` or ```443``` to masquarade service as web service. 
 
-* Core-testnet: Enable network
-Set ```true``` if you want to connect your node with ```Core-T testnet```
+* Subzero: Enable network
+Set ```true``` if you want to connect your node with ```Subzero``` (testnet)
 
-* Core-testnet: Node type (role)
-Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
+* Mileena: Node type (role)
+Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full``` (testnet)
 
-* Kelvin-testnet: Enable network
-Set ```true``` if you want to connect your node with ```kelvin-testnet```
+* Minkowski: Enable network
+Set ```true``` if you want to connect your node with ```Minkowski``` (KelVPN testnet)
 
-* SubZero: Enable network
-Set ```true``` if you want to connect your node with ```subzero```
+* Bacbone: Enable network
+Set ```true``` if you want to connect your node with ```Backbone``` (Mainnet)
 
-* SubZero: Node role
-Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
 
 ### How to configure VPN service share
 
@@ -164,7 +166,7 @@ Next line ```pricelist``` if commented out it shares service for free.
 #### Pricelist config
 Pricelist line has list of values, splitted with ```:``` symbol. What it means lets see in example ```kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0```:
 
-1. ```kelvin-testnet``` thats the chain network name where the price token issued
+1. ```minkowski``` thats the chain network name where the price token issued
 2. ```0.00001``` price per units. Important: not for one unit but for all the units, in our example - for 1 hour.
 3. ```KELT``` token ticker thats will be used for payments
 4. ```3600``` units number thats costs price `0.00001`
@@ -246,19 +248,19 @@ To stop it use the next command:
 First you need to publish you public IPv4 and/or IPv6 addresses (for current moment we support only IPv4)
 
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net -net kelvin-testnet get status
+sudo /opt/cellframe-node/bin/cellframe-node-cli net -net minkowski get status
 ```
 
 It should print smth like this
 ```
-Network "kelvin-testnet" has state NET_STATE_SYNC_CHAINS (target state NET_STATE_ONLINE), active links 3 from 4, cur node address 374C::CEB5::6740::D93B
+Network "minkowski" has state NET_STATE_SYNC_CHAINS (target state NET_STATE_ONLINE), active links 3 from 4, cur node address 374C::CEB5::6740::D93B
 ```
 
 #### Publish IP address in nodelist
 
 Look at the end of address, thats you node address, ```374C::CEB5::6740::D93B``` use it to update information about your node, as in example below:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli node add -net kelvin-testnet -addr 374C::CEB5::6740::D93B -cell 0x0000000000000001 -ipv4 5.89.17.176
+sudo /opt/cellframe-node/bin/cellframe-node-cli node add -net minkowski -addr 374C::CEB5::6740::D93B -cell 0x0000000000000001 -ipv4 5.89.17.176
 ```
 
 Here is cell `0x0000000000000001` used by default until we haven't finished cell autoselection. Then ipv4 address is `5.89.17.176` replace it with your public IPv4 address. Same could be added ipv6 address with argument `-ipv6`
@@ -268,13 +270,13 @@ Here is cell `0x0000000000000001` used by default until we haven't finished cell
 
 To say world that you have VPN service you need to place order. First lets see the market, what orders are already present:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order find -srv_uid 0x0000000000000001 -direction sell
+sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order find -srv_uid 0x0000000000000001 -direction sell
 ```
 
 It should print list if you've syncronized well before (should happens automatically by default)
 Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg``` if you see in list thats market changed and you need to change prices as well.
 Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token KELT -price 100```
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token KELT -price 100```
 
 And then you just wait some for network synchronisation and your order will see everybody.
 
