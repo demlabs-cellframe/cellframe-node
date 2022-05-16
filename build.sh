@@ -31,6 +31,7 @@ apt-get update
     g++-aarch64-linux-gnu \
     gcc-arm-linux-gnueabihf \
     g++-arm-linux-gnueabihf \
+    libjson-c-dev \
 
 mkdir ./build
 
