@@ -20,7 +20,7 @@ cellframe-node_amd64:
      - /^support.*$/
     tags:
      - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler_root.sh cellframe-node linux_static
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
 
 cellframe-node_arm64-amrhf:
     stage: build
@@ -34,5 +34,5 @@ cellframe-node_arm64-amrhf:
      - /^support.*$/
     tags:
      - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler_root.sh cellframe-node bullseye
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
 
