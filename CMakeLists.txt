@@ -216,6 +216,7 @@ if(UNIX AND NOT WIN32)
 #        find_package(PythonLibs REQUIRED)
         set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
         set(PYTHON_SRC ${PYTHON_PREFIX}/src/libpython_static)
+        set(PYTHON_INSTALL_INCLUDES ${PYTHON_PREFIX}/include/python3.10)
         set(PYTHON_STATIC_BUILD ${PYTHON_PREFIX}/src/libpython_static-build)
         set(PYTHON_STATIC_LIB ${PYTHON_PREFIX}/lib/libpython3.10.a)
 
@@ -240,21 +241,24 @@ if(UNIX AND NOT WIN32)
 
         add_dependencies(${PROJECT_NAME} ${libpython})
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
-        SET(PYTHON_INCLUDE_PATH ${PYTHON_SRC}/Include)
-        SET(PYTHON_INCLUDE_DIR  ${PYTHON_SRC}/Include)
+        SET(PYTHON_INCLUDE_PATH ${PYTHON_INSTALL_INCLUDES})
+        SET(PYTHON_INCLUDE_DIR  ${PYTHON_INSTALL_INCLUDES})
         add_library(python_static STATIC IMPORTED GLOBAL)
         add_dependencies(python_static ${libpython})
         set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
 #        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
 
         SET(PYTHON_LIBRARIES python_static util)
-
+        
 
         include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )
-	add_subdirectory(python-cellframe)
+
+        add_subdirectory(python-cellframe)
+
         if (BUILD_WITH_PYTHON_ENV)
             set(PYTHON_LIBRARIES -lssl -lcrypto -lcrypt -lnsl ${PYTHON_LIBRARIES} -lz -lutil -lexpat )
         endif()
+
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 
