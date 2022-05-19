@@ -234,12 +234,12 @@ if(UNIX AND NOT WIN32)
             LOG_BUILD ON 
             LOG_OUTPUT_ON_FAILURE ON
             CONFIGURE_HANDLED_BY_BUILD ON 
-            CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
+            CONFIGURE_COMMAND  <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
 #            LIST_SEPARATOR ' '
             )
 
         add_dependencies(${PROJECT_NAME} ${libpython})
-
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
         SET(PYTHON_INCLUDE_PATH ${PYTHON_SRC}/Include)
         SET(PYTHON_INCLUDE_DIR  ${PYTHON_SRC}/Include)
         add_library(python_static STATIC IMPORTED GLOBAL)
