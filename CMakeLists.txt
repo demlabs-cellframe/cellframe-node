@@ -214,51 +214,40 @@ if(UNIX AND NOT WIN32)
         message("[+] Build with python plugins support")
 #        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
 #        find_package(PythonLibs REQUIRED)
-        set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
-        set(PYTHON_SRC ${PYTHON_PREFIX}/src/libpython_static)
-        set(PYTHON_INSTALL_INCLUDES ${PYTHON_PREFIX}/include/python3.10)
-        set(PYTHON_STATIC_BUILD ${PYTHON_PREFIX}/src/libpython_static-build)
-        set(PYTHON_STATIC_LIB ${PYTHON_PREFIX}/lib/libpython3.10.a)
+        set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python_src)
+        set(PYTHON_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
 
         include(ExternalProject)
 
-        set (libpython libpython_static)
+        set (libpython libpython_standalone)
 #            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
 
         ExternalProject_Add(${libpython}
-            URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.10.4.tgz 
+            URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.10.4+20220502-x86_64-unknown-linux-gnu-install_only.tar.gz
             PREFIX ${PYTHON_PREFIX} 
-            INSTALL_DIR ${PYTHON_PREFIX} 
-            BUILD_COMMAND ${MAKE} 
-            BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB} 
+            BUILD_COMMAND ""
             LOG_CONFIGURE ON 
             LOG_BUILD ON 
             LOG_OUTPUT_ON_FAILURE ON
-            CONFIGURE_HANDLED_BY_BUILD ON 
-            CONFIGURE_COMMAND  <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
-#            LIST_SEPARATOR ' '
+            CONFIGURE_HANDLED_BY_BUILD ON
+            CONFIGURE_COMMAND ""
+            INSTALL_COMMAND  cp -r ${PYTHON_PREFIX}/src/libpython_standalone/ ${PYTHON_INSTALL_PREFIX}
             )
 
+        set(PYTHON_STATIC_LIB ${PYTHON_INSTALL_PREFIX}/lib/libpython3.10.so)
+        target_link_libraries(${NODE_TARGET} ${PYTHON_STATIC_LIB})
+    
         add_dependencies(${PROJECT_NAME} ${libpython})
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
-        SET(PYTHON_INCLUDE_PATH ${PYTHON_INSTALL_INCLUDES})
-        SET(PYTHON_INCLUDE_DIR  ${PYTHON_INSTALL_INCLUDES})
-        add_library(python_static STATIC IMPORTED GLOBAL)
-        add_dependencies(python_static ${libpython})
-        set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
-#        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
-
-        SET(PYTHON_LIBRARIES python_static util)
+#        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
+        SET(PYTHON_INCLUDE_PATH ${PYTHON_INSTALL_PREFIX}/include/python3.10)
         
-
-        include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )
-
+        include_directories(${PYTHON_INCLUDE_PATH})
+    
+        set(PYTHON_LIBRARIES  ${PYTHON_STATIC_LIB}  )
+    
         add_subdirectory(python-cellframe)
-
-        if (BUILD_WITH_PYTHON_ENV)
-            set(PYTHON_LIBRARIES -lssl -lcrypto -lcrypt -lnsl ${PYTHON_LIBRARIES} -lz -lutil -lexpat )
-        endif()
-
+    
+    
         set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
     endif()
 
@@ -294,7 +283,7 @@ if(DARWIN)
 
 else()
     if(BUILD_WITH_PYTHON_ENV)
-        target_compile_options(${PROJECT_NAME} PRIVATE "-rdynamic")
+        target_compile_options(${PROJECT_NAME} "-rdynamic")
         
        INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/share )
     endif()
@@ -313,10 +302,8 @@ else()
 	INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 	INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
-    INSTALL(DIRECTORY build/python/bin DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python )
-    INSTALL(DIRECTORY build/python/include DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python )
-    INSTALL(DIRECTORY build/python/lib DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python )
-    
+    INSTALL(DIRECTORY build/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python )
+
     endif()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
