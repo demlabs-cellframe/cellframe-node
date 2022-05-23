@@ -294,7 +294,7 @@ if(DARWIN)
 
 else()
     if(BUILD_WITH_PYTHON_ENV)
-        target_compile_options(${PROJECT_NAME} "-rdynamic")
+        target_compile_options(${PROJECT_NAME} PRIVATE "-rdynamic")
         
        INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/share )
     endif()
