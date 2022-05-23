@@ -238,7 +238,7 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${PYTHON_STATIC_LIB})
     
         add_dependencies(${PROJECT_NAME} ${libpython})
-#        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
         SET(PYTHON_INCLUDE_PATH ${PYTHON_INSTALL_PREFIX}/include/python3.10)
         
         include_directories(${PYTHON_INCLUDE_PATH})
@@ -282,9 +282,7 @@ if(DARWIN)
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts.darwin/ DESTINATION ${BINDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 
 else()
-    if(BUILD_WITH_PYTHON_ENV)
-        target_compile_options(${PROJECT_NAME} "-rdynamic")
-        
+    if(BUILD_WITH_PYTHON_ENV)        
        INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/share )
     endif()
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
