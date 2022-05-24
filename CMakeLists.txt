@@ -222,7 +222,7 @@ if(UNIX AND NOT WIN32)
             set (libpython libpython_standalone)
 
             ExternalProject_Add(${libpython}
-                URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.tar.gz
+                URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
                 PREFIX ${PYTHON_PREFIX} 
                 BUILD_COMMAND ""
                 LOG_CONFIGURE ON 
