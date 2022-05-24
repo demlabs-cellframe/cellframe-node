@@ -221,11 +221,12 @@ if(UNIX AND NOT WIN32)
 
             set (libpython libpython_standalone)
 
-            add_custom_target( unZip ALL)
-            add_custom_command(TARGET unZip PRE_BUILD
-                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/abc/
+            add_custom_target(unZip ALL DEPENDS ${PYTHON_INSTALL_PREFIX})
+            add_custom_command(
+                OUTPUT ${PYTHON_INSTALL_PREFIX}
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_INSTALL_PREFIX}
                 COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
                 COMMENT "Unpacking python..."
             VERBATIM)
