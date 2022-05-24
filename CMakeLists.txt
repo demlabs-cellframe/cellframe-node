@@ -221,18 +221,14 @@ if(UNIX AND NOT WIN32)
 
             set (libpython libpython_standalone)
 
-            ExternalProject_Add(${libpython}
-                URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
-                PREFIX ${PYTHON_PREFIX} 
-                BUILD_COMMAND ""
-                LOG_CONFIGURE ON 
-                LOG_BUILD ON 
-                LOG_OUTPUT_ON_FAILURE ON
-                CONFIGURE_HANDLED_BY_BUILD ON
-                CONFIGURE_COMMAND ""
-                INSTALL_COMMAND  cp -r ${PYTHON_PREFIX}/src/libpython_standalone/ ${PYTHON_INSTALL_PREFIX}
-                )
-
+            add_custom_target( unZip ALL)
+            add_custom_command(TARGET unZip PRE_BUILD
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/abc/
+                COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
+                COMMENT "Unpacking python..."
+            VERBATIM)
                 set(PYTHON_LIBRARY  ${PYTHON_INSTALL_PREFIX}/lib/libpython3.9.so)
                 set(PYTHON_INCLUDE_DIR ${PYTHON_INSTALL_PREFIX}/include/python3.9)
                               
