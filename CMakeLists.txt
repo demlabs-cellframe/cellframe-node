@@ -222,16 +222,16 @@ if(UNIX AND NOT WIN32)
             
             #unzip Python distribution to buildir.
             #it already contains ./python folder, dont need to create it            
-            add_custom_target(unzip_python ALL DEPENDS ${PYTHON_PREFIX})
-            add_custom_command(
-                OUTPUT ${PYTHON_PREFIX}
+            #works on cmake stage
+            execute_process(
                 COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_PREFIX}
                 COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
-                COMMENT "Unpacking python..."
-            VERBATIM)
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            )
             
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            VERBATIM)
+
             #!WARNING! this will set only IMPLICITLY DEFINED RPATH
             #No automatic cmake-rpathes will be inserted to node.
             set(CMAKE_SKIP_RPATH TRUE)
