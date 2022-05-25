@@ -228,9 +228,6 @@ if(UNIX AND NOT WIN32)
                 COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             )
-            
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            VERBATIM)
 
             #!WARNING! this will set only IMPLICITLY DEFINED RPATH
             #No automatic cmake-rpathes will be inserted to node.
