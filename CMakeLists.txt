@@ -211,52 +211,55 @@ if(UNIX AND NOT WIN32)
             message("[!] Using system python")
             set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
             find_package(PythonLibs REQUIRED)     
+
+            add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
+
         else()
             message("[!] Using StandalonePython x86_64-unknown-linux-gnu")
 
-            set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python_src)
-            set(PYTHON_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
-
-            include(ExternalProject)
-
-            set (libpython libpython_standalone)
-
-            add_custom_target(unZip ALL DEPENDS ${PYTHON_INSTALL_PREFIX})
+            set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
+            
+            #unzip Python distribution to buildir.
+            #it already contains ./python folder, dont need to create it            
+            add_custom_target(unzip_python ALL DEPENDS ${PYTHON_PREFIX})
             add_custom_command(
-                OUTPUT ${PYTHON_INSTALL_PREFIX}
-                COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_INSTALL_PREFIX}
+                OUTPUT ${PYTHON_PREFIX}
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_PREFIX}
                 COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
                 COMMENT "Unpacking python..."
             VERBATIM)
-                set(PYTHON_LIBRARY  ${PYTHON_INSTALL_PREFIX}/lib/libpython3.9.so)
-                set(PYTHON_INCLUDE_DIR ${PYTHON_INSTALL_PREFIX}/include/python3.9)
-                              
-            endif()
+            
+            #!WARNING! this will set only IMPLICITLY DEFINED RPATH
+            #No automatic cmake-rpathes will be inserted to node.
+            set(CMAKE_SKIP_RPATH TRUE)
+            set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,./python/lib/")
 
+            set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
+            add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.so)
+           
+        endif()
+
+        get_target_property(PYTHON_LIBRARY_PATH PYTHON_LIBRARY IMPORTED_LOCATION)
 
         message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})    
-        message("[!] Python library path: " ${PYTHON_LIBRARY})    
+        message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})    
         
         include_directories(${PYTHON_INCLUDE_DIR})
-    
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY)
+        
         add_subdirectory(python-cellframe)
-    
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PYTHON_LIBRARY}")                
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python ${PYTHON_LIBRARY})
-        
-        
     endif()
 
     if(ANDROID )
         set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
-
-
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
-
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
+        
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES}  pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
