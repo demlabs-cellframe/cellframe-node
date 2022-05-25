@@ -237,7 +237,7 @@ if(UNIX AND NOT WIN32)
             #!WARNING! this will set only IMPLICITLY DEFINED RPATH
             #No automatic cmake-rpathes will be inserted to node.
             set(CMAKE_SKIP_RPATH TRUE)
-            set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,./python/lib/")
+            set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
 
             set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
             add_library( PYTHON_LIBRARY SHARED IMPORTED )
