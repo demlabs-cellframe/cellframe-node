@@ -116,7 +116,12 @@ if(UNIX)
      if (CMAKE_TARGET_ARCH MATCHES arm)
         SET( CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libmagic1, libpython3.9" )
     endif()
-    SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    
+    #have to figure out how to use it properly with custom RPATH for python plugins...
+    if (NOT SUPPORT_PYTHON_PLUGINS)
+        SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    endif()
+
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
     elseif(BSD)
