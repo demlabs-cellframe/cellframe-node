@@ -303,7 +303,7 @@ else()
 	    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
         if (SUPPORT_PYTHON_PLUGINS AND NOT BUILD_WITH_SYSTEM_PYTHON) #install python environment if not system python in use
-            INSTALL(DIRECTORY build/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python )
+            INSTALL(DIRECTORY build/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 
