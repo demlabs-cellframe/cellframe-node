@@ -226,7 +226,6 @@ if(UNIX AND NOT WIN32)
             set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
 
         else()
-            message("[!] Using StandalonePython x86_64-unknown-linux-gnu")
 
             set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
             
@@ -238,13 +237,15 @@ if(UNIX AND NOT WIN32)
             else()
                 set(PYTHON_DISTRIBUTION ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip)
             endif()
-            
+
+            message("[!] Using StandalonePython ${PYTHON_DISTRIBUTION}")
+
             execute_process(
                 COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_PREFIX}
                 COMMAND ${CMAKE_COMMAND} -E tar xzf ${PYTHON_DISTRIBUTION}
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             )
-            
+
             #!WARNING! this will set only IMPLICITLY DEFINED RPATH
             #No automatic cmake-rpathes will be inserted to node.
             set(CMAKE_SKIP_RPATH TRUE)
