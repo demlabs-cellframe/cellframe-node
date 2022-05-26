@@ -116,7 +116,12 @@ if(UNIX)
      if (CMAKE_TARGET_ARCH MATCHES arm)
         SET( CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libmagic1, libpython3.9" )
     endif()
-    SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    
+    #have to figure out how to use it properly with custom RPATH for python plugins...
+    if (NOT SUPPORT_PYTHON_PLUGINS)
+        SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    endif()
+
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
     elseif(BSD)
@@ -202,70 +207,62 @@ if(UNIX AND NOT WIN32)
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
-        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
-        if (BUILD_WITH_PYTHON_ENV)
-            add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-        endif()
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-        if (BUILD_WITH_PYTHON_ENV)
-            message("[+] Build with python environment")
-            set(CMAKE_PREFIX_PATH "/opt/cellframe-node")
-        endif()
         message("[+] Build with python plugins support")
-#        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
-#        find_package(PythonLibs REQUIRED)
-        set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
-        set(PYTHON_SRC ${PYTHON_PREFIX}/src/libpython_static)
-        set(PYTHON_STATIC_BUILD ${PYTHON_PREFIX}/src/libpython_static-build)
-        set(PYTHON_STATIC_LIB ${PYTHON_PREFIX}/lib/libpython3.10.a)
+        
+        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
 
-        include(ExternalProject)
+        if (BUILD_WITH_SYSTEM_PYTHON)
+            message("[!] Using system python")
+            set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
+            find_package(PythonLibs REQUIRED)     
 
-        set (libpython libpython_static)
-#            URL https://www.python.org/ftp/python/3.10.4/Python-3.10.4.tgz
+            add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
 
-        ExternalProject_Add(${libpython}
-            URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.10.4.tgz 
-            PREFIX ${PYTHON_PREFIX} 
-            INSTALL_DIR ${PYTHON_PREFIX} 
-            BUILD_COMMAND ${MAKE} 
-            BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB} 
-            LOG_CONFIGURE ON 
-            LOG_BUILD ON 
-            LOG_OUTPUT_ON_FAILURE ON
-            CONFIGURE_HANDLED_BY_BUILD ON 
-            CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
-#            LIST_SEPARATOR ' '
+        else()
+            message("[!] Using StandalonePython x86_64-unknown-linux-gnu")
+
+            set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
+            
+            #unzip Python distribution to buildir.
+            #it already contains ./python folder, dont need to create it            
+            #works on cmake stage
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_PREFIX}
+                COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             )
 
-        add_dependencies(${PROJECT_NAME} ${libpython})
+            #!WARNING! this will set only IMPLICITLY DEFINED RPATH
+            #No automatic cmake-rpathes will be inserted to node.
+            set(CMAKE_SKIP_RPATH TRUE)
+            set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
 
-        SET(PYTHON_INCLUDE_PATH ${PYTHON_SRC}/Include)
-        SET(PYTHON_INCLUDE_DIR  ${PYTHON_SRC}/Include)
-        add_library(python_static STATIC IMPORTED GLOBAL)
-        add_dependencies(python_static ${libpython})
-        set_target_properties(python_static PROPERTIES IMPORTED_LOCATION ${PYTHON_STATIC_LIB})
-#        set_target_properties(python_static PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIR}")
-
-        SET(PYTHON_LIBRARIES python_static util)
-
-
-        include_directories(${PYTHON_INCLUDE_DIR} ${PYTHON_STATIC_BUILD} )
-	add_subdirectory(python-cellframe)
-        if (BUILD_WITH_PYTHON_ENV)
-            set(PYTHON_LIBRARIES -lssl -lcrypto -lcrypt -lnsl ${PYTHON_LIBRARIES} -lz -lutil -lexpat )
+            set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
+            add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.so)
+           
         endif()
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
+
+        get_target_property(PYTHON_LIBRARY_PATH PYTHON_LIBRARY IMPORTED_LOCATION)
+
+        message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})    
+        message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})    
+        
+        include_directories(${PYTHON_INCLUDE_DIR})
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY)
+        
+        add_subdirectory(python-cellframe)
     endif()
 
     if(ANDROID )
         set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
-
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
-
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
+        
+        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES}  pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
@@ -289,25 +286,28 @@ if(DARWIN)
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts.darwin/ DESTINATION ${BINDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 
 else()
-    if(BUILD_WITH_PYTHON_ENV)
-       INSTALL(FILES /cpython.tar.xz DESTINATION ${CMAKE_INSTALL_PREFIX}/share )
-    endif()
+
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
-	INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     elseif(DARWIN)
-	INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.darwin/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.darwin/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     elseif(BSD)
-	INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     endif()
 
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if(UNIX AND NOT ANDROID)
-	INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-	INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+	    INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+	    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+
+        if (SUPPORT_PYTHON_PLUGINS AND NOT BUILD_WITH_SYSTEM_PYTHON) #install python environment if not system python in use
+            INSTALL(DIRECTORY build/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python USE_SOURCE_PERMISSIONS)
+        endif()
     endif()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
+    
 endif()
 INCLUDE(CPack)

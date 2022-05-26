@@ -11,7 +11,7 @@
 To successfully complete of the build, you need to have the following packages to be installed 
 (packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
 
-* libjson-c-dev
+
 * libsqlite3-dev
 * libmagic-dev
 * libz-dev
