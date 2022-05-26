@@ -43,9 +43,9 @@ if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
 endif()
 
-#if(LINUX)
-set(SUPPORT_PYTHON_PLUGINS ON)
-#endif()
+if(LINUX)
+    set(SUPPORT_PYTHON_PLUGINS ON)
+endif()
 
 
 if (WIN32)
@@ -61,6 +61,11 @@ elseif(LINUX)
 endif()
 
 add_subdirectory(cellframe-sdk)
+
+if (CELLFRAME_MODULES MATCHES "modules-dynamic")
+    add_definitions("-DDAP_MODULES_DYNAMIC")
+endif()
+
 
 if(UNIX)
     if(DARWIN)
