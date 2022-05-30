@@ -37,7 +37,9 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
-#set(BUILD_WITH_PYTHON_ENV ON)
+
+#set(BUILD_WITH_SYSTEM_PYTHON ON) #link with system python3. If OFF - will user prebuilds or src.
+set(BUILD_PYTHON_FROM_SRC ON) #build Python from sources; if OFF - will use a prebuilds.
 
 if(BUILD_WITH_GDB_DRIVER_MDBX)
 add_subdirectory(3rdparty/libmdbx)
@@ -216,6 +218,8 @@ if(UNIX AND NOT WIN32)
         
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
+        
+        set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
 
         if (BUILD_WITH_SYSTEM_PYTHON)
             message("[!] Using system python")
@@ -226,9 +230,45 @@ if(UNIX AND NOT WIN32)
             set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
 
         else()
+        
+                
+        if (BUILD_PYTHON_FROM_SRC)
 
-            set(PYTHON_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/python)
+              #build python from source
+            #./configure 
             
+                #LDFLAGS="-static -static-libgcc" 
+                #CPPFLAGS="-static" 
+                #-enable-optimizations 
+                #--with-ensurepip=install
+                #--with-openssl=DIR 
+                message("[!] Building python from source")
+                include(ExternalProject)
+                ExternalProject_Add(PYTHON
+                URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.9.12.tgz 
+                PREFIX ${PYTHON_PREFIX} 
+                INSTALL_DIR ${PYTHON_PREFIX} 
+                BUILD_COMMAND ${MAKE} 
+                #BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB} 
+                LOG_CONFIGURE ON 
+                LOG_BUILD ON 
+                LOG_OUTPUT_ON_FAILURE ON
+                CONFIGURE_HANDLED_BY_BUILD ON 
+                CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
+                )
+
+                add_dependencies(${NODE_TARGET} PYTHON)
+
+                set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.a)
+
+                add_library( PYTHON_LIBRARY STATIC IMPORTED )
+                set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
+                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
+
+                
+
+        else()
+
             #unzip Python distribution to buildir.
             #it already contains ./python folder, dont need to create it            
             #works on cmake stage
@@ -256,14 +296,14 @@ if(UNIX AND NOT WIN32)
             set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.so)
            
         endif()
-
+        endif()
         get_target_property(PYTHON_LIBRARY_PATH PYTHON_LIBRARY IMPORTED_LOCATION)
 
         message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})    
         message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})    
         
         include_directories(${PYTHON_INCLUDE_DIR})
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY)
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY -lutil -rdynamic)
         
         add_subdirectory(python-cellframe)
     endif()
