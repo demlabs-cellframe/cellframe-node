@@ -234,39 +234,27 @@ if(UNIX AND NOT WIN32)
                 
         if (BUILD_PYTHON_FROM_SRC)
 
-              #build python from source
-            #./configure 
-            
-                #LDFLAGS="-static -static-libgcc" 
-                #CPPFLAGS="-static" 
-                #-enable-optimizations 
-                #--with-ensurepip=install
-                #--with-openssl=DIR 
                 message("[!] Building python from source")
+                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
+                set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.a)
+
                 include(ExternalProject)
                 ExternalProject_Add(PYTHON
                 URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.9.12.tgz 
                 PREFIX ${PYTHON_PREFIX} 
                 INSTALL_DIR ${PYTHON_PREFIX} 
                 BUILD_COMMAND ${MAKE} 
-                #BUILD_BYPRODUCTS ${PYTHON_STATIC_LIB} 
+                BUILD_BYPRODUCTS ${PYTHON_INCLUDE_DIR} ${PYTHON_LIBRARY}
                 LOG_CONFIGURE ON 
                 LOG_BUILD ON 
                 LOG_OUTPUT_ON_FAILURE ON
                 CONFIGURE_HANDLED_BY_BUILD ON 
-                CONFIGURE_COMMAND <SOURCE_DIR>/configure --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
+                CONFIGURE_COMMAND <SOURCE_DIR>/configure --enable-optimizations --with-ensurepip=install --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
                 )
-
-                add_dependencies(${NODE_TARGET} PYTHON)
-
-                set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.a)
 
                 add_library( PYTHON_LIBRARY STATIC IMPORTED )
                 set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
-                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
-
-                
-
+                add_dependencies(dap_core PYTHON_LIBRARY)
         else()
 
             #unzip Python distribution to buildir.
@@ -306,6 +294,7 @@ if(UNIX AND NOT WIN32)
         set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY -lutil -rdynamic)
         
         add_subdirectory(python-cellframe)
+        
     endif()
 
     if(ANDROID )
