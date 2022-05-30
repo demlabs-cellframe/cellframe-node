@@ -254,7 +254,7 @@ if(UNIX AND NOT WIN32)
 
                 add_library( PYTHON_LIBRARY STATIC IMPORTED )
                 set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
-                add_dependencies(dap_core PYTHON_LIBRARY)
+                add_dependencies(dap_core PYTHON)
         else()
 
             #unzip Python distribution to buildir.
