@@ -23,7 +23,7 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_gdb.h"
+//#include "dap_chain_gdb.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -40,13 +40,13 @@
 #include "dap_stream_ch_chain_net.h"
 
 #include "dap_common.h"
-#include "dap_client_remote.h"
+//#include "dap_client_remote.h"
 #include "dap_client.h"
 #include "dap_http_client.h"
-#include "dap_http_client_simple.h"
+//#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
-#include "dap_traffic_track.h"
+//#include "dap_traffic_track.h"
 #include "dap_file_utils.h"
 #include "dap_chain_node_cli_cmd.h"
 
@@ -203,10 +203,11 @@ int dap_node_run_action(scenario_t action) {
         char **l_addr_tokens = NULL;
         dap_chain_ledger_addr_get_token_ticker_all_fast(l_ledger, l_addr_to, &l_addr_tokens, &l_addr_tokens_size);
         dap_assert_PIF(l_addr_tokens_size > 0, "No tokens found on wallet.");
-        uint64_t l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_to, l_addr_tokens[0]);
-        dap_assert_PIF(l_balance_to == 1000000000000000, "Balance TO is not equal what it must be.");
+        uint256_t l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_to, l_addr_tokens[0]);
+//        dap_assert_PIF(l_balance_to == dap_chain_uint256_from(1000000000000000), "Balance TO is not equal what it must be.");
+        dap_assert_PIF(compare256(l_balance_to, dap_chain_uint256_from(1000000000000000)) == 0, "Balance TO is not equal what it must be.");
         l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_from, l_addr_tokens[0]);
-        dap_assert_PIF(l_balance_to == 1000000000000, "Balance FROM is not equal what it must be.");
+        dap_assert_PIF(compare256(l_balance_to, dap_chain_uint256_from(1000000000000)) == 0, "Balance FROM is not equal what it must be.");
         DAP_DELETE(l_addr_tokens[0]);
         DAP_DELETE(l_addr_tokens);
         dap_chain_wallet_close(l_wallet_from);
@@ -216,7 +217,7 @@ int dap_node_run_action(scenario_t action) {
 }
 
 int dap_node_init() {
-    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt") == 0, "Can't init common functions module");
+    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt", "./") == 0, "Can't init common functions module");
     dap_assert_PIF(dap_config_init("./locale/etc") == 0,     "Can't init config");
     g_config = dap_config_open("local");
     dap_assert_PIF(g_config != NULL,                        "Config not found");
@@ -227,7 +228,7 @@ int dap_node_init() {
     //dap_assert_PIF(dap_enc_ks_init(false, 60 *60 * 2) == 0, "Can't init encryption key storage module");
     dap_assert_PIF(dap_chain_global_db_init(g_config) == 0, "Can't init DB");
     dap_client_init();
-    dap_http_client_simple_init();
+//    dap_http_client_simple_init();
     dap_datum_mempool_init();
     dap_assert_PIF(dap_chain_init() == 0,                   "Can't init CA storage");
     dap_chain_wallet_init();
@@ -235,7 +236,8 @@ int dap_node_init() {
     dap_chain_net_init();
     dap_chain_net_srv_init(g_config);
     enc_http_init();
-    dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
+//    dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
+    dap_stream_init(g_config);
     dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
     dap_http_simple_module_init();
 
