@@ -1,5 +1,6 @@
-project(cellframe-node C)
 cmake_minimum_required(VERSION 3.10)
+project(cellframe-node C)
+set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
@@ -36,6 +37,7 @@ set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+#set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
 #set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
@@ -45,12 +47,8 @@ set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
 set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
-if(BUILD_WITH_GDB_DRIVER_MDBX)
-add_subdirectory(3rdparty/libmdbx)
-endif()
-
 if(LINUX)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+    set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
 if (WIN32)
