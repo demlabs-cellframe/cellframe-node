@@ -3,13 +3,12 @@ stages:
     - build
     - test
     - deploy
-    - update
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
 
 
-cellframe-node_stretch:
+cellframe-node_amd64:
     stage: build
     only:
      - develop
@@ -21,9 +20,9 @@ cellframe-node_stretch:
      - /^support.*$/
     tags:
      - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
+    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node buster
 
-cellframe-node_bullseye:
+cellframe-node_arm64-amrhf:
     stage: build
     only:
      - develop
@@ -37,10 +36,3 @@ cellframe-node_bullseye:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
 
-cellframe-dashboard_update:
-    stage: update
-    only:
-     - master
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/update_dashboard.sh
