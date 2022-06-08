@@ -48,7 +48,7 @@ set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
 if(LINUX)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+    set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
 if (WIN32)
