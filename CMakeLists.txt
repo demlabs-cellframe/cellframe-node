@@ -337,6 +337,7 @@ if(UNIX AND NOT WIN32)
                     set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9d.a)
                 endif()
                 set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9d)
+                set(PYTHON_WITH_PYDEBUG "--with-pydebug")
             else()
                 if (BUILD_PYTHON_SHARED)
                     message("[*] Building python as shared lib")
@@ -372,7 +373,7 @@ if(UNIX AND NOT WIN32)
                 LOG_BUILD                   ON
                 LOG_OUTPUT_ON_FAILURE       ON
                 CONFIGURE_HANDLED_BY_BUILD  ON
-                CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/python.cfg.wrapper.sh <SOURCE_DIR>/configure --with-pydebug --with-ensurepip=install ${PYTHON_SHARED} ${WITH_OPENSSL}  --prefix=${PYTHON_PREFIX}
+                CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/python.cfg.wrapper.sh <SOURCE_DIR>/configure ${PYTHON_WITH_PYDEBUG} --with-ensurepip=install ${PYTHON_SHARED} ${WITH_OPENSSL}  --prefix=${PYTHON_PREFIX}
             )
 
             if(NOT BUILD_PYTHON_SHARED)
