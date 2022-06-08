@@ -4,7 +4,7 @@ variables:
 stages:
     - build
 
-before_script: ./buildtools/prepare_environment.sh
+before_script: /opt/buildtools/prepare_environment.sh
 
 cellframe-node_debian_amd64:
     tags:
