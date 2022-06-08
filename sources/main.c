@@ -242,8 +242,7 @@ int main( int argc, const char **argv )
 
     // New event loop init
     dap_events_init( 0, 0 );
-    dap_events_t *l_events = dap_events_new( );
-    dap_events_start( l_events );
+    dap_events_start();
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
@@ -432,7 +431,7 @@ int main( int argc, const char **argv )
         int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
 
         if( l_port > 0 ) {
-            l_server = dap_server_new(l_events,  (dap_config_get_item_str(g_config, "server", "listen_address")),
+            l_server = dap_server_new( (dap_config_get_item_str(g_config, "server", "listen_address")),
                                       (uint16_t) l_port, SERVER_TCP, NULL );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
@@ -487,7 +486,7 @@ int main( int argc, const char **argv )
         bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
         log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
         if (bootstrap_balancer_enabled) {
-            dap_dns_server_start(l_events, dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
+            dap_dns_server_start( dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
         }
     }
 
@@ -508,7 +507,7 @@ int main( int argc, const char **argv )
                                                 "51.89.133.15", 80, &l_callbacks, NULL);
     */
 
-    rc = dap_events_wait(l_events);
+    rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
 
