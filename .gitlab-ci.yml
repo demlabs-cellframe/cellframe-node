@@ -1,38 +1,16 @@
-stages:
-    - prepare
-    - build
-    - test
-    - deploy
-
 variables:
-    GIT_SUBMODULE_STRATEGY: normal
+    GIT_SUBMODULE_STRATEGY: recursive
 
+stages:
+    - build
 
-cellframe-node_amd64:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
+before_script: ./buildtools/prepare_environment.sh
+
+cellframe-node_debian_amd64:
     tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node buster
-
-cellframe-node_arm64-amrhf:
+     - ci-polygon
+    
+    image: ubuntu:20.04
     stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
-
+    
+    script: ./prod_build/build.sh amd64
