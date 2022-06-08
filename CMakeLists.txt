@@ -1,5 +1,6 @@
-project(cellframe-node C)
 cmake_minimum_required(VERSION 3.10)
+project(cellframe-node C)
+set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
@@ -36,14 +37,15 @@ set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+#set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
-#set(BUILD_WITH_SYSTEM_PYTHON ON) #link with system python3. If OFF - will user prebuilds or src.
-set(BUILD_PYTHON_FROM_SRC ON) #build Python from sources; if OFF - will use a prebuilds.
-
-if(BUILD_WITH_GDB_DRIVER_MDBX)
-add_subdirectory(3rdparty/libmdbx)
-endif()
+#set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
+set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
+set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
+set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
+set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
+set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
 if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
@@ -229,69 +231,195 @@ if(UNIX AND NOT WIN32)
             add_library( PYTHON_LIBRARY SHARED IMPORTED )
             set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
 
-        else()
-        
-                
-        if (BUILD_PYTHON_FROM_SRC)
+        elseif (BUILD_PYTHON_FROM_SRC)
+            message("[!] Building python from source")
+            include(ExternalProject)
 
-                message("[!] Building python from source")
-                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
-                set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.a)
+            set(LIBFFI_URL "https://pub.cellframe.net/3rdparty/python/libffi-3.3.tar.gz")
+            set(LIBFFI_HASH "SHA256=72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056")
 
-                include(ExternalProject)
-                ExternalProject_Add(PYTHON
-                URL file:///${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/Python-3.9.12.tgz 
-                PREFIX ${PYTHON_PREFIX} 
-                INSTALL_DIR ${PYTHON_PREFIX} 
-                BUILD_COMMAND ${MAKE} 
-                BUILD_BYPRODUCTS ${PYTHON_INCLUDE_DIR} ${PYTHON_LIBRARY}
-                LOG_CONFIGURE ON 
-                LOG_BUILD ON 
-                LOG_OUTPUT_ON_FAILURE ON
-                CONFIGURE_HANDLED_BY_BUILD ON 
-                CONFIGURE_COMMAND <SOURCE_DIR>/configure --enable-optimizations --with-ensurepip=install --disable-tk --disable-shared --prefix=${PYTHON_PREFIX} 
-                )
+            set(ZLIB_URL  "https://pub.cellframe.net/3rdparty/python/zlib-1.2.12.tar.gz")
+            set(ZLIB_HASH "SHA256=91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9")
 
-                add_library( PYTHON_LIBRARY STATIC IMPORTED )
-                set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
-                add_dependencies(dap_core PYTHON)
-        else()
+            set(LIBSSL_URL "https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz")
+            set(LIBSSL_HASH "SHA256=9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f")
 
-            #unzip Python distribution to buildir.
-            #it already contains ./python folder, dont need to create it            
-            #works on cmake stage
-            if (CMAKE_TARGET_ARCH MATCHES arm)
-                set(PYTHON_DISTRIBUTION ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-aarch64-unknown-linux-gnu-install_only.zip)
+            if(LINUX)
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/Python-3.9.12.tgz")
+                set(PYTHON_HASH "SHA256=70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
+                set(PYTHON_LIBNAME "python3.9")
             else()
-                set(PYTHON_DISTRIBUTION ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/3rdparty/cpython-3.9.12+20220502-x86_64-unknown-linux-gnu-install_only.zip)
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/Python-3.10.5.tgz")
+                set(PYTHON_HASH "SHA256=18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
+                set(PYTHON_LIBNAME "python3.10")
             endif()
 
-            message("[!] Using StandalonePython ${PYTHON_DISTRIBUTION}")
+            if(BUILD_PYTHON_СUSTOM_LIBFFI)
+                message("[+] Building libffi from source")
 
-            execute_process(
-                COMMAND ${CMAKE_COMMAND} -E remove_directory ${PYTHON_PREFIX}
-                COMMAND ${CMAKE_COMMAND} -E tar xzf ${PYTHON_DISTRIBUTION}
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                set(LIBFFI_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libffi)
+                set(WRP_CFLAGS "-fPIC")
+                set(WRP_CPPFLAGS "-fPIC")
+
+                configure_file(cfg.python.wrapper.in ffi.cfg.wrapper.sh @ONLY)
+
+                ExternalProject_Add(
+                    LIBFFI
+                    URL                         ${LIBFFI_URL}
+                    URL_HASH                    ${LIBFFI_HASH}
+                    PREFIX                      ${LIBFFI_PREFIX}
+                    INSTALL_DIR                 ${LIBFFI_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ffi.cfg.wrapper.sh <SOURCE_DIR>/configure --disable-shared --prefix=${LIBFFI_PREFIX}
+                )
+
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_ZLIB)
+                message("[+] Building zlib from source")
+
+                set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/zlib)
+                set(WRP_CFLAGS "-fPIC")
+                set(WRP_CPPFLAGS "-fPIC")
+
+                configure_file(cfg.python.wrapper.in zlib.cfg.wrapper.sh @ONLY)
+
+                ExternalProject_Add(
+                    ZLIB
+                    URL                         ${ZLIB_URL}
+                    URL_HASH                    ${ZLIB_HASH}
+                    PREFIX                      ${ZLIB_PREFIX}
+                    INSTALL_DIR                 ${ZLIB_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/zlib.cfg.wrapper.sh <SOURCE_DIR>/configure --static --prefix=${ZLIB_PREFIX}
+                )
+
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -I${ZLIB_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -I${ZLIB_PREFIX}/include")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} -L${ZLIB_PREFIX}/lib/ ${ZLIB_PREFIX}/lib/libz.a")
+
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_OPENSSL)
+
+                message("[+] Building openssl from source")
+
+                set(LIBSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libssl)
+
+                ExternalProject_Add(
+                    LIBSSL
+                    URL                         ${LIBSSL_URL}
+                    URL_HASH                    ${LIBSSL_HASH}
+                    PREFIX                      ${LIBSSL_PREFIX}
+                    INSTALL_DIR                 ${LIBSSL_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           <SOURCE_DIR>/config --prefix=${LIBSSL_PREFIX}
+                )
+
+                set(WITH_OPENSSL "--with-openssl=${LIBSSL_PREFIX}")
+
+            endif()
+
+            if(CMAKE_BUILD_TYPE MATCHES Debug)
+                if (BUILD_PYTHON_SHARED)
+                    message("[*] Building python as shared lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}d.so)
+                else()
+                    message("[*] Building python as static lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}d.a)
+                endif()
+                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/${PYTHON_LIBNAME}d)
+                set(PYTHON_WITH_PYDEBUG "--with-pydebug")
+            else()
+                if (BUILD_PYTHON_SHARED)
+                    message("[*] Building python as shared lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}.so)
+                else()
+                    message("[*] Building python as static lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}.a)
+                endif()
+                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/${PYTHON_LIBNAME})
+            endif()
+
+            if(NOT BUILD_PYTHON_SHARED)
+                set(PYTHON_SHARED  "--disable-shared")
+            else()
+                set(PYTHON_SHARED  "--enable-shared")
+            endif()
+
+            set(WRP_CFLAGS ${PYTHON_WRP_CFLAGS})
+            set(WRP_CPPFLAGS ${PYTHON_WRP_CPPFLAGS})
+            set(WRP_LDFLAGS ${PYTHON_WRP_LDFLAGS})
+
+            configure_file(cfg.python.wrapper.in python.cfg.wrapper.sh @ONLY)
+
+            ExternalProject_Add(
+                PYTHON
+                URL                         ${PYTHON_URL}
+                URL_HASH                    ${PYTHON_HASH}
+                PREFIX                      ${PYTHON_PREFIX}
+                INSTALL_DIR                 ${PYTHON_PREFIX}
+                BUILD_COMMAND               ${MAKE}
+                BUILD_BYPRODUCTS            ${PYTHON_INCLUDE_DIR} ${PYTHON_LIBRARY}
+                LOG_CONFIGURE               ON
+                LOG_BUILD                   ON
+                LOG_OUTPUT_ON_FAILURE       ON
+                CONFIGURE_HANDLED_BY_BUILD  ON
+                CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/python.cfg.wrapper.sh <SOURCE_DIR>/configure ${PYTHON_WITH_PYDEBUG} --with-ensurepip=install ${PYTHON_SHARED} ${WITH_OPENSSL}  --prefix=${PYTHON_PREFIX}
             )
 
-            #!WARNING! this will set only IMPLICITLY DEFINED RPATH
-            #No automatic cmake-rpathes will be inserted to node.
-            set(CMAKE_SKIP_RPATH TRUE)
-            set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
+            if(NOT BUILD_PYTHON_SHARED)
+                add_library( PYTHON_LIBRARY STATIC IMPORTED )
+            else()
+                add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            endif()
 
-            set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
-            add_library( PYTHON_LIBRARY SHARED IMPORTED )
-            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.so)
-           
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
+
+            if(BUILD_PYTHON_СUSTOM_ZLIB)
+                add_dependencies(PYTHON ZLIB)
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_OPENSSL)
+                add_dependencies(PYTHON LIBSSL)
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_LIBFFI)
+                add_dependencies(PYTHON LIBFFI)
+            endif()
+
+            if (BUILD_PYTHON_SHARED)
+                set(CMAKE_SKIP_RPATH TRUE)
+                set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
+            endif()
+
+            add_dependencies(dap_core PYTHON)
+
         endif()
-        endif()
+
         get_target_property(PYTHON_LIBRARY_PATH PYTHON_LIBRARY IMPORTED_LOCATION)
 
         message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})    
         message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})    
         
         include_directories(${PYTHON_INCLUDE_DIR})
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY -lutil -rdynamic)
+        set(NODE_LIBRARIES ${NODE_LIBRARIES} dap_plugins_python PYTHON_LIBRARY -lutil)
         
         add_subdirectory(python-cellframe)
         
