@@ -51,6 +51,7 @@
 #include "dap_chain_node_cli_cmd.h"
 
 #include "dap_tx_test.h"
+#include "dap_chain_cs_none.h"
 
 static const char *wallet_from_create_args[] = {
     "wallet",
@@ -62,12 +63,6 @@ static const char *wallet_to_create_args[] = {
     "wallet",
     "new",
     "-w", "wallet_to"
-};
-
-static const char *mempool_proc_args[] = {
-    "mempool_proc",
-    "-net"          ,"local-testnet",
-    "-chain"        ,"gdb"
 };
 
 typedef struct arg_data {
@@ -123,15 +118,16 @@ int dap_node_run_action(scenario_t action) {
             "token_decl",
             "-net"          ,"local-testnet",
             "-chain"        ,"gdb",
-            "token"         ,"MAVRODI",
-            "total_supply"  ,"1001000000000000",
-            "signs_total"   ,"1",
-            "signs_emission","1",
-            "certs"         ,"mavrodi-cert"
+            "-token"         ,"MAVRODI",
+            "-total_supply"  ,"1001000000000000",
+            "-signs_total"   ,"1",
+            "-signs_emission","1",
+            "-certs"         ,"mavrodi-cert"
         };
 
         dap_assert_PIF(com_token_decl(15, token_decl_args, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
+        char **l_hash_decl_str = dap_strsplit(str_reply, " ", -1);
         DAP_DELETE(str_reply);
         str_reply = NULL;
 
@@ -148,10 +144,26 @@ int dap_node_run_action(scenario_t action) {
 
         dap_assert_PIF(com_token_emit(15, token_emit_args, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
+        char **l_hash_emit_str = dap_strsplit(str_reply, " ", 3);
         DAP_DELETE(str_reply);
         str_reply = NULL;
 
-        dap_assert_PIF(com_mempool_proc(4, mempool_proc_args, &str_reply) == 0, str_reply);
+        const char *mempool_proc_args_decl[] = {
+                "mempool_proc",
+                "-net"          ,"local-testnet",
+                "-chain"        ,"gdb",
+                "-datum"        , l_hash_decl_str[1]
+        };
+
+        const char *mempool_proc_args_emit[] = {
+                "mempool_proc",
+                "-net"          ,"local-testnet",
+                "-chain"        ,"gdb",
+                "-datum"        , l_hash_emit_str[1]
+        };
+
+        dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_decl, &str_reply) == 0, str_reply);
+        dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_emit, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
         DAP_DELETE(str_reply);
         str_reply = NULL;
@@ -217,7 +229,7 @@ int dap_node_run_action(scenario_t action) {
 }
 
 int dap_node_init() {
-    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt", "./") == 0, "Can't init common functions module");
+    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt", "./locale/") == 0, "Can't init common functions module");
     dap_assert_PIF(dap_config_init("./locale/etc") == 0,     "Can't init config");
     g_config = dap_config_open("local");
     dap_assert_PIF(g_config != NULL,                        "Config not found");
@@ -230,13 +242,17 @@ int dap_node_init() {
     dap_client_init();
 //    dap_http_client_simple_init();
     dap_datum_mempool_init();
-    dap_assert_PIF(dap_chain_init() == 0,                   "Can't init CA storage");
     dap_chain_wallet_init();
     dap_chain_gdb_init();
+    dap_cert_init();
+    dap_assert_PIF(dap_chain_init() == 0,                   "Can't init CA storage");
     dap_chain_net_init();
     dap_chain_net_srv_init(g_config);
     enc_http_init();
 //    dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
+    dap_events_init(0, 0);
+    dap_events_t *l_events = dap_events_new();
+    dap_events_start(l_events);
     dap_stream_init(g_config);
     dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
     dap_http_simple_module_init();
@@ -246,10 +262,7 @@ int dap_node_init() {
 
     dap_stream_ch_chain_init();
     dap_stream_ch_chain_net_init();
-    dap_events_init(0, 0);
-    dap_events_t *l_events = dap_events_new();
-    dap_events_start(l_events);
-    dap_chain_net_load_all();
+//    dap_chain_net_load_all();
     return 0;
 }
 
