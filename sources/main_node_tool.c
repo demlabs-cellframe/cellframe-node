@@ -114,8 +114,8 @@ static char s_system_ca_dir[MAX_PATH];
 static char s_system_wallet_dir[MAX_PATH];
 
 #ifdef __ANDROID__
-int cellframe_node_tool_Main(int argc, const char **argv)
-#else
+int cellframe_node_tool_Main(int argc, const char **argv);
+//#else
 
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
@@ -161,14 +161,14 @@ int main(int argc, const char **argv)
     s_help( );
     exit( -1000 );
   }
-<<<<<<< HEAD
-#ifdef __ANDROID__
-#else
-  size_t l_size = sizeof(s_opts) / sizeof(struct options);
-=======
+//<<<<<<< HEAD
+//#ifdef __ANDROID__
+//#else
+//  size_t l_size = sizeof(s_opts) / sizeof(struct options);
+//=======
 
   int l_size = sizeof(s_opts) / sizeof(struct options);
->>>>>>> master
+//>>>>>>> master
   for (int i = 0; i < l_size; i++) {
       int argv_index = 1;
       if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
@@ -189,7 +189,7 @@ int main(int argc, const char **argv)
           }
       }
   }
-#endif
+//#endif
 
   s_help();
   return -1;
