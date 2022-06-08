@@ -4,13 +4,12 @@ variables:
 stages:
     - build
 
-before_script: /opt/buildtools/prepare_environment.sh
-
-cellframe-node_debian_amd64:
+cellframe-node_x86_64-linux-gnu:
     tags:
      - ci-polygon
     
     image: ubuntu:20.04
     stage: build
     
-    script: ./prod_build/build.sh amd64
+    before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
+    script: ./prod_build/build.sh
