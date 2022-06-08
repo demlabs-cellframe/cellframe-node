@@ -48,7 +48,7 @@ set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
 if(LINUX)
-    set(SUPPORT_PYTHON_PLUGINS OFF)
+    set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 if (WIN32)
@@ -229,173 +229,179 @@ if(UNIX AND NOT WIN32)
 
             add_library( PYTHON_LIBRARY SHARED IMPORTED )
             set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
-        else()
-            if (BUILD_PYTHON_FROM_SRC)
 
-                message("[!] Building python from source")
-                include(ExternalProject)
+        elseif (BUILD_PYTHON_FROM_SRC)
+            message("[!] Building python from source")
+            include(ExternalProject)
 
-                set(LIBFFI_URL "https://pub.cellframe.net/3rdparty/python/libffi-3.3.tar.gz")
-                set(LIBFFI_HASH "SHA256=72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056")
-                
-                set(ZLIB_URL  "https://pub.cellframe.net/3rdparty/python/zlib-1.2.12.tar.gz")
-                set(ZLIB_HASH "SHA256=91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9")
+            set(LIBFFI_URL "https://pub.cellframe.net/3rdparty/python/libffi-3.3.tar.gz")
+            set(LIBFFI_HASH "SHA256=72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056")
 
-                set(LIBSSL_URL "https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz")
-                set(LIBSSL_HASH "SHA256=9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f")
+            set(ZLIB_URL  "https://pub.cellframe.net/3rdparty/python/zlib-1.2.12.tar.gz")
+            set(ZLIB_HASH "SHA256=91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9")
 
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/Python-3.9.12.tgz")
-                set(PYTHON_HASH "SHA256=70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
-            
-                if(BUILD_PYTHON_СUSTOM_LIBFFI)
-                    message("[+] Building libffi from source")
-                    
-                    set(LIBFFI_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libffi)
-                    set(WRP_CFLAGS "-fPIC")
-                    set(WRP_CPPFLAGS "-fPIC")
+            set(LIBSSL_URL "https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz")
+            set(LIBSSL_HASH "SHA256=9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f")
 
-                    configure_file(cfg.python.wrapper.in ffi.cfg.wrapper.sh @ONLY)
-                    
-                    ExternalProject_Add(
-                        LIBFFI
-                        URL                         ${LIBFFI_URL}
-                        URL_HASH                    ${LIBFFI_HASH}
-                        PREFIX                      ${LIBFFI_PREFIX} 
-                        INSTALL_DIR                 ${LIBFFI_PREFIX} 
-                        BUILD_COMMAND               ${MAKE} 
-                        LOG_CONFIGURE               ON 
-                        LOG_BUILD                   ON 
-                        LOG_OUTPUT_ON_FAILURE       ON
-                        CONFIGURE_HANDLED_BY_BUILD  ON 
-                        CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ffi.cfg.wrapper.sh <SOURCE_DIR>/configure --disable-shared --prefix=${LIBFFI_PREFIX} 
-                    )
-                    
-                    set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                    set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                    set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/Python-3.9.12.tgz")
+            set(PYTHON_HASH "SHA256=70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
 
+            if(BUILD_PYTHON_СUSTOM_LIBFFI)
+                message("[+] Building libffi from source")
+
+                set(LIBFFI_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libffi)
+                set(WRP_CFLAGS "-fPIC")
+                set(WRP_CPPFLAGS "-fPIC")
+
+                configure_file(cfg.python.wrapper.in ffi.cfg.wrapper.sh @ONLY)
+
+                ExternalProject_Add(
+                    LIBFFI
+                    URL                         ${LIBFFI_URL}
+                    URL_HASH                    ${LIBFFI_HASH}
+                    PREFIX                      ${LIBFFI_PREFIX}
+                    INSTALL_DIR                 ${LIBFFI_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ffi.cfg.wrapper.sh <SOURCE_DIR>/configure --disable-shared --prefix=${LIBFFI_PREFIX}
+                )
+
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_ZLIB)
+                message("[+] Building zlib from source")
+
+                set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/zlib)
+                set(WRP_CFLAGS "-fPIC")
+                set(WRP_CPPFLAGS "-fPIC")
+
+                configure_file(cfg.python.wrapper.in zlib.cfg.wrapper.sh @ONLY)
+
+                ExternalProject_Add(
+                    ZLIB
+                    URL                         ${ZLIB_URL}
+                    URL_HASH                    ${ZLIB_HASH}
+                    PREFIX                      ${ZLIB_PREFIX}
+                    INSTALL_DIR                 ${ZLIB_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/zlib.cfg.wrapper.sh <SOURCE_DIR>/configure --static --prefix=${ZLIB_PREFIX}
+                )
+
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -I${ZLIB_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -I${ZLIB_PREFIX}/include")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} -L${ZLIB_PREFIX}/lib/ ${ZLIB_PREFIX}/lib/libz.a")
+
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_OPENSSL)
+
+                message("[+] Building openssl from source")
+
+                set(LIBSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libssl)
+
+                ExternalProject_Add(
+                    LIBSSL
+                    URL                         ${LIBSSL_URL}
+                    URL_HASH                    ${LIBSSL_HASH}
+                    PREFIX                      ${LIBSSL_PREFIX}
+                    INSTALL_DIR                 ${LIBSSL_PREFIX}
+                    BUILD_COMMAND               ${MAKE}
+                    LOG_CONFIGURE               ON
+                    LOG_BUILD                   ON
+                    LOG_OUTPUT_ON_FAILURE       ON
+                    CONFIGURE_HANDLED_BY_BUILD  ON
+                    CONFIGURE_COMMAND           <SOURCE_DIR>/config --prefix=${LIBSSL_PREFIX}
+                )
+
+                set(WITH_OPENSSL "--with-openssl=${LIBSSL_PREFIX}")
+
+            endif()
+
+            if(CMAKE_BUILD_TYPE MATCHES Debug)
+                if (BUILD_PYTHON_SHARED)
+                    message("[*] Building python as shared lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9d.so)
+                else()
+                    message("[*] Building python as static lib")
+                    set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9d.a)
                 endif()
-               
-                if(BUILD_PYTHON_СUSTOM_ZLIB)
-                    message("[+] Building zlib from source")
-
-                    set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/zlib)
-                    set(WRP_CFLAGS "-fPIC")
-                    set(WRP_CPPFLAGS "-fPIC")
-                    
-                    configure_file(cfg.python.wrapper.in zlib.cfg.wrapper.sh @ONLY)
-                    
-                    ExternalProject_Add(
-                        ZLIB
-                        URL                         ${ZLIB_URL}
-                        URL_HASH                    ${ZLIB_HASH}
-                        PREFIX                      ${ZLIB_PREFIX} 
-                        INSTALL_DIR                 ${ZLIB_PREFIX} 
-                        BUILD_COMMAND               ${MAKE} 
-                        LOG_CONFIGURE               ON 
-                        LOG_BUILD                   ON 
-                        LOG_OUTPUT_ON_FAILURE       ON
-                        CONFIGURE_HANDLED_BY_BUILD  ON 
-                        CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/zlib.cfg.wrapper.sh <SOURCE_DIR>/configure --static --prefix=${ZLIB_PREFIX} 
-                    )
-
-                    set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -I${ZLIB_PREFIX}/include")
-                    set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -I${ZLIB_PREFIX}/include")
-                    set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} -L${ZLIB_PREFIX}/lib/ ${ZLIB_PREFIX}/lib/libz.a")
-
-                endif()
-
-                if(BUILD_PYTHON_СUSTOM_OPENSSL)
-                    
-                    message("[+] Building openssl from source")
-                        
-                    set(LIBSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libssl)        
-
-                    ExternalProject_Add(
-                        LIBSSL
-                        URL                         ${LIBSSL_URL}
-                        URL_HASH                    ${LIBSSL_HASH}
-                        PREFIX                      ${LIBSSL_PREFIX} 
-                        INSTALL_DIR                 ${LIBSSL_PREFIX} 
-                        BUILD_COMMAND               ${MAKE} 
-                        LOG_CONFIGURE               ON 
-                        LOG_BUILD                   ON 
-                        LOG_OUTPUT_ON_FAILURE       ON
-                        CONFIGURE_HANDLED_BY_BUILD  ON 
-                        CONFIGURE_COMMAND           <SOURCE_DIR>/config --prefix=${LIBSSL_PREFIX} 
-                    )
-
-                    set(WITH_OPENSSL "--with-openssl=${LIBSSL_PREFIX}")
-
-                endif()
-
-                
+                set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9d)
+            else()
                 if (BUILD_PYTHON_SHARED)
                     message("[*] Building python as shared lib")
                     set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.so)
-                else()    
+                else()
                     message("[*] Building python as static lib")
                     set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/libpython3.9.a)
                 endif()
-
-                
                 set(PYTHON_INCLUDE_DIR ${PYTHON_PREFIX}/include/python3.9)
-                
-                if(NOT BUILD_PYTHON_SHARED)
-                    set(PYTHON_SHARED  "--disable-shared")
-                else()
-                    set(PYTHON_SHARED  "--enable-shared")
-                endif()
-
-                set(WRP_CFLAGS ${PYTHON_WRP_CFLAGS})
-                set(WRP_CPPFLAGS ${PYTHON_WRP_CPPFLAGS})
-                set(WRP_LDFLAGS ${PYTHON_WRP_LDFLAGS})
-
-                configure_file(cfg.python.wrapper.in python.cfg.wrapper.sh @ONLY)
-
-                ExternalProject_Add(
-                    PYTHON
-                    URL                         ${PYTHON_URL}
-                    URL_HASH                    ${PYTHON_HASH}
-                    PREFIX                      ${PYTHON_PREFIX} 
-                    INSTALL_DIR                 ${PYTHON_PREFIX} 
-                    BUILD_COMMAND               ${MAKE} 
-                    BUILD_BYPRODUCTS            ${PYTHON_INCLUDE_DIR} ${PYTHON_LIBRARY}
-                    LOG_CONFIGURE               ON 
-                    LOG_BUILD                   ON 
-                    LOG_OUTPUT_ON_FAILURE       ON
-                    CONFIGURE_HANDLED_BY_BUILD  ON 
-                    CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/python.cfg.wrapper.sh <SOURCE_DIR>/configure --with-pydebug --with-ensurepip=install ${PYTHON_SHARED} ${WITH_OPENSSL}  --prefix=${PYTHON_PREFIX}
-                )
-
-                if(NOT BUILD_PYTHON_SHARED)
-                    add_library( PYTHON_LIBRARY STATIC IMPORTED )
-                else()
-                    add_library( PYTHON_LIBRARY SHARED IMPORTED )
-                endif()
-                
-                set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
-                
-                if(BUILD_PYTHON_СUSTOM_ZLIB)
-                    add_dependencies(PYTHON ZLIB)                
-                endif()
-
-                if(BUILD_PYTHON_СUSTOM_OPENSSL)
-                    add_dependencies(PYTHON LIBSSL)
-                endif()
-
-                if(BUILD_PYTHON_СUSTOM_LIBFFI)
-                    add_dependencies(PYTHON LIBFFI)
-                endif()
-
-                if (BUILD_PYTHON_SHARED)
-                    set(CMAKE_SKIP_RPATH TRUE)
-                    set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
-                endif()
-
-                add_dependencies(dap_core PYTHON)
-        
             endif()
+
+            if(NOT BUILD_PYTHON_SHARED)
+                set(PYTHON_SHARED  "--disable-shared")
+            else()
+                set(PYTHON_SHARED  "--enable-shared")
+            endif()
+
+            set(WRP_CFLAGS ${PYTHON_WRP_CFLAGS})
+            set(WRP_CPPFLAGS ${PYTHON_WRP_CPPFLAGS})
+            set(WRP_LDFLAGS ${PYTHON_WRP_LDFLAGS})
+
+            configure_file(cfg.python.wrapper.in python.cfg.wrapper.sh @ONLY)
+
+            ExternalProject_Add(
+                PYTHON
+                URL                         ${PYTHON_URL}
+                URL_HASH                    ${PYTHON_HASH}
+                PREFIX                      ${PYTHON_PREFIX}
+                INSTALL_DIR                 ${PYTHON_PREFIX}
+                BUILD_COMMAND               ${MAKE}
+                BUILD_BYPRODUCTS            ${PYTHON_INCLUDE_DIR} ${PYTHON_LIBRARY}
+                LOG_CONFIGURE               ON
+                LOG_BUILD                   ON
+                LOG_OUTPUT_ON_FAILURE       ON
+                CONFIGURE_HANDLED_BY_BUILD  ON
+                CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/python.cfg.wrapper.sh <SOURCE_DIR>/configure --with-pydebug --with-ensurepip=install ${PYTHON_SHARED} ${WITH_OPENSSL}  --prefix=${PYTHON_PREFIX}
+            )
+
+            if(NOT BUILD_PYTHON_SHARED)
+                add_library( PYTHON_LIBRARY STATIC IMPORTED )
+            else()
+                add_library( PYTHON_LIBRARY SHARED IMPORTED )
+            endif()
+
+            set_target_properties( PYTHON_LIBRARY PROPERTIES IMPORTED_LOCATION ${PYTHON_LIBRARY})
+
+            if(BUILD_PYTHON_СUSTOM_ZLIB)
+                add_dependencies(PYTHON ZLIB)
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_OPENSSL)
+                add_dependencies(PYTHON LIBSSL)
+            endif()
+
+            if(BUILD_PYTHON_СUSTOM_LIBFFI)
+                add_dependencies(PYTHON LIBFFI)
+            endif()
+
+            if (BUILD_PYTHON_SHARED)
+                set(CMAKE_SKIP_RPATH TRUE)
+                set_target_properties(${NODE_TARGET} PROPERTIES LINK_FLAGS "-Wl,-rpath,\$ORIGIN/python/lib/")
+            endif()
+
+            add_dependencies(dap_core PYTHON)
+
         endif()
 
         get_target_property(PYTHON_LIBRARY_PATH PYTHON_LIBRARY IMPORTED_LOCATION)
