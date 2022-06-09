@@ -44,31 +44,49 @@ cellframe-node-dbg_x86_64-linux-gnu:
     script: ./prod_build/build.sh x86_64-linux-gnu debug
         
 
+cellframe-node_armhf-linux-gnu:
+    extends: .build
+    image: raspbian/stretch
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
+    script: ./prod_build/build.sh armhf-linux-gnu release
+
+
+cellframe-node-dbg_armhf-linux-gnu:
+    extends: .build
+    image: raspbian/stretch
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
+    script: ./prod_build/build.sh armhf-linux-gnu debug
+    
 cellframe-node_aarch64-linux-gnu:
     extends: .build
-    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
+    image: arm64v8/ubuntu
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
     script: ./prod_build/build.sh aarch64-linux-gnu release
 
 
 cellframe-node-dbg_aarch64-linux-gnu:
     extends: .build
+    image: arm64v8/ubuntu
     before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: ./prod_build/build.sh aarch64-linux-gnu debug
     
-
 pack-deb:
   extends: .pack
   needs: 
     - cellframe-node_x86_64-linux-gnu 
-    - cellframe-node_aarch64-linux-gnu 
     - cellframe-node-dbg_x86_64-linux-gnu 
+    - cellframe-node_aarch64-linux-gnu 
     - cellframe-node-dbg_aarch64-linux-gnu
+    - cellframe-node-armhf-linux-gnu 
+    - cellframe-node-dbg_armhf-linux-gnu 
 
   script: 
     - ./prod_build/pack.sh x86_64-linux-gnu release
     - ./prod_build/pack.sh x86_64-linux-gnu debug
     - ./prod_build/pack.sh aarch64-linux-gnu release
     - ./prod_build/pack.sh aarch64-linux-gnu debug
+    - ./prod_build/pack.sh armhf-linux-gnu release
+    - ./prod_build/pack.sh armhf-linux-gnu debug
     
 
   artifacts:
