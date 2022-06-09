@@ -6,3 +6,8 @@ build_dependencies:
     - 'libmagic-dev'
     - 'libsqlite3-dev'
     - 'libjson-c-dev' 
+
+pack_dependencies:
+  deb:
+    - 'cmake'
+    
