@@ -4,7 +4,6 @@ variables:
 stages:
     - build
     - pack
-    - notify
 
 cellframe-node_x86_64-linux-gnu:
     tags:
@@ -14,17 +13,35 @@ cellframe-node_x86_64-linux-gnu:
     stage: build
     
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
-    script: ./prod_build/build.sh
+    script: ./prod_build/build.sh x86_64-linux-gnu 
+
+cellframe-node_aarch64-linux-gnu:
+    tags:
+     - ci-polygon
+    
+    image: ubuntu:20.04
+    stage: build
+    
+    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
+    script: ./prod_build/build.sh aarch64-linux-gnu
 
 pack-deb:
+  tags:
+     - ci-polygon
+
   stage: pack
-  needs: [cellframe-node_x86_64-linux-gnu]
+  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu:]
   image: ubuntu:20.04
 
-  script: ./prod_build/pack.sh
+  script: ./prod_build/pack.sh deb
 
-notify:
-  stage: notify
-  needs: [pack-deb]
-  script:
-    - echo "We are done"
+pack-pkg:
+  tags:
+     - ci-polygon
+
+  stage: pack
+  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
+  image: ubuntu:20.04
+
+  script: ./prod_build/pack.sh pkg
+
