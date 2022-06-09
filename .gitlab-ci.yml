@@ -4,49 +4,61 @@ variables:
 stages:
     - build
     - pack
+    - deploy
 
-cellframe-node_x86_64-linux-gnu:
-    tags:
-     - ci-polygon
-    
-    image: ubuntu:20.04
-    stage: build
-    
-    before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
-    script: ./prod_build/build.sh x86_64-linux-gnu 
-
-cellframe-node_aarch64-linux-gnu:
-    tags:
-     - ci-polygon
-    
-    image: ubuntu:20.04
-    stage: build
-    
-    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
-    script: ./prod_build/build.sh aarch64-linux-gnu release
-
-pack-deb:
+.ci-polygon:
   tags:
      - ci-polygon
+  
 
-  stage: pack
-  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
+.build:  
+  extends: .ci-polygon
+  stage: build
   image: ubuntu:20.04
+  dependencies: []
+  artifacts:
+      expire_in: 1h
+      paths:
+        - build_*
 
+.pack:
+  extends: .ci-polygon
+  image: ubuntu:20.04
+  stage: pack
+  
+.deploy:
+  extends: .ci-polygon
+  image: ubuntu:20.04
+  stage: deploy
+  
+
+cellframe-node_x86_64-linux-gnu:
+    extends: .build
+    before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
+    script: ./prod_build/build.sh x86_64-linux-gnu
+    
+
+cellframe-node_aarch64-linux-gnu:
+    extends: .build
+    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
+    script: ./prod_build/build.sh aarch64-linux-gnu release
+    
+pack-deb:
+  extends: .pack
+  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
   before_script: /opt/buildtools/prepare_environment.sh
-
   script: 
     - ./prod_build/pack.sh x86_64-linux-gnu release deb
     - ./prod_build/pack.sh aarch64-linux-gnu release deb
 
-pack-pkg:
-  tags:
-     - ci-polygon
+  artifacts:
+    paths:
+      - build_*/*.deb
 
-  stage: pack
-  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
-  image: ubuntu:20.04
-  before_script: /opt/buildtools/prepare_environment.sh
+deploy:
+  extends: .deploy
+  needs: [pack-deb]
   script: 
-    - ./prod_build/pack.sh x86_64-linux-gnu release pkg
-    - ./prod_build/pack.sh aarch64-linux-gnu release pkg
+    - ./prod_build/deploy.sh
+
+
