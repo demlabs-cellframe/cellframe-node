@@ -4,6 +4,7 @@ variables:
 stages:
     - build
     - pack
+    - deploy
 
 .ci-polygon:
   tags:
@@ -25,6 +26,11 @@ stages:
   image: ubuntu:20.04
   stage: pack
   
+.deploy:
+  extends: .ci-polygon
+  image: ubuntu:20.04
+  stage: deploy
+  
 
 cellframe-node_x86_64-linux-gnu:
     extends: .build
@@ -44,3 +50,15 @@ pack-deb:
   script: 
     - ./prod_build/pack.sh x86_64-linux-gnu release deb
     - ./prod_build/pack.sh aarch64-linux-gnu release deb
+
+  artifacts:
+    paths:
+      - build_*./*.deb
+
+deploy:
+  extends: .deploy
+  needs: [pack-deb]
+  script: 
+    - ./prod_build/deploy.sh
+
+
