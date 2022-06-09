@@ -77,7 +77,7 @@ pack-deb:
     - cellframe-node-dbg_x86_64-linux-gnu 
     - cellframe-node_aarch64-linux-gnu 
     - cellframe-node-dbg_aarch64-linux-gnu
-    - cellframe-node-armhf-linux-gnu 
+    - cellframe-node_armhf-linux-gnu 
     - cellframe-node-dbg_armhf-linux-gnu 
 
   script: 
