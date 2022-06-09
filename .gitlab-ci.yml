@@ -78,6 +78,10 @@ deploy:
   extends: .deploy
   needs: [pack-deb]
   script: 
-    - ./prod_build/deploy.sh
+    - ./prod_build/deploy.sh x86_64-linux-gnu release
+    - ./prod_build/deploy.sh x86_64-linux-gnu debug
+    - ./prod_build/deploy.sh aarch64-linux-gnu release
+    - ./prod_build/deploy.sh aarch64-linux-gnu debug
+    
 
 
