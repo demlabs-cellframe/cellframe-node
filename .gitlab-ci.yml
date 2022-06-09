@@ -78,7 +78,7 @@ deploy:
   extends: .deploy
   needs: [pack-deb]
   script: 
-    - /opt/buildtools/deploy.sh build_*/*.deb pub
+    - /opt/buildtools/deploy.sh pub linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     
 
 
