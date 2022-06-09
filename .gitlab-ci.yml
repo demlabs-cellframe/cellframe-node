@@ -53,7 +53,7 @@ pack-deb:
 
   artifacts:
     paths:
-      - build_*./*.deb
+      - build_*/*.deb
 
 deploy:
   extends: .deploy
