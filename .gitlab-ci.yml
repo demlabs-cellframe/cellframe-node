@@ -66,7 +66,7 @@ pack-pkg:
      - ci-polygon
 
   stage: pack
-  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu, cellframe-node_armfh-linux-gnu]
+  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu, cellframe-node_armhf-linux-gnu]
   image: ubuntu:20.04
   before_script: /opt/buildtools/prepare_environment.sh
   script: 
