@@ -23,7 +23,7 @@ cellframe-node_aarch64-linux-gnu:
     stage: build
     
     before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
-    script: ./prod_build/build.sh aarch64-linux-gnu
+    script: ./prod_build/build.sh aarch64-linux-gnu release
 
 pack-deb:
   tags:
@@ -33,7 +33,11 @@ pack-deb:
   needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
   image: ubuntu:20.04
 
-  script: ./prod_build/pack.sh deb
+  before_script: /opt/buildtools/prepare_environment.sh
+
+  script: 
+    - ./prod_build/pack.sh x86_64-linux-gnu release deb
+    - ./prod_build/pack.sh aarch64-linux-gnu release deb
 
 pack-pkg:
   tags:
@@ -42,6 +46,7 @@ pack-pkg:
   stage: pack
   needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
   image: ubuntu:20.04
-
-  script: ./prod_build/pack.sh pkg
-
+  before_script: /opt/buildtools/prepare_environment.sh
+  script: 
+    - ./prod_build/pack.sh x86_64-linux-gnu release pkg
+    - ./prod_build/pack.sh aarch64-linux-gnu release pkg
