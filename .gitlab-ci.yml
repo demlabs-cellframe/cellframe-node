@@ -10,7 +10,6 @@ stages:
   tags:
      - ci-polygon
   
-
 .build:  
   extends: .ci-polygon
   stage: build
@@ -35,21 +34,41 @@ stages:
 cellframe-node_x86_64-linux-gnu:
     extends: .build
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
-    script: ./prod_build/build.sh x86_64-linux-gnu
-    
+    script: ./prod_build/build.sh x86_64-linux-gnu release
+
+cellframe-node-dbg_x86_64-linux-gnu:
+    extends: .build
+    before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
+    script: ./prod_build/build.sh x86_64-linux-gnu debug
+        
 
 cellframe-node_aarch64-linux-gnu:
     extends: .build
     before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: ./prod_build/build.sh aarch64-linux-gnu release
+
+
+cellframe-node-dbg_aarch64-linux-gnu:
+    extends: .build
+    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
+    script: ./prod_build/build.sh aarch64-linux-gnu debug
     
+
 pack-deb:
   extends: .pack
-  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
+  needs: 
+    - cellframe-node_x86_64-linux-gnu 
+    - cellframe-node_aarch64-linux-gnu 
+    - cellframe-node-dbg_x86_64-linux-gnu 
+    - cellframe-node-dbg_aarch64-linux-gnu
+
   before_script: /opt/buildtools/prepare_environment.sh
   script: 
-    - ./prod_build/pack.sh x86_64-linux-gnu release deb
-    - ./prod_build/pack.sh aarch64-linux-gnu release deb
+    - ./prod_build/pack.sh x86_64-linux-gnu release
+    - ./prod_build/pack.sh x86_64-linux-gnu debug
+    - ./prod_build/pack.sh aarch64-linux-gnu release
+    - ./prod_build/pack.sh aarch64-linux-gnu debug
+    
 
   artifacts:
     paths:
