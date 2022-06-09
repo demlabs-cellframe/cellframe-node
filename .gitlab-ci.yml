@@ -3,6 +3,8 @@ variables:
 
 stages:
     - build
+    - pack
+    - notify
 
 cellframe-node_x86_64-linux-gnu:
     tags:
@@ -13,3 +15,16 @@ cellframe-node_x86_64-linux-gnu:
     
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: ./prod_build/build.sh
+
+pack-deb:
+  stage: pack
+  needs: [cellframe-node_x86_64-linux-gnu]
+  image: ubuntu:20.04
+
+  script: ./prod_build/pack.sh
+
+notify:
+  stage: notify
+  needs: [pack-deb]
+  script:
+    - echo "We are done"
