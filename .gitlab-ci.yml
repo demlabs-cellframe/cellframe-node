@@ -24,11 +24,13 @@ stages:
   extends: .ci-polygon
   image: ubuntu:20.04
   stage: pack
+  before_script: /opt/buildtools/prepare_environment.sh
   
 .deploy:
   extends: .ci-polygon
   image: ubuntu:20.04
   stage: deploy
+  before_script: /opt/buildtools/prepare_environment.sh 
   
 
 cellframe-node_x86_64-linux-gnu:
@@ -62,7 +64,6 @@ pack-deb:
     - cellframe-node-dbg_x86_64-linux-gnu 
     - cellframe-node-dbg_aarch64-linux-gnu
 
-  before_script: /opt/buildtools/prepare_environment.sh
   script: 
     - ./prod_build/pack.sh x86_64-linux-gnu release
     - ./prod_build/pack.sh x86_64-linux-gnu debug
@@ -78,7 +79,7 @@ deploy:
   extends: .deploy
   needs: [pack-deb]
   script: 
-    - /opt/buildtools/deploy.sh pub linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    - /opt/buildtools/deploy_files.sh pub linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     
 
 
