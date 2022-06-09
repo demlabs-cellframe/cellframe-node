@@ -30,7 +30,7 @@ pack-deb:
      - ci-polygon
 
   stage: pack
-  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu:]
+  needs: [cellframe-node_x86_64-linux-gnu, cellframe-node_aarch64-linux-gnu]
   image: ubuntu:20.04
 
   script: ./prod_build/pack.sh deb
