@@ -14,6 +14,7 @@ stages:
   extends: .ci-polygon
   stage: build
   image: ubuntu:20.04
+  timeout: 3 hours 30 minutes
   dependencies: []
   artifacts:
       expire_in: 1h
