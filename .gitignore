@@ -68,3 +68,11 @@ cmake_install.cmake
 
 # Editor's temp files
 *~
+
+# JetBrains
+.idea
+
+cmake-build-*
+
+pvs-reports
+.PVS-Studio
