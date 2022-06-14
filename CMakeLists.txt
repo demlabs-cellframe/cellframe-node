@@ -12,9 +12,11 @@ SET( CPACK_PACKAGE_VERSION_MAJOR 5)
 SET( CPACK_PACKAGE_VERSION_MINOR 2)
 SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
-SET( CPACK_SYSTEM_ARCH ${CMAKE_SYSTEM_PROCESSOR})
-SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
-SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+#possible need be setted during crosscompily
+#by default it uses dpkg --print-architecture
+#we ok with it on native builds.
+#SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+#SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
@@ -81,20 +83,42 @@ if(UNIX)
 
 
   if(LINUX)
-    message("[*] Debian package setup for ${CPACK_PACKAGE_ARCHITECTURE}")
-    
+
     SET( CPACK_GENERATOR "DEB")
     SET( CPACK_SYSTEM_TYPE "Debian")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
-    SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_ARCH}")
+    
+    # set architecture
+    find_program(DPKG_CMD dpkg)
+    if(NOT CPACK_SYSTEM_NAME)
+        set(CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_PROCESSOR})
+        # sanity check
+        if(CPACK_SYSTEM_NAME STREQUAL x86_64)
+            set(CPACK_SYSTEM_NAME amd64)
+        endif()
+    endif()
+
+    if(NOT CPACK_DEBIAN_PACKAGE_ARCHITECTURE)
+        if(NOT DPKG_CMD)
+            message(WARNING "DEB Generator: Can't find dpkg in your path. Setting CPACK_DEBIAN_PACKAGE_ARCHITECTURE to i386.")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE i386)
+        else()
+            execute_process(COMMAND "${DPKG_CMD}" --print-architecture
+                    OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
+    endif()
+    
+    SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    
     if(BUILD_WITH_GDB_DRIVER_PGSQL)
-        SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_NAME}-pgsql" )
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-pgsql" )
     endif()
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-        SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_NAME}-dbg" )
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
-    SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
@@ -106,12 +130,14 @@ if(UNIX)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
+    message("[*] Debian package setup target=${CPACK_SYSTEM_NAME} pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
+
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
-	message("[*] Darwin kernel (MacOS/iOS) ")
+	    message("[*] Darwin kernel (MacOS/iOS) ")
     else()
         message("[!] Unknown UNIX")
     endif()
@@ -448,3 +474,4 @@ else()
     
 endif()
 INCLUDE(CPack)
+
