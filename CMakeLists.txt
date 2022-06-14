@@ -91,23 +91,22 @@ if(UNIX)
     
     # set architecture
     find_program(DPKG_CMD dpkg)
-    if(NOT CPACK_SYSTEM_NAME)
-        set(CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_PROCESSOR})
-        # sanity check
-        if(CPACK_SYSTEM_NAME STREQUAL x86_64)
-            set(CPACK_SYSTEM_NAME amd64)
-        endif()
-    endif()
-
-    if(NOT CPACK_DEBIAN_PACKAGE_ARCHITECTURE)
+    if(NOT CPACK_TARGET_ARCHITECTURE)
         if(NOT DPKG_CMD)
-            message(WARNING "DEB Generator: Can't find dpkg in your path. Setting CPACK_DEBIAN_PACKAGE_ARCHITECTURE to i386.")
-            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE i386)
+            message(WARNING "DEB Generator: Can't find dpkg in your path. Setting CPACK_DEBIAN_PACKAGE_ARCHITECTURE to amd64.")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE amd64)
         else()
             execute_process(COMMAND "${DPKG_CMD}" --print-architecture
                     OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
+    
+    else()
+        set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
+    endif()
+
+    if(NOT CPACK_SYSTEM_NAME)
+        set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
     endif()
     
     SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
@@ -130,7 +129,7 @@ if(UNIX)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
-    message("[*] Debian package setup target=${CPACK_SYSTEM_NAME} pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
+    message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
 
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
