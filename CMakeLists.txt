@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+
 project(cellframe-node C)
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -11,25 +12,9 @@ SET( CPACK_PACKAGE_VERSION_MAJOR 5)
 SET( CPACK_PACKAGE_VERSION_MINOR 2)
 SET( CPACK_PACKAGE_VERSION_PATCH 0)
 
-if (CMAKE_TARGET_ARCH MATCHES arm)
-    SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_TARGET_ARCH}")
-    SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_TARGET_ARCH}")
-endif()
-
-# Crossbuild configs
-
-if (CMAKE_TARGET_ARCH MATCHES arm)
-set(CMAKE_SYSTEM_PROCESSOR arm)
-    if (CMAKE_TARGET_ARCH MATCHES armhf)
-        set(CMAKE_C_COMPILER "/usr/bin/arm-linux-gnueabihf-gcc")
-        set(CMAKE_CXX_COMPILER "/usr/bin/arm-linux-gnueabihf-g++")
-        set(CMAKE_SYSROOT "/raspi-sysroot/")
-    else()
-        set(CMAKE_C_COMPILER "/usr/bin/aarch64-linux-gnu-gcc")
-        set(CMAKE_CXX_COMPILER "/usr/bin/aarch64-linux-gnu-g++")
-        set(CMAKE_SYSROOT "/arm64-sysroot/")
-    endif()
-endif()
+SET( CPACK_SYSTEM_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
@@ -48,9 +33,9 @@ set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will 
 #set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 #set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
-if(LINUX)
-    set(SUPPORT_PYTHON_PLUGINS ON)
-endif()
+#if(LINUX)
+#    set(SUPPORT_PYTHON_PLUGINS ON)
+#endif()
 
 if (WIN32)
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
@@ -96,20 +81,13 @@ if(UNIX)
 
 
   if(LINUX)
-    message("[*] Linux package setup")
-
+    message("[*] Debian package setup for ${CPACK_PACKAGE_ARCHITECTURE}")
+    
     SET( CPACK_GENERATOR "DEB")
-
     SET( CPACK_SYSTEM_TYPE "Debian")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
-    if (CMAKE_TARGET_ARCH MATCHES arm)
-        SET( CPACK_SYSTEM_ARCH ${CMAKE_TARGET_ARCH})
-    else()
-        SET( CPACK_SYSTEM_ARCH "amd64")
-    endif()
-
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
-    SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_SYSTEM_ARCH}")
+    SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_ARCH}")
     if(BUILD_WITH_GDB_DRIVER_PGSQL)
         SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_NAME}-pgsql" )
     endif()
@@ -122,9 +100,6 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
     SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc, logrotate, irqbalance, xz-utils")
-     if (CMAKE_TARGET_ARCH MATCHES arm)
-        SET( CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libmagic1, libpython3.9" )
-    endif()
     
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)

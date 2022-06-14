@@ -7,8 +7,11 @@ build_dependencies:
     - 'libsqlite3-dev'
     - 'libjson-c-dev' 
     - 'python3-dev'
+    - 'file'
+    
 
 pack_dependencies:
   deb:
     - 'cmake'
+    - 'file'
     
