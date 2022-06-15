@@ -88,7 +88,13 @@ if(UNIX)
     SET( CPACK_SYSTEM_TYPE "Debian")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
+
+    execute_process (
+                    COMMAND bash -c "awk -F= '/^ID=/{print $2}' /etc/os-release |tr -d '\n' | tr -d '\"'"
+                    OUTPUT_VARIABLE CPACK_SYSTEM_TYPE
+    )
     
+
     # set architecture
     find_program(DPKG_CMD dpkg)
     if(NOT CPACK_TARGET_ARCHITECTURE)
@@ -106,7 +112,7 @@ if(UNIX)
     endif()
 
     if(NOT CPACK_SYSTEM_NAME)
-        set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+        set(CPACK_SYSTEM_NAME ${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
     endif()
     
     SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
