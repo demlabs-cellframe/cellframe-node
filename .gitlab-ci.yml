@@ -27,13 +27,13 @@ stages:
   
 cellframe-node_x86_64-apple-darvin:
     extends: .build
-    image:  codercom/ubuntu-docker
+    image:  sickcodes/docker-osx:auto
     before_script: /opt/buildtools/prepare_environment.sh x86_64-apple-darvin
     script: 
       - ./prod_build/build.sh x86_64-apple-darvin release
       - ./prod_build/pack.sh x86_64-apple-darvin release
 
-.cellframe-node_x86_64-linux-gnu:
+cellframe-node_x86_64-linux-gnu:
     extends: .build
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
