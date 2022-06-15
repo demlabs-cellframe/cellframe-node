@@ -25,23 +25,23 @@ stages:
   stage: deploy
   before_script: /opt/buildtools/prepare_environment.sh 
   
+cellframe-node_x86_64-apple-darvin:
+    extends: .build
+    image:  codercom/ubuntu-docker
+    before_script: /opt/buildtools/prepare_environment.sh x86_64-apple-darvin
+    script: 
+      - ./prod_build/build.sh x86_64-apple-darvin release
+      - ./prod_build/pack.sh x86_64-apple-darvin release
 
-cellframe-node_x86_64-linux-gnu:
+.cellframe-node_x86_64-linux-gnu:
     extends: .build
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
       - ./prod_build/build.sh x86_64-linux-gnu release
       - ./prod_build/pack.sh x86_64-linux-gnu release
 
-cellframe-node_x86_64-apple-darvin:
-    extends: .build
-    image:  ubuntu:20.04
-    before_script: /opt/buildtools/prepare_environment.sh x86_64-apple-darvin
-    script: 
-      - ./prod_build/build.sh x86_64-apple-darvin release
-      - ./prod_build/pack.sh x86_64-apple-darvin release
 
-cellframe-node_armhf-linux-gnu:
+.cellframe-node_armhf-linux-gnu:
     extends: .build
     image: arm32v7/debian
 
@@ -50,7 +50,7 @@ cellframe-node_armhf-linux-gnu:
       - ./prod_build/build.sh armhf-linux-gnu release
       - ./prod_build/pack.sh armhf-linux-gnu release
 
-cellframe-node_aarch64-linux-gnu:
+.cellframe-node_aarch64-linux-gnu:
     extends: .build
     image: arm64v8/ubuntu
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
@@ -67,7 +67,7 @@ cellframe-node_aarch64-linux-gnu:
     
   
 
-deploy:
+.fdeploy:
   extends: .deploy
   needs: 
     - cellframe-node_x86_64-linux-gnu 
