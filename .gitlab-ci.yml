@@ -34,7 +34,7 @@ amd64-darvin:
 
 amd64-debian-bullseye:
     extends: .build
-    image: amd64/debian:bullseye
+    image: amd64/debian/bullseye:node
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
       - ./prod_build/build.sh x86_64-linux-gnu release
@@ -42,7 +42,7 @@ amd64-debian-bullseye:
 
 amd64-debian-buster:
     extends: .build
-    image: amd64/debian:buster
+    image: amd64/debian/buster:node
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
       - ./prod_build/build.sh x86_64-linux-gnu release
@@ -50,7 +50,7 @@ amd64-debian-buster:
 
 armhf-debian-bullseye:
     extends: .build
-    image: arm32v7/debian:bullseye
+    image: arm32v7/debian/bullseye:node
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
     script: 
@@ -59,7 +59,7 @@ armhf-debian-bullseye:
 
 armhf-debian-buster:
     extends: .build
-    image: arm32v7/debian:buster
+    image: arm32v7/debian/buster:node
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
     script: 
@@ -69,7 +69,7 @@ armhf-debian-buster:
 
 arm64-debian-bullseye:
     extends: .build
-    image: arm64v8/debian:bullseye
+    image: arm64v8/debian/bullseye:node
     before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: 
       - ./prod_build/build.sh aarch64-linux-gnu release
@@ -77,7 +77,7 @@ arm64-debian-bullseye:
 
 arm64-debian-buster:
     extends: .build
-    image: arm64v8/debian:buster
+    image: arm64v8/debian/buster:node
     before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: 
       - ./prod_build/build.sh aarch64-linux-gnu release
