@@ -35,7 +35,7 @@ cellframe-node_x86_64-linux-gnu:
 
 cellframe-node_x86_64-apple-darvin:
     extends: .build
-    image:  sickcodes/docker-osx:auto
+    image:  docker
     before_script: /opt/buildtools/prepare_environment.sh x86_64-apple-darvin
     script: 
       - ./prod_build/build.sh x86_64-apple-darvin release
