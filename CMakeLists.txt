@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
+include(cellframe-sdk/cmake/ReadMKFile.cmake)
+
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
@@ -8,9 +10,10 @@ set(CMAKE_C_STANDARD 11)
 
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
-SET( CPACK_PACKAGE_VERSION_MAJOR 5)
-SET( CPACK_PACKAGE_VERSION_MINOR 2)
-SET( CPACK_PACKAGE_VERSION_PATCH 0)
+ReadVariables(version.mk)
+SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
 #possible need be setted during crosscompily
 #by default it uses dpkg --print-architecture
@@ -22,6 +25,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH 0)
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
+
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_WITH_GDB_DRIVER_MDBX ON)
@@ -85,15 +89,9 @@ if(UNIX)
   if(LINUX)
 
     SET( CPACK_GENERATOR "DEB")
-    SET( CPACK_SYSTEM_TYPE "Debian")
+    SET( CPACK_SYSTEM_TYPE "${DEBIAN_OS_RELEASE_NAME}")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
     SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
-
-    execute_process (
-                    COMMAND bash -c "awk -F= '/^ID=/{print $2}' /etc/os-release |tr -d '\n' | tr -d '\"'"
-                    OUTPUT_VARIABLE CPACK_SYSTEM_TYPE
-    )
-    
 
     # set architecture
     find_program(DPKG_CMD dpkg)
