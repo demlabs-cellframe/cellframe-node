@@ -1,0 +1,16 @@
+
+build_dependencies:
+  deb:
+    - 'build-essential'
+    - 'cmake'
+    - 'libmagic-dev'
+    - 'libsqlite3-dev'
+    - 'libjson-c-dev' 
+    - 'python3-dev'
+    - 'file'
+    
+
+deploy_dependencies:
+  deb:
+    - 'ssh'
+    

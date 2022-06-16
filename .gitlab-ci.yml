@@ -1,38 +1,72 @@
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
 stages:
-    - prepare
     - build
-    - test
     - deploy
 
-variables:
-    GIT_SUBMODULE_STRATEGY: normal
+.ci-polygon:
+  tags:
+     - ci-polygon
+  
+.build:  
+  extends: .ci-polygon
+  stage: build
+  timeout: 3 hours 30 minutes
+  dependencies: []
+  artifacts:
+    paths:
+      - build_*/*.deb
 
+.deploy:
+  extends: .ci-polygon
+  image: amd64/debian:bullseye
+  stage: deploy
+  before_script: /opt/buildtools/prepare_environment.sh 
+  
+.amd64-darvin:
+    extends: .build
+    image:  sickcodes/docker-osx:auto
+    before_script: /opt/buildtools/prepare_environment.sh amd64-darvin
+    script: 
+      - ./prod_build/build.sh amd64-darvin release
+      - ./prod_build/pack.sh amd64-darvin release
 
-cellframe-node_amd64:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node buster
+amd64-debian-bullseye:
+    extends: .build
+    image: amd64/debian/bullseye:node
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script: 
+      - ./prod_build/build.sh amd64-linux release
+      - ./prod_build/pack.sh amd64-linux release
 
-cellframe-node_arm64-amrhf:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
+armhf-debian-bullseye:
+    extends: .build
+    image: arm32v7/debian/bullseye:node
+
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux
+    script: 
+      - ./prod_build/build.sh armhf-linux release
+      - ./prod_build/pack.sh armhf-linux release
+
+arm64-debian-bullseye:
+    extends: .build
+    image: arm64v8/debian/bullseye:node
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    script: 
+      - ./prod_build/build.sh arm64-linux release
+      - ./prod_build/pack.sh arm64-linux release
+  
+
+deploy:
+  extends: .deploy
+  needs: 
+    - amd64-debian-bullseye 
+    - armhf-debian-bullseye 
+    - arm64-debian-bullseye 
+   
+  script: 
+    - /opt/buildtools/deploy_files.sh pub linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    
+
 
