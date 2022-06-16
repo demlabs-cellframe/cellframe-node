@@ -24,7 +24,7 @@ stages:
   stage: deploy
   before_script: /opt/buildtools/prepare_environment.sh 
   
-cellframe-node_x86_64-apple-darvin:
+amd64-darvin:
     extends: .build
     image:  sickcodes/docker-osx:auto
     before_script: /opt/buildtools/prepare_environment.sh x86_64-apple-darvin
@@ -32,34 +32,34 @@ cellframe-node_x86_64-apple-darvin:
       - ./prod_build/build.sh x86_64-apple-darvin release
       - ./prod_build/pack.sh x86_64-apple-darvin release
 
-cellframe-node_amd64-bullseye:
+amd64-debian-bullseye:
     extends: .build
-    image: amd64/debian:bullseye
+    image: amd64/debian/bullseye:node
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
       - ./prod_build/build.sh x86_64-linux-gnu release
       - ./prod_build/pack.sh x86_64-linux-gnu release
 
-cellframe-node_amd64-buster:
+amd64-debian-buster:
     extends: .build
-    image: amd64/debian:buster
+    image: amd64/debian/buster:node
     before_script: /opt/buildtools/prepare_environment.sh x86_64-linux-gnu 
     script: 
       - ./prod_build/build.sh x86_64-linux-gnu release
       - ./prod_build/pack.sh x86_64-linux-gnu release
 
-.cellframe-node_armhf-bullseye:
+armhf-debian-bullseye:
     extends: .build
-    image: arm32v7/debian:bullseye
+    image: arm32v7/debian/bullseye:node
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
     script: 
       - ./prod_build/build.sh armhf-linux-gnu release
       - ./prod_build/pack.sh armhf-linux-gnu release
 
-.cellframe-node_armhf-buster:
+armhf-debian-buster:
     extends: .build
-    image: arm32v7/debian:bullseye
+    image: arm32v7/debian/buster:node
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
     script: 
@@ -67,18 +67,18 @@ cellframe-node_amd64-buster:
       - ./prod_build/pack.sh armhf-linux-gnu release
 
 
-.cellframe-node_aarch64-bullseye:
+arm64-debian-bullseye:
     extends: .build
-    image: arm64v8/debian:bullseye
-    before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
+    image: arm64v8/debian/bullseye:node
+    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: 
       - ./prod_build/build.sh aarch64-linux-gnu release
       - ./prod_build/pack.sh aarch64-linux-gnu release
 
-.cellframe-node_aarch64-buster:
+arm64-debian-buster:
     extends: .build
-    image: arm64v8/debian:buster
-    before_script: /opt/buildtools/prepare_environment.sh armhf-linux-gnu
+    image: arm64v8/debian/buster:node
+    before_script: /opt/buildtools/prepare_environment.sh aarch64-linux-gnu
     script: 
       - ./prod_build/build.sh aarch64-linux-gnu release
       - ./prod_build/pack.sh aarch64-linux-gnu release
