@@ -10,8 +10,7 @@ build_dependencies:
     - 'file'
     
 
-pack_dependencies:
+deploy_dependencies:
   deb:
-    - 'cmake'
-    - 'file'
+    - 'ssh'
     
