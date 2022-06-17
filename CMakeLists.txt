@@ -37,7 +37,7 @@ set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-#set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
 #set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
