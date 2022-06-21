@@ -20,7 +20,7 @@ stages:
 
 .deploy:
   extends: .ci-polygon
-  image: demlabs/amd64/debian-bullseye:node
+  image: demlabs/amd64/debian-bullseye:cellframe-node
   stage: deploy
   before_script: /opt/buildtools/prepare_environment.sh 
   
@@ -34,7 +34,7 @@ stages:
 
 amd64-debian-bullseye:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:node
+    image: demlabs/amd64/debian-bullseye:cellframe-node
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script: 
       - ./prod_build/build.sh amd64-linux release
@@ -42,7 +42,7 @@ amd64-debian-bullseye:
 
 armhf-debian-bullseye:
     extends: .build
-    image: demlabs/arm32v7/debian-bullseye:node
+    image: demlabs/arm32v7/debian-bullseye:cellframe-node
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux
     script: 
@@ -51,7 +51,7 @@ armhf-debian-bullseye:
 
 arm64-debian-bullseye:
     extends: .build
-    image: demlabs/arm64v8/debian-bullseye:node
+    image: demlabs/arm64v8/debian-bullseye:cellframe-node
     before_script: /opt/buildtools/prepare_environment.sh arm64-linux
     script: 
       - ./prod_build/build.sh arm64-linux release
