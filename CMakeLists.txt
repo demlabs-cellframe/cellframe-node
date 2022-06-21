@@ -137,7 +137,7 @@ if(UNIX)
     message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
 
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
+    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
@@ -477,7 +477,7 @@ else()
 	    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
         if (SUPPORT_PYTHON_PLUGINS AND NOT BUILD_WITH_SYSTEM_PYTHON) #install python environment if not system python in use
-            INSTALL(DIRECTORY ${PYTHON_PREFIX} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY ${PYTHON_PREFIX} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 

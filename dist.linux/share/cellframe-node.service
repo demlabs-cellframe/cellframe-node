@@ -1,6 +1,6 @@
 [Unit]
 Description=Cellframe Node
-After=network.target
+After=network-online.target
 
 [Service]
 WorkingDirectory=/opt/cellframe-node
@@ -9,7 +9,6 @@ ExecStop=/bin/kill -SIGTERM $MAINPID
 Restart=always
 User=cellframe-node
 Group=cellframe-node
-RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
