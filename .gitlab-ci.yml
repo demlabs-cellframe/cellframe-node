@@ -41,6 +41,7 @@ cellframe-dashboard_update:
     stage: update
     only:
      - master
+     - /^hotfix.*$/
     tags:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/update_dashboard.sh
