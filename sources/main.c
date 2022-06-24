@@ -288,10 +288,16 @@ int main( int argc, const char **argv )
         log_it( L_ERROR, "Can't init notify server module" );
     }
 
-	if ( dap_chain_global_db_init(g_config) ) {
-	    log_it( L_CRITICAL, "Can't init global db module" );
-	    return -58;
-	}
+    {
+        char l_gdb_path[MAX_PATH] = {'\0'};
+        dap_sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
+
+        if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
+                                 dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
+            log_it( L_CRITICAL, "Can't init global db module" );
+            return -58;
+        }
+    }
 
 	//dap_http_client_simple_init( );
 
@@ -530,7 +536,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
 #endif
-    dap_chain_global_db_deinit();
+    dap_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );
     dap_interval_timer_deinit();

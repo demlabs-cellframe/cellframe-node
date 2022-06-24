@@ -47,7 +47,7 @@ static void sig_exit_handler(int sig_code) {
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_deinit();
     dap_chain_net_deinit();
-    dap_chain_global_db_deinit();
+    dap_global_db_deinit();
     dap_chain_deinit();
     dap_stream_ctl_deinit();
     dap_stream_deinit();
