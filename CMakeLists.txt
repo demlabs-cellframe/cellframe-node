@@ -28,7 +28,9 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-#set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+if(NOT WIN32)
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
 #set(BUILD_CRYPTO_TESTS ON)
 
 #set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
@@ -43,25 +45,13 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-
-if (WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(BSD)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(DARWIN)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(ANDROID)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(LINUX)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic srv-vpn")
+if(LINUX)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic srv-vpn")
+elseif(WIN32 OR BSD OR DARWIN OR ANDROID)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 endif()
 
 add_subdirectory(cellframe-sdk)
-
-if (CELLFRAME_MODULES MATCHES "modules-dynamic")
-    add_definitions("-DDAP_MODULES_DYNAMIC")
-endif()
-
 
 if(UNIX)
     if(DARWIN)
