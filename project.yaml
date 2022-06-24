@@ -6,7 +6,7 @@ build_dependencies:
     - 'libmagic-dev'
     - 'libsqlite3-dev'
     - 'libjson-c-dev' 
-    - 'python3-dev'
+    - 'libffi-dev'
     - 'file'
     
 

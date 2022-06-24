@@ -32,6 +32,14 @@ stages:
       - ./prod_build/build.sh amd64-darvin release
       - ./prod_build/pack.sh amd64-darvin release
 
+amd64-bdebian-bullseye-dbg:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:cellframe-node
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh amd64-linux debug
+      - ./prod_build/pack.sh amd64-linux debug
+
 amd64-debian-bullseye:
     extends: .build
     image: demlabs/amd64/debian-bullseye:cellframe-node
@@ -62,6 +70,7 @@ deploy:
   extends: .deploy
   needs: 
     - amd64-debian-bullseye 
+    - amd64-bdebian-bullseye-dbg
     - armhf-debian-bullseye 
     - arm64-debian-bullseye 
    

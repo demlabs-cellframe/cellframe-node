@@ -34,7 +34,7 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 #set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
 
 set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
-set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
+#set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
 set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
 set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
@@ -282,10 +282,14 @@ if(UNIX AND NOT WIN32)
                     CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ffi.cfg.wrapper.sh <SOURCE_DIR>/configure --disable-shared --prefix=${LIBFFI_PREFIX}
                 )
 
-                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS}  -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS}  -I${LIBFFI_PREFIX}/include")
 
+                
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
             endif()
 
             if(BUILD_PYTHON_СUSTOM_ZLIB)
@@ -342,6 +346,10 @@ if(UNIX AND NOT WIN32)
             endif()
 
             if(CMAKE_BUILD_TYPE MATCHES Debug)
+                #to fix pycore_byteswap.h not found error.
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -I${PYTHON_PREFIX}/src/PYTHON/Include/internal/")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -I${PYTHON_PREFIX}/src/PYTHON/Include/internal/")
+            
                 if (BUILD_PYTHON_SHARED)
                     message("[*] Building python as shared lib")
                     set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}d.so)
