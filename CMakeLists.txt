@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
+
 project(cellframe-node C)
+include(cellframe-sdk/cmake/ReadMKFile.cmake)
+
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
@@ -7,42 +10,33 @@ set(CMAKE_C_STANDARD 11)
 
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
-SET( CPACK_PACKAGE_VERSION_MAJOR 5)
-SET( CPACK_PACKAGE_VERSION_MINOR 2)
-SET( CPACK_PACKAGE_VERSION_PATCH 0)
+ReadVariables(version.mk)
+SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
-if (CMAKE_TARGET_ARCH MATCHES arm)
-    SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_TARGET_ARCH}")
-    SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_TARGET_ARCH}")
-endif()
-
-# Crossbuild configs
-
-if (CMAKE_TARGET_ARCH MATCHES arm)
-set(CMAKE_SYSTEM_PROCESSOR arm)
-    if (CMAKE_TARGET_ARCH MATCHES armhf)
-        set(CMAKE_C_COMPILER "/usr/bin/arm-linux-gnueabihf-gcc")
-        set(CMAKE_CXX_COMPILER "/usr/bin/arm-linux-gnueabihf-g++")
-        set(CMAKE_SYSROOT "/raspi-sysroot/")
-    else()
-        set(CMAKE_C_COMPILER "/usr/bin/aarch64-linux-gnu-gcc")
-        set(CMAKE_CXX_COMPILER "/usr/bin/aarch64-linux-gnu-g++")
-        set(CMAKE_SYSROOT "/arm64-sysroot/")
-    endif()
-endif()
+#possible need be setted during crosscompily
+#by default it uses dpkg --print-architecture
+#we ok with it on native builds.
+#SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+#SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}-${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+if(NOT WIN32)
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
 #set(BUILD_CRYPTO_TESTS ON)
 
 #set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
+
 set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
-set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
+#set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
 set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
 set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
 set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
@@ -51,25 +45,13 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-
-if (WIN32)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(BSD)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(DARWIN)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(ANDROID)
-    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
-elseif(LINUX)
+if(LINUX)
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic srv-vpn")
+elseif(WIN32 OR BSD OR DARWIN OR ANDROID)
+    set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 endif()
 
 add_subdirectory(cellframe-sdk)
-
-if (CELLFRAME_MODULES MATCHES "modules-dynamic")
-    add_definitions("-DDAP_MODULES_DYNAMIC")
-endif()
-
 
 if(UNIX)
     if(DARWIN)
@@ -96,47 +78,60 @@ if(UNIX)
 
 
   if(LINUX)
-    message("[*] Linux package setup")
 
     SET( CPACK_GENERATOR "DEB")
-
-    SET( CPACK_SYSTEM_TYPE "Debian")
+    SET( CPACK_SYSTEM_TYPE "${DEBIAN_OS_RELEASE_NAME}")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
-    if (CMAKE_TARGET_ARCH MATCHES arm)
-        SET( CPACK_SYSTEM_ARCH ${CMAKE_TARGET_ARCH})
+    SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
+
+    # set architecture
+    find_program(DPKG_CMD dpkg)
+    if(NOT CPACK_TARGET_ARCHITECTURE)
+        if(NOT DPKG_CMD)
+            message(WARNING "DEB Generator: Can't find dpkg in your path. Setting CPACK_DEBIAN_PACKAGE_ARCHITECTURE to amd64.")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE amd64)
+        else()
+            execute_process(COMMAND "${DPKG_CMD}" --print-architecture
+                    OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
+    
     else()
-        SET( CPACK_SYSTEM_ARCH "amd64")
+        set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
 
-    SET( CPACK_SYSTEM_CODENAME "${DEBIAN_OS_NAME}")
-    SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_SYSTEM_ARCH}")
+    if(NOT CPACK_SYSTEM_NAME)
+        set(CPACK_SYSTEM_NAME ${CPACK_SYSTEM_TYPE}-${CPACK_SYSTEM_VERSION}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+    endif()
+    
+    SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    
     if(BUILD_WITH_GDB_DRIVER_PGSQL)
-        SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_NAME}-pgsql" )
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-pgsql" )
     endif()
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-        SET( CPACK_SYSTEM_NAME "${CPACK_SYSTEM_NAME}-dbg" )
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
-    SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
     SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc, logrotate, irqbalance, xz-utils")
-     if (CMAKE_TARGET_ARCH MATCHES arm)
-        SET( CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libmagic1, libpython3.9" )
-    endif()
     
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
+    message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
+
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
+    "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/debian/config;")
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
-	message("[*] Darwin kernel (MacOS/iOS) ")
+	    message("[*] Darwin kernel (MacOS/iOS) ")
     else()
         message("[!] Unknown UNIX")
     endif()
@@ -277,10 +272,14 @@ if(UNIX AND NOT WIN32)
                     CONFIGURE_COMMAND           /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ffi.cfg.wrapper.sh <SOURCE_DIR>/configure --disable-shared --prefix=${LIBFFI_PREFIX}
                 )
 
-                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1 -I${LIBFFI_PREFIX}/include")
-                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS}  -I${LIBFFI_PREFIX}/include")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS}  -I${LIBFFI_PREFIX}/include")
 
+                
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
+                set(PYTHON_WRP_LDFLAGS "${PYTHON_WRP_LDFLAGS} ${LIBFFI_PREFIX}/lib/libffi.a")
             endif()
 
             if(BUILD_PYTHON_СUSTOM_ZLIB)
@@ -337,6 +336,10 @@ if(UNIX AND NOT WIN32)
             endif()
 
             if(CMAKE_BUILD_TYPE MATCHES Debug)
+                #to fix pycore_byteswap.h not found error.
+                set(PYTHON_WRP_CFLAGS "${PYTHON_WRP_CFLAGS} -I${PYTHON_PREFIX}/src/PYTHON/Include/internal/")
+                set(PYTHON_WRP_CPPFLAGS "${PYTHON_WRP_CPPFLAGS} -I${PYTHON_PREFIX}/src/PYTHON/Include/internal/")
+            
                 if (BUILD_PYTHON_SHARED)
                     message("[*] Building python as shared lib")
                     set(PYTHON_LIBRARY ${CMAKE_BINARY_DIR}/python/lib/lib${PYTHON_LIBNAME}d.so)
@@ -472,7 +475,7 @@ else()
 	    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
         if (SUPPORT_PYTHON_PLUGINS AND NOT BUILD_WITH_SYSTEM_PYTHON) #install python environment if not system python in use
-            INSTALL(DIRECTORY build/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/python USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY ${PYTHON_PREFIX} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 
@@ -480,3 +483,4 @@ else()
     
 endif()
 INCLUDE(CPack)
+
