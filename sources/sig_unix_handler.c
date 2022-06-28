@@ -5,7 +5,7 @@
 
 #include "dap_common.h"
 #include "dap_events.h"
-#include "dap_chain_global_db.h"
+#include "dap_global_db.h"
 #include "dap_chain_node.h"
 #include "dap_chain_net_srv_xchange.h"
 #include "dap_chain_net_srv_stake.h"

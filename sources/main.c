@@ -81,6 +81,7 @@
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
+#include "dap_chain_cs_block_ton.h"
 
 //#include "dap_chain_bridge.h"
 //#include "dap_chain_bridge_btc.h"
@@ -97,7 +98,7 @@
 #include "dap_chain_net_vpn_client.h"
 #endif
 
-#include "dap_chain_global_db.h"
+#include "dap_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
@@ -346,6 +347,11 @@ int main( int argc, const char **argv )
         return -64;
     }
 
+    if(dap_chain_cs_block_ton_init() != 0){
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus TON module");
+        return -65;
+
+    }
     if(dap_chain_gdb_init() != 0) {
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;

@@ -20,11 +20,11 @@ require_links=4
 #acl_accept_ca_chains=all
 
 
-[dag-poa]
-events-sign-cert=mileena.0.root
+#[dag-poa]
+#events-sign-cert=mycert0
 
-[block-ton]
-blocks-sign-cert=mileena.0.root
+#[block-ton]
+#blocks-sign-cert=mycert1
 
 #[block-poa]
-#blocks-sign-cert=mycert
+#blocks-sign-cert=mycert2
