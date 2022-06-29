@@ -45,9 +45,9 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-if(LINUX)
+if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange modules-dynamic srv-vpn")
-elseif(WIN32 OR BSD OR DARWIN OR ANDROID)
+elseif(WIN32 OR BSD OR ANDROID)
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 endif()
 
