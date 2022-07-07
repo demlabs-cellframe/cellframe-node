@@ -75,7 +75,7 @@ deploy:
     - arm64-debian-bullseye 
    
   script: 
-    - /opt/buildtools/deploy_files.sh pub linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     
 
 
