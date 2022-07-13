@@ -7,8 +7,8 @@ WorkingDirectory=/opt/cellframe-node
 ExecStart=/opt/cellframe-node/bin/cellframe-node &
 ExecStop=/bin/kill -SIGTERM $MAINPID
 Restart=always
-User=cellframe-node
-Group=cellframe-node
+#User=cellframe-node
+#Group=cellframe-node
 
 [Install]
 WantedBy=multi-user.target

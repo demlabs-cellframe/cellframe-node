@@ -252,7 +252,6 @@ int main( int argc, const char **argv )
         return -4;
     }
 
-
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
 	    return -5;
