@@ -111,6 +111,7 @@
 #include "dap_stream_ch_chain_net_srv.h"
 #include "dap_chain_net_srv_xchange.h"
 #include "dap_chain_net_srv_stake.h"
+#include "dap_chain_net_srv_external_stake.h"
 
 #include "dap_common.h"
 #include "dap_events_socket.h"
@@ -343,6 +344,7 @@ int main( int argc, const char **argv )
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_FEE, dap_chain_ledger_fee_verificator);
     dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_UPDATE, dap_chain_net_srv_stake_updater);
+	dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_LOCK, dap_chain_net_srv_stake_lock_verificator);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
@@ -366,6 +368,10 @@ int main( int argc, const char **argv )
     if (!dap_chain_net_srv_stake_init()) {
         log_it(L_ERROR, "Can't start delegated stake service");
     }
+
+	if (!dap_chain_net_srv_external_stake_init()) {
+		log_it(L_ERROR, "Can't start external stake service");
+	}
 
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
