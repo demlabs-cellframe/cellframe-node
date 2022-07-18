@@ -22,7 +22,7 @@ static void test_create_db(const char *db_type)
     }
     else
         unlink(DB_FILE);
-    int res = dap_db_driver_init(db_type, DB_FILE);
+    int res = dap_db_driver_init(db_type, DB_FILE, 0);
     char *l_str = dap_strdup_printf("Test init %s global_db", db_type);
     dap_assert(!res, l_str);
     DAP_DELETE(l_str);

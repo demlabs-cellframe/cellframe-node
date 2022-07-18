@@ -23,7 +23,7 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_gdb.h"
+//#include "dap_chain_gdb.h"
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
@@ -40,15 +40,16 @@
 #include "dap_stream_ch_chain_net.h"
 
 #include "dap_common.h"
-#include "dap_client_remote.h"
+//#include "dap_client_remote.h"
 #include "dap_client.h"
 #include "dap_http_client.h"
-#include "dap_http_client_simple.h"
+//#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
-#include "dap_traffic_track.h"
+//#include "dap_traffic_track.h"
 #include "dap_file_utils.h"
 #include "dap_chain_node_cli_cmd.h"
+#include "dap_chain_cs_none.h"
 
 #include "dap_tx_test.h"
 
@@ -78,6 +79,16 @@ typedef struct arg_data {
 void *call_com_tx_create(void *arg) {
     arg_data *args = (arg_data*)arg;
     com_tx_create(15, args->call_args, &(args->str_reply));
+    char **l_hash_tx_str = dap_strsplit(args->str_reply, " ", 3);
+    const char *mempool_proc_args_emit[] = {
+            "mempool_proc",
+            "-net"          ,"local-testnet",
+            "-chain"        ,"gdb",
+            "-datum"        , l_hash_tx_str[1]
+    };
+
+    dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_emit, &(args->str_reply)) == 0, args->str_reply);
+    dap_test_msg(args->str_reply);
     DAP_DELETE(args->str_reply);
     return NULL;
 }
@@ -123,14 +134,27 @@ int dap_node_run_action(scenario_t action) {
             "token_decl",
             "-net"          ,"local-testnet",
             "-chain"        ,"gdb",
-            "token"         ,"MAVRODI",
-            "total_supply"  ,"1001000000000000",
-            "signs_total"   ,"1",
-            "signs_emission","1",
-            "certs"         ,"mavrodi-cert"
+            "-token"         ,"MAVRODI",
+            "-total_supply"  ,"1001000000000000",
+            "-signs_total"   ,"1",
+            "-signs_emission","1",
+            "-certs"         ,"mavrodi-cert"
         };
 
         dap_assert_PIF(com_token_decl(15, token_decl_args, &str_reply) == 0, str_reply);
+        char **l_hash_decl_str = dap_strsplit(str_reply, " ", -1);
+        dap_test_msg(str_reply);
+        DAP_DELETE(str_reply);
+        str_reply = NULL;
+
+        const char *mempool_proc_args_decl[] = {
+                "mempool_proc",
+                "-net"          ,"local-testnet",
+                "-chain"        ,"gdb",
+                "-datum"        , l_hash_decl_str[1]
+        };
+
+        dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_decl, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
         DAP_DELETE(str_reply);
         str_reply = NULL;
@@ -148,12 +172,38 @@ int dap_node_run_action(scenario_t action) {
 
         dap_assert_PIF(com_token_emit(15, token_emit_args, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
+        char **l_emit_str = dap_strsplit(str_reply, "\n", 2);
+        char **l_hash_emit_str = dap_strsplit(l_emit_str[0], " ", 3);
+        char **l_hash_btx_str = dap_strsplit(l_emit_str[1], " ", 3);
         DAP_DELETE(str_reply);
         str_reply = NULL;
 
-        dap_assert_PIF(com_mempool_proc(4, mempool_proc_args, &str_reply) == 0, str_reply);
+        const char *mempool_proc_args_emit[] = {
+                "mempool_proc",
+                "-net"          ,"local-testnet",
+                "-chain"        ,"gdb",
+                "-datum"        , l_hash_emit_str[1]
+        };
+
+        dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_emit, &str_reply) == 0, str_reply);
         dap_test_msg(str_reply);
         DAP_DELETE(str_reply);
+        str_reply = NULL;
+
+        const char *mempool_proc_args_btx[] = {
+                "mempool_proc",
+                "-net"          ,"local-testnet",
+                "-chain"        ,"gdb",
+                "-datum"        , l_hash_btx_str[1]
+        };
+
+        dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_btx, &str_reply) == 0, str_reply);
+        dap_test_msg(str_reply);
+        DAP_DELETE(str_reply);
+        DAP_DELETE(l_hash_decl_str);
+        DAP_DELETE(l_hash_emit_str);
+        DAP_DELETE(l_hash_btx_str);
+        DAP_DELETE(l_emit_str);
         str_reply = NULL;
         DAP_DELETE(l_addr_str_from);
     } else if (action == TX) {
@@ -174,21 +224,38 @@ int dap_node_run_action(scenario_t action) {
             "-value"        ,"1000000000000",
             "-tx_num"       ,"200"
         };
-
-        pthread_t thrds[5];
-        arg_data args[5];
-        for (int i = 0; i < 5; ++i) {
-            args[i].call_args = tx_create_args;
-            args[i].str_reply = NULL;
-            pthread_create(&thrds[i], NULL, call_com_tx_create, (void*)&args[i]);
+        for (int i = 0; i < 5; i++){
+            com_tx_create(15, tx_create_args, &str_reply);
+            char **l_hash_tx_str = dap_strsplit(str_reply, " ", 3);
+            if (dap_strcmp(l_hash_tx_str[0], "Error!") == 0)
+                return -1;
+            const char *mempool_proc_args_emit[] = {
+                    "mempool_proc",
+                    "-net"          ,"local-testnet",
+                    "-chain"        ,"gdb",
+                    "-datum"        , l_hash_tx_str[1]
+            };
+            dap_assert_PIF(com_mempool_proc(6, mempool_proc_args_emit, &(str_reply)) == 0, str_reply);
+            dap_test_msg(str_reply);
+            DAP_DELETE(str_reply);
+            DAP_DELETE(l_hash_tx_str);
+            str_reply = NULL;
         }
 
-        int status;
-        for (int i = 0; i < 5; ++i) {
-            pthread_join(thrds[i], (void**)&status);
-        }
+//        pthread_t thrds[5];
+//        arg_data args[5];
+//        for (int i = 0; i < 5; ++i) {
+//            args[i].call_args = tx_create_args;
+//            args[i].str_reply = NULL;
+//            pthread_create(&thrds[i], NULL, call_com_tx_create, (void*)&args[i]);
+//        }
+//
+//        int status;
+//        for (int i = 0; i < 5; ++i) {
+//            pthread_join(thrds[i], (void**)&status);
+//        }
         DAP_DELETE(l_addr_str_to);
-        dap_assert_PIF(com_mempool_proc(4, mempool_proc_args, &str_reply) == 0, str_reply);
+//        dap_assert_PIF(com_mempool_proc(4, mempool_proc_args, &str_reply) == 0, str_reply);
     }
     else if (action == CHECK) {
         dap_chain_wallet_t *l_wallet_from   = dap_chain_wallet_open_file("./locale/var/lib/wallet/wallet_from.dwallet");
@@ -203,10 +270,10 @@ int dap_node_run_action(scenario_t action) {
         char **l_addr_tokens = NULL;
         dap_chain_ledger_addr_get_token_ticker_all_fast(l_ledger, l_addr_to, &l_addr_tokens, &l_addr_tokens_size);
         dap_assert_PIF(l_addr_tokens_size > 0, "No tokens found on wallet.");
-        uint64_t l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_to, l_addr_tokens[0]);
-        dap_assert_PIF(l_balance_to == 1000000000000000, "Balance TO is not equal what it must be.");
+        uint256_t l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_to, l_addr_tokens[0]);
+        dap_assert_PIF(compare256(l_balance_to, dap_chain_uint256_from(1000000000000000)) == 0, "Balance TO is not equal what it must be.");
         l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_from, l_addr_tokens[0]);
-        dap_assert_PIF(l_balance_to == 1000000000000, "Balance FROM is not equal what it must be.");
+        dap_assert_PIF(compare256(l_balance_to, dap_chain_uint256_from(1000000000000)) == 0, "Balance FROM is not equal what it must be.");
         DAP_DELETE(l_addr_tokens[0]);
         DAP_DELETE(l_addr_tokens);
         dap_chain_wallet_close(l_wallet_from);
@@ -216,38 +283,47 @@ int dap_node_run_action(scenario_t action) {
 }
 
 int dap_node_init() {
-    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt") == 0, "Can't init common functions module");
+    dap_assert_PIF(dap_common_init("locale", "locale_logs.txt", "./locale/") == 0, "Can't init common functions module");
     dap_assert_PIF(dap_config_init("./locale/etc") == 0,     "Can't init config");
     g_config = dap_config_open("local");
     dap_assert_PIF(g_config != NULL,                        "Config not found");
+    dap_assert_PIF(dap_enc_init() == 0,                     "Can't init encryption module");
+
+    dap_events_init(0, 0);
+    dap_events_start();
+
     dap_assert_PIF(dap_server_init(1) == 0,                 "Can't init server");
     dap_assert_PIF(dap_http_init() == 0,                    "Can't init HTTP cli submodule");
     dap_http_folder_init();
-    dap_assert_PIF(dap_enc_init() == 0,                     "Can't init encryption module");
     //dap_assert_PIF(dap_enc_ks_init(false, 60 *60 * 2) == 0, "Can't init encryption key storage module");
-    dap_assert_PIF(dap_chain_global_db_init(g_config) == 0, "Can't init DB");
+//    dap_assert_PIF(dap_chain_global_db_init(g_config) == 0, "Can't init DB");
     dap_client_init();
-    dap_http_client_simple_init();
+//    dap_http_client_simple_init();
     dap_datum_mempool_init();
     dap_assert_PIF(dap_chain_init() == 0,                   "Can't init CA storage");
     dap_chain_wallet_init();
-    dap_chain_gdb_init();
-    dap_chain_net_init();
     dap_chain_net_srv_init(g_config);
     enc_http_init();
-    dap_stream_init(dap_config_get_item_bool_default(g_config, "general", "debug_dump_stream_headers", false));
-    dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
     dap_http_simple_module_init();
 
 
     dap_assert_PIF(dap_chain_node_cli_init(g_config) == 0,  "Can't init server for console");
 
-    dap_stream_ch_chain_init();
-    dap_stream_ch_chain_net_init();
-    dap_events_init(0, 0);
-    dap_events_t *l_events = dap_events_new();
-    dap_events_start(l_events);
-    dap_chain_net_load_all();
+    dap_stream_init(g_config);
+    dap_stream_ctl_init(DAP_ENC_KEY_TYPE_OAES, 32);
+    char l_gdb_path[MAX_PATH] = {'\0'};
+    dap_sprintf(l_gdb_path, "%s/var/lib/global_db", "./locale");
+    dap_assert_PIF(
+            dap_global_db_init(
+                dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
+                dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) == 0,
+            "Can't init global db module");
+    dap_chain_gdb_init();
+    dap_chain_net_init();
+//    dap_stream_ch_chain_init();
+//    dap_stream_ch_chain_net_init();
+//    dap_events_start(l_events);
+//    dap_chain_net_load_all();
     return 0;
 }
 
