@@ -68,3 +68,7 @@ cmake_install.cmake
 
 # Editor's temp files
 *~
+
+# CLion files
+.idea/
+cmake-build-debug/
