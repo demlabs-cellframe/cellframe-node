@@ -122,8 +122,8 @@ log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 dap_global_db_path={PREFIX}/var/lib/global_db
-dap_global_db_driver=cdb
-dap_global_db_drvmode_async=false
+#global_db_driver=mdbx
+#global_db_drvmode_async=false
 
 # Plugins
 #[plugins]
