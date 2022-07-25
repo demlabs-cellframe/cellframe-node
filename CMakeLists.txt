@@ -18,7 +18,6 @@ if (CMAKE_TARGET_ARCH MATCHES arm)
 endif()
 
 # Crossbuild configs
-
 if (CMAKE_TARGET_ARCH MATCHES arm)
 set(CMAKE_SYSTEM_PROCESSOR arm)
     if (CMAKE_TARGET_ARCH MATCHES armhf)
