@@ -268,7 +268,7 @@ int dap_node_run_action(scenario_t action) {
         dap_ledger_t *l_ledger = dap_chain_ledger_by_net_name("local-testnet");
         size_t l_addr_tokens_size = 0;
         char **l_addr_tokens = NULL;
-        dap_chain_ledger_addr_get_token_ticker_all_fast(l_ledger, l_addr_to, &l_addr_tokens, &l_addr_tokens_size);
+        dap_chain_ledger_addr_get_token_ticker_all(l_ledger, l_addr_to, &l_addr_tokens, &l_addr_tokens_size);
         dap_assert_PIF(l_addr_tokens_size > 0, "No tokens found on wallet.");
         uint256_t l_balance_to = dap_chain_ledger_calc_balance(l_ledger, l_addr_to, l_addr_tokens[0]);
         dap_assert_PIF(compare256(l_balance_to, dap_chain_uint256_from(1000000000000000)) == 0, "Balance TO is not equal what it must be.");
