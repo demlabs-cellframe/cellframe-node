@@ -51,6 +51,12 @@ elseif(WIN32 OR BSD OR ANDROID)
     set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 endif()
 
+if(BUILD_CELLFRAME_NODE_TESTS)
+    enable_testing()
+    set(CELLFRAME_MODULES ${CELLFRAME_MODULES} "test-framework")
+    add_subdirectory(test)
+endif()
+
 add_subdirectory(cellframe-sdk)
 
 if(UNIX)
@@ -142,13 +148,6 @@ endif()
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
-
-
-
-if(BUILD_CELLFRAME_NODE_TESTS)
-    enable_testing()
-    add_subdirectory(test)
-endif()
 
 set( NODE_SOURCES
   sources/main.c

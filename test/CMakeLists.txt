@@ -3,7 +3,6 @@ if(TARGET kelvin_node_test)
 endif()
 project(kelvin_node_test)
 
-add_subdirectory(libdap-test)
 
 file(GLOB SOURCES *.c)
 file(GLOB HEADERS *.h)
