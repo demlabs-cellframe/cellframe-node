@@ -6,7 +6,7 @@ id=0x000000000000aaaa
 name=kelvpn-minkowski
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
-
+gdb_groups_prefix=minkowski
 node_addr_type=static
 node-addr=AAAA::0000::0000::0000
 seed_nodes_aliases=[minkowski.kelvpn.root.0,minkowski.kelvpn.root.1,minkowski.kelvpn.root.2]
@@ -23,8 +23,10 @@ private=false
 #acl_accept_ca_chains=all
 
 
-[dag-poa]
-events-sign-cert=kelvpn-minkowski.root.0
+#[dag-poa]
+#events-sign-cert=kelvpn-minkowski.root.0
 
-#[block-poa]
-#blocks-sign-cert=mycert
+#[block-ton]
+#blocks-sign-cert=minkowski.master.pvt.0
+
+
