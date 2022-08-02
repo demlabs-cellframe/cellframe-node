@@ -103,6 +103,7 @@
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
 
+#include "dap_chain_ledger.h"
 #include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
