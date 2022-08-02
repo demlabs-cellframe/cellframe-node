@@ -55,6 +55,9 @@ set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs
 if(LINUX)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} modules-dynamic srv-vpn")
 endif()
+if(MACOS)
+    set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
+endif()
 
 add_subdirectory(cellframe-sdk)
 
