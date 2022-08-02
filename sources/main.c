@@ -359,11 +359,11 @@ int main( int argc, const char **argv )
         return -66;
     }
 
-    if (!dap_chain_net_srv_xchange_init()) {
+    if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
-    if (!dap_chain_net_srv_stake_pos_delegate_init()) {
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
