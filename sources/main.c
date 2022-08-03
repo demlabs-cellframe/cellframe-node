@@ -340,11 +340,6 @@ int main( int argc, const char **argv )
         return -71;
     }
 
-	if (dap_chain_ledger_verificators_init() == false) {
-		log_it(L_CRITICAL, "Can't init ledger verificators");
-		return -72;
-	}
-
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
