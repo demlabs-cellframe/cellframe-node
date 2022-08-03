@@ -363,7 +363,7 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
-    if (!dap_chain_net_srv_stake_lock_init()) {
+    if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake token service");
     }
 
