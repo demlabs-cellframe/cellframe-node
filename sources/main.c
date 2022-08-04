@@ -340,11 +340,6 @@ int main( int argc, const char **argv )
         return -71;
     }
 
-    if( dap_chain_net_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network module");
-        return -65;
-    }
-
     if ( dap_datum_mempool_init() ) {
         log_it( L_CRITICAL, "Can't init mempool module" );
         return -59;
@@ -376,6 +371,11 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
     }
+
+	if( dap_chain_net_init() !=0){
+		log_it(L_CRITICAL,"Can't init dap chain network module");
+		return -65;
+	}
 
 
 #if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)
