@@ -158,28 +158,6 @@ int cellframe_node_Main(int argc, const char **argv)
 int main( int argc, const char **argv )
 #endif
 {
-	/* TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST */
-
-	dap_time_t t = dap_time_from_str_simplified("220906");
-	log_it(L_INFO, "t from 220906 simplified = %lld", t);
-	char tt[50];
-	memset(tt, 0, sizeof (tt));
-	dap_time_to_str_rfc822(tt, sizeof(tt), t);
-	log_it(L_INFO, "tt from t(220906) = %s",tt);
-	t = dap_time_now();
-	log_it(L_INFO, "dap_time_now() = %lld", t);
-	memset(tt, 0, sizeof (tt));
-	dap_time_to_str_rfc822(tt, sizeof(tt), t);
-	log_it(L_INFO, "tt from t(dap_time_now) = %s", tt);
-	t = dap_time_from_str_rfc822(tt);
-	log_it(L_INFO, "t from tt(%s) rfc822 = %lld", tt, t);
-	t = dap_time_from_str_rfc822("220906");
-	log_it(L_INFO, "t from tt(220906) rfc822 = %lld", t);
-	dap_time_to_str_rfc822(tt, sizeof(tt), t);
-	log_it(L_INFO, "tt from t(220906 rfc822) = %s",tt);
-
-	/* TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST */
-
 	dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
 	bool bServerEnabled = false;
