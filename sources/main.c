@@ -170,9 +170,11 @@ int main( int argc, const char **argv )
 	log_it(L_INFO, "dap_time_now() = %lld", t);
 	memset(tt, 0, sizeof (tt));
 	dap_time_to_str_rfc822(tt, sizeof(tt), t);
-	log_it(L_INFO, "tt from t(dap_time_now) = %s",tt);
+	log_it(L_INFO, "tt from t(dap_time_now) = %s", tt);
+	t = dap_time_from_str_rfc822(tt);
+	log_it(L_INFO, "t from tt(%s) rfc822 = %lld", tt, t);
 	t = dap_time_from_str_rfc822("220906");
-	log_it(L_INFO, "t from t(220906) rfc822 = %lld", t);
+	log_it(L_INFO, "t from tt(220906) rfc822 = %lld", t);
 	dap_time_to_str_rfc822(tt, sizeof(tt), t);
 	log_it(L_INFO, "tt from t(220906 rfc822) = %s",tt);
 
