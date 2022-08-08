@@ -2,7 +2,7 @@
 
 # General section
 [general]
-id=0x000000000000aaaa
+id=0x0000000000000001
 name=kelvpn-minkowski
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
