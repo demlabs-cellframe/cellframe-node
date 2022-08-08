@@ -103,6 +103,7 @@
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
 
+#include "dap_chain_ledger.h"
 #include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -338,18 +339,6 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
-    dap_chain_ledger_verificator_rwlock_init();
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator, NULL);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator, NULL);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE, dap_chain_net_srv_stake_pos_delegate_verificator, NULL);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE_UPDATE, dap_chain_net_srv_stake_updater, NULL);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_FEE, dap_chain_ledger_fee_verificator, NULL);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_LOCK, dap_chain_net_srv_stake_lock_verificator, dap_chain_net_srv_stake_lock_verificator_added);
-
-    if( dap_chain_net_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network module");
-        return -65;
-    }
 
     if ( dap_datum_mempool_init() ) {
         log_it( L_CRITICAL, "Can't init mempool module" );
@@ -361,15 +350,15 @@ int main( int argc, const char **argv )
         return -66;
     }
 
-    if (!dap_chain_net_srv_xchange_init()) {
+    if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
-    if (!dap_chain_net_srv_stake_pos_delegate_init()) {
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
-    if (!dap_chain_net_srv_stake_lock_init()) {
+    if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake token service");
     }
 
@@ -382,6 +371,11 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
     }
+
+	if( dap_chain_net_init() !=0){
+		log_it(L_CRITICAL,"Can't init dap chain network module");
+		return -65;
+	}
 
 
 #if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)

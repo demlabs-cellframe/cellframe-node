@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD 11)
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR 5)
 SET( CPACK_PACKAGE_VERSION_MINOR 1)
-SET( CPACK_PACKAGE_VERSION_PATCH 206)
+SET( CPACK_PACKAGE_VERSION_PATCH 224)
 
 
 if (CMAKE_TARGET_ARCH MATCHES arm)
@@ -55,6 +55,9 @@ set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs
 
 if(LINUX)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} modules-dynamic srv-vpn")
+endif()
+if(MACOS)
+    set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
 endif()
 
 add_subdirectory(cellframe-sdk)
