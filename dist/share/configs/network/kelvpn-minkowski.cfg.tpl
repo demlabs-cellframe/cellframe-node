@@ -2,13 +2,12 @@
 
 # General section
 [general]
-id=0x000000000000aaaa
+id=0x0000000000000001
 name=kelvpn-minkowski
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 gdb_groups_prefix=minkowski
-node_addr_type=static
-node-addr=AAAA::0000::0000::0000
+
 seed_nodes_aliases=[minkowski.kelvpn.root.0,minkowski.kelvpn.root.1,minkowski.kelvpn.root.2]
 seed_nodes_hostnames=[0.root.minkowski.kelvpn.com,1.root.minkowski.kelvpn.com,2.root.minkowski.kelvpn.com]
 seed_nodes_addrs=[AAAA::0000::0000::0000,AAAA::0000::0000::0001,AAAA::0000::0000::0002]
