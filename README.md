@@ -1,369 +1,373 @@
-# cellframe-node
+# Installing Cellframe node and providing your own services
 
-[Cellframe Node usage Wiki](https://wiki.cellframe.net/en/soft)
+## Build from sources
 
-## This guide will work on Debian/Ubuntu
+#### NOTE: This guide will only work on Debian and it's derivatives (e.g. Ubuntu).
 
-### Build from sources:
-
-#### Linux Prerequsites 
-
-To successfully complete of the build, you need to have the following packages to be installed 
-(packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
-
-* libjson-c-dev
-* libsqlite3-dev
-* libmagic-dev
-* libpython3-dev
-* traceroute
-
-Please use the command below to install dependencies listed above
+To successfully build the Cellframe node, you need to have all the necessary dependencies installed. To install them, use the following command:
 ```
-sudo apt-get install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv
+sudo apt install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv git
 ```
 
-#### MacOS Prerequsites 
+### MacOS prerequisites 
 
 Install latest XCode from App Store or directly from official Apple site.
-Install Homebrew from brew.sh, if you have Apple Sillicon chipset pls setup it to /opt/homebrew as recommendent on the Homebrew site.
-Then install cmake and sqlite
+Install Homebrew from brew.sh, if you have Apple silicon chipset, please setup it to /opt/homebrew as recommendended on the Homebrew site.
+Then install cmake and sqlite with the following command:
 ```
 brew install cmake sqlite3
 ```
 
-Generaly thats all what you need
+### Download the sources with Git
 
-
-#### Get all cellframe-node sources
-
-This command fetch sources from gitlab and build them. 
+With the following command, you can download the latest source code from master branch:
   ```
-  git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git --recursive
+  git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git --recurse-submodules
   ```
 
-#### Build cellframe using cmake framework
-Get into directory with cellframe-node and execute the following commands
-  ```
-  mkdir build
-  cd build
-  cmake ../
-  make -j$(nproc)
-  ```
-*-j$(nproc)* nrpoc parameter depends on your machine capacity - number of processor cores.
-As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
-
-#### Build cellframe-node packages for MacOS
-Right now you can't, just type ```make install``` and it will install all the files in your system at /Users/<your username>/Applications/CellFrame.app
-
-#### Build cellframe-node package for Linux
-Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
-
-##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb``` 
-
-Please use ```dpkg``` command to install it:
+### Build Cellframe node using CMake framework
+Go into the cellframe-node directory which you have cloned and use the following commands (separately) to build the node:
 ```
-sudo dpkg -i ./cellframe-node-5.0-8-Debian-21.10-amd64-impish-dbg.deb
+mkdir build
+cd build
+cmake ../
+make -j$(nproc)
 ```
 
-In some cases there is a following command required to be executed
+### Create package for Debian and it's derivatives (e.g. Ubuntu)
+When building has finished, you can create the installation package for Debian and it's derivatives with the command `cpack` (use this command in the build directory!).
+
+Use the command `ls` to view the name of the installation package in the `build` directory. For example, on Ubuntu 22.04 the package name is `cellframe-node-5.1-224-Debian-22.04-amd64.deb`.
+
+Use the following command to install the package (handles dependencies automatically):
 ```
-sudo apt --fix-broken install
+sudo apt install ./cellframe-node-5.1-224-Debian-22.04-amd64.deb
 ```
+If your `apt` version is too old, it might not support installation from local packages. Then you can use `dpkg` to install the package:
+```
+sudo dpkg -i cellframe-node-5.1-224-Debian-22.04-amd64.deb
+```
+In some cases (when using `dpkg` for installing the node), you might receive an error for missing packages during the install. You can fix the issue with the following command:
+```
+sudo apt -f install
+```
+The installer will ask you some [questions](#questions) during the installation.
 
-##### Install from DemLabs official public repository
+### Installation package for MacOS
+Building installation package for MacOS is not possible yet. However, you can use the command `make install` and the node will be installed to /Users/<your username>/Applications/CellFrame.app
 
-* Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
+## Install from Demlabs official public repository
 
-* For Debian 11:
+**NOTE: Currently only the following distros are supported:**
+* Debian 11 (Bullseye)
+* Debian 10 (Buster)
+* Debian 9 (Stretch)
+* Ubuntu 18.04 (Bionic)
+
+1. Add Demlabs public key to your trusted keys with the command:
   ```
-  deb https://debian.pub.demlabs.net/public bullseye main
-  ```
-* For Debian 10:
-  ```
-  deb https://debian.pub.demlabs.net/public buster main
-  ```
-* For Debian 9:
-  ```
-  deb https://debian.pub.demlabs.net/public stretch main
-  ```
-* For Ubuntu 18 (Bionic):
-  ```
-  deb https://debian.pub.demlabs.net/public bionic main 
-  ```
-* Then download public signature and install it:
-  ```
-  wget https://debian.pub.demlabs.net/public/public-key.gpg
-  sudo apt-key add public-key.gpg
-  ```
-* Then update your apt cache and install the package (apt-transport-https should be installed):
-  ```
-  sudo apt-get update
-  sudo apt-get install cellframe-node
+  wget -O- https://debian.pub.demlabs.net/public/public-key.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/demlabs-archive-keyring.gpg
   ```
 
-During installation it asks some questions
+2. Add Demlabs repository to your sources with the following command:
+  ```
+  echo "deb [signed-by=/usr/share/keyrings/demlabs-archive-keyring.gpg] https://debian.pub.demlabs.net/public $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/demlabs.list
+  ```
+3. Update your package index files and install the Cellframe node
+  ```
+  sudo apt update && sudo apt install cellframe-node
+  ```
+<a name="questions"></a>During installation the installer will ask you some questions:
 
-#### Debian package questions
-All this could be changed after in configs
+* Auto online (true / false)
+  * True: Cellframe node goes online after startup and tries to keep this state automatically.
+  * False: Node stays offline after startup.
 
+* Debug mode (true / false)
+  * True: Enable debug output to log files.
+  * False: Disable debug output to log files.
 
-* Auto online
-If true, the node goes online after he starts and then try to keep this state automatically 
-
-* Debug mode
-If true - produce more log output in files. Suggested to set ```true``` until the testing period 
-
-* Debug stream headers
-Dump stream headers in logs, set it ```true``` only if you want to get more debug information about stream packages passing through. Suggested ```false``` for almost everybody
-
-* Accept connections
-Enable/disable listening network address. Set ```false``` if you don't want to accept network connections to your node
+* Accept connections (true / false)
+  * True: Enable listening network address and accept inbound connections.
+  * False: Disable listening network address and refuse inbound connections.
 
 * Server address
-Network address used for listentning. Set ```0.0.0.0``` if you want to listen all network interfaces on your computer
+  * Network address used for listening. Set to `0.0.0.0` if you want to listen on all network interfaces on your computer.
 
-* Server port (optional, usually don't ask)
-Server port, 8079 by default but sometimes better to set it to ```80``` or ```443``` to masquarade service as web service. 
+* Server port
+  * Server port to listen on: Default is 8079, recommended 8079. Use 80 or 443 if you want to masquerade node for example as a web service.
 
-* Core-testnet: Enable network
-Set ```true``` if you want to connect your node with ```Core-T testnet```
+* Notify server address
+  * Default is 127.0.0.1, recommended 127.0.0.1.
 
-* Core-testnet: Node type (role)
-Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
+* Notify server port
+  * Default is 8080, recommended 8080.
 
-* Kelvin-testnet: Enable network
-Set ```true``` if you want to connect your node with ```kelvin-testnet```
+* Enable Subzero testnet (true / false)
+  * True: Connect your node to Subzero testnet.
+  * False: Don't connect your node to Subzero testnet.
 
-* SubZero: Enable network
-Set ```true``` if you want to connect your node with ```subzero```
+* Subzero node role (full / light / master / archive / root)
+  * Different role types for node. Default `full`, recommended `full`.
 
-* SubZero: Node role
-Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full```
+* Enable KelVPN Minkowski testnet (true / false)
+  * True: Connect your node to KelVPN Minkowski testnet
+  * False: Don't connect your node to KelVPN Minkowski testnet
 
-### How to configure VPN service share
+* KelVPN Minkowski node role (full / light / master / archive / root)
+  * Different role types for node. Default `full`, recommended `full`.
 
-#### Node base configuration
-Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.cfg``` and find next section:
+* Enable Backbone mainnet (true / false)
+  * True: Connect your node to Backbone mainnet.
+  * False: Don't connect your node to Backbone mainnet.
 
-```
-# VPN stream channel processing module
-[srv_vpn]
-#   Turn to true if you want to share VPN service from you node
-enabled=false
-#   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
-network_address=10.11.12.0
-network_mask=255.255.255.0
-#pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]
-```
+* Backbone node role (full / light / master / archive / root)
+  * Different role types for node. Default `full`, recommended `full`.
 
-Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usually you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
-Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below:
-Next line ```pricelist``` if commented out it shares service for free.
+* Enable Mileena testnet (true / false)
+  * True: Connect your node to Mileena testnet.
+  * False: Don't connect your node to Mileena testnet.
 
-#### Pricelist config
-Pricelist line has list of values, splitted with ```:``` symbol. What it means lets see in example ```kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0```:
+* Mileena testnet node role (full / light / master / archive / root)
+  * Different role types for node. Default `full`, recommended `full`.
 
-1. ```kelvin-testnet``` thats the chain network name where the price token issued
-2. ```0.00001``` price per units. Important: not for one unit but for all the units, in our example - for 1 hour.
-3. ```KELT``` token ticker thats will be used for payments
-4. ```3600``` units number thats costs price `0.00001`
-5. ```SEC``` unit type, could be ```SEC``` for seconds, ```DAY``` for days, ```MB``` for megabyte. IMPORTANT: if selected ```MB``` accounting would be not by time but by used traffic amount
-6.```mywallet``` wallet name for payments accommodation, should be created before with ```cellframe-node-cli```. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
+* Enable Python plugins (true / false)
+  * True: Enable loading of Python plugins.
+  * False: Disable loading of Python plugins.
 
-You could enter any number of such prices
+* Python plugins path
+  * Set path where you want to store your plugins.
 
-#### DNS server install
+## Running and troubleshooting your Cellframe node after installation 
 
-Install DNS server, it could be any other than Bind9 but for example we will use exactly thats one - did we test this with any other? at a least a couple of others?
-
-```sudo apt-get install bind9```
-
-#### Switch on IPv4 forwarding 
-
-Open ```/etc/sysctl.conf``` with command ```sudo nano /etc/sysctl.conf``` and find line 
-```
-# Uncomment the next line to enable packet forwarding for IPv4
-#net.ipv4.ip_forward=1
-```
-
-Uncomment ```net.ipv4.ip_forward=1``` as the comment above suggests. Then after you've changed them and saved changes, implement them with:
-```
-sudo sysctl -p
-```
-Then after reboot they will be implemented automatically - do we need to specify a reboot command?
-
-
-#### Configuring firewall with NAT
-
-Easiest way is to install ```arno-iptables-firewall``` with the next command:
-```
-sudo apt-get install arno-iptables-firewall
-```
-It would ask next questions:
-
-*  `Do you want to manage the firewall setup with debconf` answer `Yes`
-*  `External network interfaces` answer with you network interface thats used for internet access. Usually its `eth0` or `wifi0` but could be different, examine you network configuration first.
-*  `Open external TCP-ports` answer `8079` or what the port do you configured for cellframe node when it was installed
-*  `Open external UDP-ports:` answer same as in previous
-*  `Internal network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
-*  `Internal subnets ` here should be network_adddres/network_mask from VPN service configuration, ```10.11.12.0/255.255.255.0``` in our example
-*  `Should be restarted` answer `No` becase we need some more configs
-
-Now lets increase config ask level and reconfigure the package with the next command:
-```
-sudo dpkg-reconfigure -plow arno-iptables-firewall
-``` 
-
-For answers where you'll see right answers just press enter to skip them. Then the next questions should appears:
-* `Is DHCP used on external interfaces? ` usually answer `Yes`, answer `No` only if you have static network configuration for external connections
-* `Should the machine be pingable from the outside world?` answer `Yes` because we use pings for network speed measurements
-* `Do you want to enable NAT? ` answer `Yes`
-* `Internal networks with access to external networks:` here you list internal networks again, ```10.11.12.0/255.255.255.0``` in our example
-* `Should the firewall be (re)started now?` now answer `Yes` and have everything ready for routing
-
-
-### How to run 
-
-If the node is installed in your system you need only to check it if its runned on your system
+### Check the status of Cellframe node
 ```
   sudo service cellframe-node status
 ```
-And if its not runned - start it. Start after reboot should be automaticaly executed.
+### Restart Cellframe node
 ```
   sudo service cellframe-node start
 ```
 
-To stop it use the next command:
+### Stop Cellframe node
 ```
   sudo service cellframe-node stop
 ```
 
-### How to publish service in network 
+Log files can be found at /opt/cellframe-node/var/log/cellframe-node.log
 
+## Useful links
 
-#### Obtain node address
-First you need to publish you public IPv4 and/or IPv6 addresses (for current moment we support only IPv4)
+[Cellframe Wiki pages](https://wiki.cellframe.net/en/home)
 
+[Cellframe node CLI manual](https://wiki.cellframe.net/en/soft/node_commands)
+
+[Python SDK API reference](https://wiki.cellframe.net/en/python_51)
+
+## OPTIONAL: Configure your Cellframe node for sharing VPN service
+
+### Create a wallet
+If you haven't created a wallet yet, you should do that now as the payments from sharing your connection for VPN service will be paid to your wallet. Open terminal and type in the following command:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net -net kelvin-testnet get status
+cellframe-node-cli wallet new -w my_wallet
 ```
+Where `my_wallet` is the name you want to use on your own wallet.
 
-It should print smth like this
+### Install DNS
+You need to have DNS server installed and configured on your system. Install bind9 with the following command:
 ```
-Network "kelvin-testnet" has state NET_STATE_SYNC_CHAINS (target state NET_STATE_ONLINE), active links 3 from 4, cur node address 374C::CEB5::6740::D93B
+apt -y install bind9
 ```
+***NOTE: You don't need to do any type of configuration to your DNS server***
 
-#### Publish IP address in nodelist
-
-Look at the end of address, thats you node address, ```374C::CEB5::6740::D93B``` use it to update information about your node, as in example below:
+### Set up IPv4 forwarding
+To enable IPv4 forwarding, you need to edit `sysctl.conf` file. Open the file in nano with the command `sudo nano /etc/sysctl.conf` and find the following line:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli node add -net kelvin-testnet -addr 374C::CEB5::6740::D93B -cell 0x0000000000000001 -ipv4 5.89.17.176
+#net.ipv4.ip_forward=1
 ```
-
-Here is cell `0x0000000000000001` used by default until we haven't finished cell autoselection. Then ipv4 address is `5.89.17.176` replace it with your public IPv4 address. Same could be added ipv6 address with argument `-ipv6`
-
-
-#### Create order for VPN service 
-
-To say world that you have VPN service you need to place order. First lets see the market, what orders are already present:
+Uncomment the line, so it will look like this:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order find -srv_uid 0x0000000000000001 -direction sell
+net.ipv4.ip_forward=1
 ```
+***NOTE: If your configuration file is missing this line for some reason, you may add it manually to the end of the file.***
 
-It should print list if you've syncronized well before (should happens automatically by default)
-Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg``` if you see in list thats market changed and you need to change prices as well.
-Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net kelvin-testnet order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token KELT -price 100```
-
-And then you just wait some for network synchronisation and your order will see everybody.
-
-Description of arguments
-* ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
-* ```-srv_uid``` Service UID, for VPN service set ```1```
-* ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
-* ```-price_token``` Token ticker
-* ```-price``` Price for one unit, price for one second in our example
-
-Important: if you set price in configs for units set, 3600 in our example - here you set price for your single one unit, for one second in example.
-
-More details about order operations you could find with call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help net_srv```
-More details about cellframe node commands in call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help```
-
-# SubZero testnet
-
-## Create wallet and token request
-
-1. Install node according instructions above.
-2. Create wallet
-   
+Then press Ctrl+X, answer Y to "Save modified buffer" and press Enter. After you have saved the file, enable the new settings with command:
 ```
-    cellframe-node-cli wallet new -w subzero_wallet
-    Wallet 'subzero_wallet' (type=sig_dil) successfully created
+sysctl -p
 ```
 
-3. Get wallet address:
-   
+### Set up your Cellframe node for VPN sharing
+For enabling VPN service share in Cellframe node, we need to edit Cellframe node configuration file. Use the command `sudo nano /opt/cellframe-node/etc/cellframe-node.cfg` to edit the configuration file with nano text editor and find the following part:
 ```
-cellframe-node-cli wallet info -w subzero_wallet -net subzero 
-addr: mJUUJk6Yk2gBSTjcDHXxAerggncSK7DP8ZViVG2zrtbuW6uiCtTvXXn9kdcoBadGeBiujC7VsfemGv5BLbq2zcxoCR8GVRKfCmLtaedd
-network: subzero
-balance: 0
+[srv_vpn]
+#   Turn to true if you want to share VPN service from you node 
+enabled=true
+debug_more=false
+# Grace period for service , 60 second by default
+#grace_period=60 
+#   List of loca security access groups. Built in: expats,admins,services,nobod>
+network_address=10.11.12.0
+network_mask=255.255.255.0
+pricelist=[kelvpn-minkowski:100:KEL:3600:SEC:my_wallet]
+```
+***NOTE: This example has already been modified with KelVPN Minkowski settings. Your settings might look a bit different.***
+
+Turn `enabled` parameter from `false` to `true` for enabling the VPN service sharing on your node. Default configuration for `network_address=10.11.12.0` and `network_mask=255.255.255.0` reserves 254 local addresses for VPN sharing and it should be enough, so those lines can stay untouched. However, you should keep these addresses in mind as they will be required in the firewall configuration part.
+
+The `pricelist` line, on the other hand, needs some configuration. `pricelist` has a list of values which are split with colon (:).
+
+1. `kelvpn-minkowski` Chain network name where token is issued. 
+2. `100` is the price per unit
+3. `KEL` Token ticker thats will be used for payments
+4. `3600` units which has a price of 0.00001 like in our example above
+5. `SEC` is a unit type. For ex:SEC for seconds, MB for megabytes or DAY for days
+6. `mywallet` is the wallet name which you have created for receiving payments to.
+
+In this particular configuration we see that the unit value is `3600`, price per unit is `100` and unit type is `SEC`. Therefore as 3600 seconds makes 1 hour, the price for 1 hour would be 100 KEL. Another example with megabytes would be with the following configuration: `kelvpn-minkowski:100:KEL:30:MB:mywallet0`, which shows you that for every 30MB of data, the payment would be 100 KEL.
+
+After the consumption of each portion (time or amount of data), a check is issued for the client.
+
+Each masternode owner himself determines how much he wants for the traffic provided. The client sees the receipt issued by the master node and signs it, if he agrees with the tariff.
+
+### Configuring firewall with NAT (Network Address Translation)
+First of all, you need to figure out which network interface you are using for internet connection. To find that out, do `ip -brief address show` command in terminal to see what is your current network interface in use. The output could look something like this:
+```
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+wlo1             UP             192.168.8.128/24 fd0c:8fff:407b:1f00:2fb1:faee:31ea:eeab/64 fd0c:8fff:407b:1f00:3126:6043:318a:924a/64 fe80::c4a4:34d2:657d:275d/64 
+docker0          DOWN           172.17.0.1/16
+```
+On this particular output, we see that our network interface in use is `wlo1`.
+
+You also need to check the available tunnel devices from your system with the command `ls /dev/net`. 
+
+If you have only one `tun` device available on your system, you should use `tun0` as the tunnel device when configuring the firewall. However, if you have configured another VPN server for your system, you might have multiple tunnel devices available. So for example, if you have `tun, tun0, tun1, tun2` devices when doing the `ls /dev/net/` command, you should use `tun3` on the firewall configuration part.
+
+### Installing and configuring firewall
+
+After you have checked your network interface and tunnel you will be using, it's time to configure Linux firewall (iptables). One easy way to configure that is to use `arno-iptables-firewall`.
+
+I you have installed it already, you can simply reconfigure it with `sudo dpkg-reconfigure arno-iptables-firewall`. If you need to install it, just type in the command `sudo apt -y install arno-iptables-firewall` and it will ask you a few questions:
+
+* Do you want to manage the firewall setup with debconf? 
+  * You should answer yes.
+* External network interfaces:
+  * This is the network interface you checked with `ip -brief address show` command. In my case, that's my WiFi interface `wlo1`.
+* Open external TCP-ports:
+  * Cellframe node uses port 8079 so we'll use that. ***NOTE: If you're running other services on your computer (for example like SSH port 22), you should open those ports too to access them!***
+* Open external UDP-ports:
+  * Same answer as above, 8079.
+* Internal network interfaces:
+  * Tunnel device which you will use. e.g. tun0.
+* Internal subnets:
+  * Network setting for internal subnets. IP / Mask is the same from `cellframe-node.cfg` VPN configuration part: `10.11.12.0/255.255.255.0`.
+
+Now, the configurator will now ask you twice "Should the firewall be (re)started now?" Answer "No", as we need to continue the configuration. Next, we need to reconfigure `arno-iptables-firewall` with lower priority to set some other settings we need. Use command `sudo dpkg-reconfigure -plow arno-iptables-firewall` and you will be asked a few new questions:
+
+**Note: When installing the package for the first time, installer will ask some same questions which you have already answered, you can safely press enter on these questions for moving forward.**
+
+* Is DHCP used on external interfaces?
+  * This is probably "Yes", if you are behind a router. However, if you're running on VPS, they usually use static IP. You should ask from your service provider, if you're unsure about this.
+* Should the machine be pingable from outside the world?
+  * Answer "Yes". Ping is used for measuring network speed.
+* Do you want to enable NAT?
+  * Answer "Yes", to access from internal network to Internet.
+* Internal networks with access to external networks:
+  * Use the same IP/Mask which are configured in `cellframe-node.cfg` VPN configuration: `10.11.12.0/255.255.255.0`.
+* Should the firewall be (re)started now?
+  * You can now safely answer "Yes" to restart the firewall.
+
+### Obtain your node address
+
+First you need to publish you public IPv4 and/or IPv6 addresses (currently we only support IPv4). To get your public address in Mileena network, use the following command:
+```
+cellframe-node-cli net -net mileena get status
+```
+***NOTE: If `cellframe-node-cli` command is not recognized, it's possibly not added to your `$PATH`. If this happens, you can use it directly with the command `/opt/cellframe-node/bin/cellframe-node-cli`***
+
+You should receive some information after you press enter:
+```
+Network "mileena" has state NET_STATE_ONLINE (target state NET_STATE_ONLINE), active links 4 from 3, cur node address 2B5E::139B::C995::6D71
 ```
 
-4. Send wallet address and request for tCELL amount of money to telegram channel: t.me/cellframe_dev_en
-5. Waiting for answer from admin and execute command for network chains and gdb syncronization:
+No we can see that our node address in Mileena network is `2B5E::139B::C995::6D71`.
 
-```cellframe-node-cli net sync all -net subzero```
+### Publish IP address in node list
 
-6. See wallet balance:
-   
+You can publish your own node address in node list with the following command:
 ```
-cellframe-node-cli wallet info -w subzero_wallet -net subzero 
-wallet: subzero_wallet
-addr: mJUUJk6Yk2gBSTjcDHXxAerggncSK7DP8ZViVG2zrtbuW6uiCtTvXXn9kdcoBadGeBiujC7VsfemGv5BLbq2zcxoCR8GVRKfCmLtaedd
-network: subzero
-balance:
-	5500000.000000000 (5500000000000000) tCELL
+cellframe-node-cli node add -net mileena -addr your_node_address -cell 0x0000000000000001 -ipv4 your_external_ip_address
 ```
+Where `your_node_address` is the one which you received above (in this case: `2B5E::139B::C995::6D71`), and `your_external_ip_address` is your external IP address. Simple way to get your external IP address is to just Google "what is my IP".
 
-## Balance replenishment 
-
-If you want increase amount of tCell on your wallet, you can wrote about it to SubZero admin.
-
-## Tokens transfer
-
-1. You can transfer tokens from your wallet to other wallet. For doing this you need to know address of 2nd wallet. Execute command
+So in this case, our command would look something like this:
+```
+cellframe-node-cli node add -net mileena -addr 2B5E::139B::C995::6D71 -cell 0x0000000000000001 -ipv4 109.240.91.130
 
 ```
-cellframe-node-cli tx_create -net subzero -chain support -from_wallet subzero_wallet -to_addr rTDbDdeStfpodpLUevvYaxJBh2k739fjwusqtmAU72VoUCm88ERPw555jHXtrkoEGJfYEZ7Mmwssc3ajijG9eEqEZxV2FmZvYcvnAVZz -value 32100000
-        transfer=Ok
-        tx_hash=0x4E6D540F86CD46CBFA551F219A04BA2248FF474BB795EB5B2C524299458AD709
+***NOTE: Currently we use cell 0x0000000000000001 by default until autoselection of cell is implemented***
+
+### Create order for the VPN service
+
+First take a look at the market and see what orders are already present with the following command:
+```
+cellframe-node-cli net_srv -net mileena order find -srv_uid 0x0000000000000001 -direction sell
 ```
 
-- to_addr - address of 2nd wallet (you can see it using command ```cellframe-node-cli wallet info -w <wallet_name> -net subzero ```)
-- value - amount of tokens
-
-2. Execute command for database syncing
-
-```cellframe-node-cli net sync all -net subzero```
-
-3. Waiting for a while root node have processed you request
-4. Don't create more then one request on balance changing, until you get confirmation about processing current request. That requests will not be processed (it can be fixed in future)
-      
-and see your updated balance
-
-```cellframe-node-cli wallet info -w subzero_wallet -net subzero``` 
-
-# Node notes
-
-1. Token declaration operations, executing on node client (token_decl command) will be approved manually.
-2. Token emission operations (token_emit command) will be processing automatically only for token owners.
-3. Transactions (tx_create command) will be automatically processing as usual.
-
-#### Remove cellframe-node
-
-In order to remove cellframe-node, use the following command
+It should print a similar list if you have synchronized your node (should happen automatically by default):
 ```
-sudo apt-get remove cellframe-node
+== Order 0xA9797360399BD75C0CA59F227ACF89AB1CF15088F1B092B0EE6B77AE2BD4B1BA ==
+  version:          3
+  direction:        SERV_DIR_SELL
+  srv_uid:          0x0000000000000005
+  price:            0.000000000000000001 (1)
+  node_addr:        3E9E::B2C1::F2F2::7624
+  node_location:    None - None
+  tx_cond_hash:     0x0000000000000000000000000000000000000000000000000000000000000000
+  ext:              0x0
+
+== Order 0x6574FFA6C29166EA0E2F6D8B794EDF57E4F0DC3336EB343B8794C2803EB8B405 ==
+  version:          3
+  direction:        SERV_DIR_SELL
+  srv_uid:          0x0000000000000005
+  price:            0.000000000000000001 (1)
+  node_location:    None - None
+  tx_cond_hash:     0x0000000000000000000000000000000000000000000000000000000000000000
+  ext:              0x0
+
+== Order 0x2E633DEE16BCA16302F7C1FF238AE32C2ED8482B26A1EAB2EB1C7D91A8ED9E05 ==
+  version:          3
+  direction:        SERV_DIR_SELL
+  srv_uid:          0x0000000000000005
+  price:            0.000000000000000001 (1)
+  node_location:    None - None
+  tx_cond_hash:     0x0000000000000000000000000000000000000000000000000000000000000000
+  ext:              0x0
+
 ```
+Let's create our own order:
+```
+cellframe-node-cli net_srv -net mileena order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token TMIL -price 100
+```
+Description of arguments:
+
+* `-direction` is `buy` or `sell`, for VPN service publishing it has to be `sell`
+* `-srv_uid` is the Service UID, for VPN service, set to 1
+* `-price_unit`, set `2` for seconds, `1` for megabytes
+* `-price_token` is the token ticker you would like to use
+* `-price` is the price for one unit, price for one second in our example
+
+***NOTE: You set price in configuration file for units, (3600 in our example) - With this command you set price for one single unit, one second for example.***
+
+You can see more details about order operations with the command `cellframe-node-cli help net_srv`
+
+## Removing Cellframe node
+
+Removing Cellframe node is simple, you can use `apt` to remove the package:
+```
+apt remove cellframe-node
+```
+Or if you want to purge the databases also, use:
+```
+apt purge cellframe-node
+```
+***NOTE: All the installed files and folders are not removed by default. If you want to remove everything, you may remove the files and directories from `/opt/cellframe-node`. But beware, if you have created wallets, make sure you backup them before proceeding.***
