@@ -33,13 +33,13 @@ if(NOT WIN32)
 endif()
 #set(BUILD_CRYPTO_TESTS ON)
 
-#set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
+set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
 
-set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
+#set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
 #set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
-set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
-set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
-set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
+#set(BUILD_PYTHON_СUSTOM_ZLIB ON)        #use zlib from source arcivie.
+#set(BUILD_PYTHON_СUSTOM_OPENSSL ON)     #use openssl from source archive.
+#set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
 if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
