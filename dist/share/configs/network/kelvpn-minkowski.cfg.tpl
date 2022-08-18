@@ -13,6 +13,8 @@ seed_nodes_hostnames=[0.root.minkowski.kelvpn.com,1.root.minkowski.kelvpn.com,2.
 seed_nodes_addrs=[AAAA::0000::0000::0000,AAAA::0000::0000::0001,AAAA::0000::0000::0002]
 seed_nodes_port=[8090,8090,8090]
 
+gdb_sync_nodes_addrs=[AAAA::0000::0000::0000,AAAA::0000::0000::0001,AAAA::0000::0000::0002]
+
 private=false
 
 #[auth]
