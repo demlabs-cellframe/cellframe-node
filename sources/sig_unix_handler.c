@@ -8,7 +8,8 @@
 #include "dap_global_db.h"
 #include "dap_chain_node.h"
 #include "dap_chain_net_srv_xchange.h"
-#include "dap_chain_net_srv_stake.h"
+#include "dap_chain_net_srv_stake_pos_delegate.h"
+#include "dap_chain_net_srv_stake_lock.h"
 #include "dap_chain.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -45,7 +46,8 @@ static void sig_exit_handler(int sig_code) {
 #endif
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
-    dap_chain_net_srv_stake_deinit();
+    dap_chain_net_srv_stake_pos_delegate_deinit();
+    dap_chain_net_srv_stake_lock_deinit();
     dap_chain_net_deinit();
     dap_global_db_deinit();
     dap_chain_deinit();

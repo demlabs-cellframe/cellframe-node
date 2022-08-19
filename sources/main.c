@@ -110,13 +110,13 @@
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
 #include "dap_chain_net_srv_xchange.h"
-#include "dap_chain_net_srv_stake.h"
+#include "dap_chain_net_srv_stake_pos_delegate.h"
+#include "dap_chain_net_srv_stake_lock.h"
 
 #include "dap_common.h"
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_client.h"
-//#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
 
@@ -355,12 +355,6 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
-    dap_chain_ledger_verificator_rwlock_init();
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_XCHANGE, dap_chain_net_srv_xchange_verificator);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_PAY, dap_chain_net_srv_pay_verificator);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE, dap_chain_net_srv_stake_verificator);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_FEE_STAKE, dap_chain_net_srv_fee_stake_verificator);
-    dap_chain_ledger_verificator_add(DAP_CHAIN_TX_OUT_COND_SUBTYPE_SRV_STAKE_UPDATE, dap_chain_net_srv_stake_updater);
 
     if( dap_chain_net_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network module");
@@ -375,8 +369,12 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
-    if (!dap_chain_net_srv_stake_init()) {
-        log_it(L_ERROR, "Can't start delegated stake service");
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
+        log_it(L_ERROR, "Can't start delegated PoS stake service");
+    }
+
+    if (dap_chain_net_srv_stake_lock_init()) {
+        log_it(L_ERROR, "Can't start stake token service");
     }
 
     if( dap_chain_net_srv_app_init() !=0){
@@ -536,7 +534,8 @@ int main( int argc, const char **argv )
 	dap_enc_ks_deinit();
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
-    dap_chain_net_srv_stake_deinit();
+    dap_chain_net_srv_stake_pos_delegate_deinit();
+    dap_chain_net_srv_stake_lock_deinit();
     dap_chain_net_deinit();
 #ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
