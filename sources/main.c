@@ -22,6 +22,7 @@
     along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "dap_strfuncs.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -122,6 +123,7 @@
 
 #include "dap_defines.h"
 #include "dap_file_utils.h"
+#include "dap_plugin.h"
 
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     #include "dap_chain_plugins.h"
@@ -501,30 +503,31 @@ int main( int argc, const char **argv )
 
     //dap_chain_net_load_all();
 
-//Init python plugins
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-    log_it(L_NOTICE, "Loading python plugins");
-    dap_plugins_python_app_content_init(l_server);
-    dap_chain_plugins_init(g_config);
-#endif
+    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+        dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
+        DAP_DELETE(l_plugins_path_default);
 
-    /* Test code for service client
-    #include "dap_chain_net_srv_client.h"
-    dap_chain_net_srv_client_callbacks_t l_callbacks = {};
-    dap_chain_net_srv_client_t *l_client = dap_chain_net_srv_client_create_n_connect(
-                                                dap_chain_net_by_name("kelvin-testnet"),
-                                                "51.89.133.15", 80, &l_callbacks, NULL);
-    */
+        //Init python plugins
+        #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            log_it(L_NOTICE, "Loading python plugins");
+            dap_plugins_python_app_content_init(l_server);
+            dap_chain_plugins_init(g_config);
+        #endif
+
+        dap_plugin_start_all();
+    }
 
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
 
 //failure:
+    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+        dap_plugin_stop_all();
+        dap_plugin_deinit();
+    }
 
-//    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-//        dap_chain_plugins_deinit();
-//    #endif
     dap_dns_server_stop();
 	dap_stream_deinit();
 	dap_stream_ctl_deinit();
@@ -537,9 +540,6 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_stake_pos_delegate_deinit();
     dap_chain_net_srv_stake_lock_deinit();
     dap_chain_net_deinit();
-#ifdef DAP_MODULES_DYNAMIC
-    dap_modules_dynamic_close_cdb();
-#endif
     dap_global_db_deinit();
     dap_chain_deinit();
 	dap_config_close( g_config );
