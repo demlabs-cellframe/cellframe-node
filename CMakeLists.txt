@@ -33,7 +33,11 @@ if(NOT WIN32)
 endif()
 #set(BUILD_CRYPTO_TESTS ON)
 
-set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
+if(DARWIN)
+    set(BUILD_PYTHON_FROM_SRC ON)
+else()
+    set(BUILD_WITH_SYSTEM_PYTHON ON)       #link with system python3. If OFF - will user prebuilds or src.
+endif()
 
 #set(BUILD_PYTHON_FROM_SRC ON)           #build Python from sources; if OFF - will use a prebuilds.
 #set(BUILD_PYTHON_СUSTOM_LIBFFI ON)      #use libffi from source archive.
