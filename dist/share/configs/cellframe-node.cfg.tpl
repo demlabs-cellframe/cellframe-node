@@ -57,7 +57,9 @@ listen_port={NOTIFY_SRV_PORT}
 [ledger]
 # More debug output
 # debug_more=true
-cached=false
+# Disable ledger cache load
+# cache_enabled=false
+
 
 # DAG defaults
 [dag]
