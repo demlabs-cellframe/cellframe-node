@@ -246,6 +246,8 @@ int main( int argc, const char **argv )
         return -4;
     }
 
+	if (!dap_chain_global_rwlocks_and_verificators_init())
+		return -77;
 
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
@@ -345,22 +347,22 @@ int main( int argc, const char **argv )
         return -59;
     }
 
-    if( dap_chain_net_srv_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service module");
-        return -66;
-    }
+	if( dap_chain_net_srv_init() !=0){
+		log_it(L_CRITICAL,"Can't init dap chain network service module");
+		return -66;
+	}
 
-    if (dap_chain_net_srv_xchange_init()) {
-        log_it(L_ERROR, "Can't provide exchange capability");
-    }
+	if (dap_chain_net_srv_xchange_init()) {
+		log_it(L_ERROR, "Can't provide exchange capability");
+	}
 
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
+	if (dap_chain_net_srv_stake_pos_delegate_init()) {
+		log_it(L_ERROR, "Can't start delegated PoS stake service");
+	}
 
-    if (dap_chain_net_srv_stake_lock_init()) {
-        log_it(L_ERROR, "Can't start stake token service");
-    }
+	if (dap_chain_net_srv_stake_lock_init()) {
+		log_it(L_ERROR, "Can't start stake token service");
+	}
 
     if( dap_chain_net_srv_app_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
@@ -372,7 +374,7 @@ int main( int argc, const char **argv )
         return -68;
     }
 
-	if( dap_chain_net_init() !=0){
+	if( dap_chain_net_init() !=0){//	TODO: ^ can be moved up ^
 		log_it(L_CRITICAL,"Can't init dap chain network module");
 		return -65;
 	}
