@@ -32,45 +32,52 @@ stages:
       - ./prod_build/build.sh amd64-darvin release
       - ./prod_build/pack.sh amd64-darvin release
 
-amd64-bdebian-bullseye-dbg:
+amd64-test-windows:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:cellframe-node
+    image: demlabs/amd64/debian-bullseye:windowsbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh amd64-linux debug
-      - ./prod_build/pack.sh amd64-linux debug
+      - ./prod_build/build.sh --target windows release
+
+amd64-debian-bullseye-dbg:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh --target linux debug
+      - ./prod_build/pack.sh --target linux debug
 
 amd64-debian-bullseye:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:cellframe-node
+    image: demlabs/amd64/debian-bullseye:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script: 
-      - ./prod_build/build.sh amd64-linux release
-      - ./prod_build/pack.sh amd64-linux release
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
 
 armhf-debian-bullseye:
     extends: .build
-    image: demlabs/arm32v7/debian-bullseye:cellframe-node
+    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
 
     before_script: /opt/buildtools/prepare_environment.sh armhf-linux
     script: 
-      - ./prod_build/build.sh armhf-linux release
-      - ./prod_build/pack.sh armhf-linux release
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
 
 arm64-debian-bullseye:
     extends: .build
-    image: demlabs/arm64v8/debian-bullseye:cellframe-node
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh arm64-linux
     script: 
-      - ./prod_build/build.sh arm64-linux release
-      - ./prod_build/pack.sh arm64-linux release
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
   
 
 deploy:
   extends: .deploy
   needs: 
     - amd64-debian-bullseye 
-    - amd64-bdebian-bullseye-dbg
+    - amd64-debian-bullseye-dbg
     - armhf-debian-bullseye 
     - arm64-debian-bullseye 
    
