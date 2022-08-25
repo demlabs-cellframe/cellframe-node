@@ -185,8 +185,8 @@ if(WIN32)
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
     target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
-			KERNEL32 USER32 SHELL32 WINMM GDI32 ADVAPI32 Ole32 Version Imm32
-			OleAut32 ws2_32 ntdll psapi Shlwapi Bcrypt Crypt32 Secur32 userenv )
+			kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
+			oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
     set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
