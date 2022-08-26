@@ -23,14 +23,6 @@ stages:
   image: demlabs/amd64/debian-bullseye:cellframe-node
   stage: deploy
   before_script: /opt/buildtools/prepare_environment.sh 
-  
-.amd64-darvin:
-    extends: .build
-    image:  sickcodes/docker-osx:auto
-    before_script: /opt/buildtools/prepare_environment.sh amd64-darvin
-    script: 
-      - ./prod_build/build.sh amd64-darvin release
-      - ./prod_build/pack.sh amd64-darvin release
 
 windows-amd64:
     extends: .build
@@ -38,6 +30,13 @@ windows-amd64:
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - ./prod_build/build.sh --target windows release
+
+macos-amd64:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:osxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-osx
+    script:
+      - ./prod_build/build.sh --target osx release
 
 linux-amd64-debian-bullseye-dbg:
     extends: .build
