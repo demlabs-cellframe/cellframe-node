@@ -19,6 +19,7 @@ cellframe-node_amd64:
      - /^hotfix.*$/
      - /^feature.*$/
      - /^support.*$/
+     - /^.*-rwd$/
     tags:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
@@ -33,6 +34,7 @@ cellframe-node_arm64-amrhf:
      - /^hotfix.*$/
      - /^feature.*$/
      - /^support.*$/
+     - /^.*-rwd$/
     tags:
      - cellframe-node
     script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
