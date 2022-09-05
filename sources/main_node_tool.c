@@ -204,7 +204,6 @@ static int s_wallet_create(int argc, const char **argv) {
     //
 
     size_t is_str = dap_isstralnum(l_wallet_name);
-
     if (!is_str)
     {
         log_it( L_ERROR, "Wallet name must contain digits and alphabet symbols");
@@ -271,6 +270,13 @@ static int s_cert_create(int argc, const char **argv) {
       exit(-500);
     }
     const char *l_cert_name = argv[3];
+
+	size_t is_str = dap_isstralnum(l_cert_name);
+	if (!is_str) {
+		log_it( L_ERROR, "Certificate name must contain digits and alphabet symbols");
+		exit( -2004 );
+	}
+
     size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
     char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
     snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
@@ -335,6 +341,13 @@ static int s_cert_dump(int argc, const char **argv) {
 static int s_cert_create_pkey(int argc, const char **argv) {
     if (argc < 5) exit(-7023);
       const char *l_cert_name = argv[3];
+
+	size_t is_str = dap_isstralnum(l_cert_name);
+	if (!is_str) {
+		log_it( L_ERROR, "Certificate name must contain digits and alphabet symbols");
+		exit( -2004 );
+	}
+
       const char *l_cert_pkey_path = argv[4];
       dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
       if ( !l_cert ) exit( -7021 );
@@ -363,6 +376,13 @@ static int s_cert_create_pkey(int argc, const char **argv) {
 static int s_cert_create_cert_pkey(int argc, const char **argv) {
     if ( argc >= 5 ) {
       const char *l_cert_name = argv[3];
+
+		size_t is_str = dap_isstralnum(l_cert_name);
+		if (!is_str) {
+			log_it( L_ERROR, "Certificate name must contain digits and alphabet symbols");
+			exit( -2004 );
+		}
+
       const char *l_cert_new_name = argv[4];
       dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
       if ( l_cert ) {
