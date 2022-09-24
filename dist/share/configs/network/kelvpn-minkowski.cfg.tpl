@@ -12,8 +12,6 @@ seed_nodes_hostnames=[0.root.minkowski.kelvpn.com,1.root.minkowski.kelvpn.com,2.
 seed_nodes_addrs=[AAAA::0000::0000::0000,AAAA::0000::0000::0001,AAAA::0000::0000::0002]
 seed_nodes_port=[8090,8090,8090]
 
-private=false
-
 #[auth]
 #type=ca
 #acl_accept_ca_list=[]
@@ -22,9 +20,9 @@ private=false
 
 
 #[dag-poa]
-#events-sign-cert=kelvpn-minkowski.root.0
+#events-sign-cert=my_cert_root
 
 #[block-ton]
-#blocks-sign-cert=minkowski.master.pvt.0
+#blocks-sign-cert=my_cert_master
 
 
