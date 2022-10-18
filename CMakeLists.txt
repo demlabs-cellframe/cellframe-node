@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
 include(cellframe-sdk/cmake/ReadMKFile.cmake)
+include(FetchContent) 
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -15,7 +16,7 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
-#possible need be setted during crosscompily
+#possible need be setted during crosscompile
 #by default it uses dpkg --print-architecture
 #we ok with it on native builds.
 #SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
@@ -33,10 +34,11 @@ else()
 endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
-#set(BUILD_WITH_PYTHON_ENV ON)
+
 set(BUILD_WITH_ZIP OFF)
 
 if(LINUX)
+#set(BUILD_WITH_PYTHON_ENV ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
@@ -212,24 +214,40 @@ if(UNIX AND NOT WIN32)
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
-        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
-         if (BUILD_WITH_PYTHON_ENV)
-            add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-        endif()
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-         if (BUILD_WITH_PYTHON_ENV)
-            message("[+] Build with python environment")
-            set(CMAKE_PREFIX_PATH "/opt/cellframe-node")
-        endif()
         message("[+] Build with python plugins support")
-        set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
-        find_package(PythonLibs REQUIRED)
-        include_directories(${PYTHON_INCLUDE_DIR} include/)
-            add_subdirectory(python-cellframe)
+        
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
+        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
+
         if (BUILD_WITH_PYTHON_ENV)
-            set(PYTHON_LIBRARIES -lssl -lcrypto -lcrypt -lnsl ${PYTHON_LIBRARIES} -lz -lutil -lexpat )
+        
+            message("[+] Build with python environment")
+            message("    Downloading static prebuild cpython3.7...")
+            #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
+            # installing pip in it, then tared all back.
+            FetchContent_Declare(
+                CPython37Static
+                URL      https://pub.cellframe.net/3rdparty/python/cpython.tar.xz
+            )
+
+            FetchContent_MakeAvailable(CPython37Static)
+
+            set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
+            
+            set(Python_ADDITIONAL_VERSIONS 3.7)
+            find_package(PythonLibs REQUIRED)
+
+            add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
+            set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
+
+        else()
+            find_package(Python REQUIRED)
         endif()
-        set(NODE_LIBRARIES ${NODE_LIBRARIES} ${PYTHON_LIBRARIES} dap_plugins_python)
+        
+        include_directories(${PYTHON_INCLUDE_DIR} include/)
+        add_subdirectory(python-cellframe)
+
+        set(NODE_LIBRARIES ${NODE_LIBRARIES}  dap_plugins_python ${PYTHON_LIBRARIES})
     endif()
 
     if(ANDROID )
@@ -275,10 +293,10 @@ else()
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if(NOT ANDROID)
-	    
-
-        if (SUPPORT_PYTHON_PLUGINS AND NOT BUILD_WITH_SYSTEM_PYTHON) #install python environment if not system python in use
-            INSTALL(DIRECTORY ${PYTHON_PREFIX} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin USE_SOURCE_PERMISSIONS)
+	    #install all python-specific files back to its original location
+        if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)  
+           INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin USE_SOURCE_PERMISSIONS)
+           INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/lib/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 

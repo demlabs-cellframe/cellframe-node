@@ -10,21 +10,6 @@ DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
 # Store write config to new if present smth
 DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 
-#fixed link with python library
-BUILD_PYTHON_VERSION=/usr/lib/x86_64-linux-gnu/libpython3.5m.so.1.0
-
-[ -h $BUILD_PYTHON_VERSION ] && rm $BUILD_PYTHON_VERSION
-#STANDART_PYTHON_LIB=$(ls /usr/lib/x86_64-linux-gnu | grep "libpython3.*.so.1.0" | cut -d" " -f1 | head -n1)
-#[ -e $BUILD_PYTHON_VERSION ] || ln -sf /usr/lib/x86_64-linux-gnu/$STANDART_PYTHON_LIB /usr/lib/x86_64-linux-gnu/libpython3.5m.so.1.0
-
-
-#unpack PYTHON_ENV
-if [[ -e /opt/cellframe-node/share/cpython.tar.xz ]]; then 
-    rm -rf /opt/cellframe-node/etc/lib /opt/cellframe-node/etc/bin /opt/cellframe-node/var/python || true
-    mkdir -p /opt/cellframe-node/var || true
-    tar -C /opt/cellframe-node -xf /opt/cellframe-node/share/cpython.tar.xz || true
-    rm /opt/cellframe-node/share/cpython.tar.xz || true
-fi
 # Check profile.d symlink
 
 [ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] || ln -sf $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
