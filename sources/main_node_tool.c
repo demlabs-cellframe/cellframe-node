@@ -188,6 +188,9 @@ int main(int argc, const char **argv)
   return -1;
 }
 
+
+
+
 static int s_wallet_create(int argc, const char **argv) {
     if ( argc < 5 ) {
       log_it( L_ERROR, "Wrong 'wallet create' command params" );
@@ -196,6 +199,7 @@ static int s_wallet_create(int argc, const char **argv) {
     }
 
     const char *l_wallet_name = argv[3];
+
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
     dap_chain_wallet_t *l_wallet = NULL;
 
@@ -216,7 +220,7 @@ static int s_wallet_create(int argc, const char **argv) {
       s_help( );
       exit( -2004 );
     }
- 
+
     //
     // Check unsupported tesla algorithm
     //
@@ -227,7 +231,7 @@ static int s_wallet_create(int argc, const char **argv) {
         exit( -2004 );
     }
 
-    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type);
+    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, NULL);
 
     return 0;
 }
