@@ -248,9 +248,6 @@ int main( int argc, const char **argv )
         return -4;
     }
 
-	if (!dap_chain_global_rwlocks_and_verificators_init())
-		return -77;
-
 	if ( dap_http_init() != 0 ) {
     	log_it( L_CRITICAL, "Can't init http server module" );
 	    return -5;
@@ -498,6 +495,8 @@ int main( int argc, const char **argv )
     dap_plugins_python_app_content_init(l_server);
     dap_chain_plugins_init(g_config);
 #endif
+
+    dap_chain_net_load_all();
 
     rc = dap_events_wait(l_events);
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
