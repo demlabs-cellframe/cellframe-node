@@ -346,6 +346,11 @@ int main( int argc, const char **argv )
         return -59;
     }
 
+    if( dap_chain_net_init() !=0) {
+        log_it(L_CRITICAL,"Can't init dap chain network module");
+        return -65;
+    }
+
 	if( dap_chain_net_srv_init() !=0){
 		log_it(L_CRITICAL,"Can't init dap chain network service module");
 		return -66;
@@ -373,11 +378,6 @@ int main( int argc, const char **argv )
         return -68;
     }
 
-	if( dap_chain_net_init() !=0){//	TODO: ^ can be moved up ^
-		log_it(L_CRITICAL,"Can't init dap chain network module");
-		return -65;
-	}
-
 
 #if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)
     // vpn server
@@ -401,11 +401,6 @@ int main( int argc, const char **argv )
     }
 #endif
 
-	if ( dap_chain_node_cli_init(g_config) ) {
-	    log_it( L_CRITICAL, "Can't init server for console" );
-	    return -11;
-	}
-
 #ifndef _WIN32
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
@@ -421,6 +416,8 @@ int main( int argc, const char **argv )
         return -12;
     }
 #endif
+
+    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
@@ -489,14 +486,17 @@ int main( int argc, const char **argv )
         }
     }
 
+    if ( dap_chain_node_cli_init(g_config) ) {
+        log_it( L_CRITICAL, "Can't init server for console" );
+        return -11;
+    }
+
 //Init python plugins
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     log_it(L_NOTICE, "Loading python plugins");
     dap_plugins_python_app_content_init(l_server);
     dap_chain_plugins_init(g_config);
 #endif
-
-    dap_chain_net_load_all();
 
     rc = dap_events_wait(l_events);
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
