@@ -57,7 +57,8 @@ listen_port={NOTIFY_SRV_PORT}
 [ledger]
 # More debug output
 # debug_more=true
-cached=false
+# Cache is enabled by default but always off (config ignored) with MASTER or ROOT node roles
+# cache_enabled=false
 
 # DAG defaults
 [dag]
