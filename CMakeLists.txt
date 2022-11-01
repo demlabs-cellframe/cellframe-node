@@ -45,9 +45,9 @@ endif()
 #set(BUILD_WITH_PYTHON_ENV ON)
 set(BUILD_WITH_ZIP OFF)
 
-if(LINUX)
+#if(LINUX)
 set(SUPPORT_PYTHON_PLUGINS ON)
-endif()
+#endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
@@ -193,7 +193,7 @@ if(BSD)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
-if(UNIX AND NOT WIN32)
+#if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
     set(NODE_LIBRARIES cellframe-sdk )
@@ -234,7 +234,7 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
-endif()
+#endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
