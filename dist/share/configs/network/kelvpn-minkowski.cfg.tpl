@@ -4,6 +4,7 @@
 [general]
 id=0x000000000000aaaa
 name=kelvpn-minkowski
+native_ticker=tKEL
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 
