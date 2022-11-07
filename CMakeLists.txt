@@ -46,7 +46,7 @@ endif()
 #set(BUILD_PYTHON_SHARED OFF)            #use python with shared lib (or link staticaly).
 
 if(LINUX)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+#    set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
