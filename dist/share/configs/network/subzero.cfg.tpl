@@ -4,6 +4,7 @@
 [general]
 id=0x000000000000acca
 name=subzero
+native_ticker=tCELL
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 
