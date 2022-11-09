@@ -57,7 +57,8 @@ listen_port={NOTIFY_SRV_PORT}
 [ledger]
 # More debug output
 # debug_more=true
-cached=false
+# Cache is enabled by default but always off (config ignored) with MASTER or ROOT node roles
+# cache_enabled=false
 
 # DAG defaults
 [dag]
@@ -122,6 +123,7 @@ log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 dap_global_db_path={PREFIX}/var/lib/global_db
+dap_chains_path={PREFIX}/var/lib/network
 #global_db_driver=mdbx
 #global_db_drvmode_async=false
 
