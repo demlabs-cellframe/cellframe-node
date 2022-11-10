@@ -90,8 +90,8 @@ deploy:
     - linux-amd64-debian-buster-rwd
    
   script: 
-    - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f version-badge.svg -c blue
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
+    - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     
 
