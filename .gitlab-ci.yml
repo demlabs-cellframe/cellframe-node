@@ -1,47 +1,87 @@
-stages:
-    - prepare
-    - build
-    - test
-    - deploy
-    - update
-
 variables:
-    GIT_SUBMODULE_STRATEGY: normal
+    GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+    - build
+    - deploy
+
+.ci-polygon:
+  tags:
+     - ci-polygon
+  
+.build:  
+  extends: .ci-polygon
+  stage: build
+  timeout: 3 hours 30 minutes
+  dependencies: []
+  artifacts:
+    paths:
+      - build_*/*.deb
+
+.deploy:
+  extends: .ci-polygon
+  image: demlabs/amd64/debian-bullseye:cellframe-node
+  stage: deploy
+  before_script: /opt/buildtools/prepare_environment.sh 
+
+windows-amd64:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:windowsbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh --target windows release
+
+macos-amd64:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:osxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-osx
+    script:
+      - ./prod_build/build.sh --target osx release
+
+linux-amd64-debian-buster-dbg:
+    extends: .build
+    image: demlabs/amd64/debian-buster:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/pack.sh --target linux debug
+
+linux-amd64-debian-buster:
+    extends: .build
+    image: demlabs/amd64/debian-buster:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script: 
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/pack.sh --target linux release
+
+linux-armhf-debian-bullseye:
+    extends: .build
+    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
+
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux
+    script: 
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+
+linux-arm64-debian-bullseye:
+    extends: .build
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    script: 
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+  
+
+deploy:
+  extends: .deploy
+  needs: 
+    - linux-amd64-debian-buster 
+    - linux-amd64-debian-buster-dbg
+    - linux-armhf-debian-bullseye 
+    - linux-arm64-debian-bullseye 
+   
+  script: 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    
 
 
-cellframe-node_amd64:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node linux_static
-
-cellframe-node_arm64-amrhf:
-    stage: build
-    only:
-     - develop
-     - master
-     - /^release.*$/
-     - /^bugfix.*$/
-     - /^hotfix.*$/
-     - /^feature.*$/
-     - /^support.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/build_all_handler.sh cellframe-node bullseye
-
-cellframe-dashboard_update:
-    stage: update
-    only:
-     - master
-     - /^hotfix.*$/
-    tags:
-     - cellframe-node
-    script: ~/production-docker/integration/gitlab-CI/update_dashboard.sh

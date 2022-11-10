@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+case "$1" in
+	remove|purge|abort-install|abort-upgrade)
+		echo "[*] Stopping cellframe-node.service"
+		systemctl stop cellframe-node || true
+		echo "[*] Disabling cellframe-node.service"
+		systemctl disable cellframe-node || true
+		;;
+
+	disappear)
+		;;
+
+	upgrade)
+		echo "[*] Stopping cellframe-node.service"
+        systemctl stop cellframe-node || true
+		;;
+
+	failed-upgrade)
+		echo "[*] Stopping cellframe-node.service"
+        systemctl stop cellframe-node || true
+        ;;
+
+	*)
+	    echo "prerm called with unknown argument \`$1'" >&2
+		exit 1;;
+esac
+
+exit 0
