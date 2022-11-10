@@ -20,7 +20,7 @@ stages:
 
 .deploy:
   extends: .ci-polygon
-  image: demlabs/amd64/debian-bullseye:cellframe-node
+  image: demlabs/amd64/debian-buster:linuxbuilder
   stage: deploy
   before_script: /opt/buildtools/prepare_environment.sh 
 
