@@ -493,10 +493,16 @@ int main( int argc, const char **argv )
 
 //Init python plugins
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-    log_it(L_NOTICE, "Loading python plugins");
-    dap_plugins_python_app_content_init(l_server);
-    dap_chain_plugins_init(g_config);
-#endif
+    log_it(L_NOTICE, "Checking if Python plugins are enabled in configuration file...");
+    if (dap_config_get_item_bool_default(g_config, "plugins", "py_load", false)) {// Init the plugins only if py_load is set to true in configuration file.
+        log_it(L_NOTICE, "Python plugins are enabled, initializing Python plugins...");
+        dap_plugins_python_app_content_init(l_server);
+        dap_chain_plugins_init(g_config);
+    }
+    else {
+        log_it(L_NOTICE, "Python plugins not enabled in configuration file, skipping initialization of Python plugins...");
+    }
+ #endif
 
     rc = dap_events_wait(l_events);
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
