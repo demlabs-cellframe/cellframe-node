@@ -1,0 +1,71 @@
+#!/bin/bash -e
+. /usr/share/debconf/confmodule
+
+
+case "$1" in
+reconfigure|configure)
+
+   db_input critical cellframe-node/auto_online || true 
+   db_go || true 
+
+   db_input critical cellframe-node/debug_mode || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_enabled || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_addr || true 
+   db_go || true 
+
+   db_input critical cellframe-node/server_port || true 
+   db_go || true 
+
+   db_input critical cellframe-node/notify_srv_addr || true 
+   db_go || true 
+
+   db_input critical cellframe-node/notify_srv_port || true 
+   db_go || true 
+
+   db_input critical cellframe-node/subzero_enabled || true 
+   db_go || true 
+
+   db_get cellframe-node/subzero_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/subzero_node_type || true 
+      db_go || true
+   fi
+
+   db_input critical cellframe-node/kelvpn_minkowski_enabled || true 
+   db_go || true 
+
+   db_get cellframe-node/kelvpn_minkowski_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/kelvpn_minkowski_node_type || true 
+      db_go || true
+   fi
+
+   db_input critical cellframe-node/backbone_enabled || true 
+   db_go || true 
+
+   db_get cellframe-node/backbone_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/backbone_node_type || true 
+      db_go || true
+   fi
+
+   db_input critical cellframe-node/enable_python_plugins || true 
+   db_go || true 
+
+   db_get cellframe-node/enable_python_plugins
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/python_plugins_path || true 
+      db_go || true
+   fi
+;;
+*)
+   echo "config called with unknown argument \`$1'" >&2
+   exit 1
+;;
+esac
+
+
