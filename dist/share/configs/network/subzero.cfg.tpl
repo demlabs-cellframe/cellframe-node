@@ -12,6 +12,8 @@ seed_nodes_hostnames=[0.root.subzero.cellframe.net,1.root.subzero.cellframe.net,
 seed_nodes_addrs=[ACCA::0000::0000::0001,ACCA::0000::0000::0002,ACCA::0000::0000::0003,ACCA::0000::0000::0004,ACCA::0000::0000::0005]
 seed_nodes_port=[8099,8099,8099,8099,8099]
 
+private=false
+
 #[auth]
 #type=ca
 #acl_accept_ca_list=[]

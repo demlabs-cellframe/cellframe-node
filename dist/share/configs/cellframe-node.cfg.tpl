@@ -31,6 +31,13 @@ listen_port_tcp={SERVER_PORT}
 # If not set - used listen_port_tcp for node table auto fill
 #ext_port_tcp=8089
 
+[notify_server]
+# Listening path have priority above listening address 
+#listen_path={PREFIX}/var/run/node_notify
+#listen_path_mode=600
+listen_address={NOTIFY_SRV_ADDR}
+listen_port={NOTIFY_SRV_PORT}
+
 [stream]
 # For now its IAES but thats depricated
 #preferred_encryption=SALSA2012 
@@ -65,8 +72,8 @@ pricelist=[]
 
 # Mempool
 [mempool]
-# Automaticaly should be true for master ad root node role
-# auto_proc=false
+# Automaticaly false, for enabling need role master or higher
+auto_proc=false
 
 # Chain network settings
 [chain_net]
@@ -76,6 +83,7 @@ pricelist=[]
 # Uncomment to have more debug information in stream channel Chain
 # False by default
 #debug_more=true
+ban_list_sync_groups=[*.orders-test-stat]
 
 # Number of hashes packed into the one update packet
 # Increase it to reduce update latency
@@ -118,7 +126,8 @@ log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 dap_global_db_path={PREFIX}/var/lib/global_db
-dap_global_db_driver=sqlite3
+#global_db_driver=mdbx
+#global_db_drvmode_async=false
 
 # Plugins
 #[plugins]
