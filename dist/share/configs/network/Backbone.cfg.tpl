@@ -21,11 +21,11 @@ require_links=3
 #acl_accept_ca_chains=all
 
 
-#[dag-poa]
-#events-sign-cert=mycert0
+[dag-poa]
+#events-sign-cert=scorpion.root.0
 
-#[block-ton]
-#blocks-sign-cert=mycert1
+[block-ton]
+#blocks-sign-cert=scorpion.root.0
 
 #[block-poa]
-#blocks-sign-cert=mycert2
+#blocks-sign-cert=mycert

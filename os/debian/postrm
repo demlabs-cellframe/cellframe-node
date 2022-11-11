@@ -1,0 +1,11 @@
+#! /bin/bash -e
+if [ "$1" == "purge" ] && [ -e /usr/share/debconf/confmodule ] ; then
+. /usr/share/debconf/confmodule
+db_purge
+fi
+GROUP_RM="cellframe-node"
+
+systemctl stop cellframe-node || true
+systemctl disable cellframe-node || true
+
+#this file will be merged to dashboard postinst, be aware of this
