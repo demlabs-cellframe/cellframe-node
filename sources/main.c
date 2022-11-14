@@ -130,11 +130,6 @@
     #include "dap_plugins_python_app_context.h"
 #endif
 
-
-#define ENC_HTTP_URL "/enc_init"
-#define STREAM_CTL_URL "/stream_ctl"
-
-#define STREAM_URL "/stream"
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
@@ -452,11 +447,11 @@ int main( int argc, const char **argv )
 #endif
 
 	        // Handshake URL
-	        enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
+            enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
 	        // Streaming URLs
-	        dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
-	        dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
+            dap_stream_add_proc_http( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM );
+            dap_stream_ctl_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
 
             const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
 	        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
