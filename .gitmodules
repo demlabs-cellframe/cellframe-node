@@ -1,7 +1,3 @@
-[submodule "test/libdap-test"]
-	path = test/libdap-test
-	url = ../libdap-test.git
-	branch = master
 [submodule "python-cellframe"]
 	path = python-cellframe
 	url = ../python-cellframe.git
@@ -15,5 +11,5 @@
 	url = ../prod_build_cellframe-node
 [submodule "dap-sdk"]
 	path = dap-sdk
-	url = https://gitlab.demlabs.net/dap/dap-sdk
+	url = ../../dap/dap-sdk
 	branch = develop

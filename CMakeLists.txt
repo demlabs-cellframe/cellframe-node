@@ -59,6 +59,7 @@ if(BUILD_CELLFRAME_NODE_TESTS)
     add_subdirectory(test)
 endif()
 
+add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 
 if(UNIX)
