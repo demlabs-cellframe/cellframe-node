@@ -48,10 +48,10 @@ listen_port={NOTIFY_SRV_PORT}
 [dns_client]
 #request_timeout=10
 
-# Builtin DNS server
-[dns_server]
-#enabled=false
-#bootstrap_balancer=false
+# Bootstrap balancer server
+[bootstrap_balancer]
+dns_server=false
+http_server=false
 
 # Ledger defaults
 [ledger]

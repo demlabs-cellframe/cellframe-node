@@ -62,6 +62,7 @@
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
+#include "dap_chain_net_balancer.h"
 
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
@@ -130,11 +131,6 @@
     #include "dap_plugins_python_app_context.h"
 #endif
 
-
-#define ENC_HTTP_URL "/enc_init"
-#define STREAM_CTL_URL "/stream_ctl"
-
-#define STREAM_URL "/stream"
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
@@ -418,6 +414,8 @@ int main( int argc, const char **argv )
     }
 #endif
 
+    dap_chain_net_load_all();
+
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
 
@@ -453,11 +451,11 @@ int main( int argc, const char **argv )
 #endif
 
             // Handshake URL
-            enc_http_add_proc( DAP_HTTP(l_server), ENC_HTTP_URL );
+            enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
             // Streaming URLs
-            dap_stream_add_proc_http( DAP_HTTP(l_server), STREAM_URL );
-            dap_stream_ctl_add_proc( DAP_HTTP(l_server), STREAM_CTL_URL );
+            dap_stream_add_proc_http( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM );
+            dap_stream_ctl_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
 
             const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
             if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
@@ -477,30 +475,29 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-    if (dap_config_get_item_bool_default(g_config, "dns_server", "enabled", false))
-    {
+    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
+    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
+    if (dns_bootstrap_balancer_enabled) {
         // DNS server start
-        bool bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "dns_server", "bootstrap_balancer", false);
-        log_it(L_DEBUG, "config dns_server->bootstrap_balancer = \"%u\" ", bootstrap_balancer_enabled);
-        if (bootstrap_balancer_enabled) {
-            dap_dns_server_start( dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
-        }
+        dap_dns_server_start(dap_config_get_item_uint16_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT));
     }
-
-    //dap_chain_net_load_all();
+    bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
+    log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
+    if (http_bootstrap_balancer_enabled) {
+        // HTTP URL add
+        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 1024, dap_chain_net_balancer_http_issue_link);
+    }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
         dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
         DAP_DELETE(l_plugins_path_default);
-
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
         //Init python plugins
-        #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            log_it(L_NOTICE, "Loading python plugins");
-            dap_plugins_python_app_content_init(l_server);
-            dap_chain_plugins_init(g_config);
-        #endif
-
+        log_it(L_NOTICE, "Loading python plugins");
+        dap_plugins_python_app_content_init(l_server);
+        dap_chain_plugins_init(g_config);
+#endif
         dap_plugin_start_all();
     }
 
