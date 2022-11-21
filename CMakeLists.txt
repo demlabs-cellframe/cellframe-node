@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
 include(cellframe-sdk/cmake/ReadMKFile.cmake)
-include(FetchContent) 
+include(FetchContent)
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -102,21 +102,21 @@ if(UNIX)
                     OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
         endif()
-    
+
     else()
         set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
-    
+
     if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
         SET( BUILD_WITH_PYTHON_ENV OFF )
     endif()
-    
+
     if(NOT CPACK_SYSTEM_NAME)
         set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
     endif()
-    
+
     SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
-    
+
     if(BUILD_WITH_GDB_DRIVER_PGSQL)
         SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-pgsql" )
     endif()
@@ -131,7 +131,7 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
     SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc, logrotate, irqbalance, xz-utils")
-    
+
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
@@ -206,6 +206,9 @@ if(BSD)
 endif()
 
 
+target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
+target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
+
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -218,12 +221,12 @@ if(UNIX AND NOT WIN32)
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
-        
+
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
         add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
 
         if (BUILD_WITH_PYTHON_ENV)
-        
+
             message("[+] Build with python environment")
             message("    Downloading static prebuild cpython3.7...")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
@@ -236,7 +239,7 @@ if(UNIX AND NOT WIN32)
             FetchContent_MakeAvailable(CPython37Static)
 
             set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
-            
+
             set(Python_ADDITIONAL_VERSIONS 3.7)
             find_package(PythonLibs REQUIRED)
 
@@ -248,9 +251,9 @@ if(UNIX AND NOT WIN32)
             find_package(PythonLibs REQUIRED)
         endif()
 
-        message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})    
-        message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})    
-        
+        message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})
+        message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})
+
         include_directories(${PYTHON_INCLUDE_DIR} include/)
         add_subdirectory(python-cellframe)
 
@@ -267,6 +270,10 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
 endif()
+
+target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
+target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
+
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
@@ -291,22 +298,22 @@ else()
     elseif(BSD)
 	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     endif()
-    
+
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
-        if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)  
-           
+        if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
+
            INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/pip3 )
            INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/lib/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
-    
+
 endif()
 INCLUDE(CPack)
 

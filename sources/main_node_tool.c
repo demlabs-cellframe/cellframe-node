@@ -195,7 +195,7 @@ static int s_wallet_create(int argc, const char **argv) {
       exit( -2003 );
     }
 
-    const char *l_wallet_name = argv[3];
+    const char *l_wallet_name = argv[3], *l_pass_str = argv[5];
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
     dap_chain_wallet_t *l_wallet = NULL;
 
@@ -220,14 +220,13 @@ static int s_wallet_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-
     if (l_sig_type.type == SIG_TYPE_TESLA)
     {
         log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
         exit( -2004 );
     }
 
-    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, NULL);
+    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
     return 0;
 }
