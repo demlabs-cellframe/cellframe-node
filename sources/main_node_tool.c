@@ -227,7 +227,7 @@ static int s_wallet_create(int argc, const char **argv) {
         exit( -2004 );
     }
 
-    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type);
+    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, NULL);
 
     return 0;
 }
