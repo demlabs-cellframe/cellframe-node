@@ -5,6 +5,7 @@
 id=0x000000000000acca
 name=subzero
 native_ticker=tCELL
+links_static_only=true
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 
