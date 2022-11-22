@@ -4,6 +4,7 @@
 id=0xFF00000000000001
 name=private
 native_ticker=TST
+links_static_only=true
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 # type of node addr [auto, static, dinamic]
