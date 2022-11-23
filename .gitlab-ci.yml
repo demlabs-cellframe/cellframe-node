@@ -8,7 +8,7 @@ stages:
 .ci-polygon:
 
   before_script: 
-      - git submodule foreach --recursive 'git fetch --force'
+      - git submodule update --init --force --checkout
 
   tags:
      - ci-polygon
