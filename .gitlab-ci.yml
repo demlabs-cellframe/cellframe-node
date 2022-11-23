@@ -1,14 +1,11 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
-
+    GIT_SUBMODULE_UPDATE_FLAGS: --force
 stages:
     - build
     - deploy
 
 .ci-polygon:
-
-  before_script: 
-      - git submodule update --init --force --checkout
 
   tags:
      - ci-polygon
