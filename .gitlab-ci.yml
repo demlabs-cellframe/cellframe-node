@@ -6,6 +6,10 @@ stages:
     - deploy
 
 .ci-polygon:
+
+  before_script: 
+      - git submodule foreach --recursive 'git fetch --force'
+
   tags:
      - ci-polygon
   
