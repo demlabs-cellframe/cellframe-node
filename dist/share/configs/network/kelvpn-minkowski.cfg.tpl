@@ -7,6 +7,7 @@ name=kelvpn-minkowski
 native_ticker=tKEL
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
+links_static_only=true
 
 seed_nodes_aliases=[minkowski.kelvpn.root.0,minkowski.kelvpn.root.1,minkowski.kelvpn.root.2]
 seed_nodes_hostnames=[0.root.minkowski.kelvpn.com,1.root.minkowski.kelvpn.com,2.root.minkowski.kelvpn.com]
