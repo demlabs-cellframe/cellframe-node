@@ -5,6 +5,7 @@
 gdb_sync_nodes_addrs=[CCCC::0000::0000::0000,CCCC::0000::0000::0001,CCCC::0000::0000::0002]
 id=0x000000000000cccc
 name=mileena
+links_static_only=true
 gdb_groups_prefix=mileena
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}

@@ -4,6 +4,7 @@
 [general]
 id=0x000000000000acca
 name=subzero
+links_static_only=true
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 

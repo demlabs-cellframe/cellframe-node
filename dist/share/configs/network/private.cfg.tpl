@@ -2,6 +2,7 @@
 # General section
 [general]
 id=0xFF00000000000001
+links_static_only=true
 auth_cert=
 name=private
 # Possible values: light, full, archive, master, root
