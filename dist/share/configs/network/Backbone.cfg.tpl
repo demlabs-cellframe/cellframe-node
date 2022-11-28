@@ -5,6 +5,7 @@
 id=0x0404202200000000
 name=Backbone
 gdb_groups_prefix=scorpion
+links_static_only=true
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
