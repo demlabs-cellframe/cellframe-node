@@ -60,7 +60,11 @@ As a result, you should be able to fine make files in your build folder which wi
 Right now you can't, just type ```make install``` and it will install all the files in your system at /Users/<your username>/Applications/CellFrame.app
 
 #### Build cellframe-node package for Linux
-Use the following command ```cpack``` from the build directory to create cellframe-node installation package.
+Use the following command ```cpack``` from the build directory to create cellframe-node installation package:
+
+```
+cpack
+```
 
 ##### Install from local package
 If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb``` 
