@@ -35,7 +35,11 @@ make -j$(nproc)
 ```
 
 ### Create package for Debian and it's derivatives (e.g. Ubuntu)
-When building has finished, you can create the installation package for Debian and it's derivatives with the command `cpack` (use this command in the build directory!).
+When building has finished, you can create the installation package for Debian and it's derivatives with the command `cpack` (use this command in the build directory!):
+
+```
+cpack
+```
 
 Use the command `ls` to view the name of the installation package in the `build` directory. For example, on Ubuntu 22.04 the package name is `cellframe-node-5.1-224-Debian-22.04-amd64.deb`.
 
