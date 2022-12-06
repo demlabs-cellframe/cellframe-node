@@ -307,7 +307,8 @@ else()
 	    #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
-           INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/pip3 )
+           INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
+           INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
            INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/lib/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
