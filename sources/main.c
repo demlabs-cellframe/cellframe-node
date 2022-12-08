@@ -120,6 +120,7 @@
 #include "dap_http_client.h"
 //#include "dap_http_client_simple.h"
 #include "dap_http_simple.h"
+#include "dap_json_rpc.h"
 #include "dap_process_manager.h"
 
 #include "dap_defines.h"
@@ -466,6 +467,13 @@ int main( int argc, const char **argv )
                                                                 "resources",
                                                                 "www_root") );
 	        }
+
+            // RPC server
+            if(!dap_json_rpc_init()) {
+                dap_json_rpc_add_proc_http(DAP_HTTP(l_server), "/json-rpc");
+            } else {
+                log_it(L_ERROR, "Can't started json-rpc service");
+            }
 
 		}
     } else
