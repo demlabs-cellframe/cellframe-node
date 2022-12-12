@@ -189,10 +189,11 @@ else
     
 fi
 
-echo "[ ] Enabling logrotate" 
+echo "[ ] Enabling logrotate"
 chmod 644  $DAP_PREFIX/share/logrotate/$DAP_APP_NAME || true
-chmod 644  $DAP_PREFIX/share/logrotate/logrotate.timer || true
-systemctl disable logrotate.timer
-systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer
+ln -sf $DAP_PREFIX/share/logrotate/logrotate.timer /etc/systemd/system/logrotate.timer || true
+ln -sf $DAP_PREFIX/share/logrotate/$DAP_APP_NAME /etc/logrotate.d/$DAP_APP_NAME || true
+chmod 644 /etc/logrotate.d/$DAP_APP_NAME || true
+systemctl reenable logrotate.timer || true 
 
 echo "[!] Done"
