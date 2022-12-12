@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+override_dh_fixperms:
+    dh_fixperms -X/opt/cellframe-node
+    chmod 777 /opt/cellframe-node/bin/cellframe-node-cli
+override_dh_auto_install:
+    dh_auto_install -- prefix=/opt/cellframe-node
+%:
+#    dh $@  --with=systemd
+    dh $@

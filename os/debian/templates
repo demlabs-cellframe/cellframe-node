@@ -1,0 +1,133 @@
+Template: cellframe-node/auto_online
+Default: false
+Choices: true, false
+Type: select
+Description: Auto online
+ Bring up links automatically and go to ONLINE network state
+
+Template: cellframe-node/debug_mode
+Default: false
+Choices: true, false
+Type: select
+Description: Debug mode
+ Debug mode for logs
+
+Template: cellframe-node/server_enabled
+Default: false
+Choices: true, false
+Type: select
+Description: Accept connections
+ Accept connections 
+
+Template: cellframe-node/server_port
+Default: 8079
+Type: string
+Description: Server port
+ Server port to listen on, recommended 8079 
+
+Template: cellframe-node/server_addr
+Default: 0.0.0.0
+Type: string
+Description: Server address
+ Server address to listen on
+
+Template: cellframe-node/notify_srv_addr
+Default: 127.0.0.1
+Type: string
+Description: Notify server address
+ Notify server address to listen on
+
+Template: cellframe-node/notify_srv_port
+Default: 8080
+Type: string
+Description: Notify server port
+ Notify server port to listen on 
+
+Template: cellframe-node/subzero_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: SubZero: Enable network
+ Subzero Testnet: Enable network auto load on start
+
+Template: cellframe-node/subzero_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: SubZero: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
+Template: cellframe-node/mileena_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Mileena: Enable network
+ Mileena Testnet: Enable network auto load on start
+
+Template: cellframe-node/mileena_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Mileena: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
+Template: cellframe-node/kelvpn_minkowski_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Kelvpn Minkowski: Enable network
+ Minkowski Testnet: Enable network auto load on start
+
+Template: cellframe-node/kelvpn_minkowski_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Kelvpn Minkowski: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well 
+
+Template: cellframe-node/backbone_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Backbone: Enable network
+ Backbone Mainnet: Enable network auto load on start
+
+Template: cellframe-node/backbone_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Backbone: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
+Template: cellframe-node/enable_python_plugins
+Default: false
+Choices: true, false
+Type: select
+Description: Python plugins: Enable Python plugins
+ Python plugins: Enable Python plugins
+
+Template: cellframe-node/python_plugins_path
+Default: /opt/cellframe-node/var/lib/plugins
+Type: string
+Description: Python plugins path
+ Path for Python plugins

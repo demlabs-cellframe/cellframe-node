@@ -21,7 +21,7 @@ test/build
 *.gch
 *.pch
 
-# Libraries
+## Libraries
 *.lib
 *.a
 *.la

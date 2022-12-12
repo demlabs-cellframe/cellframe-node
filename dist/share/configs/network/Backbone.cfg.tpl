@@ -1,4 +1,4 @@
-# scorpion net config
+# Backbone net config
 
 # General section
 [general]
@@ -20,7 +20,6 @@ require_links=3
 #acl_accept_ca_list=[]
 #acl_accept_ca_gdb=
 #acl_accept_ca_chains=all
-
 
 [dag-poa]
 #events-sign-cert=scorpion.root.0
