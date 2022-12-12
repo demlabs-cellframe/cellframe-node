@@ -1,4 +1,4 @@
-# scorpion net config
+# Backbone net config
 
 # General section
 [general]
@@ -6,7 +6,6 @@ id=0x0404202200000000
 name=Backbone
 gdb_groups_prefix=scorpion
 native_ticker=CELL
-links_static_only=true
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
@@ -21,7 +20,6 @@ require_links=3
 #acl_accept_ca_list=[]
 #acl_accept_ca_gdb=
 #acl_accept_ca_chains=all
-
 
 [dag-poa]
 #events-sign-cert=scorpion.root.0
