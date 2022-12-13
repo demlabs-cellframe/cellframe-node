@@ -189,10 +189,15 @@ else
     
 fi
 
+if [ -e /.dockerenv ]
+then
+echo "[ ] Disabling logrotate in docker-container"
+else
 echo "[ ] Enabling logrotate" 
 chmod 644  $DAP_PREFIX/share/logrotate/$DAP_APP_NAME || true
 chmod 644  $DAP_PREFIX/share/logrotate/logrotate.timer || true
 systemctl disable logrotate.timer
-systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer 
+systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer
+fi
 
 echo "[!] Done"
