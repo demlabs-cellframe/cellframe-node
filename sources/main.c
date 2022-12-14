@@ -241,10 +241,13 @@ int main( int argc, const char **argv )
         return -5;
     }
 
+#ifndef DAP_OS_ANDROID
     if ( dap_http_folder_init() != 0 ){
         log_it( L_CRITICAL, "Can't init http server module" );
         return -55;
     }
+#endif
+
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
@@ -461,16 +464,6 @@ int main( int argc, const char **argv )
             if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
                     dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
             }
-
-            // Built in WWW server
-
-            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                    dap_http_folder_add( DAP_HTTP(l_server), "/",
-                                    dap_config_get_item_str(g_config,
-                                                                "resources",
-                                                                "www_root") );
-            }
-
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
@@ -514,7 +507,10 @@ int main( int argc, const char **argv )
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
+#ifndef DAP_OS_ANDROID
     dap_http_folder_deinit();
+#endif
+
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
