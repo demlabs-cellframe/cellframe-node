@@ -32,6 +32,10 @@ set(SUBMODULES_NO_BUILD ON)
 include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+if (ANDROID)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE OFF)
+endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
@@ -171,6 +175,8 @@ if(UNIX)
         ${NODE_TOOL_SOURCES}
         sources/cellframe_node.h
     )
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})

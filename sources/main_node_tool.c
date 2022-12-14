@@ -67,7 +67,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 
-#ifdef DAP_OS_LINUX
+#if defined(DAP_OS_LINUX) && ! defined(DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #endif
 
@@ -113,9 +113,6 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 static char s_system_ca_dir[MAX_PATH];
 static char s_system_wallet_dir[MAX_PATH];
 
-#ifdef __ANDROID__
-int cellframe_node_tool_Main(int argc, const char **argv)
-#else
 
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
@@ -147,7 +144,6 @@ struct options {
 };
 
 int main(int argc, const char **argv)
-#endif
 {
   int ret = s_init( argc, argv );
 
