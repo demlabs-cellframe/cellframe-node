@@ -22,7 +22,7 @@
     along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dap_strfuncs.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <getopt.h>
 #include <signal.h>
+
+#include "dap_strfuncs.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -146,7 +148,7 @@ static const char *s_pid_file_path = NULL;
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
 #else
-int main( int argc, const char **argv )
+int cellframe_node_Main ( int argc, const char **argv )
 #endif
 {
     dap_server_t *l_server = NULL; // DAP Server instance
@@ -603,3 +605,20 @@ void exit_if_server_already_running( void ) {
     }
 }
 
+
+#ifndef  DAP_CELLFRAME_NODE_AS_SUBROUTINE
+/*
+ *   DESCRIPTION: Main entry point to be run cellframe node as a standalone process.
+ *
+ *   INPUTS:
+ *
+ *   OUTPUTS:
+ *
+ *   RETURNS:
+ */
+
+int main(int argc, char *argv[])
+{
+    int cellframe_node_Main (argc, argv );
+}
+#endif      /* DAP_CELLFRAME_NODE_AS_SUBROUTINE */
