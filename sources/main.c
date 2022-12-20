@@ -503,9 +503,23 @@ int cellframe_node_Main ( int argc, const char **argv )
         dap_plugin_start_all();
     }
 
+#ifdef  DAP_AVRESTREAM
+    extern int avrs_plugin_init(dap_config_t * a_plugin_config, char ** a_error_str);
+    avrs_plugin_init(g_config, NULL);
+#endif  /* DAP_AVRESTREAM */
+
+
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
+
+
     // Deinit modules
+
+#ifdef  DAP_AVRESTREAM
+    extern void avrs_plugin_deinit();
+    avrs_plugin_deinit();
+#endif  /* DAP_AVRESTREAM */
+
 
 //failure:
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
@@ -605,7 +619,7 @@ void exit_if_server_already_running( void ) {
     }
 }
 
-
+/* #undef  DAP_CELLFRAME_NODE_AS_SUBROUTINE */
 #ifndef  DAP_CELLFRAME_NODE_AS_SUBROUTINE
 /*
  *   DESCRIPTION: Main entry point to be run cellframe node as a standalone process.
@@ -619,6 +633,6 @@ void exit_if_server_already_running( void ) {
 
 int main(int argc, char *argv[])
 {
-    int cellframe_node_Main (argc, argv );
+    cellframe_node_Main (argc, (const char **) argv );
 }
 #endif      /* DAP_CELLFRAME_NODE_AS_SUBROUTINE */

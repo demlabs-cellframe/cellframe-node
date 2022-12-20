@@ -44,6 +44,7 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
+set(CELLFRAME_MODULES "${CELLFRAME_MODULES} avrestream")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -204,6 +205,9 @@ endif()
 
 target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
 target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
+
+
+target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} dap_avrestream )
 
 
 if(UNIX AND NOT WIN32)
