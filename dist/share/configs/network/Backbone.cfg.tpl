@@ -5,7 +5,7 @@
 id=0x0404202200000000
 name=Backbone
 gdb_groups_prefix=scorpion
-links_static_only=true
+native_ticker=CELL
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
@@ -20,7 +20,6 @@ require_links=3
 #acl_accept_ca_list=[]
 #acl_accept_ca_gdb=
 #acl_accept_ca_chains=all
-
 
 [dag-poa]
 #events-sign-cert=scorpion.root.0
