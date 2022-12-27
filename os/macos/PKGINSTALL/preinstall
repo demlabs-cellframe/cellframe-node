@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#NODE=com.demlabs.cellframe-node
+#launchctl stop $NODE
+
+#RET=0
+
+#[ -e /Library/LaunchDaemons/com.demlabs.cellframe-node.plist ] && launchctl unload -w /Users/$USER/Library/LaunchAgents/com.demlabs.cellframe-node.plist
