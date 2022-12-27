@@ -39,6 +39,9 @@ macos-amd64:
     script:
       - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
+    artifacts:
+      paths:
+        - build_*/*.pkg
 
 linux-amd64-debian-buster-dbg:
     extends: .build
