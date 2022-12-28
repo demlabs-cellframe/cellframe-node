@@ -503,10 +503,10 @@ int cellframe_node_Main ( int argc, const char **argv )
         dap_plugin_start_all();
     }
 
-#ifdef  DAP_AVRESTREAM
+//#ifdef  DAP_AVRESTREAM
     extern int avrs_plugin_init(dap_config_t * a_plugin_config, char ** a_error_str);
     avrs_plugin_init(g_config, NULL);
-#endif  /* DAP_AVRESTREAM */
+//#endif  /* DAP_AVRESTREAM */
 
 
     rc = dap_events_wait();
