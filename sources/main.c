@@ -145,6 +145,91 @@ void exit_if_server_already_running( void );
 
 static const char *s_pid_file_path = NULL;
 
+
+pthread_mutex_t     s_node_started_cb_lock = PTHREAD_MUTEX_INITIALIZER; /* To coordinate access to the queuee's entries */
+struct {                                                                /* A list of callback to notify that node has been started */
+        void (*rtn) (void *);
+        void *arg;
+} s_node_started_cb_list [256 ];
+
+static int s_node_started_cb_nr = 0;
+
+
+
+/*
+ *   DESCRIPTION: Add an caller provided callback/arg pair into the enternal list.
+ *      Routines from this list well be called  on all node's initialization completion.
+ *
+ *   INPUTS:
+ *      a_rtn:  An address of routine
+ *      a_arg:  An argument to be passed to the a_rtn()
+ *
+ *   IMPLICITE OUTPUTS:
+ *      s_node_started_cb_list
+ *
+ *   RETURNS:
+ *      0       - SUCCESS
+ *      0 <>    - <errno>
+ */
+
+int cellframe_node_started_add_cb (
+                        void (*a_rtn) (void *),
+                        void        *a_arg
+                        )
+{
+int     l_rc;
+
+    if ( (l_rc = pthread_mutex_lock(&s_node_started_cb_lock)) )
+        return  log_it(L_ERROR, "Cannot add routine:%p(arg:%p) into the list, errno:%d", a_rtn, a_arg, errno), errno;
+
+    s_node_started_cb_list[s_node_started_cb_nr].rtn = a_rtn;
+    s_node_started_cb_list[s_node_started_cb_nr].arg = a_arg;
+    s_node_started_cb_nr++;
+
+    if ( (l_rc = pthread_mutex_unlock(&s_node_started_cb_lock)) )
+        log_it(L_ERROR, "pthread_mutex_unlock()->%d, errno:%d", l_rc, errno);
+
+    return  0;
+}
+
+/*
+ *    DESCRIPTION:
+ *
+ *    INPUTS:
+ *      NONE
+ *
+ *    OUTPUTS:
+ *      NONE
+ *
+ *    RETURNS:
+ *      NONE
+ */
+static int cellframe_node_started_run_cb (void)
+{
+int     l_rc;
+pthread_attr_t  l_tattr;
+pthread_t       l_tid;
+
+    /* We do call and forget kind of thread's */
+    pthread_attr_init(&l_tattr);
+    pthread_attr_setdetachstate(&l_tattr, PTHREAD_CREATE_DETACHED);
+
+    /* Run over list and run executor thread for an every call back */
+    for (int i = 0; i < s_node_started_cb_nr; i++)
+    {
+        if ( !s_node_started_cb_list[i].rtn )
+            continue;
+
+        if ( (l_rc = pthread_create(&l_tid, &l_tattr, s_node_started_cb_list[i].rtn, s_node_started_cb_list[i].arg)) )
+             log_it(L_ERROR, "error create executo thread for routine:%p(arg:%p), pthread_create()->%d, errno:%d",
+                    s_node_started_cb_list[i].rtn, s_node_started_cb_list[i].arg, l_rc, errno);
+        else log_it(L_NOTICE, "Call back routine:%p(arg:%p)", s_node_started_cb_list[i].rtn, s_node_started_cb_list[i].arg);
+    }
+
+    return  0;
+}
+
+
 #ifdef __ANDROID__
 int cellframe_node_Main(int argc, const char **argv)
 #else
@@ -509,6 +594,13 @@ int cellframe_node_Main ( int argc, const char **argv )
 //#endif  /* DAP_AVRESTREAM */
 
 
+    /*
+     * So at this point all initialitation step are should be performed ,
+     * now we can do notification of waiters ...
+     */
+    cellframe_node_started_run_cb ();
+
+    log_it( L_NOTICE, "Start main node loop ...");
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
 
