@@ -94,6 +94,9 @@ deploy:
     - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*amd64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
     
 
 
