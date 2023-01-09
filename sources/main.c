@@ -95,7 +95,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+#if defined(DAP_OS_MACOS) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)) && ! defined (DAP_OS_IOS)
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
@@ -375,7 +375,7 @@ int main( int argc, const char **argv )
     }
 
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+#if defined(DAP_OS_MACOS) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
         if(dap_chain_net_srv_vpn_init(g_config) != 0) {

@@ -33,7 +33,7 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-if (ANDROID)
+if (ANDROID OR IOS)
     set(BUILD_WITH_GDB_DRIVER_SQLITE OFF)
 endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
@@ -49,7 +49,7 @@ endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-block-ton cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
 
-if(LINUX OR DARWIN)
+if(LINUX OR MACOS)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
 endif()
 
@@ -168,15 +168,13 @@ set( NODE_TOOL_SOURCES
 )
 
 if(UNIX)
-  if(ANDROID)
+  if(ANDROID OR IOS)
     add_library(${PROJECT_NAME} SHARED
         ${NODE_SOURCES}
-        ${NODE_CLI_SOURCES}
-        ${NODE_TOOL_SOURCES}
         sources/cellframe_node.h
     )
-    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
-    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
+    #add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    #add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -202,15 +200,16 @@ if(WIN32)
 #dap_chain_net_srv_vpn dap_server_http_db_auth
 
 endif()
-if(BSD)
+if(BSD AND NOT IOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -L /usr/local/lib ")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
 
 target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
+if(NOT IOS)
 target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
+endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -268,6 +267,10 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
+    elseif(IOS)
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES})
+        list(REMOVE_DUPLICATES ALL_LIBRARIES)
+        target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
@@ -276,17 +279,18 @@ if(UNIX AND NOT WIN32)
 endif()
 
 target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
-target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
+if(NOT IOS)
+    target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
+endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
-if(NOT ANDROID)
+if(NOT ANDROID AND NOT IOS)
     target_include_directories(${NODE_CLI_TARGET} INTERFACE .)
     target_include_directories(${NODE_TOOL_TARGET} INTERFACE .)
 endif()
 
-if(DARWIN)
+if(DARWIN AND NOT IOS)
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*")
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
@@ -304,9 +308,10 @@ else()
     endif()
 
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-
+    if(NOT IOS)
+        INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    endif()
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)

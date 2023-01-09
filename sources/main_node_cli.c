@@ -188,7 +188,7 @@ int shell_reader_loop()
     return 0;
 }
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__ ) || defined (DAP_OS_IOS)
 int cellframe_node__cli_Main(int argc, const char *argv[])
 #else
 
