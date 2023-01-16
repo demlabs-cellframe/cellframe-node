@@ -1,0 +1,49 @@
+#!/bin/bash
+
+APP_NAME=CellframeNode
+DAP_PREFIX=/Users/$USER/Applications/Cellframe.app/Contents/Resources
+NODE=com.demlabs.cellframe-node
+
+set -x
+sudo xattr -rd com.apple.quarantine /Applications/"$APP_NAME".app
+sudo killall -HUP mDNSResponder
+
+EXEC_PREFIX=/Applications/$APP_NAME.app/Contents/Resources
+
+mkdir -p $DAP_PREFIX
+sudo mv -f /Applications/$APP_NAME.app/Contents/Resources/etc $DAP_PREFIX
+sudo mv -f /Applications/$APP_NAME.app/Contents/Resources/share $DAP_PREFIX
+
+wd=$(pwd)
+cd $EXEC_PREFIX/../MacOS
+
+for filename in $(ls . | grep -v '.'); do
+    if [ -L $filename ] && [ ! -e $filename ]; then
+        strip -u -r $filename
+    fi
+done
+
+sudo chmod +x $EXEC_PREFIX/create_configs.sh
+sudo chmod +x $EXEC_PREFIX/create_configs_from_tpl.sh
+
+$EXEC_PREFIX/create_configs.sh /Applications/${APP_NAME}.app/
+
+mkdir -p /Users/$USER/Library/LaunchAgents
+
+launchctl stop $NODE
+sudo -u $USER launchctl unload -w /Users/$USER/Library/LaunchAgents/$NODE.plist
+sudo chown $USER /Applications/"$APP_NAME".app/Contents/Resources/$NODE.plist
+sudo chmod 644 /Applications/"$APP_NAME".app/Contents/Resources/$NODE.plist
+
+sudo ln -sf /Applications/"$APP_NAME".app/Contents/Resources/$NODE.plist /Users/$USER/Library/LaunchAgents/$NODE.plist
+sudo -u $USER launchctl load -w /Users/$USER/Library/LaunchAgents/$NODE.plist
+
+rm -r /Users/$USER/Applications/"$APP_NAME".app/Contents/Resources/var/lib/global_db/gdb-cdb/
+
+sudo -u $USER launchctl start $NODE
+
+sudo rm $EXEC_PREFIX/*.sh
+
+echo "node agent: $(launchctl list | grep cell)" > /tmp/cellframe-dashboard_install_logs.txt
+
+cd $wd
