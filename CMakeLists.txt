@@ -20,6 +20,7 @@ SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(DESTDIR "/opt/${PROJECT_NAME}")
 
+#SET(DAP_PQLR OFF)
 #possible need be setted during crosscompily
 #by default it uses dpkg --print-architecture
 #we ok with it on native builds.
