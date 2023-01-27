@@ -160,6 +160,14 @@ Building installation package for MacOS is not possible yet. However, you can us
 
 Log files can be found at /opt/cellframe-node/var/log/cellframe-node.log
 
+## Running and debugging in Qt (Linux Mint)
+
+During debugging, the configuration files located in /opt/cellframe-node/ are used. Therefore, it is necessary to grant access rights to this directory to the user who will do the debugging.
+
+```
+sudo chown user_name /opt/cellframe-node/
+```
+
 ## Useful links
 
 [Cellframe Wiki pages](https://wiki.cellframe.net/en/home)
