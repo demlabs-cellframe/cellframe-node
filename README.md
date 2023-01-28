@@ -6,7 +6,7 @@ To successfully build Cellframe node, you need to have all the necessary depende
 
 On Debian / Ubuntu:
 ```
-sudo apt install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv git
+sudo apt install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev libsqlite3-dev libmemcached-dev libev-dev libmagic-dev libcurl4-gnutls-dev libldb-dev libtalloc-dev libtevent-dev traceroute debconf-utils pv git logrotate
 ```
 
 On MacOS:
@@ -43,11 +43,11 @@ When installing from a .deb package, the installer will ask you some [questions]
 
 # Install from Demlabs official public repository
 
-## NOTE: Currently only the following distros are supported:
-* Debian 11 (Bullseye)
-* Debian 10 (Buster)
-* Debian 9 (Stretch)
-* Ubuntu 18.04 (Bionic)
+**NOTE: Currently only the following distros are supported:**
+- Debian 11 (Bullseye)
+- Debian 10 (Buster)
+- Debian 9 (Stretch)
+- Ubuntu 18.04 (Bionic)
 
 ## 1. Add Demlabs public key to your trusted keys with the command:
   ```
@@ -122,3 +122,8 @@ When installing from a .deb package, the installer will ask you some [questions]
 
 * Python plugins path
   * Set path where you want to store your Python plugins.
+
+# Additional configuration and general FAQ / Troubleshooting
+For troubleshooting and general FAQ, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+For information how to run your own services on Cellframe network, please see [SERVICES.md](SERVICES.md).
