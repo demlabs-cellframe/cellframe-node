@@ -128,7 +128,7 @@ When installing from a .deb package, the installer will ask you some [questions]
 [Arch Linux](https://aur.archlinux.org/packages/cellframe-node)
 
 # Additional configuration and general FAQ / Troubleshooting
-For additional information about configuration, see: [CONFIGURATION.md](CONFIGURATION.md).
+For additional information about configuration: [CONFIGURATION.md](CONFIGURATION.md).
 
 For troubleshooting and general FAQ: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
