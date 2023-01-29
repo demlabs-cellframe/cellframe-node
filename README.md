@@ -45,9 +45,6 @@ When installing from a .deb package, the installer will ask you some [questions]
 
 **NOTE: Currently only the following distros are supported:**
 - Debian 11 (Bullseye)
-- Debian 10 (Buster)
-- Debian 9 (Stretch)
-- Ubuntu 18.04 (Bionic)
 
 ## 1. Add Demlabs public key to your trusted keys with the command:
   ```
