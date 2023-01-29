@@ -11,7 +11,7 @@ sudo apt install build-essential cmake dpkg-dev libpython3-dev libjson-c-dev lib
 
 On MacOS:
 
-Install latest XCode from App Store or directly from official Apple site and install Homebrew from brew.sh. (If you have Apple silicon chipset, please setup it to /opt/homebrew as recommended on the Homebrew website).
+Install latest XCode from App Store or directly from official Apple site and install Homebrew from brew.sh. If you have Apple silicon chipset, please setup it to /opt/homebrew as recommended on the Homebrew website
 After that, install necessary dependencies with:
 ```
 brew install cmake sqlite3
@@ -24,7 +24,7 @@ cd cellframe-node
 ```
 
 ## 3. Build Cellframe node using CMake framework and install Cellframe node
-Go into the cellframe-node directory which you have cloned and use the following commands (separately) to build the node:
+Use the following commands (separately) to build the node:
 ```
 mkdir build
 cd build
@@ -65,65 +65,73 @@ When installing from a .deb package, the installer will ask you some [questions]
 <a name="questions"></a>During installation the installer will ask you some questions:
 
 * Auto online (true / false)
-  * True: Cellframe node goes online after startup and tries to keep this state automatically.
-  * False: Node stays offline after startup.
+  * True: Cellframe node goes online after startup and tries to keep this state automatically
+  * False: Node stays offline after startup
 
 * Debug mode (true / false)
-  * True: Enable debug output to log files.
-  * False: Disable debug output to log files.
+  * True: Enable debug output to log files
+  * False: Disable debug output to log files
 
 * Accept connections (true / false)
-  * True: Enable listening network address and accept inbound connections.
-  * False: Disable listening network address and refuse inbound connections.
+  * True: Enable listening network address and accept inbound connections
+  * False: Disable listening network address and refuse inbound connections
 
 * Server address
-  * Network address used for listening. Set to `0.0.0.0` if you want to listen on all network interfaces on your computer.
+  * Network address used for listening. Set to `0.0.0.0` if you want to listen on all network interfaces on your computer
 
 * Server port
-  * Server port to listen on: Default is 8079, recommended 8079. Use 80 or 443 if you want to masquerade node for example as a web service.
+  * Server port to listen on: Default is 8079, recommended 8079. Use 80 or 443 if you want to masquerade node for example as a web service
 
 * Notify server address
-  * Default is 127.0.0.1, recommended 127.0.0.1.
+  * Default is 127.0.0.1, recommended 127.0.0.1
 
 * Notify server port
-  * Default is 8080, recommended 8080.
+  * Default is 8080, recommended 8080
 
 * Enable Subzero testnet (true / false)
-  * True: Connect your node to Subzero testnet.
-  * False: Don't connect your node to Subzero testnet.
+  * True: Connect your node to Subzero testnet
+  * False: Don't connect your node to Subzero testnet
 
 * Subzero node role (full / light / master / archive / root)
-  * Different role types for node. Default `full`, recommended `full`.
+  * Different role types for node. Default `full`, recommended `full`
 
 * Enable KelVPN Minkowski testnet (true / false)
   * True: Connect your node to KelVPN Minkowski testnet
   * False: Don't connect your node to KelVPN Minkowski testnet
 
 * KelVPN Minkowski node role (full / light / master / archive / root)
-  * Different role types for node. Default `full`, recommended `full`.
+  * Different role types for node. Default `full`, recommended `full`
 
 * Enable Backbone mainnet (true / false)
-  * True: Connect your node to Backbone mainnet.
-  * False: Don't connect your node to Backbone mainnet.
+  * True: Connect your node to Backbone mainnet
+  * False: Don't connect your node to Backbone mainnet
 
 * Backbone node role (full / light / master / archive / root)
-  * Different role types for node. Default `full`, recommended `full`.
+  * Different role types for node. Default `full`, recommended `full`
 
 * Enable Mileena testnet (true / false)
   * True: Connect your node to Mileena testnet.
   * False: Don't connect your node to Mileena testnet.
 
 * Mileena testnet node role (full / light / master / archive / root)
-  * Different role types for node. Default `full`, recommended `full`.
+  * Different role types for node. Default `full`, recommended `full`
 
 * Enable Python plugins (true / false)
-  * True: Enable loading of Python plugins.
-  * False: Disable loading of Python plugins.
+  * True: Enable support for python plugins
+  * False: Disable support Python plugins
 
 * Python plugins path
   * Set path where you want to store your Python plugins.
 
-# Additional configuration and general FAQ / Troubleshooting
-For troubleshooting and general FAQ, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+# Community maintained packages
 
-For information how to run your own services on Cellframe network, please see [SERVICES.md](SERVICES.md).
+[Arch Linux](https://aur.archlinux.org/packages/cellframe-node)
+
+# Additional configuration and general FAQ / Troubleshooting
+For additional information about configuration, see: [CONFIGURATION.md](CONFIGURATION.md).
+
+For troubleshooting and general FAQ: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+# Running your own services on Cellframe network
+
+For information how to run your own services on Cellframe network: [SERVICES.md](SERVICES.md).
