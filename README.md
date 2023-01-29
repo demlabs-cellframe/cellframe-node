@@ -115,7 +115,7 @@ When installing from a .deb package, the installer will ask you some [questions]
 
 * Enable Python plugins (true / false)
   * True: Enable support for python plugins
-  * False: Disable support Python plugins
+  * False: Disable support for Python plugins
 
 * Python plugins path
   * Set path where you want to store your Python plugins.
