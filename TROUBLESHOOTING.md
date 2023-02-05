@@ -13,13 +13,12 @@ By default, Cellframe node log file can be found at `/opt/cellframe-node/var/log
 
 **NOTE: Be careful, take a backup of your created wallets from `/opt/cellframe-node/var/lib/wallet/` before proceeding!**
 
-On Debian and it's derivatives, you can use `apt remove cellframe-node` and deleting the folder /opt/cellframe-node after removal. 
+On Debian and it's derivatives, you can use `apt remove cellframe-node` and delete folder `/opt/cellframe-node` after removal. 
 
 On other Linux systems:
 ```
 sudo systemctl stop cellframe-node.service
 sudo systemctl disable cellframe-node.service
-sudo unlink /etc/systemd/system/cellframe-node.service
 sudo unlink /etc/logrotate.d/cellframe-node
 sudo rm -rf /opt/cellframe-node
 ```
