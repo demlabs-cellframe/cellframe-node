@@ -20,6 +20,7 @@ On other Linux systems:
 sudo systemctl stop cellframe-node.service
 sudo systemctl disable cellframe-node.service
 sudo unlink /etc/logrotate.d/cellframe-node
+sudo unlink /etc/profile.d/cellframe-node.sh
 sudo rm -rf /opt/cellframe-node
 ```
 
