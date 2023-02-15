@@ -52,6 +52,11 @@ if(MACOS)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
 endif()
 
+option(DAP_PQLR "PQLR Intergration" ON)
+if (DAP_PQLR)
+    add_compile_definitions("DAP_PQLR")
+endif()
+
 add_subdirectory(cellframe-sdk)
 
 if (CELLFRAME_MODULES MATCHES "modules-dynamic")

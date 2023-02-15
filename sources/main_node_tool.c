@@ -297,6 +297,17 @@ static int s_cert_create(int argc, const char **argv) {
     } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
      l_key_type = DAP_ENC_KEY_TYPE_SIG_DILITHIUM;
     }
+#ifdef DAP_PQLR
+    else if ( dap_strcmp(argv[4],"sig_pqlr_dil") == 0){
+         l_key_type = DAP_ENC_KEY_TYPE_PQLR_SIG_DILITHIUM;
+        }
+    else if ( dap_strcmp(argv[4],"sig_pqlr_falcon") == 0){
+         l_key_type = DAP_ENC_KEY_TYPE_PQLR_SIG_FALCON;
+        }
+    else if ( dap_strcmp(argv[4],"sig_pqlr_sphincs") == 0){
+         l_key_type = DAP_ENC_KEY_TYPE_PQLR_SIG_SPHINCS;
+        }
+#endif
     else {
       log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
       exit(-600);
