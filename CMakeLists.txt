@@ -53,6 +53,7 @@ if(MACOS)
 endif()
 
 option(DAP_PQLR "PQLR Intergration" ON)
+#set(DAP_PQLR ON) # if option not worked, noticed in some systems
 if (DAP_PQLR)
     add_compile_definitions("DAP_PQLR")
 endif()
