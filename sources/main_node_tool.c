@@ -288,22 +288,8 @@ static int s_cert_create(int argc, const char **argv) {
        exit(-600);
     }
 
-<<<<<<< HEAD
-    if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
-      l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
-    } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
-      l_key_type = DAP_ENC_KEY_TYPE_SIG_PICNIC;
-    } else if ( dap_strcmp(argv[4],"sig_dil") == 0){
-     l_key_type = DAP_ENC_KEY_TYPE_SIG_DILITHIUM;
-    }
-    else {
-      log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
-      exit(-600);
-    }
-=======
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
->>>>>>> e279c2c... [*] Keys read fix
 
     if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
       dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
