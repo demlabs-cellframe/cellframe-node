@@ -38,8 +38,8 @@ endif()
 set(BUILD_WITH_ZIP OFF)
 
 if(LINUX)
-#set(BUILD_WITH_PYTHON_ENV ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
+set(BUILD_WITH_PYTHON_ENV OFF)
+set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
 
@@ -244,14 +244,16 @@ if(UNIX AND NOT WIN32)
 	    set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
 
 	    set(Python_ADDITIONAL_VERSIONS 3.7)
-	    find_package(PythonLibs REQUIRED)
+            find_package (Python COMPONENTS Interpreter Development)
+            #find_package(PythonLibs REQUIRED)
 
 	    add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
 	    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
 
 	else()
 	    set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
-	    find_package(PythonLibs REQUIRED)
+            find_package (Python COMPONENTS Interpreter Development)
+            #find_package(PythonLibs REQUIRED)
 	endif()
 
 	include_directories(${PYTHON_INCLUDE_DIR} include/)

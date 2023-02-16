@@ -270,9 +270,7 @@ static int s_cert_create(int argc, const char **argv) {
       exit(-500);
     }
     const char *l_cert_name = argv[3];
-    size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
-    char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
-    snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
+    char *l_cert_path = dap_strdup_printf("%s/%s.dcert", s_system_ca_dir, l_cert_name);
     if ( access( l_cert_path, F_OK ) != -1 ) {
       log_it (L_ERROR, "File %s is already exists! Who knows, may be its smth important?", l_cert_path);
       exit(-700);
@@ -285,6 +283,7 @@ static int s_cert_create(int argc, const char **argv) {
     if (dap_strcmp (argv[4],"sig_tesla") == 0)
     {
        log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+       DAP_DELETE(l_cert_path);
        exit(-600);
     }
 
@@ -463,6 +462,7 @@ static int s_init( int argc, const char **argv )
         dap_stpcpy(s_system_ca_dir, "./");
         dap_stpcpy(s_system_wallet_dir, "./");
     }
+    dap_enc_init();
     return 0;
 }
 
