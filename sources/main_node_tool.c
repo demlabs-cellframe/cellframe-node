@@ -278,8 +278,6 @@ static int s_cert_create(int argc, const char **argv) {
       exit(-700);
     }
 
-    dap_enc_key_type_t l_key_type = DAP_ENC_KEY_TYPE_NULL;
-
     //
     // Check unsupported tesla algorithm
     //
@@ -290,6 +288,7 @@ static int s_cert_create(int argc, const char **argv) {
        exit(-600);
     }
 
+<<<<<<< HEAD
     if ( dap_strcmp (argv[4],"sig_bliss") == 0 ){
       l_key_type = DAP_ENC_KEY_TYPE_SIG_BLISS;
     } else if ( dap_strcmp (argv[4],"sig_picnic") == 0){
@@ -301,14 +300,19 @@ static int s_cert_create(int argc, const char **argv) {
       log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
       exit(-600);
     }
+=======
+    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
+>>>>>>> e279c2c... [*] Keys read fix
 
-    if ( l_key_type != DAP_ENC_KEY_TYPE_NULL ) {
+    if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
       dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
       if (l_cert == NULL){
         log_it(L_ERROR, "Can't create %s",l_cert_path);
       }
       dap_cert_delete(l_cert);
     } else {
+        log_it (L_ERROR, "Wrong key create action \"%s\"",argv[4]);
         s_help();
         DAP_DELETE(l_cert_path);
         exit(-500);
@@ -371,11 +375,8 @@ static int s_cert_create_cert_pkey(int argc, const char **argv) {
           l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
 
           // Copy only public key
-          l_cert_new->enc_key->pub_key_data = DAP_NEW_Z_SIZE(uint8_t,
-                                                             l_cert_new->enc_key->pub_key_data_size =
-                                                             l_cert->enc_key->pub_key_data_size );
-          memcpy(l_cert_new->enc_key->pub_key_data, l_cert->enc_key->pub_key_data,l_cert->enc_key->pub_key_data_size);
-
+          l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data, l_cert->enc_key->pub_key_data_size);
+          l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
           dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
           //dap_cert_delete_by_name(l_cert_name);
           //dap_cert_delete_by_name(l_cert_new_name);
