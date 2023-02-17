@@ -83,7 +83,7 @@
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
-#include "dap_chain_cs_block_ton.h"
+#include "dap_chain_cs_esbocs.h"
 
 //#include "dap_chain_bridge.h"
 //#include "dap_chain_bridge_btc.h"
@@ -330,7 +330,7 @@ int main( int argc, const char **argv )
         return -64;
     }
 
-    if(dap_chain_cs_block_ton_init() != 0){
+    if(dap_chain_cs_esbocs_init() != 0){
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus TON module");
         return -65;
 
