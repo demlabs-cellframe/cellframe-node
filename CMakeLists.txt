@@ -36,6 +36,13 @@ set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
 set(BUILD_WITH_ZIP OFF)
+option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
+
+#if(MACOS)
+#    if(SUPPORT_PYTHON_PLUGINS)
+#        set(BUILD_WITH_PYTHON_ENV ON)
+#    endif()
+#endif()
 
 if(LINUX)
 set(BUILD_WITH_PYTHON_ENV ON)
@@ -240,7 +247,13 @@ if(UNIX AND NOT WIN32)
             find_package(PythonLibs REQUIRED)
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-            set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
+            if(MACOS OR IOS)
+                set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lz -lutil -lexpat )
+            else()
+                if(LINUX OR BSD)
+                    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
+                endif()
+            endif()
 
         else()
             set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
