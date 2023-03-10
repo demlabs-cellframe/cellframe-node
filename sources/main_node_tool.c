@@ -424,7 +424,7 @@ static int s_cert_pkey_show(int argc, const char **argv) {
     }
 
     size_t l_buf_len;
-    uint8_t *l_pub_enc_key = dap_enc_key_serealize_pub_key(l_cert->enc_key, &l_buf_len);
+    uint8_t *l_pub_enc_key = dap_enc_key_serialize_pub_key(l_cert->enc_key, &l_buf_len);
 
     dap_hash_fast_t l_hash;
     dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
@@ -503,12 +503,12 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
     size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key, sizeof(dap_hash_fast_t));
     if(l_sign_unserialized_size > 0) {
         size_t l_pub_key_size = 0;
-        uint8_t *l_pub_key = dap_enc_key_serealize_pub_key(l_key, &l_pub_key_size);
+        uint8_t *l_pub_key = dap_enc_key_serialize_pub_key(l_key, &l_pub_key_size);
         if (!l_pub_key)
             return;
         uint8_t* l_sign_unserialized = DAP_NEW_Z_SIZE(uint8_t, l_sign_unserialized_size);
         size_t l_sign_ser_size = l_sign_unserialized_size;
-        uint8_t *l_sign_ser = dap_enc_key_serealize_sign(l_key->type, l_sign_unserialized, &l_sign_ser_size);
+        uint8_t *l_sign_ser = dap_enc_key_serialize_sign(l_key->type, l_sign_unserialized, &l_sign_ser_size);
         if ( l_sign_ser ) {
             dap_sign_t *l_ret = DAP_NEW_Z_SIZE(dap_sign_t,
                                                sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size);

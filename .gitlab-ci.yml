@@ -93,6 +93,7 @@ deploy:
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
+    - windows-amd64
     - macos-amd64
    
   script: 
