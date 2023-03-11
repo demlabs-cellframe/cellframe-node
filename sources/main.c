@@ -189,7 +189,7 @@ int main( int argc, const char **argv )
 
     {
         char l_config_dir[MAX_PATH] = {'\0'};
-        dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
         dap_config_init(l_config_dir);
     }
 
@@ -274,7 +274,7 @@ int main( int argc, const char **argv )
 
     {
         char l_gdb_path[MAX_PATH] = {'\0'};
-        dap_sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
+        sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
 
         if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
                                  dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
