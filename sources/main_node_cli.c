@@ -221,7 +221,7 @@ int main(int argc, const char *argv[])
 
     {
         char l_config_dir[MAX_PATH] = {'\0'};
-        dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
         dap_config_init(l_config_dir);
     }
     dap_log_level_set(L_CRITICAL);

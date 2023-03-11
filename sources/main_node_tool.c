@@ -305,12 +305,15 @@ static int s_cert_create(int argc, const char **argv) {
     DAP_DELETE(l_cert_path);
     return 0;
 }
-static int s_cert_dump(int argc, const char **argv) {
+
+static int s_cert_dump(int argc, const char **argv)
+{
     if (argc>=4) {
       const char * l_cert_name = argv[3];
       dap_cert_t * l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
       if ( l_cert ) {
-        dap_cert_dump(l_cert);
+        char *l_cert_dump = dap_cert_dump(l_cert);
+        printf("%s", l_cert_dump);
         dap_cert_delete_by_name(l_cert_name);
       }
       else {
@@ -451,7 +454,7 @@ static int s_init( int argc, const char **argv )
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
     char l_config_dir[MAX_PATH] = {'\0'};
-    dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+    sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
     dap_config_init(l_config_dir);
     g_config = dap_config_open(dap_get_appname());
     if (g_config) {
