@@ -330,11 +330,6 @@ int main( int argc, const char **argv )
         return -64;
     }
 
-    if(dap_chain_cs_esbocs_init() != 0){
-        log_it(L_CRITICAL,"Can't init dap chain blocks consensus TON module");
-        return -65;
-
-    }
     if(dap_chain_gdb_init() != 0) {
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
@@ -371,6 +366,11 @@ int main( int argc, const char **argv )
         return -68;
     }
 
+    if(dap_chain_cs_esbocs_init() != 0){
+        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
+        return -69;
+
+    }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
