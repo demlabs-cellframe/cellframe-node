@@ -26,8 +26,7 @@ require_links=2
 #[dag-poa]
 #events-sign-cert=mileena.0.root
 
-#[block-ton]
-#blocks-sign-cert=mileena.0.master
-
-#[block-poa]
+#[esbocs]
 #blocks-sign-cert=mycert
+#minimum_fee=1.0
+#fee_addr=myaddr

@@ -23,7 +23,9 @@ seed_nodes_port=[8090,8090,8090]
 #[dag-poa]
 #events-sign-cert=kelvpn-minkowski.root.0
 
-#[block-ton]
-#blocks-sign-cert=minkowski.master.pvt.0
+#[esbocs]
+#blocks-sign-cert=mycert
+#minimum_fee=1.0
+#fee_addr=myaddr
 
 

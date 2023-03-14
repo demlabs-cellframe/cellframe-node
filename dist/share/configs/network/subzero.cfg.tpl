@@ -5,7 +5,6 @@
 id=0x000000000000acca
 name=subzero
 native_ticker=tCELL
-links_static_only=true
 gdb_groups_prefix=subzero
 
 # Possible values: light, full, archive, master, root
@@ -21,9 +20,10 @@ seed_nodes_port=[8190,8190,8190]
 #acl_accept_ca_gdb=
 #acl_accept_ca_chains=all
 
-
 #[dag-poa]
 #events-sign-cert=mycert
 
-#[block-poa]
+#[esbocs]
 #blocks-sign-cert=mycert
+#minimum_fee=1.0
+#fee_addr=myaddr

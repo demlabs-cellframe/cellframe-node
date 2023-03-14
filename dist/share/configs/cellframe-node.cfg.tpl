@@ -63,6 +63,10 @@ http_server=false
 # More debug output
 # debug_more=true
 
+# Synchronizatiob defaults
+[node_client]
+#timer_update_states=300
+
 [srv]
 order_signed_only=false
 
@@ -72,7 +76,7 @@ pricelist=[]
 
 # Mempool
 [mempool]
-# Automaticaly false, for enabling need role master or higher
+# Automatically false, for enabling need role master or higher
 auto_proc=false
 
 # Chain network settings
@@ -83,7 +87,6 @@ auto_proc=false
 # Uncomment to have more debug information in stream channel Chain
 # False by default
 #debug_more=true
-ban_list_sync_groups=[*.orders-test-stat]
 
 # Number of hashes packed into the one update packet
 # Increase it to reduce update latency
@@ -120,18 +123,20 @@ notify_path={PREFIX}/var/run/node_notify
 #notify_permissions=770
 #notify_user=myuser
 #notify_group=mygroup
-
 pid_path={PREFIX}/var/run/cellframe-node.pid
 log_file={PREFIX}/var/log/cellframe-node.log
 wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
-dap_global_db_path={PREFIX}/var/lib/global_db
-#global_db_driver=mdbx
-#global_db_drvmode_async=false
+
+[global_db]
+driver=mdbx
+path={PREFIX}/var/lib/global_db
+#debug_more=true
 
 # Plugins
 #[plugins]
+#enabled=true
 # Load Python-based plugins
-#py_load=false   
+#py_load=true   
 # Path to Pyhon-based plugins
 #py_path={PREFIX}/var/lib/plugins

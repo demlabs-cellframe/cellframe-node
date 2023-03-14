@@ -20,5 +20,7 @@ seed_nodes_addrs=[ffff::0000::0000::0001,ffff::0000::0000::0002]
 #[dag-poa]
 #events-sign-cert=mycert
 
-#[dag-pos]
-#events-sign-wallet=mywallet
+#[esbocs]
+#blocks-sign-cert=mycert
+#minimum_fee=1.0
+#fee_addr=myaddr
