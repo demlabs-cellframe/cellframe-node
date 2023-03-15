@@ -35,6 +35,7 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
+#add_definitions("-DDAP_TPS_TEST")
 
 set(BUILD_WITH_ZIP OFF)
 option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
