@@ -222,7 +222,6 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL, "Can't init encryption module" );
         return -56;
     }
-
     // change to dap_config_get_item_int_default when it's will be possible
     uint32_t l_thread_cnt = dap_config_get_item_int32_default(g_config, "resources", "threads_cnt", 0);
     // New event loop init
