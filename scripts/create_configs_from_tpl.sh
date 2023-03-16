@@ -88,6 +88,7 @@ fi
 NET_NAME="kelvpn-minkowski"
 
 #if [ "$DAP_KELVPN_MINKOWSKI_ENABLED" = "true" ]; then
+rm "$DAP_PREFIX/etc/network/kelvpn-minkowski.cfg"
 if false; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
