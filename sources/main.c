@@ -271,18 +271,13 @@ int main( int argc, const char **argv )
         log_it( L_ERROR, "Can't init notify server module" );
     }
 
-    {
-        char l_gdb_path[MAX_PATH] = {'\0'};
-        sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
-
-        if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
-                                 dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
-            log_it( L_CRITICAL, "Can't init global db module" );
-            return -58;
-        }
+    char l_gdb_path[MAX_PATH] = {'\0'};
+    sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
+    if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
+                             dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
+        log_it( L_CRITICAL, "Can't init global db module" );
+        return -58;
     }
-
-    //dap_http_client_simple_init( );
 
     if ( dap_datum_mempool_init() ) {
         log_it( L_CRITICAL, "Can't init mempool module" );
