@@ -15,21 +15,26 @@ export DAP_SERVER_ENABLED=false
 export DAP_SERVER_ADDRESS=0.0.0.0
 export DAP_SERVER_PORT=8089
 
+
+# Raiden testnet
+export DAP_RAIDEN_ENABLED=true
+export DAP_RAIDEN_ROLE=full
+
 # Subzero testnet
 export DAP_SUBZERO_ENABLED=true
 export DAP_SUBZERO_ROLE=full
 
 # Backbone
-export DAP_BACKBONE_ENABLED=true
+export DAP_BACKBONE_ENABLED=false
 export DAP_BACKBONE_ROLE=full
 
 
 # Kelvpn-minkowski testnet
-export DAP_KELVPN_MINKOWSKI_ENABLED=true
+export DAP_KELVPN_MINKOWSKI_ENABLED=false
 export DAP_KELVPN_MINKOWSKI_ROLE=full
 
 # Milena testnet
-export DAP_MILEENA_ENABLED=true
+export DAP_MILEENA_ENABLED=false
 export DAP_MILEENA_ROLE=full
 
 echo "Init configs with prefix " $DAP_PREFIX
