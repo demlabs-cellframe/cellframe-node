@@ -62,6 +62,25 @@ Description: SubZero: Node role
  archive - Sync all the network
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
+Template: cellframe-node/raiden_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Raiden: Enable network
+ Raiden Testnet: Enable network auto load on start
+
+Template: cellframe-node/raiden_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Raiden: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
 Template: cellframe-node/mileena_enabled
 Default: true
 Choices: true, false
