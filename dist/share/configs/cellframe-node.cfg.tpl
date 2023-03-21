@@ -135,7 +135,7 @@ path={PREFIX}/var/lib/global_db
 
 # Plugins
 #[plugins]
-#enabled=true
+enabled=true
 # Load Python-based plugins
 #py_load=true   
 # Path to Pyhon-based plugins
