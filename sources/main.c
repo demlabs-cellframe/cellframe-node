@@ -373,6 +373,23 @@ int main( int argc, const char **argv )
         return -68;
     }
 
+#ifndef _WIN32
+    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
+                                                              "resources",
+                                                              "pid_path",
+                                                              "/tmp")) != 0) {
+        log_it(L_CRITICAL,"Can't init sig unix handler module");
+        return -12;
+    }
+    save_process_pid_in_file(s_pid_file_path);
+#else
+    if ( sig_win32_handler_init( NULL ) ) {
+        log_it( L_CRITICAL,"Can't init sig win32 handler module" );
+        return -12;
+    }
+#endif
+
+    dap_chain_net_load_all();
 
 #if defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID)
     // vpn server
@@ -395,24 +412,6 @@ int main( int argc, const char **argv )
         }
     }
 #endif
-
-#ifndef _WIN32
-    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
-                                                              "resources",
-                                                              "pid_path",
-                                                              "/tmp")) != 0) {
-        log_it(L_CRITICAL,"Can't init sig unix handler module");
-        return -12;
-    }
-    save_process_pid_in_file(s_pid_file_path);
-#else
-    if ( sig_win32_handler_init( NULL ) ) {
-        log_it( L_CRITICAL,"Can't init sig win32 handler module" );
-        return -12;
-    }
-#endif
-
-    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
