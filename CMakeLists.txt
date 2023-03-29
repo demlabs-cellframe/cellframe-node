@@ -201,7 +201,7 @@ if(WIN32)
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-    target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c )
+    target_link_libraries(${PROJECT_NAME} cellframe-sdk )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 
