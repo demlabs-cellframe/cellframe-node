@@ -333,10 +333,6 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
-    if( dap_chain_net_srv_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service module");
-        return -66;
-    }
 
     if (!dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
@@ -358,6 +354,28 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_datum_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
+    }
+
+#ifndef _WIN32
+    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
+                                                              "resources",
+                                                              "pid_path",
+                                                              "/tmp")) != 0) {
+        log_it(L_CRITICAL,"Can't init sig unix handler module");
+        return -12;
+    }
+#else
+    if ( sig_win32_handler_init( NULL ) ) {
+        log_it( L_CRITICAL,"Can't init sig win32 handler module" );
+        return -12;
+    }
+#endif
+
+    dap_chain_net_load_all();
+
+    if( dap_chain_net_srv_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service module");
+        return -66;
     }
 
     if(dap_chain_cs_esbocs_init() != 0){
@@ -392,23 +410,6 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
     }
-
-#ifndef _WIN32
-    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
-                                                              "resources",
-                                                              "pid_path",
-                                                              "/tmp")) != 0) {
-        log_it(L_CRITICAL,"Can't init sig unix handler module");
-        return -12;
-    }
-#else
-    if ( sig_win32_handler_init( NULL ) ) {
-        log_it( L_CRITICAL,"Can't init sig win32 handler module" );
-        return -12;
-    }
-#endif
-
-    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
