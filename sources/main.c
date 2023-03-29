@@ -356,6 +356,11 @@ int main( int argc, const char **argv )
         return -68;
     }
 
+    if(dap_chain_cs_esbocs_init() != 0){
+        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
+        return -69;
+    }
+
 #ifndef _WIN32
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
@@ -376,12 +381,6 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
-    }
-
-    if(dap_chain_cs_esbocs_init() != 0){
-        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
-        return -69;
-
     }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
