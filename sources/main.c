@@ -376,12 +376,15 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    dap_chain_net_load_all();
-
     if( dap_chain_net_srv_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
     }
+
+    dap_chain_net_load_all();
+
+    if (dap_chain_net_srv_order_init() != 0)
+        return -67;
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
