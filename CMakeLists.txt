@@ -21,7 +21,7 @@ SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(DESTDIR "/opt/${PROJECT_NAME}")
 
 #SET(DAP_PQLR OFF)
-#possible need be setted during crosscompily
+#possible need be set during crosscompily
 #by default it uses dpkg --print-architecture
 #we ok with it on native builds.
 #SET( CPACK_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
