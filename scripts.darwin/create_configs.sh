@@ -20,6 +20,11 @@ export DAP_SERVER_PORT=8089
 export DAP_RAIDEN_ENABLED=true
 export DAP_RAIDEN_ROLE=full
 
+# Raiden testnet
+export DAP_RIEMANN_ENABLED=true
+export DAP_RIEMANN_ROLE=full
+
+
 # Subzero testnet
 export DAP_SUBZERO_ENABLED=true
 export DAP_SUBZERO_ROLE=full
