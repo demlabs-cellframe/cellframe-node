@@ -59,6 +59,7 @@ if [ "$RET" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+    chmod 777 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/subzero_node_type || true
@@ -80,6 +81,7 @@ if [ "$RET" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+    chmod 777 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/mileena_node_type || true
@@ -101,6 +103,7 @@ if [ "$RET" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+    chmod 777 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/kelvpn_minkowski_node_type || true
@@ -122,6 +125,7 @@ if [ "$RET" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+    chmod 777 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/backbone_node_type || true
