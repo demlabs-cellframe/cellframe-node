@@ -62,7 +62,7 @@ if [ "$DAP_BACKBONE_ENABLED" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    chmod 777 $DAP_NET_CFG
+    chmod 666 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     sed -i .old "s/{NODE_TYPE}/$DAP_BACKBONE_ROLE/" $DAP_NET_CFG  || true
@@ -80,7 +80,7 @@ if [ "$DAP_SUBZERO_ENABLED" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    chmod 777 $DAP_NET_CFG
+    chmod 666 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
@@ -98,7 +98,7 @@ if [ "$DAP_KELVPN_MINKOWSKI_ENABLED" = "true" ]; then
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    chmod 777 $DAP_NET_CFG
+    chmod 666 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_MINKOWSKI_ROLE/" $DAP_NET_CFG  || true
@@ -116,7 +116,7 @@ if [ "$DAP_MILEENA_ENABLED" = "true" ]; then
     else
     DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    chmod 777 $DAP_NET_CFG
+    chmod 666 $DAP_NET_CFG
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     sed -i .old "s/{NODE_TYPE}/$DAP_MILEENA_ROLE/" $DAP_NET_CFG  || true
