@@ -237,7 +237,11 @@ if(UNIX AND NOT WIN32)
 		URL      https://pub.cellframe.net/3rdparty/python/cpython.tar.xz
 		)
 
-	    FetchContent_MakeAvailable(CPython37Static)
+            FetchContent_MakeAvailable(CPython37Static)
+            
+            SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
+            add_subdirectory(cellframe-sdk/3rdparty/openssl-cmake)
+            add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
 	    set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
 
@@ -245,7 +249,7 @@ if(UNIX AND NOT WIN32)
 	    find_package(PythonLibs REQUIRED)
 
 	    add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-	    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
+	    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} ssl_lib crypto_lib -lcrypt -lnsl -lz -lutil -lexpat )
 
 	else()
 	    set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
