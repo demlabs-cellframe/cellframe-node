@@ -179,6 +179,23 @@ else
             chmod 0664 $filename 2>/dev/null || true
         fi
     done
+
+    #diagtool service
+    if [ -f "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
+        if [ -e /etc/systemd/system/cellframe-diagtool.service ]; then
+            echo "[*] Restarting cellframe-diagtool service"
+            systemctl --system stop cellframe-diagtool  >> /dev/null|| true
+            echo "[*] Stopped cellframe-diagtool"
+            systemctl daemon-reload || true
+            systemctl --system start cellframe-diagtool || true
+            echo "[*] Started cellframe-diagtool"
+        else
+            echo "[!] Installing cellframe-diagtool as systemd service"
+            ln -sf $DAP_PREFIX/share/cellframe-diagtool.service /etc/systemd/system/cellframe-diagtool.service || true
+            systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
+        fi
+    fi
+
     chmod 0666 $DAP_CFG
     chmod 0666 $DAP_CFG_TPL
     chmod 0774 $DAP_PREFIX/bin/* || true

@@ -16,6 +16,9 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
+#enable for diagtool 
+#set(BUILD_DIAGTOOL OFF)
+
 #possible need be setted during crosscompile
 #by default it uses dpkg --print-architecture
 #we ok with it on native builds.
@@ -36,6 +39,7 @@ endif()
 #set(BUILD_CRYPTO_TESTS ON)
 
 set(BUILD_WITH_ZIP OFF)
+
 
 if(LINUX)
     #set(BUILD_WITH_PYTHON_ENV ON)
@@ -219,6 +223,11 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+    
+    if(BUILD_DIAGTOOL)
+        message("[*] Diagtool build on")
+        add_subdirectory(diagtool)
+    endif()
 
     if (SUPPORT_PYTHON_PLUGINS)
 	message("[+] Build with python plugins support")
@@ -306,6 +315,10 @@ else()
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+
+    if (BUILD_DIAGTOOL)
+        INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    endif()
 
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
