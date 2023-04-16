@@ -127,6 +127,10 @@ dap_chains_path={PREFIX}/var/lib/network
 #global_db_driver=mdbx
 #global_db_drvmode_async=false
 
+[Diagnostic]
+enabled=true
+name=
+
 # Plugins
 #[plugins]
 # Load Python-based plugins
