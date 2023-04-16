@@ -129,7 +129,7 @@ dap_chains_path={PREFIX}/var/lib/network
 
 [Diagnostic]
 enabled=true
-name=
+#name=
 
 # Plugins
 #[plugins]
