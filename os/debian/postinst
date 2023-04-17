@@ -55,7 +55,7 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
@@ -76,11 +76,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-
+   
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/mileena_node_type || true
     NODE_TYPE=$RET
@@ -97,11 +97,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-
+   
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/kelvpn_minkowski_node_type || true
     NODE_TYPE=$RET
@@ -118,10 +118,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+   
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/backbone_node_type || true
@@ -183,6 +184,11 @@ else
     chmod 0666 $DAP_CFG_TPL
     chmod 0774 $DAP_PREFIX/bin/* || true
     chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/bin/pip3* $DAP_PREFIX/bin/python3* || true
+    
+    #set rwo permissions to configs
+    chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
+    #set rwx permissions to dirs
+    chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
     
     service cellframe-node start || true
     systemctl restart cellframe-node || true
