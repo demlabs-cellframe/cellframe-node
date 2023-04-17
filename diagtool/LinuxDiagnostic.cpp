@@ -14,8 +14,8 @@ void LinuxDiagnostic::info_update(){
     QSettings config("/opt/cellframe-node/etc/cellframe-node.cfg",
                        QSettings::IniFormat);
 
-    bool isEnabled = config.value("Diagnostic/enabled").toBool();
-    QString name = config.value("Diagnostic/name").toString();
+    bool isEnabled = config.value("Diagnostic/enabled",false).toBool();
+    QString name = config.value("Diagnostic/name","").toString();
 
     if(isEnabled)
     {
@@ -24,10 +24,8 @@ void LinuxDiagnostic::info_update(){
         QJsonObject full_info;
 
         sys_info = get_sys_info();
-        if(name.isEmpty())
-            sys_info.insert("mac", s_mac);
-        else
-            sys_info.insert("mac", name);
+        sys_info.insert("name", name);
+        sys_info.insert("mac", s_mac);
 
         QJsonObject obj = sys_info["memory"].toObject();
         int mem = obj["total_value"].toInt();
