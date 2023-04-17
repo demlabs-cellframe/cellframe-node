@@ -121,3 +121,9 @@ fi
 
 chmod 0666 $DAP_CFG
 chmod 0666 $DAP_CFG_TPL
+
+#set rwo permissions to configs
+chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
+#set rwx permissions to dirs
+chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
+
