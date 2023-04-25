@@ -469,6 +469,7 @@ int main( int argc, const char **argv )
             }
 
         }
+        dap_server_set_default(l_server);
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
