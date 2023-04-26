@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="com.demlabs.CellframeNode" postinstall-action="none" version="0" format-version="2" generator-version="InstallCmds-763 (20G80)" install-location="/Applications/" auth="root">
+    <payload numberOfFiles="" installKBytes=""/>
+    <domains enable_localSystem="false" enable_anywhere="true" enable_currentUserHome="true"/>
+    <bundle id="com.demlabs.CellframeNode" path="./CellframeNode.app"/>
+    <bundle-version>
+        <bundle id="com.demlabs.CellframeNode"/>
+    </bundle-version>
+    <upgrade-bundle>
+        <bundle id="com.demlabs.CellframeNode"/>
+    </upgrade-bundle>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier>
+        <bundle id="com.demlabs.CellframeNode"/>
+    </strict-identifier>
+    <relocate/>
+    <scripts>
+        <preinstall file="./preinstall"/>
+        <postinstall file="./postinstall"/>
+    </scripts>
+</pkg-info>
