@@ -77,7 +77,7 @@ When installing from a .deb package, the installer will ask you some [questions]
   * Network address used for listening. Set to `0.0.0.0` if you want to listen on all network interfaces on your computer
 
 * Server port
-  * Server port to listen on: Default is 8079, recommended 8079. Use 80 or 443 if you want to masquerade node for example as a web service
+  * Server port to listen on: Default is 8080, recommended 8080. Use 80 or 443 if you want to masquerade node for example as a web service
 
 * Notify server address
   * Default is 127.0.0.1, recommended 127.0.0.1
