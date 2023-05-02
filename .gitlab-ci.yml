@@ -48,7 +48,7 @@ linux-amd64-debian-buster-dbg:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux debug
 
 linux-amd64-debian-buster-rwd:
@@ -56,7 +56,7 @@ linux-amd64-debian-buster-rwd:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
 
 linux-amd64-debian-buster:
@@ -64,7 +64,7 @@ linux-amd64-debian-buster:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script: 
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux release
 
 linux-armhf-debian-bullseye:
