@@ -11,10 +11,11 @@ LinuxDiagnostic::LinuxDiagnostic(AbstractDiagnostic *parent)
 
 void LinuxDiagnostic::info_update(){
 
-    QSettings config("/opt/cellframe-node/etc/cellframe-node.cfg",
-                       QSettings::IniFormat);
+    // QSettings config("/opt/cellframe-node/etc/cellframe-node.cfg",
+    //                    QSettings::IniFormat);
 
-    bool isEnabled = config.value("Diagnostic/enabled",false).toBool();
+    // bool isEnabled = config.value("Diagnostic/enabled",false).toBool();
+    bool isEnabled = true;
 
     if(isEnabled)
     {
