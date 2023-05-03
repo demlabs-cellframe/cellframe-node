@@ -41,7 +41,6 @@ private:
 private slots:
     void info_update();
 
-
 private:
     size_t previous_idle_time{0}, previous_total_time{0};
     long get_pid();

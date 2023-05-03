@@ -21,7 +21,7 @@ DiagnosticWorker::DiagnosticWorker(QObject * parent)
             Qt::QueuedConnection);
 
     m_diagnostic->start_diagnostic();
-    m_diagnostic->set_timeout(5000);
+    m_diagnostic->set_timeout(30000);
 }
 DiagnosticWorker::~DiagnosticWorker()
 {
@@ -39,7 +39,8 @@ void DiagnosticWorker::slot_diagnostic_data(QJsonDocument data)
 
     system.insert("uptime_dashboard", s_uptime);
     system.insert("time_update_unix", QDateTime::currentSecsSinceEpoch());
-    system.insert("time_update", QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm"));
+
+//    system.insert("time_update", QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm"));
     obj.insert("system",system);
 
     if(proc["status"].toString() == "Offline") //if node offline - clear version
@@ -51,8 +52,11 @@ void DiagnosticWorker::slot_diagnostic_data(QJsonDocument data)
         proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"), QStringList()<<"version");
         proc.waitForFinished(5000);
         QString result = proc.readAll();
-        result = result.split("version")[1];
-        m_node_version = result.split('\n', QString::SkipEmptyParts).first().trimmed();
+        if(result.contains("version"))
+        {
+            result = result.split("version")[1];
+            m_node_version = result.split('\n', QString::SkipEmptyParts).first().trimmed();
+        }
     }
 
     proc.insert("version", m_node_version);

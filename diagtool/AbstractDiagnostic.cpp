@@ -105,7 +105,9 @@ quint64 AbstractDiagnostic::get_file_size (QString flag, QString path ) {
 
 QString AbstractDiagnostic::get_memory_string(long num)
 {
-    QString result;
+    QString result = QString::number(num);
+    return result;
+
     int gb = (num / 1024) / 1024;
     int mb = (num-gb*1024*1024) /1024;
     int kb = (num - (gb*1024*1024+mb*1024));
@@ -119,4 +121,30 @@ QString AbstractDiagnostic::get_memory_string(long num)
        result += QString::number(kb) + QString(" Kb ");
 
     return result;
+}
+
+QJsonObject AbstractDiagnostic::roles_processing()
+{
+    QJsonObject rolesObject;
+
+    QDir currentFolder("/opt/cellframe-node/etc/network");
+
+    currentFolder.setFilter( QDir::Dirs | QDir::Files | QDir::NoSymLinks );
+    currentFolder.setSorting( QDir::Name );
+
+    QFileInfoList folderitems( currentFolder.entryInfoList() );
+
+    foreach ( QFileInfo i, folderitems ) {
+        QString iname( i.fileName() );
+        if ( iname == "." || iname == ".." || iname.isEmpty() )
+            continue;
+        if(i.suffix() == "cfg" && !i.isDir())
+        {
+            QSettings config(i.absoluteFilePath(), QSettings::IniFormat);
+
+            rolesObject.insert(i.completeBaseName(), config.value("node-role", "unknown").toString());
+        }
+    }
+
+    return rolesObject;
 }

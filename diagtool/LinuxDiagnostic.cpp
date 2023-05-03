@@ -15,7 +15,6 @@ void LinuxDiagnostic::info_update(){
                        QSettings::IniFormat);
 
     bool isEnabled = config.value("Diagnostic/enabled",false).toBool();
-    QString name = config.value("Diagnostic/name","").toString();
 
     if(isEnabled)
     {
@@ -24,13 +23,27 @@ void LinuxDiagnostic::info_update(){
         QJsonObject full_info;
 
         sys_info = get_sys_info();
-        sys_info.insert("name", name);
         sys_info.insert("mac", s_mac);
+
+        QFile file("/opt/cellframe-node/etc/diagdata.json");
+        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QJsonParseError err;
+            QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
+            file.close();
+
+            if(err.error == QJsonParseError::NoError && !doc.isEmpty())
+                sys_info.insert("data", doc.object());
+            else
+                qWarning()<<err.errorString();
+        }
 
         QJsonObject obj = sys_info["memory"].toObject();
         int mem = obj["total_value"].toInt();
 
         proc_info = get_process_info(get_pid(), mem);
+        proc_info.insert("roles", roles_processing());
+
 
         full_info.insert("system", sys_info);
         full_info.insert("process", proc_info);
@@ -244,9 +257,9 @@ QJsonObject LinuxDiagnostic::get_process_info(long proc_id, int totalRam)
    db_size = get_memory_string(get_file_size("DB", node_dir) / 1024);
    chain_size = get_memory_string(get_file_size("chain", node_dir) / 1024);
 
-   if(log_size.isEmpty()) log_size = "0 Kb";
-   if(db_size.isEmpty()) db_size = "0 Kb";
-   if(chain_size.isEmpty()) chain_size = "0 Kb";
+   if(log_size.isEmpty()) log_size = "0";
+   if(db_size.isEmpty()) db_size = "0";
+   if(chain_size.isEmpty()) chain_size = "0";
 
    process_info.insert("log_size", log_size);
    process_info.insert("DB_size", db_size);

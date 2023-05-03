@@ -36,6 +36,8 @@ public:
 
     QJsonDocument get_full_info(){return s_full_info;};
 
+    QJsonObject roles_processing();
+
 public:
     QTimer * s_timer_update;
     int s_timeout{1000};
