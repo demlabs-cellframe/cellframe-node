@@ -1,4 +1,6 @@
 #include "LinuxDiagnostic.h"
+#include <sys/vfs.h>
+#include <sys/stat.h>
 
 LinuxDiagnostic::LinuxDiagnostic(AbstractDiagnostic *parent)
     : AbstractDiagnostic{parent}
@@ -15,16 +17,17 @@ void LinuxDiagnostic::info_update(){
     //                    QSettings::IniFormat);
 
     // bool isEnabled = config.value("Diagnostic/enabled",false).toBool();
-    bool isEnabled = true;
 
-    if(isEnabled)
+    if(true) //isEnabled
     {
         QJsonObject proc_info;
         QJsonObject sys_info;
+        QJsonObject cli_info;
         QJsonObject full_info;
 
         sys_info = get_sys_info();
         sys_info.insert("mac", s_mac);
+        sys_info.insert("disk", get_disk_info());
 
         QFile file("/opt/cellframe-node/etc/diagdata.json");
         if(file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -45,6 +48,12 @@ void LinuxDiagnostic::info_update(){
         proc_info = get_process_info(get_pid(), mem);
         proc_info.insert("roles", roles_processing());
 
+        if(s_node_status)
+        {
+            cli_info = get_cli_info();
+            full_info.insert("cli_data", cli_info);
+        }
+
 
         full_info.insert("system", sys_info);
         full_info.insert("process", proc_info);
@@ -53,6 +62,39 @@ void LinuxDiagnostic::info_update(){
 
         emit data_updated(s_full_info);
     }
+}
+
+QJsonObject LinuxDiagnostic::get_disk_info()
+{
+    QString path = "/opt/cellframe-node";
+
+    QString apath = QDir(path).absolutePath();
+
+    struct statfs stfs;
+
+    if (::statfs(apath.toLocal8Bit(),&stfs) == -1)
+    {
+        QJsonObject diskObj;
+        diskObj.insert("total",     -1);
+        diskObj.insert("free",      -1);
+        diskObj.insert("available", -1);
+        diskObj.insert("used",      -1);
+
+        return diskObj;
+    }
+
+    quint64 total     = stfs.f_blocks * stfs.f_bsize;
+    quint64 free      = stfs.f_bfree  * stfs.f_bsize;
+    quint64 available = stfs.f_bavail * stfs.f_bsize;
+    quint64 used      = total - free;
+
+    QJsonObject diskObj;
+    diskObj.insert("total",     QString::number(total));
+    diskObj.insert("free",      QString::number(free));
+    diskObj.insert("available", QString::number(available));
+    diskObj.insert("used",      QString::number(used));
+
+    return diskObj;
 }
 
 
@@ -71,6 +113,9 @@ long LinuxDiagnostic::get_pid()
     return pid;
 }
 
+/// ---------------------------------------------------------------
+///        Sys info
+/// ---------------------------------------------------------------
 QJsonObject LinuxDiagnostic::get_sys_info()
 {
     QJsonObject obj_sys_data, obj_cpu, obj_memory;
@@ -120,7 +165,7 @@ QJsonObject LinuxDiagnostic::get_sys_info()
     memory_free = get_memory_string(available_value);
 
     obj_memory.insert("total", memory);
-    obj_memory.insert("total_value", total_value);
+//    obj_memory.insert("total_value", total_value);
     obj_memory.insert("free", memory_free);
     obj_memory.insert("load", memory_used);
 
@@ -292,9 +337,172 @@ QJsonObject LinuxDiagnostic::get_process_info(long proc_id, int totalRam)
        process_info.insert("uptime","00:00:00");
    }
 
+   s_node_status = status == "Online" ? true : false;
+
    process_info.insert("status", status);
 
    return process_info;
+}
+
+/// ---------------------------------------------------------------
+///        Cli info
+/// ---------------------------------------------------------------
+QJsonObject LinuxDiagnostic::get_cli_info()
+{
+    QStringList networks = get_networks();
+
+    QJsonObject netObj;
+
+    for(QString net : networks)
+    {
+        QJsonObject dataObj;
+
+        dataObj.insert("net_info", get_net_info(net));
+        dataObj.insert("mempool" , get_mempool_count(net));
+//        dataObj.insert("ledger"  , get_ledger_count(net));
+        dataObj.insert("blocks"  , get_blocks_count(net));
+        dataObj.insert("events"  , get_events_count(net));
+
+        netObj.insert(net, dataObj);
+    }
+
+    return netObj;
+}
+
+QStringList LinuxDiagnostic::get_networks()
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"), QStringList()<<"net"<<"list");
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    QStringList listNetworks;
+    result.remove(' ');
+    result.remove("\r");
+    result.remove("\n");
+    result.remove("Networks:");
+    if(!(result.isEmpty() || result.isNull() || result.contains('\'') || result.contains("error") || result.contains("Error") || result.contains("err")))
+    {
+        listNetworks = result.split("\t", QString::SkipEmptyParts);
+    }
+
+    return listNetworks;
+}
+
+QJsonObject LinuxDiagnostic::get_net_info(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+               QStringList()<<"net"<<"-net"<<QString(net)<<"get"<<"status");
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    // ---------- State & TargetState ----------------
+
+    QRegularExpression rx(R"***(^Network "(\S+)" has state (\S+) \(target state (\S*)\), .*cur node address ([A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}))***");
+    QRegularExpressionMatch match = rx.match(result);
+    if (!match.hasMatch()) {
+        return {};
+    }
+
+    QJsonObject resultObj({
+                                {"state"              , match.captured(2)},
+                                {"target_state"       , match.captured(3)},
+                                {"node_address"       , match.captured(4)}
+                            });
+
+    // ---------- Links count ----------------
+    QRegularExpression rxLinks(R"(\), active links (\d+) from (\d+),)");
+    match = rxLinks.match(result);
+    if (!match.hasMatch()) {
+        return resultObj;
+    }
+
+    resultObj.insert("active_links_count", match.captured(1));
+    resultObj.insert("links_count"       , match.captured(2));
+
+    return resultObj;
+}
+
+QJsonObject LinuxDiagnostic::get_mempool_count(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+               QStringList()<<"mempool_list"<<"-net"<<QString(net));
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    QRegularExpression rx(R"(\.(.+): Total (.+) records)");
+
+    ///TODO: bug in requests. Always returns both chains
+//    QRegularExpressionMatch match = rx.match(result);
+//    if (!match.hasMatch()) {
+//        return {};
+//    }
+
+//    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+//               QStringList()<<"mempool_list"<<"-net"<<QString(net)<<"-chain"<<"zero");
+//    proc.waitForFinished(5000);
+//    result = proc.readAll();
+
+    QJsonObject resultObj;
+
+    QRegularExpressionMatchIterator matchItr = rx.globalMatch(result);
+
+    while (matchItr.hasNext())
+    {
+        QRegularExpressionMatch match = matchItr.next();
+        resultObj.insert(match.captured(1), match.captured(2));
+    }
+
+    return resultObj;
+}
+
+QJsonObject LinuxDiagnostic::get_ledger_count(QString net)
+{
+    //TODO: legder tx -all -net   NOT WORKING
+    return {};
+}
+
+QJsonObject LinuxDiagnostic::get_blocks_count(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+               QStringList()<<"block"<<"list"<<"-net"<<QString(net) <<"-chain" << "main");
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    QRegularExpression rx(R"(\.(.+): Have (.+) blocks)");
+    QRegularExpressionMatch match = rx.match(result);
+    if (!match.hasMatch()) {
+        return {};
+    }
+
+    QJsonObject resultObj;
+    resultObj.insert(match.captured(1), match.captured(2));
+
+    return resultObj;
+
+}
+
+QJsonObject LinuxDiagnostic::get_events_count(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+               QStringList()<<"dag"<<"event"<<"list"<<"-net"<<QString(net) <<"-chain" << "zerochain");
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    QRegularExpression rx(R"(\.(.+) have total (.+) events)");
+    QRegularExpressionMatch match = rx.match(result);
+    if (!match.hasMatch()) {
+        return {};
+    }
+
+    QJsonObject resultObj;
+    resultObj.insert(match.captured(1), match.captured(2));
+
+    return resultObj;
 }
 
 
