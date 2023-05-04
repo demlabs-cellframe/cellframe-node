@@ -43,7 +43,7 @@ void LinuxDiagnostic::info_update(){
         }
 
         QJsonObject obj = sys_info["memory"].toObject();
-        int mem = obj["total_value"].toInt();
+        int mem = obj["total"].toInt();
 
         proc_info = get_process_info(get_pid(), mem);
         proc_info.insert("roles", roles_processing());
@@ -164,7 +164,8 @@ QJsonObject LinuxDiagnostic::get_sys_info()
     memory_used = QString::number((total_value - available_value) *100 / total_value);
     memory_free = get_memory_string(available_value);
 
-    obj_memory.insert("total", memory);
+//    obj_memory.insert("total", memory);
+    obj_memory.insert("total", total_value);
 //    obj_memory.insert("total_value", total_value);
     obj_memory.insert("free", memory_free);
     obj_memory.insert("load", memory_used);
