@@ -43,7 +43,7 @@ void LinuxDiagnostic::info_update(){
         }
 
         QJsonObject obj = sys_info["memory"].toObject();
-        int mem = obj["total_value"].toInt();
+        int mem = obj["total"].toInt();
 
         proc_info = get_process_info(get_pid(), mem);
         proc_info.insert("roles", roles_processing());
