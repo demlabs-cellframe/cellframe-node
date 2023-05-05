@@ -244,7 +244,10 @@ if(UNIX AND NOT WIN32)
             FetchContent_MakeAvailable(CPython37Static)
             
             SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
+            set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
+            set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
             add_subdirectory(cellframe-sdk/3rdparty/openssl-cmake)
+            set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
             add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
             set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
