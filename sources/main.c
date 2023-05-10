@@ -334,6 +334,14 @@ int main( int argc, const char **argv )
         return -65;
     }
 
+    if( dap_chain_net_srv_init() !=0){
+        log_it(L_CRITICAL,"Can't init dap chain network service module");
+        return -66;
+    }
+
+    if (dap_chain_net_srv_order_init() != 0)
+        return -67;
+
     if (!dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
@@ -343,7 +351,7 @@ int main( int argc, const char **argv )
     }
 
     if (dap_chain_net_srv_stake_lock_init()) {
-        log_it(L_ERROR, "Can't start stake token service");
+        log_it(L_ERROR, "Can't start stake lock service");
     }
 
     if( dap_chain_net_srv_app_init() !=0){
@@ -376,15 +384,7 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if( dap_chain_net_srv_init() !=0){
-        log_it(L_CRITICAL,"Can't init dap chain network service module");
-        return -66;
-    }
-
     dap_chain_net_load_all();
-
-    if (dap_chain_net_srv_order_init() != 0)
-        return -67;
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
@@ -469,6 +469,7 @@ int main( int argc, const char **argv )
             }
 
         }
+        dap_server_set_default(l_server);
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 

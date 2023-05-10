@@ -44,6 +44,15 @@ reconfigure|configure)
       db_go || true
    fi
 
+   db_input critical cellframe-node/riemann_enabled || true 
+   db_go || true 
+
+   db_get cellframe-node/riemann_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/riemann_node_type || true 
+      db_go || true
+   fi
+
 #   db_input critical cellframe-node/kelvpn_minkowski_enabled || true 
 #   db_go || true 
 

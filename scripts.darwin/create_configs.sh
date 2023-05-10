@@ -14,11 +14,17 @@ export DAP_AUTO_ONLINE=true
 export DAP_SERVER_ENABLED=false
 export DAP_SERVER_ADDRESS=0.0.0.0
 export DAP_SERVER_PORT=8089
-
+export NOTIFY_SRV_ADDR=127.0.0.1
+export NOTIFY_SRV_PORT=8080
 
 # Raiden testnet
 export DAP_RAIDEN_ENABLED=true
 export DAP_RAIDEN_ROLE=full
+
+# Raiden testnet
+export DAP_RIEMANN_ENABLED=true
+export DAP_RIEMANN_ROLE=full
+
 
 # Subzero testnet
 export DAP_SUBZERO_ENABLED=true

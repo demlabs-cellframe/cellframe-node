@@ -81,6 +81,25 @@ Description: Raiden: Node role
  archive - Sync all the network
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
+Template: cellframe-node/riemann_enabled
+Default: true
+Choices: true, false
+Type: select
+Description: Riemann: Enable network
+ Riemann Testnet: Enable network auto load on start
+
+Template: cellframe-node/riemann_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: Riemann: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
 Template: cellframe-node/mileena_enabled
 Default: true
 Choices: true, false
