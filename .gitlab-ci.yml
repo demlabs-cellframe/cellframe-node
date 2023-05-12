@@ -35,6 +35,7 @@ stages:
   stage: deploy
   rules:
     - if: $CI_COMMIT_REF_NAME == "release-5.2"
+    - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
 
 
 windows-amd64:
@@ -119,6 +120,6 @@ deploy_testnets:
   needs:
     - publish
   script:
-    - echo hi, do it on machine
+    - echo "hi, do it on machine"
     - echo $(hostname)
 
