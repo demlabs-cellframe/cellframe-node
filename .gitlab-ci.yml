@@ -36,6 +36,7 @@ stages:
   rules:
     - if: $CI_COMMIT_REF_NAME == "release-5.2"
       when: manual
+      allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
 
 
