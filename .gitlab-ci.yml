@@ -35,8 +35,7 @@ stages:
   extends: .ci-ansible
   stage: deploy
   rules:
-    - if: $CI_COMMIT_REF_NAME == "release-5.2"
-    - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
+    - if: $CI_COMMIT_REF_NAME == "master"
 
 windows-amd64:
     extends: .build
