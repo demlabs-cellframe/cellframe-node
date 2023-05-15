@@ -4,12 +4,16 @@ variables:
 
 stages:
     - build
+    - publish
     - deploy
 
 .ci-polygon:
   tags:
      - ci-polygon
-  
+.ci-ansible:
+  tags:
+     - ci-ansible
+    
 .build:  
   extends: .ci-polygon
   stage: build
@@ -19,11 +23,21 @@ stages:
     paths:
       - build_*/*.deb
 
-.deploy:
+.publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
-  stage: deploy
+  stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
+  
+
+.deploy:
+  extends: .ci-ansible
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+      when: manual
+    - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
+
 
 windows-amd64:
     extends: .build
@@ -85,8 +99,8 @@ linux-arm64-debian-bullseye:
       - ./prod_build/pack.sh --target linux release
   
 
-deploy:
-  extends: .deploy
+publish:
+  extends: .publish
   needs: 
     - linux-amd64-debian-buster 
     - linux-amd64-debian-buster-dbg
@@ -101,4 +115,18 @@ deploy:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
 
+
+
+deploy_testnets:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  raiden riemann subzero
 
