@@ -104,11 +104,11 @@ if [ "$RET" = "true" ]; then
 #	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
 #    fi
    
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/kelvpn_minkowski_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled kelvpn-minkowski"
+#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+#    db_get cellframe-node/kelvpn_minkowski_node_type || true
+#    NODE_TYPE=$RET
+#    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+#    echo "[*] Enabled kelvpn-minkowski"
 fi
 
 # Init Backbone
