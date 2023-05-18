@@ -126,6 +126,19 @@ publish:
     - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
 
 
+publish_updtr:
+  extends: .publish
+  needs: 
+    - publish
+    - linux-amd64-debian-buster-updtr
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+      when: manual
+  script: 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
+  
+
+
 
 raiden_deploy:
   extends: .deploy
