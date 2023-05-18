@@ -36,7 +36,9 @@ stages:
   stage: deploy
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
-    - when: manual
+      when: manual
+      allow_failure: true
+
   allow_failure: true
 
 windows-amd64:
