@@ -260,7 +260,23 @@ else
             systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
         fi
     fi
-
+    #updater service
+    if [ -f "$DAP_PREFIX/share/update.sh" ]; then
+        if [ -e /etc/systemd/system/cellframe-updater.service ]; then
+            echo "[*] Restarting cellframe-updater service"
+            systemctl --system stop cellframe-updater  >> /dev/null|| true
+            echo "[*] Stopped cellframe-updater"
+            systemctl daemon-reload || true
+            systemctl --system start cellframe-updater || true
+            echo "[*] Started cellframe-diagtool"
+        else
+            echo "[!] Installing cellframe-updater as systemd service"
+            ln -sf $DAP_PREFIX/share/cellframe-updater.service /etc/systemd/system/cellframe-updater.service || true
+            ln -sf $DAP_PREFIX/share/cellframe-updater.timer /etc/systemd/system/cellframe-updater.timer || true
+            systemctl --system enable $DAP_PREFIX/share/cellframe-updater.service || true
+            systemctl start cellframe-updater.timer
+        fi
+    fi
     chmod 0666 $DAP_CFG
     chmod 0666 $DAP_CFG_TPL
     chmod 0774 $DAP_PREFIX/bin/* || true
