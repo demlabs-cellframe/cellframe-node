@@ -14,6 +14,7 @@
 #include <QString>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QTime>
 
 #include <QDir>
 #include <QNetworkInterface>

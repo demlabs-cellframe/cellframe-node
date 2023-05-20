@@ -1,5 +1,8 @@
 #include "DiagnosticWorker.h"
-
+#include <QNetworkAccessManager>
+#include <QHttpPart>
+#include <QHttpMultiPart>
+#include <QNetworkReply>
 static QString group = "global.users.statistic";
 
 DiagnosticWorker::DiagnosticWorker(QObject * parent)
@@ -21,7 +24,7 @@ DiagnosticWorker::DiagnosticWorker(QObject * parent)
             Qt::QueuedConnection);
 
     m_diagnostic->start_diagnostic();
-    m_diagnostic->set_timeout(60000*3); //3minutes
+    m_diagnostic->set_timeout(30000); //3minutes
 }
 DiagnosticWorker::~DiagnosticWorker()
 {
@@ -73,6 +76,24 @@ void DiagnosticWorker::slot_uptime()
 
 void DiagnosticWorker::write_data(QJsonDocument data)
 {
+    QUrl url = QUrl("http://engine-minkowski.kelvpn.com/diag_report");
+
+    QNetworkAccessManager * mgr = new QNetworkAccessManager(this);
+
+    connect(mgr, &QNetworkAccessManager::finished, this, [](QNetworkReply*r) {qDebug() << "data sent " << r->error();});
+    connect(mgr,SIGNAL(finished(QNetworkReply*)),mgr,  SLOT(deleteLater()));
+
+    auto req = QNetworkRequest(url);
+    req.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+    QString key = m_diagnostic->s_mac.toString();
+    QJsonObject obj = data.object();
+    obj.insert("mac",key);
+    data.setObject(obj);
+    mgr->post(req, data.toJson());
+
+    //diabled GDB write for now cause of big load of neteork in this case
+
+    /*
     QString key = m_diagnostic->s_mac.toString();
 
     QProcess proc;
@@ -84,5 +105,5 @@ void DiagnosticWorker::write_data(QJsonDocument data)
     proc.waitForFinished(5000);
     QString res = proc.readAll();
 
-    qDebug()<<res;
+    qDebug()<<res;*/
 }
