@@ -76,11 +76,12 @@ void DiagnosticWorker::slot_uptime()
 
 void DiagnosticWorker::write_data(QJsonDocument data)
 {
-    QUrl url = QUrl("http://engine-minkowski.kelvpn.com/diag_report");
+    QString urls = "https://engine-minkowski.kelvpn.com/diag_report";
+    QUrl url = QUrl(urls);
 
     QNetworkAccessManager * mgr = new QNetworkAccessManager(this);
 
-    connect(mgr, &QNetworkAccessManager::finished, this, [](QNetworkReply*r) {qDebug() << "data sent " << r->error();});
+    connect(mgr, &QNetworkAccessManager::finished, this, [=](QNetworkReply*r) {qDebug() << "data sent " << urls << " " << r->error();});
     connect(mgr,SIGNAL(finished(QNetworkReply*)),mgr,  SLOT(deleteLater()));
 
     auto req = QNetworkRequest(url);
