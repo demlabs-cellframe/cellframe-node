@@ -1,0 +1,14 @@
+[Unit]
+Description=Cellframe Updater
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/cellframe-node/
+ExecStart=/bin/bash /opt/cellframe-node/share/update.sh &
+
+User=root
+Group=root
+LogNamespace=cellframe
+
+[Install]
+WantedBy=timers.target

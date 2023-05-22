@@ -74,6 +74,14 @@ linux-amd64-debian-buster-rwd:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
 
+linux-amd64-debian-buster-updtr:
+    extends: .build
+    image: demlabs/amd64/debian-buster:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+
 linux-amd64-debian-buster:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
@@ -108,6 +116,7 @@ publish:
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
+    - linux-amd64-debian-buster-updtr
     - macos-amd64
    
   script: 
@@ -115,6 +124,19 @@ publish:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
+
+
+publish_updtr:
+  extends: .publish
+  needs: 
+    - publish
+    - linux-amd64-debian-buster-updtr
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+      when: manual
+  script: 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
+  
 
 
 
