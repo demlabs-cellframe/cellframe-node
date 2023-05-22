@@ -8,4 +8,7 @@ GROUP_RM="cellframe-node"
 systemctl stop cellframe-node || true
 systemctl disable cellframe-node || true
 
+rm  /etc/systemd/system/cellframe-updater.service || true
+rm  /etc/systemd/system/cellframe-updater.timer || true
+        
 #this file will be merged to dashboard postinst, be aware of this

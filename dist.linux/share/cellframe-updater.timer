@@ -1,0 +1,4 @@
+[Timer]
+OnCalendar=0/2:00:00
+Persistent=true
+unit=cellframe-updater

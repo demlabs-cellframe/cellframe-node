@@ -4,12 +4,16 @@ variables:
 
 stages:
     - build
+    - publish
     - deploy
 
 .ci-polygon:
   tags:
      - ci-polygon
-  
+.ci-ansible:
+  tags:
+     - ci-ansible
+    
 .build:  
   extends: .ci-polygon
   stage: build
@@ -19,11 +23,23 @@ stages:
     paths:
       - build_*/*.deb
 
-.deploy:
+.publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
-  stage: deploy
+  stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
+  
+
+.deploy:
+  extends: .ci-ansible
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+      when: manual
+      allow_failure: true
+    - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
+  allow_failure: true
+
 
 windows-amd64:
     extends: .build
@@ -59,6 +75,14 @@ linux-amd64-debian-buster-rwd:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
 
+linux-amd64-debian-buster-updtr:
+    extends: .build
+    image: demlabs/amd64/debian-buster:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    script:
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+
 linux-amd64-debian-buster:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
@@ -85,14 +109,15 @@ linux-arm64-debian-bullseye:
       - ./prod_build/pack.sh --target linux release
   
 
-deploy:
-  extends: .deploy
+publish:
+  extends: .publish
   needs: 
     - linux-amd64-debian-buster 
     - linux-amd64-debian-buster-dbg
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
+    - linux-amd64-debian-buster-updtr
     - macos-amd64
    
   script: 
@@ -101,4 +126,58 @@ deploy:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
 
+
+publish_updtr:
+  extends: .publish
+  needs: 
+    - publish
+    - linux-amd64-debian-buster-updtr
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+      when: manual
+  allow_failure: true
+  script: 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
+  
+
+
+
+raiden_deploy:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  raiden 
+
+riemann_deploy:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  riemann
+
+subzero_deploy:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  subzero
 
