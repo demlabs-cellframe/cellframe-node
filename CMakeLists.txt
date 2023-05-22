@@ -16,6 +16,9 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
+#enable for diagtool 
+#set(BUILD_DIAGTOOL OFF)
+
 #possible need be setted during crosscompile
 #by default it uses dpkg --print-architecture
 #we ok with it on native builds.
@@ -37,9 +40,14 @@ endif()
 
 set(BUILD_WITH_ZIP OFF)
 
+
 if(LINUX)
-#set(BUILD_WITH_PYTHON_ENV ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
+    #set(BUILD_WITH_PYTHON_ENV ON)
+    set(SUPPORT_PYTHON_PLUGINS ON)
+    option(CREATE_DEFAULT_CONFIG "Create default configuration files" ON) # Optional config files creation
+    if (CREATE_DEFAULT_CONFIG)
+        message("[*] Generating default configuration for ${PROJECT_NAME}, skip with -DCREATE_DEFAULT_CONFIG=OFF")
+    endif()
 endif()
 
 
@@ -215,6 +223,11 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+    
+    if(BUILD_DIAGTOOL)
+        message("[*] Diagtool build on")
+        add_subdirectory(diagtool)
+    endif()
 
     if (SUPPORT_PYTHON_PLUGINS)
 	message("[+] Build with python plugins support")
@@ -233,7 +246,11 @@ if(UNIX AND NOT WIN32)
 		URL      https://pub.cellframe.net/3rdparty/python/cpython.tar.xz
 		)
 
-	    FetchContent_MakeAvailable(CPython37Static)
+            FetchContent_MakeAvailable(CPython37Static)
+            
+            SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
+            add_subdirectory(cellframe-sdk/3rdparty/openssl-cmake)
+            add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
 	    set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
 
@@ -241,7 +258,7 @@ if(UNIX AND NOT WIN32)
 	    find_package(PythonLibs REQUIRED)
 
 	    add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-	    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} -lssl -lcrypto -lcrypt -lnsl -lz -lutil -lexpat )
+	    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} ssl_lib crypto_lib -lcrypt -lnsl -lz -lutil -lexpat )
 
 	else()
 	    set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
@@ -280,6 +297,7 @@ if(DARWIN)
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
 
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts.darwin/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 else()
@@ -287,6 +305,9 @@ else()
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
 	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+        if (CREATE_DEFAULT_CONFIG)
+            INSTALL(CODE "execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/create_default_config.sh ${DESTDIR})")
+        endif()
     elseif(BSD)
 	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     endif()
@@ -295,11 +316,16 @@ else()
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
+    if (BUILD_DIAGTOOL)
+        INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    endif()
+
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
 	if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
-	   INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/pip3 )
+	   INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
+       INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
 	   INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/lib/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()

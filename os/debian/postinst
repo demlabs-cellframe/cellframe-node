@@ -16,7 +16,7 @@ DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
-    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
+    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.new"
 else
     DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 fi
@@ -55,7 +55,7 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
@@ -76,11 +76,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-
+   
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/mileena_node_type || true
     NODE_TYPE=$RET
@@ -97,11 +97,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-
+   
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/kelvpn_minkowski_node_type || true
     NODE_TYPE=$RET
@@ -118,10 +118,11 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
     else
 	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
+   
 
     cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
     db_get cellframe-node/backbone_node_type || true
@@ -179,21 +180,47 @@ else
             chmod 0664 $filename 2>/dev/null || true
         fi
     done
+
+    #diagtool service
+    if [ -f "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
+        if [ -e /etc/systemd/system/cellframe-diagtool.service ]; then
+            echo "[*] Restarting cellframe-diagtool service"
+            systemctl --system stop cellframe-diagtool  >> /dev/null|| true
+            echo "[*] Stopped cellframe-diagtool"
+            systemctl daemon-reload || true
+            systemctl --system start cellframe-diagtool || true
+            echo "[*] Started cellframe-diagtool"
+        else
+            echo "[!] Installing cellframe-diagtool as systemd service"
+            ln -sf $DAP_PREFIX/share/cellframe-diagtool.service /etc/systemd/system/cellframe-diagtool.service || true
+            systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
+        fi
+    fi
+
     chmod 0666 $DAP_CFG
     chmod 0666 $DAP_CFG_TPL
     chmod 0774 $DAP_PREFIX/bin/* || true
     chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/bin/pip3* $DAP_PREFIX/bin/python3* || true
+    
+    #set rwo permissions to configs
+    chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
+    #set rwx permissions to dirs
+    chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
     
     service cellframe-node start || true
     systemctl restart cellframe-node || true
     
 fi
 
-echo "[ ] Enabling logrotate"
+if [ -e /.dockerenv ]
+then
+echo "[ ] Disabling logrotate in docker-container"
+else
+echo "[ ] Enabling logrotate" 
 chmod 644  $DAP_PREFIX/share/logrotate/$DAP_APP_NAME || true
-ln -sf $DAP_PREFIX/share/logrotate/logrotate.timer /etc/systemd/system/logrotate.timer || true
-ln -sf $DAP_PREFIX/share/logrotate/$DAP_APP_NAME /etc/logrotate.d/$DAP_APP_NAME || true
-chmod 644 /etc/logrotate.d/$DAP_APP_NAME || true
-systemctl reenable logrotate.timer || true 
+chmod 644  $DAP_PREFIX/share/logrotate/logrotate.timer || true
+systemctl disable logrotate.timer || true
+systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer || true
+fi
 
 echo "[!] Done"
