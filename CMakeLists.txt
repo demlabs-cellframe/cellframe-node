@@ -55,7 +55,7 @@ set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")

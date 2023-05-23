@@ -38,6 +38,7 @@ stages:
       when: manual
       allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
+  allow_failure: true
 
 
 windows-amd64:
@@ -134,6 +135,7 @@ publish_updtr:
   rules:
     - if: $CI_COMMIT_REF_NAME == "release-5.2"
       when: manual
+  allow_failure: true
   script: 
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
   
