@@ -44,4 +44,4 @@ echo "wgot"
 
 service cellframe-node stop
 dpkg -i /tmp/cfupd/$PACKAGE_NAME
-service cellframe-node start
+service cellframe-node restart
