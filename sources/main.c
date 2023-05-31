@@ -383,7 +383,6 @@ int main( int argc, const char **argv )
         return -12;
     }
 #endif
-
     dap_chain_net_load_all();
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
