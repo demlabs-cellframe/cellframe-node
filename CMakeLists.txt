@@ -55,7 +55,7 @@ set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
 
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -131,12 +131,18 @@ if(UNIX)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
-    if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
-    endif()
 
-    if(ADD_UPDATER)
-        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+    if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+        if(ADD_UPDATER)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+        else()
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
+        endif()
+    else() #to use -updtr postfix in rwd build without rwd
+        if(ADD_UPDATER)
+            set(CMAKE_BUILD_TYPE RelWithDebInfo) 
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+        endif()
     endif()
 
 
