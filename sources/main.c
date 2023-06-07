@@ -58,7 +58,9 @@
 #include "dap_server.h"
 #include "dap_notify_srv.h"
 #include "dap_http.h"
+#ifndef DAP_OS_ANDROID
 #include "dap_http_folder.h"
+#endif
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 
@@ -93,7 +95,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#ifdef DAP_OS_LINUX
+#if defined(DAP_OS_LINUX) && !defined(DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_vpn_client.h"
 #endif

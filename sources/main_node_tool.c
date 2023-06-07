@@ -45,7 +45,9 @@
 #include "dap_config.h"
 #include "dap_server.h"
 #include "dap_http.h"
+#ifndef DAP_OS_ANDROID
 #include "dap_http_folder.h"
+#endif
 #include "dap_events.h"
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
