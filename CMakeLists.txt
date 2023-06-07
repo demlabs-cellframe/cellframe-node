@@ -38,6 +38,11 @@ endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
 
+set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+if (ANDROID)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE OFF)
+endif()
+
 set(BUILD_WITH_ZIP OFF)
 
 
@@ -186,6 +191,8 @@ if(UNIX)
 	${NODE_TOOL_SOURCES}
 	sources/cellframe_node.h
     )
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -275,8 +282,9 @@ if(UNIX AND NOT WIN32)
 	set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
 
 	list(REMOVE_DUPLICATES ALL_LIBRARIES)
-
 	target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
 	target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread z util expat )
 	target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
