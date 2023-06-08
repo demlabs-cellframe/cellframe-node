@@ -59,6 +59,15 @@ macos-amd64:
       paths:
         - build_*/*.pkg
 
+
+android-armv8:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:androidbuilder
+    before_script: /opt/buildtools/prepare_environment.sh android
+    script:
+      - ./prod_build/build.sh --target android release
+    
+
 linux-amd64-debian-buster-dbg:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
