@@ -58,9 +58,11 @@
 #include "dap_server.h"
 #include "dap_notify_srv.h"
 #include "dap_http.h"
+
 #ifndef DAP_OS_ANDROID
 #include "dap_http_folder.h"
 #endif
+
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 
@@ -165,7 +167,11 @@ int main( int argc, const char **argv )
 	#if defined(_WIN32) && defined(NDEBUG)
 		S_SetExceptionFilter( );
     #endif
+
+    #ifdef DAP_OS_ANDROID
     __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "HAI2U");
+    #endif
+
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
@@ -187,7 +193,9 @@ int main( int argc, const char **argv )
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
+        #ifdef DAP_OS_ANDROID
         __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_dir);
+        #endif DAP_OS_ANDROID
         if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
             printf("Fatal Error: Can't init common functions module");
             return -2;
