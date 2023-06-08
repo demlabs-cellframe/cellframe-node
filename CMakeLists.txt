@@ -212,7 +212,7 @@ if(WIN32)
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-    target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c )
+    target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 
@@ -279,10 +279,10 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-	set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+	    set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
 
-	list(REMOVE_DUPLICATES ALL_LIBRARIES)
-	target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+	    list(REMOVE_DUPLICATES ALL_LIBRARIES)
+	    target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
