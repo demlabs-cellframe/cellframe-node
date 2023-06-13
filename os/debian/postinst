@@ -280,7 +280,7 @@ else
     chmod 0666 $DAP_CFG
     chmod 0666 $DAP_CFG_TPL
     chmod 0774 $DAP_PREFIX/bin/* || true
-    chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/bin/pip3* $DAP_PREFIX/bin/python3* || true
+    chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
     
     #set rwo permissions to configs
     chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
