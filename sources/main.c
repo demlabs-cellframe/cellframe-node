@@ -184,20 +184,38 @@ int main( int argc, const char **argv )
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    //g_sys_dir_path = "/storage/emulated/0/Android/data/com.CellframeWallet/files/node";
+    //g_sys_dir_path = "/storage/emulated/0/Android/data/com.CellframeWallet/files/node";
+
+    //zero argumet from jni call is always a working dir
+    jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
+    g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+    
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
+
+        #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, l_log_dir);
+        #endif
+        
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
         #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "Log dir:");
         __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_dir);
         #endif
         if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
             printf("Fatal Error: Can't init common functions module");
+            #ifdef DAP_OS_ANDROID
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "Log file:");
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_file);
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG,"Can't init common functions");
+        
+            #endif
             return -2;
         }
         DAP_DELETE(l_log_dir);
@@ -207,6 +225,9 @@ int main( int argc, const char **argv )
     {
         char l_config_dir[MAX_PATH] = {'\0'};
         dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, l_config_dir);
+        #endif
         dap_config_init(l_config_dir);
     }
 
