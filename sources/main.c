@@ -195,7 +195,7 @@ int main( int argc, const char **argv )
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
         #ifdef DAP_OS_ANDROID
         __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_dir);
-        #endif DAP_OS_ANDROID
+        #endif
         if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
             printf("Fatal Error: Can't init common functions module");
             return -2;
