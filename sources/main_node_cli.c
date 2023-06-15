@@ -190,60 +190,63 @@ int shell_reader_loop()
 }
 
 #ifdef __ANDROID__
+#include <stdio.h>
+#include <fcntl.h>
 
-static int pfd[2];
-static pthread_t thr;
-static const char *tag = "CellframeNodeCLi";
-static jstring cli_response;
+#include <jni.h>
 
-static void *thread_func(void * prm)
-{
-    ssize_t rdsz;
-    char buf[128];
-    while((rdsz = read(pfd[0], buf, sizeof buf - 1)) > 0) {
-        if(buf[rdsz - 1] == '\n') --rdsz;
-        buf[rdsz] = 0;  /* add null-terminator */
-        __android_log_write(ANDROID_LOG_DEBUG, tag, buf);
-        cli_response.
-    }
-    return 0;
-}
 
-int start_logger(const char *app_name)
-{
-    tag = app_name;
-
-    /* make stdout line-buffered and stderr unbuffered */
-    setvbuf(stdout, 0, _IOLBF, 0);
-    setvbuf(stderr, 0, _IONBF, 0);
-
-    /* create the pipe and redirect stdout and stderr */
-    pipe(pfd);
-    dup2(pfd[1], 1);
-    dup2(pfd[1], 2);
-
-    /* spawn the logging thread */
-    if(pthread_create(&thr, 0, thread_func, 0) == -1)
-        return -1;
-    pthread_detach(thr);
-    return 0;
-}
+#define STDOUT_BUF_LEN 1023
 
 JNIEXPORT jstring Java_com_CellframeWallet_Node_cellframeNodeCliMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 {
-
-    cli_response = (*cntx)->NewStringUTF(cntx,"")
     
-    if (start_logger("CellframeCli") != 0)
-        __android_log_write(ANDROID_LOG_DEBUG, "CellFrameCLi", "Can't run logger thread");
+    char buffer[STDOUT_BUF_LEN+1] = {0};
+    memset(buffer, 0, STDOUT_BUF_LEN+1);
 
+    int out_pipe[2];
+    int saved_stdout;
+
+    saved_stdout = dup(STDOUT_FILENO); 
+
+    if( pipe(out_pipe) != 0 ) {         
+        __android_log_write(ANDROID_LOG_DEBUG, "CLI", "PIPE FAILED");
+    }
+
+    dup2(out_pipe[1], STDOUT_FILENO);   
+    close(out_pipe[1]);
+
+    
     jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
     char * g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
-    char * tsts[] = {"cli", "version"};
 
-    cellframe_node__cli_Main(2, tsts , g_sys_dir_path);
-      
-    return (*cntx)->NewStringUTF(cntx,"TEST RESPONSE");
+    jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
+    char **argv = malloc(sizeof(char*) * (argc+1));
+    argv[0] = g_sys_dir_path;
+
+    
+    for (jsize i = 1; i < argc; ++i) { //first arg is always node working dir
+        jstring stringargv = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, i));
+        const char *cstr = (*javaEnv)->GetStringUTFChars(javaEnv, stringargv, 0);
+        argv[i] = strdup(cstr);
+        (*javaEnv)->ReleaseStringUTFChars(javaEnv, string, cstr );
+    }
+    
+    __android_log_write(ANDROID_LOG_DEBUG, "CLI", "CALL MAIN");   
+    cellframe_node__cli_Main(argc, argv , g_sys_dir_path);
+    __android_log_write(ANDROID_LOG_DEBUG, "CLI", "CALL MAIN  OK");   
+
+
+   //for (jsize i = 1; i < argc; ++i) {
+	//	DAP_DELETE(argv[i]);
+    //}
+    //(*javaEnv)->ReleaseStringUTFChars(javaEnv, string, g_sys_dir_path);
+    
+    fflush(stdout);
+    read(out_pipe[0], buffer, STDOUT_BUF_LEN); 
+    dup2(saved_stdout, STDOUT_FILENO);  
+    
+    return (*javaEnv)->NewStringUTF(javaEnv,buffer);
 }
 
 int cellframe_node__cli_Main(int argc, const char *argv[], const char *sys_dir)
