@@ -38,6 +38,7 @@
 
 #ifdef __ANDROID__
     #include "cellframe_node.h"
+    #include <android/log.h>
 #endif
 
 #ifdef _WIN32
@@ -189,7 +190,63 @@ int shell_reader_loop()
 }
 
 #ifdef __ANDROID__
-int cellframe_node__cli_Main(int argc, const char *argv[])
+
+static int pfd[2];
+static pthread_t thr;
+static const char *tag = "CellframeNodeCLi";
+static jstring cli_response;
+
+static void *thread_func(void * prm)
+{
+    ssize_t rdsz;
+    char buf[128];
+    while((rdsz = read(pfd[0], buf, sizeof buf - 1)) > 0) {
+        if(buf[rdsz - 1] == '\n') --rdsz;
+        buf[rdsz] = 0;  /* add null-terminator */
+        __android_log_write(ANDROID_LOG_DEBUG, tag, buf);
+        cli_response.
+    }
+    return 0;
+}
+
+int start_logger(const char *app_name)
+{
+    tag = app_name;
+
+    /* make stdout line-buffered and stderr unbuffered */
+    setvbuf(stdout, 0, _IOLBF, 0);
+    setvbuf(stderr, 0, _IONBF, 0);
+
+    /* create the pipe and redirect stdout and stderr */
+    pipe(pfd);
+    dup2(pfd[1], 1);
+    dup2(pfd[1], 2);
+
+    /* spawn the logging thread */
+    if(pthread_create(&thr, 0, thread_func, 0) == -1)
+        return -1;
+    pthread_detach(thr);
+    return 0;
+}
+
+JNIEXPORT jstring Java_com_CellframeWallet_Node_cellframeNodeCliMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
+{
+
+    cli_response = (*cntx)->NewStringUTF(cntx,"")
+    
+    if (start_logger("CellframeCli") != 0)
+        __android_log_write(ANDROID_LOG_DEBUG, "CellFrameCLi", "Can't run logger thread");
+
+    jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
+    char * g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+    char * tsts[] = {"cli", "version"};
+
+    cellframe_node__cli_Main(2, tsts , g_sys_dir_path);
+      
+    return (*cntx)->NewStringUTF(cntx,"TEST RESPONSE");
+}
+
+int cellframe_node__cli_Main(int argc, const char *argv[], const char *sys_dir)
 #else
 
 int main(int argc, const char *argv[])
@@ -207,10 +264,11 @@ int main(int argc, const char *argv[])
         printf("Fatal Error: Can't obtain username");
         return 2;
     }
+    
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = sys_dir;
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -233,12 +291,18 @@ int main(int argc, const char *argv[])
 
     // connect to node
 
-#ifndef _WIN32
-    const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
-#else
+#ifndef _WIN32 
+    #ifndef DAP_OS_ANDROID
+        const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
+    #endif
+#else //win32
     const char* listen_socket = NULL;
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
+#endif
+
+#ifdef DAP_OS_ANDROID
+    const char* listen_socket = NULL;
 #endif
 
     cparam = dap_app_cli_connect(listen_socket);
