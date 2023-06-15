@@ -54,8 +54,7 @@ set(BUILD_WITH_PYTHON_ENV OFF)
 set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
-
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake-pos-delegate srv-stake-lock srv-xchange")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -131,12 +130,18 @@ if(UNIX)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
-    if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
-    endif()
 
-    if(ADD_UPDATER)
-        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+    if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+        if(ADD_UPDATER)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+        else()
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
+        endif()
+    else() #to use -updtr postfix in rwd build without rwd
+        if(ADD_UPDATER)
+            set(CMAKE_BUILD_TYPE RelWithDebInfo) 
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
+        endif()
     endif()
 
 
@@ -247,16 +252,26 @@ if(UNIX AND NOT WIN32)
         if (BUILD_WITH_PYTHON_ENV)
 
             message("[+] Build with python environment")
-            message("    Downloading static prebuild cpython3.7...")
+            message("    Downloading static prebuild cpython3.10...")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
             # installing pip in it, then tared all back.
-            FetchContent_Declare(
-                CPython37Static
-                URL      https://pub.cellframe.net/3rdparty/python/cpython.tar.xz
-            )
+            set(DOWNLOAD_EXTRACT_TIMESTAMP ON)
+            if(CMAKE_BUILD_TYPE MATCHES Debug)
+                FetchContent_Declare(
+                    CPython310StaticDebug
+                    URL https://pub.cellframe.net/3rdparty/python/cpython310d.tar.xz
+                )
+                FetchContent_MakeAvailable(CPython310StaticDebug)
+                set(cpython310static_SOURCE_DIR ${cpython310staticdebug_SOURCE_DIR})
+            else()
+                FetchContent_Declare(
+                    CPython310Static
+                    URL https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz
+                )
+                FetchContent_MakeAvailable(CPython310Static)
+                set(cpython310static_SOURCE_DIR ${cpython310static_SOURCE_DIR})
+            endif()
 
-            FetchContent_MakeAvailable(CPython37Static)
-            
             SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
             set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
@@ -264,33 +279,43 @@ if(UNIX AND NOT WIN32)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
             add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
-            set(CMAKE_PREFIX_PATH ${cpython37static_SOURCE_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${cpython310static_SOURCE_DIR})
             
-            set(Python_ADDITIONAL_VERSIONS 3.7)
-
-            find_package(PythonLibs REQUIRED)
+            find_package(Python EXACT 3.10 COMPONENTS Interpreter Development REQUIRED)
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
             if(MACOS OR IOS)
-                set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} ssl_lib crypto_lib -lz -lutil -lexpat )
-            else()
-                if(LINUX OR BSD)
-                    set(PYTHON_LIBRARIES  ${PYTHON_LIBRARIES} ssl_lib crypto_lib -lcrypt -lnsl -lz -lutil -lexpat )
+                list(APPEND Python_LIBRARIES ssl_lib crypto_lib z util expat)
+            elseif(LINUX OR BSD)
+                list(APPEND Python_LIBRARIES ssl_lib crypto_lib crypt nsl z util expat)
+            endif()
+        else()
+            if(NOT ${CMAKE_VERSION} VERSION_LESS "3.15")
+                cmake_policy(SET CMP0094 NEW)
+            endif()
+            find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
+            if(MACOS OR IOS)
+                list(APPEND Python_LIBRARIES ssl crypto z util expat)
+            elseif(LINUX OR BSD)
+                if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
+                    list(APPEND Python_LIBRARIES crypt nsl z util expat)
+                else()
+                    list(APPEND Python_LIBRARIES ssl crypto crypt nsl z util expat)
                 endif()
             endif()
-
-        else()
-            set(Python_ADDITIONAL_VERSION 3.9 3.8 3.7 3.6 3.5 3.4)
-            find_package(PythonLibs REQUIRED)
         endif()
 
-        message("[!] Python includes path: " ${PYTHON_INCLUDE_DIR})
-        message("[!] Python library path: " ${PYTHON_LIBRARY_PATH})
+        message("[*] Python version: " ${Python_VERSION})
+        message("[*] Python path: " ${Python_EXECUTABLE})
+        message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
+        message("[*] Python library path: " ${Python_LIBRARY_DIRS})
+        message("[*] Python libraries: " "${Python_LIBRARIES}")
 
-        include_directories(${PYTHON_INCLUDE_DIR} include/)
+        include_directories(${Python_INCLUDE_DIRS} include/)
         add_subdirectory(python-cellframe)
 
-        set(NODE_LIBRARIES ${NODE_LIBRARIES}  dap_plugins_python ${PYTHON_LIBRARIES})
+        list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
     endif()
 
     if(ANDROID )
@@ -351,9 +376,19 @@ else()
 	    #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
-           INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
-           INSTALL(FILES ${cpython37static_SOURCE_DIR}/bin/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
-           INSTALL(DIRECTORY ${cpython37static_SOURCE_DIR}/lib/python3.7 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/ USE_SOURCE_PERMISSIONS)
+            INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+            if(CMAKE_BUILD_TYPE MATCHES Debug)
+                INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10d DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+                INSTALL(FILES ${cpython310static_SOURCE_DIR}/lib/libpython3.10d.so.1.0 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
+            else()
+                INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+                INSTALL(FILES ${cpython310static_SOURCE_DIR}/lib/libpython3.10.so.1.0 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
+            endif()
+            
+            INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+            
+           
+           INSTALL(DIRECTORY ${cpython310static_SOURCE_DIR}/lib/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 
