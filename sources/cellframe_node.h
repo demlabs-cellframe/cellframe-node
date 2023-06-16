@@ -13,7 +13,7 @@ JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, j
 JNIEXPORT int Java_com_CellframeWallet_Node_dapCommonInit(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argv);
 JNIEXPORT jstring Java_com_CellframeWallet_Node_cellframeNodeCliMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argv);
 
-int cellframe_node__cli_Main(int argc, const char *argv[], const char *sys_dir);
+int cellframe_node_cli_Main(int argc, const char *argv[], const char *sys_dir, char **l_out_res);
 int cellframe_node_tool_Main(int argc, const char **argv);
 
 #ifdef __cplusplus
