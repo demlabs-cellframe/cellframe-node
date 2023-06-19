@@ -319,7 +319,13 @@ int main(int argc, const char *argv[])
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 2);
         // Send command
-        int res = dap_app_cli_post_command(cparam, &cmd, a_out_str);
+        int res = dap_app_cli_post_command(cparam, &cmd,
+#ifdef __ANDROID__
+                                           a_out_str
+#else
+                                           NULL
+#endif
+);
         dap_app_cli_disconnect(cparam);
 #ifdef _WIN32
         WSACleanup();
