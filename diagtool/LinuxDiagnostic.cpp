@@ -164,8 +164,7 @@ QJsonObject LinuxDiagnostic::get_sys_info()
     memory_used = QString::number((total_value - available_value) *100 / total_value);
     memory_free = get_memory_string(available_value);
 
-//    obj_memory.insert("total", memory);
-    obj_memory.insert("total", total_value);
+    obj_memory.insert("total", memory);
 //    obj_memory.insert("total_value", total_value);
     obj_memory.insert("free", memory_free);
     obj_memory.insert("load", memory_used);
@@ -334,7 +333,7 @@ QJsonObject LinuxDiagnostic::get_process_info(long proc_id, int totalRam)
    if(status == "Offline")
    {
        process_info.insert("memory_use","0");
-       process_info.insert("memory_use_value","0 Kb");
+       process_info.insert("memory_use_value","0");
        process_info.insert("uptime","00:00:00");
    }
 
