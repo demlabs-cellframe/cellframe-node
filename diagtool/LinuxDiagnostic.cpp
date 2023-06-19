@@ -428,35 +428,31 @@ QJsonObject LinuxDiagnostic::get_net_info(QString net)
 
 QJsonObject LinuxDiagnostic::get_mempool_count(QString net)
 {
-    QProcess proc;
-    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
-               QStringList()<<"mempool_list"<<"-net"<<QString(net));
-    proc.waitForFinished(5000);
-    QString result = proc.readAll();
-
-    QRegularExpression rx(R"(\.(.+): Total (.+) records)");
-
-    ///TODO: bug in requests. Always returns both chains
-//    QRegularExpressionMatch match = rx.match(result);
-//    if (!match.hasMatch()) {
-//        return {};
-//    }
-
-//    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
-//               QStringList()<<"mempool_list"<<"-net"<<QString(net)<<"-chain"<<"zero");
-//    proc.waitForFinished(5000);
-//    result = proc.readAll();
-
+    auto chains = {"zerochain", "main"};
     QJsonObject resultObj;
+    for (auto chain : chains){
+    
+        QProcess proc;
+        proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+                QStringList()<<"mempool_list"<<"-net"<<QString(net) << "-chain" << QString(chain));
 
-    QRegularExpressionMatchIterator matchItr = rx.globalMatch(result);
+        proc.waitForFinished(5000);
+        QString result = proc.readAll();
 
-    while (matchItr.hasNext())
-    {
-        QRegularExpressionMatch match = matchItr.next();
-        resultObj.insert(match.captured(1), match.captured(2));
+        QRegularExpression rx(R"(\.(.+): Total (.+) records)");
+
+
+
+        QRegularExpressionMatchIterator matchItr = rx.globalMatch(result);
+
+        while (matchItr.hasNext())
+        {
+            QRegularExpressionMatch match = matchItr.next();
+            resultObj.insert(match.captured(1), match.captured(2));
+        }
+
     }
-
+    
     return resultObj;
 }
 
