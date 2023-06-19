@@ -164,7 +164,7 @@ QJsonObject LinuxDiagnostic::get_sys_info()
     memory_used = QString::number((total_value - available_value) *100 / total_value);
     memory_free = get_memory_string(available_value);
 
-    obj_memory.insert("total", memory);
+    obj_memory.insert("total", total_value);
 //    obj_memory.insert("total_value", total_value);
     obj_memory.insert("free", memory_free);
     obj_memory.insert("load", memory_used);
@@ -279,8 +279,10 @@ QJsonObject LinuxDiagnostic::get_process_info(long proc_id, int totalRam)
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
 //   vm_usage     = (vsize/1024.0);
    long resident_set = rss * page_size_kb;
-
-   int precentUseRss = (resident_set * 100) / totalRam;
+    
+   int precentUseRss = 0;
+   if (totalRam > 0)
+        precentUseRss = (resident_set * 100) / totalRam;
 
    QProcess proc;
    QString program = "ps";
