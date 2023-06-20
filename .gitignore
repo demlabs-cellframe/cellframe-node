@@ -4,6 +4,7 @@ build_stretch/*
 test/build
 *.txt.user
 *.txt.user.*
+*.user
 *.autosave
 .vscode/*
 # Object files

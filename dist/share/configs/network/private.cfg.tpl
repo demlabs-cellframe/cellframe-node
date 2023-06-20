@@ -13,7 +13,7 @@ node_addr_type=auto
 #node-addr=[ffff::0000::0000::0001]
 
 seed_nodes_ipv4=[195.154.133.160, 62.210.90.227]
-seed_nodes_port=[8079, 8079]
+seed_nodes_port=[8080, 8080]
 seed_nodes_aliases=[private.root.0,private.root.1]
 seed_nodes_addrs=[ffff::0000::0000::0001,ffff::0000::0000::0002]
 

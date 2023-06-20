@@ -4,12 +4,17 @@ variables:
 
 stages:
     - build
+    - publish
     - deploy
 
 .ci-polygon:
   tags:
      - ci-polygon
-  
+     
+.ci-ansible:
+  tags:
+     - ci-ansible
+
 .build:  
   extends: .ci-polygon
   stage: build
@@ -19,11 +24,22 @@ stages:
     paths:
       - build_*/*.deb
 
-.deploy:
+.publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
-  stage: deploy
+  stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
+  
+
+.deploy:
+  extends: .ci-ansible
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "master"
+      when: manual
+      allow_failure: true
+
+  allow_failure: true
 
 windows-amd64:
     extends: .build
@@ -48,7 +64,7 @@ linux-amd64-debian-buster-dbg:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux debug
 
 linux-amd64-debian-buster-rwd:
@@ -56,7 +72,7 @@ linux-amd64-debian-buster-rwd:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
 
 linux-amd64-debian-buster:
@@ -64,7 +80,7 @@ linux-amd64-debian-buster:
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script: 
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux release
 
 linux-armhf-debian-bullseye:
@@ -85,14 +101,15 @@ linux-arm64-debian-bullseye:
       - ./prod_build/pack.sh --target linux release
   
 
-deploy:
-  extends: .deploy
+publish:
+  extends: .publish
   needs: 
     - linux-amd64-debian-buster 
     - linux-amd64-debian-buster-dbg
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
+    - windows-amd64
     - macos-amd64
    
   script: 
@@ -103,5 +120,21 @@ deploy:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect    
+
+
+deploy_testnets:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  ton_minkowski mileena
+
+
 
 
