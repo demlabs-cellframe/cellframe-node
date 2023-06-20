@@ -42,10 +42,8 @@ set(BUILD_WITH_ZIP OFF)
 
 
 if(LINUX)
-#set(BUILD_WITH_PYTHON_ENV ON)
-set(SUPPORT_PYTHON_PLUGINS ON)
     #set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+    set(SUPPORT_PYTHON_PLUGINS OFF)
     option(CREATE_DEFAULT_CONFIG "Create default configuration files" ON) # Optional config files creation
     if (CREATE_DEFAULT_CONFIG)
         message("[*] Generating default configuration for ${PROJECT_NAME}, skip with -DCREATE_DEFAULT_CONFIG=OFF")
