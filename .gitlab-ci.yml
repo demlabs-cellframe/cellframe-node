@@ -124,7 +124,7 @@ publish_linux:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
 
 
-.publish_other:
+publish_other:
   extends: .publish
   needs: 
     - linux-armhf-debian-bullseye 
