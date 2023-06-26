@@ -61,6 +61,7 @@
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
+#include "dap_chain_net_balancer.h"
 
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
@@ -479,6 +480,12 @@ int main( int argc, const char **argv )
             dap_dns_server_start(l_events, dap_config_get_item_uint16_default(g_config, "dns_server", "bootstrap_balancer_port", DNS_LISTEN_PORT));
         }
     }
+    bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "http_server", "bootstrap_balancer", false);
+        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
+        if (http_bootstrap_balancer_enabled) {
+            // HTTP URL add
+            dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 1024, dap_chain_net_balancer_http_issue_link);
+        }
 
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
