@@ -107,12 +107,12 @@ pricelist=[scorpion:1:CELL:3600:SEC:mywallet0]
 # Console interface server
 [conserver]
 enabled=true
-listen_port_tcp=12345
-listen_address=0.0.0.0
-#listen_unix_socket_path={PREFIX}/var/run/node_cli
+#listen_port_tcp=12345
+#listen_address=0.0.0.0
+listen_unix_socket_path={PREFIX}/var/run/node_cli
 # Default permissions 770
 # IMPORTANT! Its accessible for all the users in system!
-#listen_unix_socket_permissions=777
+listen_unix_socket_permissions=777
 
 # Application Resources
 [resources]
