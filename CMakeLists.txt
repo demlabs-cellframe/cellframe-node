@@ -36,7 +36,13 @@ else()
     set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+#set(BUILD_WITH_GDB_DRIVER_CUTTDB ON)
 #set(BUILD_CRYPTO_TESTS ON)
+
+set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+if (ANDROID)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE OFF)
+endif()
 
 set(BUILD_WITH_ZIP OFF)
 
@@ -186,6 +192,8 @@ if(UNIX)
 	${NODE_TOOL_SOURCES}
 	sources/cellframe_node.h
     )
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -205,7 +213,7 @@ if(WIN32)
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-    target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c )
+    target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 
@@ -272,11 +280,12 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-	set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+	    set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
 
-	list(REMOVE_DUPLICATES ALL_LIBRARIES)
-
-	target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+	    list(REMOVE_DUPLICATES ALL_LIBRARIES)
+	    target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
 	target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread z util expat )
 	target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
