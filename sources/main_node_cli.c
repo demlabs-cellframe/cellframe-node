@@ -38,6 +38,7 @@
 
 #ifdef __ANDROID__
     #include "cellframe_node.h"
+    #include <android/log.h>
 #endif
 
 #ifdef _WIN32
@@ -123,14 +124,14 @@ int execute_line(char *line)
 
     // Call the function
     if(argc > 0) {
-        dap_app_cli_cmd_state_t cmd;
-        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
+        dap_app_cli_cmd_state_t cmd = { };
         cmd.cmd_name = (char *) argv[0];
         cmd.cmd_param_count = argc - 1;
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 1);
         // Send command
-        int res = dap_app_cli_post_command(cparam, &cmd);
+        char *l_out_str = NULL;
+        int res = dap_app_cli_post_command(cparam, &cmd, &l_out_str);
         DAP_DELETE(argv);
         return res;
     }
@@ -189,7 +190,48 @@ int shell_reader_loop()
 }
 
 #ifdef __ANDROID__
-int cellframe_node__cli_Main(int argc, const char *argv[])
+#include <stdio.h>
+#include <fcntl.h>
+
+#include <jni.h>
+
+
+#define STDOUT_BUF_LEN 1023
+
+JNIEXPORT jstring Java_com_CellframeWallet_Node_cellframeNodeCliMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
+{
+    jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
+    const char * g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+
+    jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
+    char *argv[argc + 1];
+    argv[0] = (char*)g_sys_dir_path;
+
+    
+    for (jsize i = 1; i < argc; ++i) { //first arg is always node working dir
+        jstring stringargv = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, i));
+        const char *cstr = (*javaEnv)->GetStringUTFChars(javaEnv, stringargv, 0);
+        argv[i] = strdup(cstr);
+        (*javaEnv)->ReleaseStringUTFChars(javaEnv, string, cstr );
+    }
+    
+    __android_log_write(ANDROID_LOG_DEBUG, "CLI", "CALL MAIN");
+    char *l_out_str = NULL;
+    cellframe_node_cli_Main(argc, (const char**)argv, g_sys_dir_path, &l_out_str);
+    __android_log_write(ANDROID_LOG_DEBUG, "CLI", "CALL MAIN  OK");   
+
+    for (jsize i = 1; i < argc; ++i) {
+        DAP_DELETE(argv[i]);
+    }
+    (*javaEnv)->ReleaseStringUTFChars(javaEnv, string, g_sys_dir_path);
+    
+    jstring l_res = (*javaEnv)->NewStringUTF(javaEnv, l_out_str);
+    DAP_DELETE(l_out_str);
+
+    return l_res;
+}
+
+int cellframe_node_cli_Main(int argc, const char *argv[], const char *sys_dir, char **a_out_str)
 #else
 
 int main(int argc, const char *argv[])
@@ -207,10 +249,11 @@ int main(int argc, const char *argv[])
         printf("Fatal Error: Can't obtain username");
         return 2;
     }
+    
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = sys_dir;
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -231,14 +274,13 @@ int main(int argc, const char *argv[])
         exit(-1);
     }
 
-    // connect to node
-
-#ifndef _WIN32
-    const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
-#else
     const char* listen_socket = NULL;
+    // connect to node
+#ifdef DAP_OS_WINDOWS
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
+#elif !defined DAP_OS_ANDROID
+    listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path");
 #endif
 
     cparam = dap_app_cli_connect(listen_socket);
@@ -264,14 +306,19 @@ int main(int argc, const char *argv[])
     if(argc > 1){
         // Call the function
         //int res = ((*(command->func))(argc - 2, argv + 2));
-        dap_app_cli_cmd_state_t cmd;
-        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
-        cmd.cmd_name = strdup(argv[1]);
+        dap_app_cli_cmd_state_t cmd = { };
+        cmd.cmd_name = (char*)argv[1];
         cmd.cmd_param_count = argc - 2;
         if(cmd.cmd_param_count > 0)
             cmd.cmd_param = (char**) (argv + 2);
         // Send command
-        int res = dap_app_cli_post_command(cparam, &cmd);
+        int res = dap_app_cli_post_command(cparam, &cmd,
+#ifdef __ANDROID__
+                                           a_out_str
+#else
+                                           NULL
+#endif
+);
         dap_app_cli_disconnect(cparam);
 #ifdef _WIN32
         WSACleanup();
