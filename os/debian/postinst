@@ -262,8 +262,7 @@ else
     fi
     #updater service
 
-    systemctl daemon-reload
-        
+    systemctl daemon-reload || true
     echo "[!] Installing cellframe-updater as systemd service"
     ln -sf $DAP_PREFIX/share/cellframe-updater.service /etc/systemd/system/cellframe-updater.service || true
     ln -sf $DAP_PREFIX/share/cellframe-updater.timer /etc/systemd/system/cellframe-updater.timer || true
