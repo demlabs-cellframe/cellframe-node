@@ -277,7 +277,7 @@ else
     systemctl daemon-reload || true
     systemctl --system start cellframe-updater || true
     echo "[*] Started cellframe-updater"
-    systemctl enable $DAP_PREFIX/share/cellframe-updater.timer
+    systemctl enable $DAP_PREFIX/share/cellframe-updater.timer || true
 
 
     chmod 0666 $DAP_CFG
