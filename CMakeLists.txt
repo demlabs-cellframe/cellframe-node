@@ -50,7 +50,7 @@ option(ADD_UPDATER OFF)
 #endif()
 
 if(LINUX)
-set(BUILD_WITH_PYTHON_ENV ON)
+set(BUILD_WITH_PYTHON_ENV OFF)
 set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
@@ -213,7 +213,7 @@ if(WIN32)
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-    target_link_libraries(${PROJECT_NAME} cellframe-sdk json-c )
+    target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
 
 #dap_chain_net_srv_vpn dap_server_http_db_auth
