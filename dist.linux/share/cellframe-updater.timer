@@ -4,7 +4,7 @@ Description=CFUPDATE
 [Timer]
 AccuracySec=1m
 #OnBootSec=1min
-OnCalendar=*:1/10
+OnCalendar=0/2:00:00
 Persistent=true
 Unit=cellframe-updater.service
 
