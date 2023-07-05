@@ -1,4 +1,13 @@
+[Unit]
+Description=CFUPDATE
+
 [Timer]
+AccuracySec=1m
+#OnBootSec=1min
 OnCalendar=0/2:00:00
 Persistent=true
-unit=cellframe-updater
+Unit=cellframe-updater.service
+
+
+[Install]
+WantedBy=timers.target

@@ -43,5 +43,9 @@ wget $STORAGE_URL/$PACKAGE_NAME -O /tmp/cfupd/$PACKAGE_NAME
 echo "wgot"
 
 service cellframe-node stop
+
+#for shure, "service stop" not olways stops the node...
+kill -9 `cat /opt/cellframe-node/var/run/cellframe-node.pid` || true
+
 dpkg -i /tmp/cfupd/$PACKAGE_NAME
 service cellframe-node restart
