@@ -37,6 +37,7 @@ include (cellframe-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_CRYPTO_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
 
@@ -215,8 +216,6 @@ if(WIN32)
 
     target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
-
-#dap_chain_net_srv_vpn dap_server_http_db_auth
 
 endif()
 if(BSD)
