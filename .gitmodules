@@ -1,3 +1,7 @@
+[submodule "test/libdap-test"]
+	path = test/libdap-test
+	url = ../libdap-test.git
+	branch = master
 [submodule "python-cellframe"]
 	path = python-cellframe
 	url = ../python-cellframe.git
