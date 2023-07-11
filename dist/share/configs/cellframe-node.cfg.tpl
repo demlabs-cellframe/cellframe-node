@@ -68,7 +68,9 @@ http_server=false
 #timer_update_states=300
 
 [srv]
-order_signed_only=false
+allow_unsigned_orders=false
+allow_unverified_orders=false
+unverified_orders_lifetime=21600
 
 [srv_dns]
 enabled=false
