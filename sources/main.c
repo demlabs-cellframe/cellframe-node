@@ -294,6 +294,10 @@ int main( int argc, const char **argv )
         return -61;
     }
 
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
+        log_it(L_ERROR, "Can't start delegated PoS stake service");
+    }
+
     if( dap_chain_cs_dag_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -62;
@@ -324,6 +328,11 @@ int main( int argc, const char **argv )
         return -64;
     }
 
+    if(dap_chain_cs_esbocs_init() != 0){
+        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
+        return -69;
+    }
+
     if(dap_chain_gdb_init() != 0) {
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
@@ -346,10 +355,6 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
-
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
     }
@@ -362,11 +367,6 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_datum_init() !=0){
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
-    }
-
-    if(dap_chain_cs_esbocs_init() != 0){
-        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
-        return -69;
     }
 
 #ifndef _WIN32
