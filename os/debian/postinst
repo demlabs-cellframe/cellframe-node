@@ -173,26 +173,19 @@ db_get cellframe-node/backbone_enabled || true
 if [ "$RET" = "true" ]; then
     
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled Backbone"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    
 
-    #DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    #DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    #DAP_NET_CFG=""
-    #if [ -e "$DAP_CFG_NET" ]; then
-	#DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    #else
-	#DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    #fi
-
-    #cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    #db_get cellframe-node/backbone_node_type || true
-    #NODE_TYPE=$RET
-    #sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    #echo "[*] Enabled Backbone"
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/backbone_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+    echo "[*] Enabled Backbone"
 fi
 
 mkdir -p $DAP_PREFIX/var/log     || true
