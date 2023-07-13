@@ -44,7 +44,7 @@ Description: Notify server port
  Notify server port to listen on 
 
 Template: cellframe-node/subzero_enabled
-Default: true
+Default: false
 Choices: true, false
 Type: select
 Description: SubZero: Enable network
@@ -63,7 +63,7 @@ Description: SubZero: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/raiden_enabled
-Default: true
+Default: false
 Choices: true, false
 Type: select
 Description: Raiden: Enable network
@@ -82,7 +82,7 @@ Description: Raiden: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/riemann_enabled
-Default: true
+Default: false
 Choices: true, false
 Type: select
 Description: Riemann: Enable network
@@ -101,7 +101,7 @@ Description: Riemann: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/mileena_enabled
-Default: true
+Default: false
 Choices: true, false
 Type: select
 Description: Mileena: Enable network
@@ -120,7 +120,7 @@ Description: Mileena: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/kelvpn_minkowski_enabled
-Default: true
+Default: false
 Choices: true, false
 Type: select
 Description: Kelvpn Minkowski: Enable network
