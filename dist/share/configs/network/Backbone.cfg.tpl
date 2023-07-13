@@ -24,7 +24,8 @@ require_links=3
 [dag-poa]
 #events-sign-cert=scorpion.root.0
 
-#[esbocs]
+[esbocs]
 #blocks-sign-cert=mycert
 #minimum_fee=1.0
 #fee_addr=myaddr
+
