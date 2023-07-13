@@ -16,8 +16,7 @@ DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
-    #DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
-    mv "$DAP_CFG" "$DAP_CFG".old
+    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
 else
     DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 fi
@@ -177,9 +176,7 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".old
-        #DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
     else
         DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
