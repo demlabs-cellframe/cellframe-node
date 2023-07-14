@@ -34,12 +34,11 @@ stages:
   extends: .ci-ansible
   stage: deploy
   rules:
-    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+    - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
       allow_failure: true
-    - if: $CI_COMMIT_REF_NAME == "rc52-feature-autodeploy"
-  allow_failure: true
 
+  allow_failure: true
 
 windows-amd64:
     extends: .build
@@ -117,7 +116,6 @@ publish:
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
-    - linux-amd64-debian-buster-updtr
     - macos-amd64
    
   script: 
@@ -125,22 +123,31 @@ publish:
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
     - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect    
+
+publish_ext:
+  extends: .publish
+  needs: 
+    - linux-amd64-debian-buster-updtr
+   
+  script: 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 
 publish_updtr:
   extends: .publish
   needs: 
-    - publish
+    - publish_ext
     - linux-amd64-debian-buster-updtr
   rules:
-    - if: $CI_COMMIT_REF_NAME == "release-5.2"
+    - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
   allow_failure: true
   script: 
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
   
-
-
 
 raiden_deploy:
   extends: .deploy
@@ -181,3 +188,15 @@ subzero_deploy:
   variables:
     instanses:  subzero
 
+scorpion_deploy:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  scorpion 
