@@ -253,7 +253,9 @@ static int s_wallet_sign_file(int argc, const char **argv) {
     size_t l_wallet_certs_number = dap_chain_wallet_get_certs_number( l_wallet );
     if ( (l_cert_index > 0) && (l_wallet_certs_number > (size_t)l_cert_index) ) {
       FILE *l_data_file = fopen( argv[5],"rb" );
-      if ( l_data_file ) {}
+      if ( l_data_file ) {
+        fclose(l_data_file);
+      }
     }
     else {
       log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
@@ -365,6 +367,10 @@ static int s_cert_create_cert_pkey(int argc, const char **argv) {
           // Copy only public key
           l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
                                                            l_cert->enc_key->pub_key_data_size);
+          if(!l_cert_new->enc_key->pub_key_data) {
+            log_it(L_ERROR, "Memory allocation error in s_cert_create_cert_pkey");
+            return -1;
+          }
           l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
 
           dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
@@ -519,6 +525,7 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
             for (int i = 0; i < DAP_CHAIN_HASH_FAST_SIZE; i++) {
                 s[i] = fast_hash.raw[i];
             }
+            DAP_DEL_Z(l_ret);
         }
     }
 }
