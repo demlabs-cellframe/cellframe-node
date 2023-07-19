@@ -217,7 +217,37 @@ if [ "$RET" = "true" ]; then
     db_get cellframe-node/backbone_node_type || true
     NODE_TYPE=$RET
     sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled Backbone"
+    echo "[*] Enabled Backbone Mainnet"
+fi
+
+
+# Init Backbone
+NET_NAME="KelVPN"
+
+db_get cellframe-node/kelvpn_enabled || true
+if [ "$RET" = "true" ]; then
+    
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+
+    if [ -e "$DAP_CFG_NET" ]; then
+        if (( NEW_MINOR > OLD_MINOR )); then
+            echo "Need update KelVPN.cfg ..."
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        else
+            echo "No need to update KelVPN.cfg, write as new"
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg.new"
+        fi
+    else
+        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/kelvpn_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+    echo "[*] Enabled KelVPN Mainnet"
 fi
 
 mkdir -p $DAP_PREFIX/var/log     || true
