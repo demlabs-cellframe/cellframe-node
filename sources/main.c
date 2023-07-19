@@ -359,12 +359,12 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
-    if( dap_chain_net_srv_app_init() !=0){
+    if( dap_chain_net_srv_app_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service applications module");
         return -67;
     }
 
-    if( dap_chain_net_srv_datum_init() !=0){
+    if( dap_chain_net_srv_datum_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service datum module");
         return -68;
     }
