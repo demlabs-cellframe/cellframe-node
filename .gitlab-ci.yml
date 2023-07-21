@@ -40,14 +40,14 @@ stages:
 
   allow_failure: true
 
-windows-amd64:
+.windows-amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:windowsbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - ./prod_build/build.sh --target windows release
 
-macos-amd64:
+.macos-amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:osxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-osx
@@ -116,7 +116,7 @@ publish:
     - linux-armhf-debian-bullseye 
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
-    - macos-amd64
+    #- macos-amd64
    
   script: 
     - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
