@@ -1,3 +1,7 @@
 VERSION_MAJOR=5
 VERSION_MINOR=2
+<<<<<<< HEAD
+VERSION_PATCH=231
+=======
 VERSION_PATCH=245
+>>>>>>> origin/master
