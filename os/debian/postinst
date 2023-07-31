@@ -1,9 +1,28 @@
 #!/bin/bash -e
 . /usr/share/debconf/confmodule
 
+
+
 DAP_CHAINS_NAME="cellframe"
 DAP_APP_NAME="$DAP_CHAINS_NAME-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
+
+new_ver=$(dpkg-query --show --showformat='${Version}' $DAP_APP_NAME)
+old_ver="$2"
+
+echo "New version: $new_ver"
+echo "Old version: $old_ver"
+
+OLD_MINOR=( $( printf "%s\n"  "$old_ver" | cut -c 3-3 | sort -nr) )
+NEW_MINOR=( $( printf "%s\n"  "$new_ver" | cut -c 3-3 | sort -nr) )
+
+
+if (( NEW_MINOR > OLD_MINOR )); then
+    echo "Need update cellframe-node configs..."
+else
+    echo "No need to update cellframe-node configs, write as new"
+fi
+
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
 
@@ -16,8 +35,13 @@ DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 
 # Init node config
 if [ -e "$DAP_CFG" ]; then
-    #DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
-    mv "$DAP_CFG" "$DAP_CFG".old
+    if (( NEW_MINOR > OLD_MINOR )); then
+        echo "Need update cellframe-node.cfg ..."
+        DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+    else
+        echo "No need to update cellframe-node.cfg, write as new"
+        DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
+    fi
 else
     DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
 fi
@@ -176,10 +200,15 @@ if [ "$RET" = "true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
     DAP_NET_CFG=""
+
     if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".old
-        #DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        if (( NEW_MINOR > OLD_MINOR )); then
+            echo "Need update Backbone.cfg ..."
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        else
+            echo "No need to update Backbone.cfg, write as new"
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg.new"
+        fi
     else
         DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
@@ -188,7 +217,37 @@ if [ "$RET" = "true" ]; then
     db_get cellframe-node/backbone_node_type || true
     NODE_TYPE=$RET
     sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled Backbone"
+    echo "[*] Enabled Backbone Mainnet"
+fi
+
+
+# Init Backbone
+NET_NAME="KelVPN"
+
+db_get cellframe-node/kelvpn_enabled || true
+if [ "$RET" = "true" ]; then
+    
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+
+    if [ -e "$DAP_CFG_NET" ]; then
+        if (( NEW_MINOR > OLD_MINOR )); then
+            echo "Need update KelVPN.cfg ..."
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        else
+            echo "No need to update KelVPN.cfg, write as new"
+            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg.new"
+        fi
+    else
+        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/kelvpn_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+    echo "[*] Enabled KelVPN Mainnet"
 fi
 
 mkdir -p $DAP_PREFIX/var/log     || true
