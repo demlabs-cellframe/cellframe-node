@@ -200,3 +200,17 @@ scorpion_deploy:
     - ansible-playbook deploy_node_deb.yml || true
   variables:
     instanses:  scorpion 
+
+
+kelvpn_deploy:
+  extends: .deploy
+  needs:
+    - publish
+  script:
+    - source version.mk
+    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
+    - cd /home/gitlab-runner/playbooks/nodes_network
+    - ansible-playbook deploy_node_deb.yml || true
+  variables:
+    instanses:  kelvpn
