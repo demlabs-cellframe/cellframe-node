@@ -31,8 +31,12 @@ export DAP_SUBZERO_ENABLED=true
 export DAP_SUBZERO_ROLE=full
 
 # Backbone
-export DAP_BACKBONE_ENABLED=false
+export DAP_BACKBONE_ENABLED=true
 export DAP_BACKBONE_ROLE=full
+
+# Kelvpn
+export DAP_KELVPN_ENABLED=true
+export DAP_KELVPN_ROLE=full
 
 
 # Kelvpn-minkowski testnet
