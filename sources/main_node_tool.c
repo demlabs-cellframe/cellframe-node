@@ -368,7 +368,7 @@ static int s_cert_create_cert_pkey(int argc, const char **argv) {
           l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
                                                            l_cert->enc_key->pub_key_data_size);
           if(!l_cert_new->enc_key->pub_key_data) {
-            log_it(L_ERROR, "Memory allocation error in s_cert_create_cert_pkey");
+            log_it(L_ERROR, "Memory allocation error in %s, line %d", __PRETTY_FUNCTION__, __LINE__);
             return -1;
           }
           l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
