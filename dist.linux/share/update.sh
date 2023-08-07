@@ -47,5 +47,15 @@ service cellframe-node stop
 #for shure, "service stop" not olways stops the node...
 kill -9 `cat /opt/cellframe-node/var/run/cellframe-node.pid` || true
 
+
+if (( MAX_REBUILD == 250 )); then
+    echo "Clear global-db dir..."
+    rm /opt/cellframe-node/var/lib/global_db/ -r
+else
+    echo "No need to clear global_db"
+fi
+
+
+
 dpkg -i /tmp/cfupd/$PACKAGE_NAME
 service cellframe-node restart
