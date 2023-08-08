@@ -98,19 +98,25 @@ NET_NAME="raiden"
 db_get cellframe-node/raiden_enabled || true
 if [ "$RET" = "true" ]; then
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
+        echo "[*] Disabled raiden"
     fi
 
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/raiden_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled raiden"
+#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+#    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+#    DAP_NET_CFG=""
+#    if [ -e "$DAP_CFG_NET" ]; then
+#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+#    else
+#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+#    fi
+#
+#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+#    db_get cellframe-node/raiden_node_type || true
+#    NODE_TYPE=$RET
+#    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+#    echo "[*] Enabled raiden"
 fi
 
 # Init raiden
