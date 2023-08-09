@@ -91,6 +91,7 @@ void DiagnosticWorker::write_data(QJsonDocument data)
     obj.insert("mac",key);
     data.setObject(obj);
     mgr->post(req, data.toJson());
+    //qDebug() << data.toJson();
 
     //diabled GDB write for now cause of big load of neteork in this case
 
