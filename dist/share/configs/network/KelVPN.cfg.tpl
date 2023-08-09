@@ -6,6 +6,7 @@ id=0x1807202300000000
 name=KelVPN
 native_ticker=KEL
 gdb_groups_prefix=kelvpn
+bridged_network_ids=[0x0404202200000000]
 
 
 # Possible values: light, full, archive, master, root
