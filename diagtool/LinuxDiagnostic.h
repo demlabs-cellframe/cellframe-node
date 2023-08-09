@@ -50,6 +50,9 @@ private:
     QJsonObject get_ledger_count(QString net);
     QJsonObject get_blocks_count(QString net);
     QJsonObject get_events_count(QString net);
+    QJsonArray get_nodelist(QString net);
+    QJsonObject get_balancer_links(QString net);
+
 
 private slots:
     void info_update();

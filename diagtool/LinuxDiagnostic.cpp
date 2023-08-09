@@ -363,6 +363,7 @@ QJsonObject LinuxDiagnostic::get_cli_info()
 //        dataObj.insert("ledger"  , get_ledger_count(net));
         dataObj.insert("blocks"  , get_blocks_count(net));
         dataObj.insert("events"  , get_events_count(net));
+        dataObj.insert("nodelist"  , get_nodelist(net));
 
         netObj.insert(net, dataObj);
     }
@@ -421,7 +422,8 @@ QJsonObject LinuxDiagnostic::get_net_info(QString net)
 
     resultObj.insert("active_links_count", match.captured(1));
     resultObj.insert("links_count"       , match.captured(2));
-
+    resultObj.insert("balancer", get_balancer_links(net));
+    
     return resultObj;
 }
 
@@ -507,3 +509,43 @@ QJsonObject LinuxDiagnostic::get_events_count(QString net)
 }
 
 
+QJsonArray LinuxDiagnostic::get_nodelist(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+               QStringList()<<"node"<<"dump"<<"-net"<<QString(net));
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+    
+    QJsonArray res;
+    for (auto l : result.split("\n"))
+        res.push_back(QJsonValue(l));
+
+    return res;
+}
+
+QJsonObject LinuxDiagnostic::get_balancer_links(QString net)
+{
+    QProcess proc;
+    proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"),
+                QStringList()<<"node"<<"connections"<<"-net"<<QString(net));
+
+    proc.waitForFinished(5000);
+    QString result = proc.readAll();
+
+    QJsonObject resultObj;
+    for (auto line : result.split("\n"))
+    {
+        if (line.split(":").length() < 2)
+            continue;
+
+        if(line.startsWith("Uplinks:"))
+            resultObj.insert("uplinks", line.split(":")[1].trimmed());
+        if(line.startsWith("Downlinks:"))
+            resultObj.insert("downlinks", line.split(":")[1].trimmed());        
+    }
+    
+    qDebug() << resultObj;
+
+    return resultObj;
+}
