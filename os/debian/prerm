@@ -6,19 +6,25 @@ case "$1" in
 		systemctl stop cellframe-node || true
 		echo "[*] Disabling cellframe-node.service"
 		systemctl disable cellframe-node || true
+		echo "[*] Disabling cellframe-diagtool.service"
+		systemctl stop cellframe-diagtool || true
+		systemctl disable cellframe-diagtool || true
 		;;
-
+		
+		
 	disappear)
 		;;
 
 	upgrade)
 		echo "[*] Stopping cellframe-node.service"
         systemctl stop cellframe-node || true
+		systemctl stop cellframe-diagtool || true
 		;;
 
 	failed-upgrade)
 		echo "[*] Stopping cellframe-node.service"
         systemctl stop cellframe-node || true
+		systemctl stop cellframe-diagtool || true
         ;;
 
 	*)

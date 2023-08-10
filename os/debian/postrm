@@ -7,6 +7,8 @@ GROUP_RM="cellframe-node"
 
 systemctl stop cellframe-node || true
 systemctl disable cellframe-node || true
+systemctl stop cellframe-diagtool || true
+
 
 rm  /etc/systemd/system/cellframe-updater.service || true
 rm  /etc/systemd/system/cellframe-updater.timer || true

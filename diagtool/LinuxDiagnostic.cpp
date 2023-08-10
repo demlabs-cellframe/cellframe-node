@@ -413,6 +413,8 @@ QJsonObject LinuxDiagnostic::get_net_info(QString net)
                                 {"node_address"       , match.captured(4)}
                             });
 
+    resultObj.insert("balancer", get_balancer_links(net));
+
     // ---------- Links count ----------------
     QRegularExpression rxLinks(R"(\), active links (\d+) from (\d+),)");
     match = rxLinks.match(result);
@@ -422,7 +424,7 @@ QJsonObject LinuxDiagnostic::get_net_info(QString net)
 
     resultObj.insert("active_links_count", match.captured(1));
     resultObj.insert("links_count"       , match.captured(2));
-    resultObj.insert("balancer", get_balancer_links(net));
+    
     
     return resultObj;
 }
@@ -545,7 +547,7 @@ QJsonObject LinuxDiagnostic::get_balancer_links(QString net)
             resultObj.insert("downlinks", line.split(":")[1].trimmed());        
     }
     
-    qDebug() << resultObj;
+    qDebug() << "UpDown" <<  resultObj;
 
     return resultObj;
 }
