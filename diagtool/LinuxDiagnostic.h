@@ -39,19 +39,6 @@ private:
     QString get_proc_path(long pid);
     QJsonObject get_process_info(long pid, int totalRam);
     QJsonObject get_disk_info();
-    QJsonObject get_cli_info();
-
-
-    //CLI
-
-    QStringList get_networks();
-    QJsonObject get_net_info(QString net);
-    QJsonObject get_mempool_count(QString net);
-    QJsonObject get_ledger_count(QString net);
-    QJsonObject get_blocks_count(QString net);
-    QJsonObject get_events_count(QString net);
-    QJsonArray get_nodelist(QString net);
-    QJsonObject get_balancer_links(QString net);
 
 
 private slots:
@@ -59,7 +46,7 @@ private slots:
 
 private:
     size_t previous_idle_time{0}, previous_total_time{0};
-    bool s_node_status{false};
+
 
 };
 
