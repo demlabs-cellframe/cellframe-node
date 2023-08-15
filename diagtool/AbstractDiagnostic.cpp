@@ -12,14 +12,11 @@ AbstractDiagnostic::AbstractDiagnostic(QObject *parent)
     :QObject(parent)
 {
 #ifdef Q_OS_LINUX
-    s_nodeDataPath = "/opt/cellframe-node/";
+    s_nodeDataPath = "/opt/cellframe-node";
 #elif defined(Q_OS_WIN)
-    s_nodeDataPath = QString("%1/cellframe-node/").arg(regGetUsrPath());
+    s_nodeDataPath = QString("%1/cellframe-node").arg(regGetUsrPath());
 #elif defined(Q_OS_MACOS)
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (l_username)
-        s_nodeDataPath = QString("/Users/%1/Applications/Cellframe.app/Contents/Resources/").arg(l_username);
+    s_nodeDataPath = QString("/Users/%1/Applications/Cellframe.app/Contents/Resources/").arg(getenv("USER"));
 #endif
     s_timer_update = new QTimer();
     s_mac = get_mac();

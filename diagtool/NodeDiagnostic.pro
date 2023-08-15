@@ -11,15 +11,13 @@ CONFIG -= app_bundle
 #LIBS += -L$$NODE_BUILD_PATH/dap-sdk/core/ -ldap_core
 include (../dap-sdk/core/libdap.pri)
 
-
-
 SOURCES += \
         AbstractDiagnostic.cpp \
         DiagnosticWorker.cpp \
         main.cpp
 HEADERS += \
     AbstractDiagnostic.h \
-    DiagnosticWorker.h \
+    DiagnosticWorker.h
 
 win32 {
     DEFINES += CLI_PATH=\\\"cellframe-node-cli.exe\\\"
@@ -28,7 +26,7 @@ win32 {
 }
 
 mac {
-    DEFINES += CLI_PATH=\\\"/Applications/Cellframe.app/Contents/MacOS/cellframe-node-cli\\\"
+    DEFINES += CLI_PATH=\\\"./cellframe-node-cli\\\"
     HEADERS += MacDiagnostic.h
     SOURCES += MacDiagnostic.cpp
 }
@@ -38,9 +36,6 @@ else: !win32 {
     HEADERS += LinuxDiagnostic.h
     SOURCES += LinuxDiagnostic.cpp
 }
-
-
-
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

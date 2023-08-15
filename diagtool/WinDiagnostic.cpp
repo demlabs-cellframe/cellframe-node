@@ -21,7 +21,7 @@ void WinDiagnostic::info_update()
     sys_info.insert("mac", s_mac);
 //    sys_info.insert("disk", get_disk_info());
 
-    QString jsonFilePath = QString("%1/cellframe-node/etc/diagdata.json").arg(regGetUsrPath());
+    QString jsonFilePath = QString("%1/etc/diagdata.json").arg(s_nodeDataPath);
     QFile file(jsonFilePath);
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -259,7 +259,7 @@ QJsonObject WinDiagnostic::get_process_info(int totalRam)
     }else{
 
         process_info.insert("memory_use",0);
-        process_info.insert("memory_use_value","0");
+        process_info.insert("memory_use_value","0 Kb");
         process_info.insert("uptime","00:00:00");
     }
 

@@ -29,7 +29,8 @@ void LinuxDiagnostic::info_update(){
         sys_info.insert("mac", s_mac);
         sys_info.insert("disk", get_disk_info());
 
-        QFile file("/opt/cellframe-node/etc/diagdata.json");
+        QString jsonFilePath = QString("%1/etc/diagdata.json").arg(s_nodeDataPath);
+        QFile file(jsonFilePath);
         if(file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
             QJsonParseError err;
