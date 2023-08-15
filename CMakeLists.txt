@@ -369,7 +369,11 @@ else()
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if (BUILD_DIAGTOOL)
-        INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        if(WIN32)
+            INSTALL(TARGETS cellframe-diagtool.exe DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        else()
+            INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        endif()
     endif()
 
     if(NOT ANDROID)
