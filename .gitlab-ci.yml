@@ -42,10 +42,10 @@ stages:
 
 windows-amd64:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:windowsbuilder -DBUILD_DIAGTOOL=ON
+    image: demlabs/amd64/debian-bullseye:windowsbuilder 
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target windows release
+      - ./prod_build/build.sh --target windows release -DBUILD_DIAGTOOL=ON
 
 macos-amd64:
     extends: .build
