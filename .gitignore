@@ -5,7 +5,7 @@ test/build
 *.txt.user
 *.txt.user.*
 *.autosave
-.user
+*.user
 .vscode/
 # Object files
 *.o

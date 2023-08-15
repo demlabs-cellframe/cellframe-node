@@ -13,6 +13,7 @@ set(CMAKE_AUTOMOC ON)
 
 if(UNIX)
     if(DARWIN)
+        add_definitions(CLI_PATH=.\cellframe-node-cli)
         add_executable(${PROJECT_NAME}
             main.cpp
             DiagnosticWorker.cpp
@@ -22,6 +23,7 @@ if(UNIX)
     endif()
 
     if(LINUX)
+        add_definitions(CLI_PATH=/opt/cellframe-node/bin/cellframe-node-cli)
         add_executable(${PROJECT_NAME}
             main.cpp
             DiagnosticWorker.cpp
@@ -33,6 +35,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
+    add_definitions(CLI_PATH=cellframe-node-cli.exe)
     add_executable(${PROJECT_NAME}
         main.cpp
         DiagnosticWorker.cpp
