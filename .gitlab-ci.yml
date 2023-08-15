@@ -42,7 +42,7 @@ stages:
 
 windows-amd64:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:windowsbuilder
+    image: demlabs/amd64/debian-bullseye:windowsbuilder -DBUILD_DIAGTOOL=ON
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - ./prod_build/build.sh --target windows release
@@ -52,7 +52,7 @@ macos-amd64:
     image: demlabs/amd64/debian-bullseye:osxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-osx
     script:
-      - ./prod_build/build.sh --target osx release
+      - ./prod_build/build.sh --target osx release -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
     artifacts:
       paths:
