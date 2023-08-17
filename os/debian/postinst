@@ -266,6 +266,10 @@ fi
 
 cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
 
+#unconditianly create directories on pkg instllation
+echo "[*] Creating run, lib, var dirs...."
+mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
+
 echo "[*] Check /etc/systemd/system/$DAP_APP_NAME.service file..."
 if [ -e /etc/systemd/system/$DAP_APP_NAME.service ]; then
     echo "[*] Restarting $DAP_APP_NAME to implement changes"
@@ -289,7 +293,7 @@ else
     for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
         usermod -aG cellframe-node $username || true
     done
-    mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
+    
     #mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db,var/plugins} || true
     touch $DAP_PREFIX/var/run/cellframe-node.pid || true
     #chown -R $USERMAN:$USERMAN $DAP_PREFIX
