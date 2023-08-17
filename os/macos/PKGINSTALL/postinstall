@@ -11,8 +11,11 @@ sudo killall -HUP mDNSResponder
 EXEC_PREFIX=/Applications/$APP_NAME.app/Contents/Resources
 
 mkdir -p $DAP_PREFIX
-sudo mv -f /Applications/$APP_NAME.app/Contents/Resources/etc $DAP_PREFIX
-sudo mv -f /Applications/$APP_NAME.app/Contents/Resources/share $DAP_PREFIX
+mkdir -p $DAP_PREFIX/etc
+mkdir -p $DAP_PREFIX/share 
+
+sudo cp -rf /Applications/$APP_NAME.app/Contents/Resources/etc/* $DAP_PREFIX/etc
+sudo cp -rf /Applications/$APP_NAME.app/Contents/Resources/share/* $DAP_PREFIX/share
 
 wd=$(pwd)
 cd $EXEC_PREFIX/../MacOS
@@ -42,7 +45,7 @@ rm -r /Users/$USER/Applications/"$APP_NAME".app/Contents/Resources/var/lib/globa
 
 sudo -u $USER launchctl start $NODE
 
-sudo rm $EXEC_PREFIX/*.sh
+#sudo rm $EXEC_PREFIX/*.sh
 
 echo "node agent: $(launchctl list | grep cell)" > /tmp/cellframe-dashboard_install_logs.txt
 
