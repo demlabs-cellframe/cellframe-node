@@ -17,14 +17,20 @@ DiagnosticWorker::DiagnosticWorker(QObject * parent)
     s_elapsed_timer = new QElapsedTimer();
     s_elapsed_timer->start();
 
+#ifdef Q_OS_LINUX
     m_diagnostic = new LinuxDiagnostic();
+#elif defined Q_OS_WIN
+    m_diagnostic = new WinDiagnostic();
+#elif defined Q_OS_MAC
+    m_diagnostic = new MacDiagnostic();
+#endif
 
     connect(m_diagnostic, &AbstractDiagnostic::data_updated,
             this, &DiagnosticWorker::slot_diagnostic_data,
             Qt::QueuedConnection);
 
     m_diagnostic->start_diagnostic();
-    m_diagnostic->set_timeout(30000); //3minutes
+    m_diagnostic->set_timeout(30000); //30 sec
 }
 DiagnosticWorker::~DiagnosticWorker()
 {
@@ -52,7 +58,7 @@ void DiagnosticWorker::slot_diagnostic_data(QJsonDocument data)
     if(m_node_version.isEmpty())
     {
         QProcess proc;
-        proc.start(QString("/opt/cellframe-node/bin/cellframe-node-cli"), QStringList()<<"version");
+        proc.start(QString(CLI_PATH), QStringList()<<"version");
         proc.waitForFinished(5000);
         QString result = proc.readAll();
         if(result.contains("version"))
