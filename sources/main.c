@@ -284,12 +284,12 @@ int main( int argc, const char **argv )
         return -59;
     }
 
-    if( dap_chain_init() !=0){
+    if( dap_chain_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain modules");
         return -60;
     }
 
-    if( dap_chain_wallet_init() !=0){
+    if( dap_chain_wallet_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
@@ -298,60 +298,60 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
-    if( dap_chain_cs_dag_init() !=0){
+    if( dap_chain_cs_dag_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -62;
     }
 
-    if( dap_chain_cs_dag_poa_init() !=0){
+    if( dap_chain_cs_dag_poa_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -63;
     }
 
-    if( dap_chain_cs_dag_pos_init() !=0){
+    if( dap_chain_cs_dag_pos_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoS module");
         return -64;
     }
 
-    if (dap_chain_cs_blocks_init() != 0) {
+    if( dap_chain_cs_blocks_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
         return -62;
     }
 
-    if (dap_chain_cs_block_poa_init() != 0) {
+    if( dap_chain_cs_block_poa_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoA module");
         return -63;
     }
 
-    if (dap_chain_cs_block_pos_init() != 0) {
+    if( dap_chain_cs_block_pos_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoS module");
         return -64;
     }
 
-    if(dap_chain_cs_esbocs_init() != 0){
+    if( dap_chain_cs_esbocs_init() ){
         log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
         return -69;
     }
 
-    if(dap_chain_gdb_init() != 0) {
+    if( dap_chain_gdb_init() ) {
         log_it(L_CRITICAL, "Can't init dap chain gdb module");
         return -71;
     }
 
-    if( dap_chain_net_init() !=0){
+    if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
     }
 
-    if( dap_chain_net_srv_init() !=0){
+    if( dap_chain_net_srv_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
     }
 
-    if (dap_chain_net_srv_order_init() != 0)
+    if( dap_chain_net_srv_order_init() )
         return -67;
 
-    if (!dap_chain_net_srv_xchange_init()) {
+    if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
