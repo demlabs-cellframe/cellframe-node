@@ -5,6 +5,9 @@ int main(int argc, char *argv[])
 {
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{function}: %{message}");
     QCoreApplication a(argc, argv);
+
+    qDebug()<<CLI_PATH;
+
     DiagnosticWorker * wrkr = new DiagnosticWorker();
 
     return a.exec();
