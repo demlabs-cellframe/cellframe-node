@@ -9,7 +9,7 @@ CONFIG -= app_bundle
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 #LIBS += -L$$NODE_BUILD_PATH/dap-sdk/core/ -ldap_core
-#include (../dap-sdk/core/libdap.pri)
+include (../dap-sdk/core/libdap.pri)
 
 SOURCES += \
         AbstractDiagnostic.cpp \
