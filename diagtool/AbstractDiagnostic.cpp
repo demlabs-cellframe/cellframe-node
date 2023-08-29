@@ -295,13 +295,36 @@ QJsonObject AbstractDiagnostic::get_blocks_count(QString net)
     QString result = proc.readAll();
 
     QRegularExpression rx(R"(\.(.+): Have (.+) blocks)");
+    QRegularExpression rx_creation(R"(.*(0x.*): ts_create=(.*))");
+    
+
     QRegularExpressionMatch match = rx.match(result);
+
     if (!match.hasMatch()) {
         return {};
     }
 
     QJsonObject resultObj;
     resultObj.insert(match.captured(1), match.captured(2));
+
+    
+    QRegularExpressionMatchIterator matchItr = rx_creation.globalMatch(result);
+    
+    //rewind to end
+    QRegularExpressionMatch match_date;
+    
+    while (matchItr.hasNext()){ 
+        match_date = matchItr.next();
+    }
+
+    QJsonObject last_block;
+    last_block.insert("hash", match_date.captured(1));
+    QDateTime dt = QDateTime::fromString(match_date.captured(2));
+    qint64 timestamp = dt.toSecsSinceEpoch();
+    last_block.insert("timestamp", QString::number(timestamp));
+
+    resultObj.insert("last_block", last_block);
+    qDebug() << resultObj;
 
     return resultObj;
 
@@ -315,15 +338,38 @@ QJsonObject AbstractDiagnostic::get_events_count(QString net)
     proc.waitForFinished(5000);
     QString result = proc.readAll();
 
-    QRegularExpression rx(R"(\.(.+) have total (.+) events)");
-    QRegularExpressionMatch match = rx.match(result);
+    QRegularExpression rx_event_count(R"(\.(.+) have total (.+) events)");
+    QRegularExpression rx_creation(R"(.*(0x.*): ts_create=(.*))");
+
+    QRegularExpressionMatch match = rx_event_count.match(result);
+        
     if (!match.hasMatch()) {
         return {};
     }
 
     QJsonObject resultObj;
+    
     resultObj.insert(match.captured(1), match.captured(2));
 
+    QRegularExpressionMatchIterator matchItr = rx_creation.globalMatch(result);
+    
+    //rewind to end
+    QRegularExpressionMatch match_date;
+    
+    while (matchItr.hasNext()){ 
+        match_date = matchItr.next();
+    }
+
+    QJsonObject last_block;
+    last_block.insert("hash", match_date.captured(1));
+    QDateTime dt = QDateTime::fromString(match_date.captured(2));
+    qint64 timestamp = dt.toSecsSinceEpoch();
+    last_block.insert("timestamp", QString::number(timestamp));
+
+    resultObj.insert("last_event", last_block);
+    qDebug() << resultObj;
+
+    
     return resultObj;
 }
 
