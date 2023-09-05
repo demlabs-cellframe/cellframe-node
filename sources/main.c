@@ -63,6 +63,7 @@
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 #include "dap_chain_net_balancer.h"
+#include "dap_chain_net_node_list.h"
 
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
@@ -485,6 +486,7 @@ int main( int argc, const char **argv )
         // HTTP URL add
         dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
     }
+    dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
