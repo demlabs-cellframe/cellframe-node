@@ -40,6 +40,12 @@ stages:
 
   allow_failure: true
 
+.deploytestnet:
+  extends: .ci-ansible
+  stage: deploy
+  when: manual
+  allow_failure: true
+  
 windows-amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:windowsbuilder 
@@ -150,7 +156,7 @@ publish_updtr:
   
 
 raiden_deploy:
-  extends: .deploy
+  extends: .deploytestnet
   needs:
     - publish
   script:
@@ -163,7 +169,7 @@ raiden_deploy:
     instanses:  raiden test_raiden
 
 riemann_deploy:
-  extends: .deploy
+  extends: .deploytestnet
   needs:
     - publish
   script:
@@ -176,7 +182,7 @@ riemann_deploy:
     instanses:  riemann
 
 subzero_deploy:
-  extends: .deploy
+  extends: .deploytestnet
   needs:
     - publish
   script:
