@@ -254,7 +254,7 @@ if(UNIX AND NOT WIN32)
             message("    Downloading static prebuild cpython3.10...")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
             # installing pip in it, then tared all back.
-            set(DOWNLOAD_EXTRACT_TIMESTAMP ON)
+            cmake_policy(SET CMP0135 NEW)
             if(CMAKE_BUILD_TYPE MATCHES Debug)
                 FetchContent_Declare(
                     CPython310StaticDebug
