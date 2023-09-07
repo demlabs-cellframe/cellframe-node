@@ -10,7 +10,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "LinuxDiagnostic.h"
+
+#ifdef Q_OS_LINUX
+    #include "LinuxDiagnostic.h"
+#elif defined Q_OS_WIN
+    #include "WinDiagnostic.h"
+#elif defined Q_OS_MAC
+    #include "MacDiagnostic.h"
+#endif
 
 
 class DiagnosticWorker : public QObject

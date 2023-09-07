@@ -42,17 +42,17 @@ stages:
 
 windows-amd64:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:windowsbuilder
+    image: demlabs/amd64/debian-bullseye:windowsbuilder 
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
-      - ./prod_build/build.sh --target windows release
+      - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
 
 macos-amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:osxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-osx
     script:
-      - ./prod_build/build.sh --target osx release
+      - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
     artifacts:
       paths:
@@ -155,7 +155,7 @@ raiden_deploy:
     - publish
   script:
     - source version.mk
-    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
                  
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
@@ -168,7 +168,7 @@ riemann_deploy:
     - publish
   script:
     - source version.mk
-    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
                  
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
@@ -181,7 +181,7 @@ subzero_deploy:
     - publish
   script:
     - source version.mk
-    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
                  
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
@@ -194,7 +194,7 @@ scorpion_deploy:
     - publish
   script:
     - source version.mk
-    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
                  
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
@@ -208,7 +208,7 @@ kelvpn_deploy:
     - publish
   script:
     - source version.mk
-    - export pakage=https://pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
                  
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true

@@ -228,6 +228,10 @@ endif()
 target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
 target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
 
+if(BUILD_DIAGTOOL)
+    message("[*] Diagtool build on")
+    add_subdirectory(diagtool)
+endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -237,11 +241,6 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
-    
-    if(BUILD_DIAGTOOL)
-        message("[*] Diagtool build on")
-        add_subdirectory(diagtool)
-    endif()
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
@@ -369,7 +368,11 @@ else()
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if (BUILD_DIAGTOOL)
-        INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        if(WIN32)
+            INSTALL(TARGETS cellframe-diagtool.exe DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        else()
+            INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        endif()
     endif()
 
     if(NOT ANDROID)
