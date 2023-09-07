@@ -160,7 +160,7 @@ raiden_deploy:
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
-    instanses:  raiden 
+    instanses:  raiden test_raiden
 
 riemann_deploy:
   extends: .deploy
