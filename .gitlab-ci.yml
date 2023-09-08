@@ -9,10 +9,10 @@ stages:
 
 .ci-polygon:
   tags:
-    - ci-polygon
+     - ci-polygon
 .ci-ansible:
   tags:
-    - ci-ansible
+     - ci-ansible
     
 .build:  
   extends: .ci-polygon
@@ -54,8 +54,6 @@ macos-amd64:
     script:
       - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
-
     artifacts:
       paths:
         - build_*/*.pkg
@@ -67,7 +65,6 @@ linux-amd64-debian-buster-dbg:
     script:
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux debug
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 linux-amd64-debian-buster-rwd:
     extends: .build
@@ -76,7 +73,6 @@ linux-amd64-debian-buster-rwd:
     script:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 linux-amd64-debian-buster-updtr:
     extends: .build
@@ -85,8 +81,6 @@ linux-amd64-debian-buster-updtr:
     script:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-
 
 linux-amd64-debian-buster:
     extends: .build
@@ -95,10 +89,6 @@ linux-amd64-debian-buster:
     script: 
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux release
-      - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-    
 
 linux-armhf-debian-bullseye:
     extends: .build
@@ -108,8 +98,6 @@ linux-armhf-debian-bullseye:
     script: 
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-
 
 linux-arm64-debian-bullseye:
     extends: .build
@@ -118,10 +106,9 @@ linux-arm64-debian-bullseye:
     script: 
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
   
 
-.publish:
+.dpublish:
   extends: .publish
   needs: 
     - linux-amd64-debian-buster 
@@ -130,6 +117,7 @@ linux-arm64-debian-bullseye:
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
     - macos-amd64
+   
   script: 
     - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
@@ -143,11 +131,12 @@ linux-arm64-debian-bullseye:
   extends: .publish
   needs: 
     - linux-amd64-debian-buster-updtr
+   
   script: 
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 
-publish_updtr:
+.publish_updtr:
   extends: .publish
   needs: 
     - publish_ext
@@ -163,10 +152,11 @@ publish_updtr:
 raiden_deploy:
   extends: .deploy
   needs:
-    - publish
+    - linux-amd64-debian-buster-rwd
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
@@ -175,10 +165,11 @@ raiden_deploy:
 riemann_deploy:
   extends: .deploy
   needs:
-    - publish
+    - linux-amd64-debian-buster-rwd
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
@@ -187,10 +178,11 @@ riemann_deploy:
 subzero_deploy:
   extends: .deploy
   needs:
-    - publish
+    - linux-amd64-debian-buster-rwd
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
@@ -199,10 +191,11 @@ subzero_deploy:
 scorpion_deploy:
   extends: .deploy
   needs:
-    - publish
+    - linux-amd64-debian-buster-rwd
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
@@ -212,10 +205,11 @@ scorpion_deploy:
 kelvpn_deploy:
   extends: .deploy
   needs:
-    - publish
+    - linux-amd64-debian-buster-rwd
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
+                 
     - cd /home/gitlab-runner/playbooks/nodes_network
     - ansible-playbook deploy_node_deb.yml || true
   variables:
