@@ -136,33 +136,27 @@ if [ "$RET" = "true" ]; then
 fi
 
 
-# Init mileena
+# Init raiden
 NET_NAME="mileena"
 
 db_get cellframe-node/mileena_enabled || true
 if [ "$RET" = "true" ]; then
-
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled meelena"
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
-    
-#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-#    DAP_NET_CFG=""
-#    if [ -e "$DAP_CFG_NET" ]; then
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-#    else
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    fi
 
-#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-#    db_get cellframe-node/mileena_node_type || true
-#    NODE_TYPE=$RET
-#    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-#    echo "[*] Enabled mileena"
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    db_get cellframe-node/mileena_node_type || true
+    NODE_TYPE=$RET
+    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
+    echo "[*] Enabled mileena"
 fi
+
 
 # Init Minkowski
 NET_NAME="kelvpn-minkowski"
