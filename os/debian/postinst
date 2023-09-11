@@ -136,7 +136,7 @@ if [ "$RET" = "true" ]; then
 fi
 
 
-# Init raiden
+# Init mileena
 NET_NAME="mileena"
 
 db_get cellframe-node/mileena_enabled || true
