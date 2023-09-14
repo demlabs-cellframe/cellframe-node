@@ -227,6 +227,10 @@ endif()
 target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
 target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
 
+if(BUILD_DIAGTOOL)
+    message("[*] Diagtool build on")
+    add_subdirectory(diagtool)
+endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -236,11 +240,6 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
-    
-    if(BUILD_DIAGTOOL)
-        message("[*] Diagtool build on")
-        add_subdirectory(diagtool)
-    endif()
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
@@ -254,7 +253,9 @@ if(UNIX AND NOT WIN32)
             message("    Downloading static prebuild cpython3.10...")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
             # installing pip in it, then tared all back.
-            set(DOWNLOAD_EXTRACT_TIMESTAMP ON)
+            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+                cmake_policy(SET CMP0135 NEW)
+            endif()
             if(CMAKE_BUILD_TYPE MATCHES Debug)
                 FetchContent_Declare(
                     CPython310StaticDebug
@@ -290,7 +291,7 @@ if(UNIX AND NOT WIN32)
                 list(APPEND Python_LIBRARIES ssl_lib crypto_lib crypt nsl z util expat)
             endif()
         else()
-            if(NOT ${CMAKE_VERSION} VERSION_LESS "3.15")
+            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
                 cmake_policy(SET CMP0094 NEW)
             endif()
             find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
@@ -368,7 +369,11 @@ else()
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if (BUILD_DIAGTOOL)
-        INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        if(WIN32)
+            INSTALL(TARGETS cellframe-diagtool.exe DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        else()
+            INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        endif()
     endif()
 
     if(NOT ANDROID)

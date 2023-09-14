@@ -1,6 +1,6 @@
  #! /bin/bash
 set -e
-STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/release-5.2/updates
+STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master/updates
 REGEXP="href=\"cellframe-node-([0-9].[0-9]-[0-9]+)-updtr-amd64.deb" 
 INSTALLED_VERSION=$(dpkg -l | awk '$2=="cellframe-node" { print $3 }')
 
@@ -46,6 +46,16 @@ service cellframe-node stop
 
 #for shure, "service stop" not olways stops the node...
 kill -9 `cat /opt/cellframe-node/var/run/cellframe-node.pid` || true
+
+
+if (( MAX_REBUILD == 250 )); then
+    echo "Clear global-db dir..."
+    rm /opt/cellframe-node/var/lib/global_db/ -r
+else
+    echo "No need to clear global_db"
+fi
+
+
 
 dpkg -i /tmp/cfupd/$PACKAGE_NAME
 service cellframe-node restart

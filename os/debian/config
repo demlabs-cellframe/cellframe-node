@@ -62,6 +62,15 @@ reconfigure|configure)
       db_go || true
    fi
 
+   db_input critical cellframe-node/kelvpn_enabled || true 
+   db_go || true 
+
+   db_get cellframe-node/kelvpn_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/kelvpn_node_type || true 
+      db_go || true
+   fi
+
 
 #   db_input critical cellframe-node/kelvpn_minkowski_enabled || true 
 #   db_go || true 
@@ -73,14 +82,14 @@ reconfigure|configure)
 #   fi
 
 
-#   db_input critical cellframe-node/mileena_enabled || true 
-#   db_go || true 
+   db_input critical cellframe-node/mileena_enabled || true 
+   db_go || true 
 
-#   db_get cellframe-node/mileena_enabled
-#   if [ "$RET" = "true" ]; then
-#      db_input critical cellframe-node/mileena_node_type || true 
-#      db_go || true
-#   fi
+   db_get cellframe-node/mileena_enabled
+   if [ "$RET" = "true" ]; then
+      db_input critical cellframe-node/mileena_node_type || true 
+      db_go || true
+   fi
 
    db_input critical cellframe-node/enable_python_plugins || true 
    db_go || true 
