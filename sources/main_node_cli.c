@@ -123,12 +123,11 @@ int execute_line(char *line)
 
     // Call the function
     if(argc > 0) {
-        dap_app_cli_cmd_state_t cmd;
-        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
-        cmd.cmd_name = (char *) argv[0];
-        cmd.cmd_param_count = argc - 1;
-        if(cmd.cmd_param_count > 0)
-            cmd.cmd_param = (char**) (argv + 1);
+        dap_app_cli_cmd_state_t cmd = {
+            .cmd_name           = (char*)argv[0],
+            .cmd_param_count    = argc - 1,
+            .cmd_param          = argc - 1 > 0 ? (char**)(argv + 1) : NULL
+        };
         // Send command
         int res = dap_app_cli_post_command(cparam, &cmd);
         DAP_DELETE(argv);
@@ -137,20 +136,6 @@ int execute_line(char *line)
     fprintf(stderr, "No command\n");
     DAP_DELETE(argv);
     return -1; //((*(command->func))(argc, (const char **) argv, NULL));
-}
-
-/**
- * Clear and delete memory of structure cmd_state
- */
-void free_cmd_state(dap_app_cli_cmd_state_t *cmd) {
-    if(!cmd->cmd_param)
-        return;
-    for(int i = 0; i < cmd->cmd_param_count; i++)
-            {
-        DAP_DELETE(cmd->cmd_param[i]);
-    }
-    DAP_DELETE(cmd->cmd_res);
-    DAP_DELETE(cmd);
 }
 
 /**
@@ -248,29 +233,12 @@ int main(int argc, const char *argv[])
         exit(-1);
     }
 
-    /*{
-     printf("start node_cli_post_command()\n");
-     cmd_state *cmd = DAP_NEW_Z(cmd_state);
-     cmd->cmd_name = "cmd1";
-     cmd->cmd_param_count = 2;
-     cmd->cmd_param = DAP_NEW_Z_SIZE(char*, cmd->cmd_param_count * sizeof(char*));
-     cmd->cmd_param[0] = strdup("t2-t1");
-     cmd->cmd_param[1] = strdup("-opt");
-     int a = node_cli_post_command(cparam, cmd);
-     printf("node_cli_post_command()=%d\n", a);
-     free_cmd_state(cmd);
-     }*/
-
     if(argc > 1){
-        // Call the function
-        //int res = ((*(command->func))(argc - 2, argv + 2));
-        dap_app_cli_cmd_state_t cmd;
-        memset(&cmd, 0, sizeof(dap_app_cli_cmd_state_t));
-        cmd.cmd_name = strdup(argv[1]);
-        cmd.cmd_param_count = argc - 2;
-        if(cmd.cmd_param_count > 0)
-            cmd.cmd_param = (char**) (argv + 2);
-        // Send command
+        dap_app_cli_cmd_state_t cmd = {
+            .cmd_name           = (char*)argv[1],
+            .cmd_param_count    = argc - 2,
+            .cmd_param          = argc - 2 > 0 ? (char**)(argv + 2) : NULL
+        };
         int res = dap_app_cli_post_command(cparam, &cmd);
         dap_app_cli_disconnect(cparam);
 #ifdef _WIN32
@@ -284,10 +252,10 @@ int main(int argc, const char *argv[])
                 printf("Socket read error!\n");
                 break;
             case DAP_CLI_ERROR_TIMEOUT:
-                printf("No response recieved.\n");
+                printf("No response recieved\n");
                 break;
             case DAP_CLI_ERROR_INCOMPLETE:
-                printf("Connection closed by peer");
+                printf("Connection closed by peer\n");
             default:
                 break;
         }
