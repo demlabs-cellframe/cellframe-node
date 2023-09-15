@@ -6,6 +6,7 @@ id=0x0404202200000000
 name=Backbone
 gdb_groups_prefix=scorpion
 native_ticker=CELL
+bridged_network_ids=[0x1807202300000000]
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}

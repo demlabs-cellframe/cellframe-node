@@ -1,6 +1,5 @@
 # mileena net config
 
-# General section
 [general]
 gdb_sync_nodes_addrs=[CCCC::0000::0000::0000,CCCC::0000::0000::0001,CCCC::0000::0000::0002]
 id=0x000000000000cccc
@@ -13,7 +12,7 @@ node-role={NODE_TYPE}
 seed_nodes_aliases=[0.root.mileena,1.root.mileena,2.root.mileena]
 seed_nodes_hostnames=[0.root.mileena.cellframe.net,1.root.mileena.cellframe.net,2.root.mileena.cellframe.net]
 seed_nodes_addrs=[CCCC::0000::0000::0000,CCCC::0000::0000::0001,CCCC::0000::0000::0002]
-seed_nodes_port=[8099,8099,8099]
+seed_nodes_port=[8199,8199,8199]
 require_links=2
 
 #[auth]
@@ -26,7 +25,8 @@ require_links=2
 #[dag-poa]
 #events-sign-cert=mileena.0.root
 
-#[esbocs]
+#[block-ton]
+#blocks-sign-cert=mileena.0.master
+
+#[block-poa]
 #blocks-sign-cert=mycert
-#minimum_fee=1.0
-#fee_addr=myaddr
