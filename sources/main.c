@@ -471,6 +471,7 @@ int main( int argc, const char **argv )
 
         }
         dap_server_set_default(l_server);
+        dap_chain_net_announce_addrs();
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
