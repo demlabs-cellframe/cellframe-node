@@ -49,152 +49,22 @@ sed -i .old "s/{NOTIFY_SRV_PORT}/$NOTIFY_SRV_PORT/g" $DAP_CFG  || true
 sed -i .old "s/{PREFIX}/$DAP_PREFIX_TPL/g" $DAP_CFG  || true
 rm $DAP_CFG.old
 
-# Init chains
-
-NET_NAME="Backbone"
-
-if [ "$DAP_BACKBONE_ENABLED" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-    	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    else
-    	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    sed -i .old "s/{NODE_TYPE}/$DAP_BACKBONE_ROLE/" $DAP_NET_CFG  || true
-    rm $DAP_NET_CFG.old
-fi
-
-NET_NAME="KelVPN"
-
-if [ "$DAP_KELVPN_ENABLED" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-    	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    else
-    	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_ROLE/" $DAP_NET_CFG  || true
-    rm $DAP_NET_CFG.old
-fi
-
-NET_NAME="subzero"
-
-if [ "$DAP_SUBZERO_ENABLED" = "true" ]; then
-    
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
-    rm $DAP_NET_CFG.old
-fi
-
-
-NET_NAME="raiden"
-
-if [ "$DAP_RAIDEN_ENABLED" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled raiden"
-    fi
-
-#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-#    DAP_NET_CFG=""
-#    if [ -e "$DAP_CFG_NET" ]; then
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-#    else
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    fi
-#
-#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-#    sed -i .old "s/{NODE_TYPE}/$DAP_RAIDEN_ROLE/" $DAP_NET_CFG  || true
-#    rm $DAP_NET_CFG.old
-fi
-
-
-NET_NAME="riemann"
-
-if [ "$DAP_RIEMANN_ENABLED" = "true" ]; then
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    sed -i .old "s/{NODE_TYPE}/$DAP_RIEMANN_ROLE/" $DAP_NET_CFG  || true
-    rm $DAP_NET_CFG.old
-fi
-
-NET_NAME="kelvpn-minkowski"
-
-if [ "$DAP_KELVPN_MINKOWSKI_ENABLED" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled kelvpn"
-    fi
-
-#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-#    DAP_NET_CFG=""
-#    if [ -e "$DAP_CFG_NET" ]; then
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-#    else
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
- #   fi
-
-#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-#    sed -i .old "s/{NODE_TYPE}/$DAP_KELVPN_MINKOWSKI_ROLE/" $DAP_NET_CFG  || true
-#    rm $DAP_NET_CFG.old
-
-fi
-
 NET_NAME="mileena"
 
 if [ "$DAP_MILEENA_ENABLED" = "true" ]; then
 
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    AP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
     if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled meleena"
+    DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
+    else
+    DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     fi
 
-    #DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    #DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    #DAP_NET_CFG=""
-    #if [ -e "$DAP_CFG_NET" ]; then
-    #DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    #else
-    #DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    #fi
-
-    #cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    #sed -i .old "s/{NODE_TYPE}/$DAP_MILEENA_ROLE/" $DAP_NET_CFG  || true
-    #rm $DAP_NET_CFG.old
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    sed -i .old "s/{NODE_TYPE}/$DAP_MILEENA_ROLE/" $DAP_NET_CFG  || true
+    rm $DAP_NET_CFG.old
 fi
 
 chmod 0666 $DAP_CFG

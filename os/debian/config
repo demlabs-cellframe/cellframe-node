@@ -26,62 +26,6 @@ reconfigure|configure)
    db_input critical cellframe-node/notify_srv_port || true 
    db_go || true 
 
-   db_input critical cellframe-node/subzero_enabled || true 
-   db_go || true 
-
-   db_get cellframe-node/subzero_enabled
-   if [ "$RET" = "true" ]; then
-      db_input critical cellframe-node/subzero_node_type || true 
-      db_go || true
-   fi
-
-   db_input critical cellframe-node/raiden_enabled || true 
-   db_go || true 
-
-   db_get cellframe-node/raiden_enabled
-   if [ "$RET" = "true" ]; then
-      db_input critical cellframe-node/raiden_node_type || true 
-      db_go || true
-   fi
-
-   db_input critical cellframe-node/riemann_enabled || true 
-   db_go || true 
-
-   db_get cellframe-node/riemann_enabled
-   if [ "$RET" = "true" ]; then
-      db_input critical cellframe-node/riemann_node_type || true 
-      db_go || true
-   fi
-
-   db_input critical cellframe-node/backbone_enabled || true 
-   db_go || true 
-
-   db_get cellframe-node/backbone_enabled
-   if [ "$RET" = "true" ]; then
-      db_input critical cellframe-node/backbone_node_type || true 
-      db_go || true
-   fi
-
-   db_input critical cellframe-node/kelvpn_enabled || true 
-   db_go || true 
-
-   db_get cellframe-node/kelvpn_enabled
-   if [ "$RET" = "true" ]; then
-      db_input critical cellframe-node/kelvpn_node_type || true 
-      db_go || true
-   fi
-
-
-#   db_input critical cellframe-node/kelvpn_minkowski_enabled || true 
-#   db_go || true 
-
-#   db_get cellframe-node/kelvpn_minkowski_enabled
-#   if [ "$RET" = "true" ]; then
-#      db_input critical cellframe-node/kelvpn_minkowski_node_type || true 
-#      db_go || true
-#   fi
-
-
    db_input critical cellframe-node/mileena_enabled || true 
    db_go || true 
 
