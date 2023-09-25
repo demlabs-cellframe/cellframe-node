@@ -157,7 +157,7 @@ Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano 
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node
 enabled=false
-#   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
+#   List of local security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
 net=KelVPN
@@ -170,7 +170,7 @@ The next line ```net``` sets the name of the network on which the service will b
 Line ```wallet``` sets name of the wallet to which the payment for the service sharing will be sent.
 
 #### Pricelist config
-To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free
+To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free turn ```allow_free_srv``` parameter in ```[srv_vpn]``` section to ```true```.
 
 #### DNS server install
 
@@ -267,15 +267,16 @@ Here is cell `0x0000000000000001` used by default until we haven't finished cell
 
 To say world that you have VPN service you need to place order. First lets see the market, what orders are already present:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order find -srv_uid 0x0000000000000001 -direction sell
+sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order find -srv_uid 0x0000000000000001 -direction sell
 ```
 
 It should print list if you've syncronized well before (should happens automatically by default)
 Anyway, lets create our order, changing price in it if you see in list thats market changed and you need to change prices as well.
 Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order create -direction sell -srv_uid 1 -price_unit SEC -price_token tKEL -price 100 -units 3600 -node_addr 374C::CEB5::6740::D93B -cert my_masternode_cert -region Russia -continent Europe```
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order create -direction sell -srv_uid 1 -price_unit SEC -price_token KEL -price 100 -units 3600 -node_addr 374C::CEB5::6740::D93B -cert my_masternode_cert -region Russia -continent Europe```
 
-And then you just wait some for network synchronisation and your order will see everybody.
+And then you just wait some for network synchronisation and your order will see everybody. Next restart your node. Provide the hash of your order to the network administrator so that your node appears in the clients list of servers.
+
 
 Description of arguments
 * ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
