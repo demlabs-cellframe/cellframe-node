@@ -142,20 +142,40 @@ Template: cellframe-node/backbone_enabled
 Default: true
 Choices: true, false
 Type: select
-Description: Backbone: Enable network
+Description: Backbone Mainnet: Enable network
  Backbone Mainnet: Enable network auto load on start
 
 Template: cellframe-node/backbone_node_type
 Type: select
 Default: full
 Choices: full, light, master, archive, root
-Description: Backbone: Node role
+Description: Backbone Mainnet: Node role
  Select node role:. 
  Light - Synchronize only local wallets 
  full - Sync all its cell
  master - Allow to store values in chains and take comission, sync all shards that will need to be synced
  archive - Sync all the network
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
+
+Template: cellframe-node/kelvpn_enabled
+Default: false
+Choices: true, false
+Type: select
+Description: KelVPN: Enable network
+ KelVPN Mainnet: Enable network auto load on start
+
+Template: cellframe-node/kelvpn_node_type
+Type: select
+Default: full
+Choices: full, light, master, archive, root
+Description: KelVPN Mainnet: Node role
+ Select node role:. 
+ Light - Synchronize only local wallets 
+ full - Sync all its cell
+ master - Allow to store values in chains and take comission, sync all shards that will need to be synced
+ archive - Sync all the network
+ root - Special predefined root nodes, usually produces zerochain and acts like archive as well 
+
 
 Template: cellframe-node/enable_python_plugins
 Default: false
