@@ -160,7 +160,7 @@ enabled=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-net=minkowski
+net=KelVPN
 wallet=my_wallet
 ```
 
@@ -170,7 +170,7 @@ The next line ```net``` sets the name of the network on which the service will b
 Line ```wallet``` sets name of the wallet to which the payment for the service sharing will be sent.
 
 #### Pricelist config
-To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing, the service will be provided for free.
+To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free
 
 #### DNS server install
 
