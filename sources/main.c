@@ -59,7 +59,11 @@
 #include "dap_server.h"
 #include "dap_notify_srv.h"
 #include "dap_http.h"
+
+#ifndef DAP_OS_ANDROID
 #include "dap_http_folder.h"
+#endif
+
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 #include "dap_chain_net_balancer.h"
@@ -79,6 +83,7 @@
 #include "dap_chain_cs_blocks.h"
 #include "dap_chain_cs_block_poa.h"
 #include "dap_chain_cs_block_pos.h"
+
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
 #include "dap_chain_cs_dag_pos.h"
@@ -95,7 +100,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+#if defined(DAP_OS_LINUX) && !defined(DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
@@ -135,7 +140,9 @@
 #define MAIN_URL "/"
 
 #ifdef __ANDROID__
-    #include "cellframe_node.h"
+#include "cellframe_node.h"
+#include <android/log.h>
+#include <jni.h>
 #endif
 
 void parse_args( int argc, const char **argv );
@@ -144,7 +151,7 @@ void exit_if_server_already_running( void );
 static const char *s_pid_file_path = NULL;
 
 #ifdef __ANDROID__
-int cellframe_node_Main(int argc, const char **argv)
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 #else
 int main( int argc, const char **argv )
 #endif
@@ -158,6 +165,11 @@ int main( int argc, const char **argv )
     #if defined(_WIN32) && defined(NDEBUG)
         S_SetExceptionFilter( );
     #endif
+
+    #ifdef DAP_OS_ANDROID
+    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "CellframeNode main routine start");
+    #endif
+
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
@@ -170,17 +182,38 @@ int main( int argc, const char **argv )
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    //g_sys_dir_path = "/storage/emulated/0/Android/data/com.CellframeWallet/files/node";
+    //g_sys_dir_path = "/storage/emulated/0/Android/data/com.CellframeWallet/files/node";
+
+    //zero argumet from jni call is always a working dir
+    jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
+    g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+    
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
+
+        #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, l_log_dir);
+        #endif
+        
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
+        #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "Log dir:");
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_dir);
+        #endif
         if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
             printf("Fatal Error: Can't init common functions module");
+            #ifdef DAP_OS_ANDROID
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "Log file:");
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_file);
+                __android_log_write(ANDROID_LOG_INFO, LOG_TAG,"Can't init common functions");
+        
+            #endif
             return -2;
         }
         DAP_DELETE(l_log_dir);
@@ -189,7 +222,10 @@ int main( int argc, const char **argv )
 
     {
         char l_config_dir[MAX_PATH] = {'\0'};
-        sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        dap_sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        #ifdef DAP_OS_ANDROID
+        __android_log_write(ANDROID_LOG_INFO, LOG_TAG, l_config_dir);
+        #endif
         dap_config_init(l_config_dir);
     }
 
@@ -198,13 +234,32 @@ int main( int argc, const char **argv )
         return -1;
     }
 
-    s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
+
 
     log_it(L_DEBUG, "Parsing command line args");
-    parse_args( argc, argv );
-    #ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-    #endif
+#ifndef _WIN32
+    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
+#ifdef __ANDROID__
+    jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
+    char **argv = malloc(sizeof(char*) * (argc + 1));
+    argv[0] = strdup(dap_get_appname());
+    for (jsize i = 0; i < argc; ++i) {
+        jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, i));
+        const char *cstr = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+        argv[i + 1] = strdup(cstr);
+        (*javaEnv)->ReleaseStringUTFChars(javaEnv, string, cstr );
+        (*javaEnv)->DeleteLocalRef(javaEnv, string );
+    }
+    parse_args(argc + 1, (const char**)argv);
+    for(jsize i = 0; i < argc + 1; ++i)
+        free(argv[i]);
+    free(argv);
+#else
+    parse_args(argc, argv);
+#endif
+#else
+    exit_if_server_already_running();
+#endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -240,10 +295,13 @@ int main( int argc, const char **argv )
         return -5;
     }
 
-    if ( dap_http_folder_init() != 0 ){
-        log_it( L_CRITICAL, "Can't init http server module" );
-        return -55;
-    }
+#ifndef DAP_OS_ANDROID
+	if ( dap_http_folder_init() != 0 ){
+	    log_it( L_CRITICAL, "Can't init http server module" );
+	    return -55;
+	}
+#endif
+
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
@@ -459,14 +517,16 @@ int main( int argc, const char **argv )
                     dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
             }
 
-            // Built in WWW server
+#ifndef DAP_OS_ANDROID
+	        // Built in WWW server
 
             if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                     dap_http_folder_add( DAP_HTTP(l_server), "/",
                                     dap_config_get_item_str(g_config,
                                                                 "resources",
                                                                 "www_root") );
-            }
+	        }
+#endif
 
         }
         dap_server_set_default(l_server);
@@ -512,7 +572,9 @@ int main( int argc, const char **argv )
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
+#ifndef DAP_OS_ANDROID
     dap_http_folder_deinit();
+#endif
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
