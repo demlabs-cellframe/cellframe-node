@@ -290,10 +290,13 @@ static int s_cert_create(int argc, const char **argv) {
     }
 
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    log_it( L_ERROR, "l_sig_type");
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
+    log_it( L_ERROR, "l_key_type");
 
     if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
       dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
+      log_it( L_ERROR, "l_cert");
       if (l_cert == NULL){
         log_it(L_ERROR, "Can't create %s",l_cert_path);
       }
