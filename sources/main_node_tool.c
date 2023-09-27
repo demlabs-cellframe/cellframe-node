@@ -283,9 +283,9 @@ static int s_cert_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_strcmp (argv[4],"sig_tesla") == 0)
+    if ((dap_strcmp (argv[4],"sig_tesla") == 0)||(dap_strcmp (argv[4],"sig_picnic") == 0))
     {
-       log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+       log_it( L_ERROR, "Tesla and Picnic algorithms are not supported, please, use another variant");
        exit(-600);
     }
 
