@@ -63,6 +63,7 @@
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 #include "dap_chain_net_balancer.h"
+#include "dap_chain_net_node_list.h"
 
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
@@ -470,6 +471,8 @@ int main( int argc, const char **argv )
 
         }
         dap_server_set_default(l_server);
+        dap_chain_net_announce_addrs();
+        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
