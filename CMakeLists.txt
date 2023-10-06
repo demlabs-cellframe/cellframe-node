@@ -67,6 +67,27 @@ if(BUILD_CELLFRAME_NODE_TESTS)
     add_subdirectory(test)
 endif()
 
+# define sphincs hash params
+    #choose one hashtype
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-128f")
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-128s")
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-192f")
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-192s")
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-256f")
+    #set(SPHINCS_HASH_TYPE "sphincs-haraka-256s")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-128f")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-128s")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-192f")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-192s")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-256f")
+    #set(SPHINCS_HASH_TYPE "sphincs-sha2-256s")
+    #set(SPHINCS_HASH_TYPE "sphincs-shake-128f")
+    #set(SPHINCS_HASH_TYPE "sphincs-shake-128s")
+    #set(SPHINCS_HASH_TYPE "sphincs-shake-192f")
+    #set(SPHINCS_HASH_TYPE "sphincs-shake-192s")
+        set(SPHINCS_HASH_TYPE "sphincs-shake-256f")
+    #set(SPHINCS_HASH_TYPE "sphincs-shake-256s")
+
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 
