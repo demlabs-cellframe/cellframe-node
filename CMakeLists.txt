@@ -88,6 +88,10 @@ endif()
         set(SPHINCS_HASH_TYPE "sphincs-shake-256f")
     #set(SPHINCS_HASH_TYPE "sphincs-shake-256s")
 
+    #choose one thash
+        set(SPHINCS_THASH "robust")
+    #set(SPHINCS_THASH "simple")
+
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 
