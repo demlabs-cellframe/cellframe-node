@@ -424,7 +424,7 @@ int main( int argc, const char **argv )
 
         if( l_port > 0 ) {
             l_server = dap_server_new( (dap_config_get_item_str(g_config, "server", "listen_address")),
-                                      (uint16_t) l_port, SERVER_TCP, NULL );
+                                      (uint16_t) l_port, DAP_SERVER_TCP, NULL );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
 
