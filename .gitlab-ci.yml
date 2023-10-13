@@ -133,6 +133,34 @@ linux-arm64-debian-bullseye:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
+linux-armhf-debian-bullseye-гupdtr:
+    extends: .build
+    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
+    
+    when: manual
+    allow_failure: true
+    
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux
+    script: 
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
+linux-arm64-debian-bullseye-updtr:
+    extends: .build
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    
+    when: manual
+    allow_failure: true
+    
+    script: 
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+  
 
 .dpublish:
   extends: .publish
