@@ -413,21 +413,23 @@ static int s_cert_add_metadata(int argc, const char **argv) {
 static int s_cert_sign(int argc, const char **argv) {
     return 0;
 }
-static int s_cert_pkey_show(int argc, const char **argv) {
+static int s_cert_pkey_show(int argc, const char **argv)
+{
     dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
     if (!l_cert) {
-        printf("Not found cert: %s\n", argv[4]);
+        printf("Not found cert %s\n", argv[4]);
         exit(-134);
     }
 
-    size_t l_buf_len;
-    uint8_t *l_pub_enc_key = dap_enc_key_serialize_pub_key(l_cert->enc_key, &l_buf_len);
-
     dap_hash_fast_t l_hash;
-    dap_hash_fast (l_pub_enc_key, l_buf_len, &l_hash);
+    if (dap_cert_get_pkey_hash(l_cert, &l_hash)) {
+        printf("Can't serialize cert %s", argv[4]);
+        exit(-135);
+    }
 
     char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
     printf("%s\n", l_hash_str);
+    DAP_DELETE(l_hash_str);
 
     return 0;
 }
