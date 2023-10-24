@@ -178,7 +178,8 @@ linux-arm64-debian-bullseye:
 raiden_deploy:
   extends: .deploy
   needs:
-    - linux-amd64-debian-buster-rwd
+    - job: linux-amd64-debian-buster-rwd
+      optional: true
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
