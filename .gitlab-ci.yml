@@ -83,7 +83,7 @@ linux-amd64-debian-buster-dbg:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 linux-amd64-debian-buster-rwd:
-    extends: .debug_build
+    extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
