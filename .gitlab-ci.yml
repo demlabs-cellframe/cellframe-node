@@ -23,7 +23,7 @@ stages:
     paths:
       - build_*/*.deb
 
-.build_with_san:  
+.debug_build:  
   extends: .build
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /-asan$/
@@ -74,7 +74,7 @@ macos-amd64:
         - build_*/*.pkg
 
 linux-amd64-debian-buster-dbg:
-    extends: .build_with_san
+    extends: .debug_build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
@@ -83,7 +83,7 @@ linux-amd64-debian-buster-dbg:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 linux-amd64-debian-buster-rwd:
-    extends: .build_with_san
+    extends: .debug_build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
