@@ -34,7 +34,7 @@ stages:
         DAP_UBSAN: "1"  
     - if: $CI_COMMIT_REF_NAME =~ /-tsan$/
       variables:                                   
-        DAP_TSAN: "1"  
+        DAP_TSAN: "1"
 
 
 .publish:
@@ -192,7 +192,8 @@ raiden_deploy:
 riemann_deploy:
   extends: .deploy
   needs:
-    - linux-amd64-debian-buster-rwd
+    - job: linux-amd64-debian-buster-rwd
+      optional: true
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
@@ -205,7 +206,8 @@ riemann_deploy:
 subzero_deploy:
   extends: .deploy
   needs:
-    - linux-amd64-debian-buster-rwd
+    - job: linux-amd64-debian-buster-rwd
+      optional: true
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
@@ -218,7 +220,8 @@ subzero_deploy:
 scorpion_deploy:
   extends: .deploy
   needs:
-    - linux-amd64-debian-buster-rwd
+    - job: linux-amd64-debian-buster-rwd
+      optional: true
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
@@ -232,7 +235,8 @@ scorpion_deploy:
 kelvpn_deploy:
   extends: .deploy
   needs:
-    - linux-amd64-debian-buster-rwd
+    - job: linux-amd64-debian-buster-rwd
+      optional: true
   script:
     - source version.mk
     - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
