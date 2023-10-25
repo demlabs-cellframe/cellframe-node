@@ -272,11 +272,11 @@ static int s_cert_create(int argc, const char **argv) {
       exit(-500);
     }
     const char *l_cert_name = argv[3];
-    if (strlen(l_cert_name) > 40) {
+    if (strlen(l_cert_name) > 39) {
       log_it(L_ERROR, "Certificat name is to long");
       exit(-800);
     }
-    
+
     size_t l_cert_path_length = strlen(argv[3])+8+strlen(s_system_ca_dir);
     char *l_cert_path = DAP_NEW_Z_SIZE(char,l_cert_path_length);
     snprintf(l_cert_path,l_cert_path_length,"%s/%s.dcert",s_system_ca_dir,l_cert_name);
