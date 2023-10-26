@@ -34,7 +34,8 @@ stages:
         DAP_UBSAN: "1"  
     - if: $CI_COMMIT_REF_NAME =~ /-tsan$/
       variables:                                   
-        DAP_TSAN: "1"  
+        DAP_TSAN: "1"
+
 
 
 .publish:
