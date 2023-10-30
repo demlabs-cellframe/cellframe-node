@@ -432,43 +432,39 @@ int main( int argc, const char **argv )
     }
 
     if ( l_server ) { // If listener server is initialized
-        // TCP-specific things
-        if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
-            // Init HTTP-specific values
-            dap_http_new( l_server, dap_get_appname() );
+        // Init HTTP-specific values
+        dap_http_new( l_server, dap_get_appname() );
 
 #ifdef DAP_MODULES_DYNAMIC
-            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-                if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
-                    log_it(L_CRITICAL,"Can't init CDB module");
-                    return -3;
-                }else{
-                    log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
-                }
+        if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
+            if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
+                log_it(L_CRITICAL,"Can't init CDB module");
+                return -3;
+            }else{
+                log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
             }
+        }
 #endif
 
-            // Handshake URL
-            enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
+        // Handshake URL
+        enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
-            // Streaming URLs
-            dap_stream_add_proc_http( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM );
-            dap_stream_ctl_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
+        // Streaming URLs
+        dap_stream_add_proc_http( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM );
+        dap_stream_ctl_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
 
-            const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-            if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-                    dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
-            }
+        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
+                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
+        }
 
-            // Built in WWW server
+        // Built in WWW server
 
-            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                    dap_http_folder_add( DAP_HTTP(l_server), "/",
-                                    dap_config_get_item_str(g_config,
-                                                                "resources",
-                                                                "www_root") );
-            }
-
+        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+                dap_http_folder_add( DAP_HTTP(l_server), "/",
+                                dap_config_get_item_str(g_config,
+                                                            "resources",
+                                                            "www_root") );
         }
         dap_server_set_default(l_server);
         dap_chain_net_announce_addrs();
