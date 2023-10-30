@@ -19,12 +19,6 @@ stages:
   stage: build
   timeout: 3 hours 30 minutes
   dependencies: []
-  artifacts:
-    paths:
-      - build_*/*.deb
-
-.debug_build:  
-  extends: .build
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /-asan$/
       variables:                                   
@@ -35,8 +29,12 @@ stages:
     - if: $CI_COMMIT_REF_NAME =~ /-tsan$/
       variables:                                   
         DAP_TSAN: "1"
-
-
+    - if: $CI_COMMIT_REF_NAME =~ /.*$/
+      variables:                                   
+        DUMMY_VAR_FOR_ALLOW_JOB: "1"
+  artifacts:
+    paths:
+      - build_*/*.deb
 
 .publish:
   extends: .ci-polygon
@@ -75,7 +73,7 @@ macos-amd64:
         - build_*/*.pkg
 
 linux-amd64-debian-buster-dbg:
-    extends: .debug_build
+    extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
