@@ -68,6 +68,9 @@ if(BUILD_CELLFRAME_NODE_TESTS)
     add_subdirectory(test)
 endif()
 
+# activate sphincsplus flexible option
+set(SPHINCSPLUS_FLEX ON)
+
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 
