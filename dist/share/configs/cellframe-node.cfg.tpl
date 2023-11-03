@@ -62,6 +62,7 @@ http_server=false
 [dag]
 # More debug output
 # debug_more=true
+#threshold_enabled=true
 
 # Synchronizatiob defaults
 [node_client]
