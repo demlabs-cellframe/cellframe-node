@@ -150,7 +150,6 @@ int cellframe_node_Main(int argc, const char **argv)
 int main( int argc, const char **argv )
 #endif
 {
-    rpmalloc_linker_reference();
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
