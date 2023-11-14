@@ -130,7 +130,7 @@ wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 
 [global_db]
-driver=mdbx
+driver={DB_DRIVER}
 path={PREFIX}/var/lib/global_db
 #debug_more=true
 
