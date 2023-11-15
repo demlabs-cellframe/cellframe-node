@@ -459,6 +459,11 @@ static int s_init( int argc, const char **argv )
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
+        printf("Fatal Error: Can't init common functions module");
+        return -2;
+    }
+    dap_log_level_set(L_ERROR);
     char l_config_dir[MAX_PATH] = {'\0'};
     sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
     dap_config_init(l_config_dir);
