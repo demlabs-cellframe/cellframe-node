@@ -47,6 +47,8 @@ export DAP_KELVPN_MINKOWSKI_ROLE=full
 export DAP_MILEENA_ENABLED=false
 export DAP_MILEENA_ROLE=full
 
+export DAP_DB_DRIVER=sqlite
+
 echo "Init configs with prefix " $DAP_PREFIX
 echo $(pwd)
 echo $(env)
