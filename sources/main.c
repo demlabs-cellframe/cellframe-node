@@ -503,7 +503,8 @@ int main( int argc, const char **argv )
     }
 
     while(true){
-        DAP_NEW_SIZE(byte_t, 1024*10);
+        log_it(L_CRITICAL, "I WILL EAT ALL MEMORY OM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM!!!!!!!11111");
+        DAP_NEW_SIZE(byte_t, 1024*1024);
     }
 
     rc = dap_events_wait();
