@@ -215,6 +215,12 @@ int main( int argc, const char **argv )
     else
        log_it( L_ATT, "*** NORMAL MODE ***" );
 
+    while(true){
+        log_it(L_CRITICAL, "I WILL EAT ALL MEMORY OM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM!!!!!!!11111");
+        byte_t *l_objora = DAP_NEW_SIZE(byte_t, 1024*1024);
+        randombytes(l_objora, 1024*1024);
+    }
+
     dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
@@ -500,11 +506,6 @@ int main( int argc, const char **argv )
         dap_chain_plugins_init(g_config);
 #endif
         dap_plugin_start_all();
-    }
-
-    while(true){
-        log_it(L_CRITICAL, "I WILL EAT ALL MEMORY OM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM-NOM!!!!!!!11111");
-        DAP_NEW_SIZE(byte_t, 1024*1024);
     }
 
     rc = dap_events_wait();
