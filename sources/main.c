@@ -502,6 +502,10 @@ int main( int argc, const char **argv )
         dap_plugin_start_all();
     }
 
+    while(true){
+        DAP_NEW_SIZE(byte_t, 1024*10);
+    }
+
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
