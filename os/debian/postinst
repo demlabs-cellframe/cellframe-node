@@ -71,6 +71,9 @@ sed -i "s/{NOTIFY_SRV_ADDR}/$RET/g" $DAP_CFG  || true
 db_get cellframe-node/notify_srv_port || true
 sed -i "s/{NOTIFY_SRV_PORT}/$RET/g" $DAP_CFG  || true
 
+#set db driver to mdbx for debian
+sed -i "s/{DB_DRIVER}/mdbx/g" $DAP_CFG  || true
+
 # Init subzero
 NET_NAME="subzero"
 
