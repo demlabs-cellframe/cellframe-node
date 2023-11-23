@@ -33,9 +33,8 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
+
 include (dap-sdk/cmake/OS_Detection.cmake)
-
-
 
 if(DARWIN)
     set(BUILD_WITH_GDB_DRIVER_SQLITE ON) #MDBX crashes on apple
@@ -59,6 +58,7 @@ option(ADD_UPDATER OFF)
 if(LINUX)
 set(BUILD_WITH_PYTHON_ENV ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
+set(MDBX_FORCE_DISABLE_CXX ON)  # Use it to force disabled compiling C++ part of MDBX library
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
@@ -93,8 +93,6 @@ if(UNIX)
         add_definitions("-DDAP_DARWIN_LIBRARY")
 
     endif()
-
-
 
   if(LINUX)
     message("[*] Linux package setup")
@@ -335,10 +333,6 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
 endif()
-
-target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
-target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
