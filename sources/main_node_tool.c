@@ -331,7 +331,7 @@ static int s_cert_create_pkey(int argc, const char **argv) {
       const char *l_cert_pkey_path = argv[4];
       dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
       if ( !l_cert ) exit( -7021 );
-        l_cert->enc_key->pub_key_data_size = dap_enc_gen_key_public_size(l_cert->enc_key);
+        l_cert->enc_key->pub_key_data_size = dap_enc_ser_pub_key_size(l_cert->enc_key);
         if ( l_cert->enc_key->pub_key_data_size ) {
           //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
           //if ( dap_enc_gen_key_public(l_cert->key_private, l_cert->key_private->pub_key_data) == 0){
