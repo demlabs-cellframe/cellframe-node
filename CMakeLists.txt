@@ -39,7 +39,7 @@ set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-#set(BUILD_CRYPTO_TESTS ON)
+#set(BUILD_CELLFRAME_NODE_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
 
 set(BUILD_WITH_ZIP OFF)
@@ -63,9 +63,8 @@ if(LINUX OR DARWIN)
 endif()
 
 if(BUILD_CELLFRAME_NODE_TESTS)
-    enable_testing()
-    set(CELLFRAME_MODULES ${CELLFRAME_MODULES} "test-framework")
-    add_subdirectory(test)
+    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    set(BUILD_CELLFRAME_SDK_TESTS ON)
 endif()
 
 # activate sphincsplus flexible option
