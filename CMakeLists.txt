@@ -33,9 +33,16 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-include (cellframe-sdk/cmake/OS_Detection.cmake)
+include (dap-sdk/cmake/OS_Detection.cmake)
 
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+
+
+if(DARWIN)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE ON) #MDBX crashes on apple
+else()
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
@@ -355,14 +362,26 @@ else()
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
 	    
-
+        #install all from dist.linux/share except updater files and node-serivice
         if(NOT ADD_UPDATER)
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE )
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
         else()
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-node*service*" EXCLUDE)
         endif()
+
+        #install node service depends on sanitasizes values
+        if (DEFINED ENV{DAP_ASAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.asan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        elseif(DEFINED ENV{DAP_UBSAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.ubsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        elseif(DEFINED ENV{DAP_TSAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.tsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        else()
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        endif()
+        
     elseif(BSD)
-	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
