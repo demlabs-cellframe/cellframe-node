@@ -156,21 +156,23 @@ Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano 
 # VPN stream channel processing module
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node
-enabled=false
+enabled=true
 #   List of local security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
 net=KelVPN
-wallet=my_wallet
+wallet_addr=
+receipt_sign_cert=my_awesome_cert
 ```
 
 Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usually you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
 Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below.
 The next line ```net``` sets the name of the network on which the service will be shared.
-Line ```wallet``` sets name of the wallet to which the payment for the service sharing will be sent.
+Line ```wallet_addr``` sets the address of the wallet to which the payment for the service sharing will be sent.
+Line ```receipt_sign_cert``` sets the name of the certificate for signing receipts. Must match the master node certificate.
 
 #### Pricelist config
-To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free turn ```allow_free_srv``` parameter in ```[srv_vpn]``` section to ```true```.
+To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free turn ```allow_free_srv``` parameter in ```[srv_vpn]``` section to ```true``` and create order with zero price.
 
 #### DNS server install
 
@@ -273,7 +275,7 @@ sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order find -
 It should print list if you've syncronized well before (should happens automatically by default)
 Anyway, lets create our order, changing price in it if you see in list thats market changed and you need to change prices as well.
 Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order create -direction sell -srv_uid 1 -price_unit SEC -price_token KEL -price 100 -units 3600 -node_addr 374C::CEB5::6740::D93B -cert my_masternode_cert -region Russia -continent Europe```
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order create -direction sell -srv_uid 1 -price_unit SEC -price_token KEL -price 100 -units 3600 -node_addr 374C::CEB5::6740::D93B -cert my_awesome_cert -region Russia -continent Europe```
 
 And then you just wait some for network synchronisation and your order will see everybody. Next restart your node. Provide the hash of your order to the network administrator so that your node appears in the clients list of servers.
 
@@ -284,7 +286,7 @@ Description of arguments
 * ```-price_unit``` Set SEC for Seconds
 * ```-price_token``` Token ticker
 * ```-units``` The number of units in one portion of the service, in this example 3600 seconds
-* ```-price``` Price for the number of units specified in the parameter -units. In this example 100 datoshi for 3600 seconds of service
+* ```-price``` Price for the number of units specified in the parameter -units. In this example 100 datoshi for 3600 seconds of service. To share VPN service for free set this field to 0.
 * ```-node_addr``` Address of node
 * ```-cert``` Certificate of master node
 * ```-region``` The region in which the node is located
