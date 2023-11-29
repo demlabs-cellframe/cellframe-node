@@ -54,3 +54,6 @@ echo $(pwd)
 echo $(env)
 
 ${DAP_INST_DIR}/Contents/Resources/create_configs_from_tpl.sh
+
+DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
+sed -i .old "s/driver=mdbx/driver=${DAP_DB_DRIVER}/g" $DAP_CFG  || true
