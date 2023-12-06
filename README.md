@@ -148,7 +148,7 @@ Set ```true``` if you want to connect your node with ```Backbone``` (Mainnet)
 
 
 ### How to configure VPN service share
-
+To share VPN service you must have a node with master role.
 #### Node base configuration
 Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.cfg``` and find next section:
 
@@ -156,28 +156,23 @@ Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano 
 # VPN stream channel processing module
 [srv_vpn]
 #   Turn to true if you want to share VPN service from you node
-enabled=false
-#   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
+enabled=true
+#   List of local security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-#pricelist=[kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0,kelvin-testnet:0.00001:cETH:3600:SEC:mywallet1,private:1:WOOD:10:SEC:mywallet0]
+net=KelVPN
+wallet_addr=
+receipt_sign_cert=my_awesome_cert
 ```
 
 Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usually you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
-Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below:
-Next line ```pricelist``` if commented out it shares service for free.
+Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below.
+The next line ```net``` sets the name of the network on which the service will be shared.
+Line ```wallet_addr``` sets the address of the wallet to which the payment for the service sharing will be sent.
+Line ```receipt_sign_cert``` sets the name of the certificate for signing receipts. Must match the master node certificate.
 
 #### Pricelist config
-Pricelist line has list of values, splitted with ```:``` symbol. What it means lets see in example ```kelvin-testnet:0.00001:KELT:3600:SEC:mywallet0```:
-
-1. ```minkowski``` thats the chain network name where the price token issued
-2. ```0.00001``` price per units. Important: not for one unit but for all the units, in our example - for 1 hour.
-3. ```KELT``` token ticker thats will be used for payments
-4. ```3600``` units number thats costs price `0.00001`
-5. ```SEC``` unit type, could be ```SEC``` for seconds, ```DAY``` for days, ```MB``` for megabyte. IMPORTANT: if selected ```MB``` accounting would be not by time but by used traffic amount
-6.```mywallet``` wallet name for payments accommodation, should be created before with ```cellframe-node-cli```. Used for signing conditioned transactions with receipts therefore they pass values to the selected wallet.
-
-You could enter any number of such prices
+To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free turn ```allow_free_srv``` parameter in ```[srv_vpn]``` section to ```true``` and create order with zero price.
 
 #### DNS server install
 
@@ -274,24 +269,28 @@ Here is cell `0x0000000000000001` used by default until we haven't finished cell
 
 To say world that you have VPN service you need to place order. First lets see the market, what orders are already present:
 ```
-sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order find -srv_uid 0x0000000000000001 -direction sell
+sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order find -srv_uid 0x0000000000000001 -direction sell
 ```
 
 It should print list if you've syncronized well before (should happens automatically by default)
-Anyway, lets create our order, changing price in it and in ```cellframe-node.cfg``` if you see in list thats market changed and you need to change prices as well.
+Anyway, lets create our order, changing price in it if you see in list thats market changed and you need to change prices as well.
 Here is exmaple based on our pricelist in previous examples:
-```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net minkowski order create -direction sell -srv_uid 1 -srv_class PERM -price_unit 2 -price_token KELT -price 100```
+```sudo /opt/cellframe-node/bin/cellframe-node-cli net_srv -net KelVPN order create -direction sell -srv_uid 1 -price_unit SEC -price_token KEL -price 100 -units 3600 -node_addr 374C::CEB5::6740::D93B -cert my_awesome_cert -region Russia -continent Europe```
 
-And then you just wait some for network synchronisation and your order will see everybody.
+And then you just wait some for network synchronisation and your order will see everybody. Next restart your node. Provide the hash of your order to the network administrator so that your node appears in the clients list of servers.
+
 
 Description of arguments
 * ```-direction``` buy or sell, for VPN service publishing it must be ```sell```
 * ```-srv_uid``` Service UID, for VPN service set ```1```
-* ```-price_unit``` Set 2 for Seconds, 1 for Megabytes
+* ```-price_unit``` Set SEC for Seconds
 * ```-price_token``` Token ticker
-* ```-price``` Price for one unit, price for one second in our example
-
-Important: if you set price in configs for units set, 3600 in our example - here you set price for your single one unit, for one second in example.
+* ```-units``` The number of units in one portion of the service, in this example 3600 seconds
+* ```-price``` Price for the number of units specified in the parameter -units. In this example 100 datoshi for 3600 seconds of service. To share VPN service for free set this field to 0.
+* ```-node_addr``` Address of node
+* ```-cert``` Certificate of master node
+* ```-region``` The region in which the node is located
+* ```-continent```  The continent in which the node is located
 
 More details about order operations you could find with call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help net_srv```
 More details about cellframe node commands in call ```sudo /opt/cellframe-node/bin/cellframe-node-cli help```
