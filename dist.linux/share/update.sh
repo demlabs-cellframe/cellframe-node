@@ -1,7 +1,22 @@
  #! /bin/bash
 set -e
 STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master/updates
-REGEXP="href=\"cellframe-node-([0-9].[0-9]-[0-9]+)-updtr-amd64.deb" 
+
+MACHINE=$(uname -m)
+
+POSTFIX="amd64"
+
+if [[ $MACHINE = "aarch64" ]]; then
+    POSTFIX="arm64"
+fi
+if [[ $MACHINE = "armv7l" ]]; then
+    POSTFIX="armhf"
+fi
+
+REGEXP="href=\"cellframe-node-([0-9].[0-9]-[0-9]+)-updtr-${POSTFIX}.deb" 
+
+echo "Looking for regexp: $REGEXP"
+
 INSTALLED_VERSION=$(dpkg -l | awk '$2=="cellframe-node" { print $3 }')
 
 echo "Cellframe-node installed: $INSTALLED_VERSION"

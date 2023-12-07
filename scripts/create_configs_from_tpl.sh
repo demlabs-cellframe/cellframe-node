@@ -22,10 +22,9 @@ fi
 [ "$DAP_SERVER_ADDR" ] || DAP_SERVER_ADDR="0.0.0.0"
 [ "$NOTIFY_SRV_ADDR" ] || NOTIFY_SRV_ADDR="127.0.0.1"
 [ "$NOTIFY_SRV_PORT" ] || NOTIFY_SRV_PORT="8080"
+[ "$DAP_DB_DRIVER" ] || DAP_DB_DRIVER="mdbx"
 
 DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
-
-
 
 # Init node config
 if [ ! -e "$DAP_CFG" ]; then
@@ -47,6 +46,7 @@ sed -i .old "s/{SERVER_ADDR}/$DAP_SERVER_ADDR/g" $DAP_CFG  || true
 sed -i .old "s/{NOTIFY_SRV_ADDR}/$NOTIFY_SRV_ADDR/g" $DAP_CFG  || true
 sed -i .old "s/{NOTIFY_SRV_PORT}/$NOTIFY_SRV_PORT/g" $DAP_CFG  || true
 sed -i .old "s/{PREFIX}/$DAP_PREFIX_TPL/g" $DAP_CFG  || true
+sed -i .old "s/{DB_DRIVER}/$DAP_DB_DRIVER/g" $DAP_CFG  || true
 rm $DAP_CFG.old
 
 # Init chains
