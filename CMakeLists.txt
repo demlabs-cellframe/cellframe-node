@@ -56,6 +56,8 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
+set(DAP_USE_RPMALLOC OFF)
+
 if(LINUX)
 set(BUILD_WITH_PYTHON_ENV ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
