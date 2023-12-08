@@ -106,7 +106,12 @@ debug_more=false
 #   List of loca security access groups. Built in: expats,admins,services,nobody,everybody
 network_address=10.11.12.0
 network_mask=255.255.255.0
-pricelist=[cellframe-testnet:100:KELT:3600:SEC:mywallet0]
+# The network on which the service operates
+#net=KelVPN
+# Wallet address for transferring payment for the service.
+#wallet_addr=
+# The name of the certificate for signing receipts. Must match the master node certificate.
+#receipt_sign_cert=
 
 # Console interface server
 [conserver]
@@ -132,7 +137,7 @@ wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 
 [global_db]
-driver=mdbx
+driver={DB_DRIVER}
 path={PREFIX}/var/lib/global_db
 #debug_more=true
 
