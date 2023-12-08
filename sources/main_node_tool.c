@@ -283,9 +283,9 @@ static int s_cert_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_strcmp (argv[4],"sig_tesla") == 0)
+    if((dap_strcmp (argv[4],"sig_tesla") == 0)||(dap_strcmp (argv[4],"sig_picnic") == 0))
     {
-       log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+       log_it( L_ERROR, "Tesla and Picnic algorithms are not supported, please, use another variant");
        exit(-600);
     }
 
@@ -461,6 +461,11 @@ static int s_init( int argc, const char **argv )
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
+    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
+        printf("Fatal Error: Can't init common functions module");
+        return -2;
+    }
+    dap_log_level_set(L_ERROR);
     char l_config_dir[MAX_PATH] = {'\0'};
     sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
     dap_config_init(l_config_dir);

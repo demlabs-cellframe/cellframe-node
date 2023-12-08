@@ -19,12 +19,6 @@ stages:
   stage: build
   timeout: 3 hours 30 minutes
   dependencies: []
-  artifacts:
-    paths:
-      - build_*/*.deb
-
-.debug_build:  
-  extends: .build
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /-asan$/
       variables:                                   
@@ -34,8 +28,13 @@ stages:
         DAP_UBSAN: "1"  
     - if: $CI_COMMIT_REF_NAME =~ /-tsan$/
       variables:                                   
-        DAP_TSAN: "1"  
-
+        DAP_TSAN: "1"
+    - if: $CI_COMMIT_REF_NAME =~ /.*$/
+      variables:                                   
+        DUMMY_VAR_FOR_ALLOW_JOB: "1"
+  artifacts:
+    paths:
+      - build_*/*.deb
 
 .publish:
   extends: .ci-polygon
@@ -74,7 +73,7 @@ macos-amd64:
         - build_*/*.pkg
 
 linux-amd64-debian-buster-dbg:
-    extends: .debug_build
+    extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
@@ -108,7 +107,7 @@ linux-amd64-debian-buster:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
       - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
 
@@ -129,6 +128,34 @@ linux-arm64-debian-bullseye:
     before_script: /opt/buildtools/prepare_environment.sh arm64-linux
     script: 
       - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+  
+linux-armhf-debian-bullseye-гupdtr:
+    extends: .build
+    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
+    
+    when: manual
+    allow_failure: true
+    
+    before_script: /opt/buildtools/prepare_environment.sh armhf-linux
+    script: 
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
+linux-arm64-debian-bullseye-updtr:
+    extends: .build
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    
+    when: manual
+    allow_failure: true
+    
+    script: 
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
