@@ -226,10 +226,6 @@ if(BSD)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
-
-target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
-target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
 if(BUILD_DIAGTOOL)
     message("[*] Diagtool build on")
     add_subdirectory(diagtool)
@@ -331,10 +327,6 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
 endif()
-
-target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
-target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
