@@ -33,10 +33,16 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-include (cellframe-sdk/cmake/OS_Detection.cmake)
+include (dap-sdk/cmake/OS_Detection.cmake)
 
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
-#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+
+
+if(DARWIN)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE ON) #MDBX crashes on apple
+else()
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CRYPTO_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
@@ -49,6 +55,8 @@ option(ADD_UPDATER OFF)
 #        set(BUILD_WITH_PYTHON_ENV ON)
 #    endif()
 #endif()
+
+set(DAP_USE_RPMALLOC OFF)
 
 if(LINUX)
 set(BUILD_WITH_PYTHON_ENV ON)
