@@ -1,6 +1,7 @@
 [Unit]
 Description=Cellframe Updater
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/cellframe-node/
