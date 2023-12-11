@@ -272,10 +272,7 @@ int main( int argc, const char **argv )
         log_it( L_ERROR, "Can't init notify server module" );
     }
 
-    char l_gdb_path[MAX_PATH] = {'\0'};
-    sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
-    if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
-                             dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
+    if ( dap_global_db_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init global db module" );
         return -58;
     }
