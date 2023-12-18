@@ -135,8 +135,9 @@ wallets_path={PREFIX}/var/lib/wallet
 ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 
 [global_db]
-driver={DB_DRIVER}
 path={PREFIX}/var/lib/global_db
+#driver={DB_DRIVER}
+
 #debug_more=true
 
 # Plugins
