@@ -67,6 +67,7 @@
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
 #include "dap_chain_net_balancer.h"
+#include "dap_chain_net_node_list.h"
 
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
@@ -329,10 +330,7 @@ int main( int argc, const char **argv )
         log_it( L_ERROR, "Can't init notify server module" );
     }
 
-    char l_gdb_path[MAX_PATH] = {'\0'};
-    sprintf(l_gdb_path, "%s/var/lib/global_db", g_sys_dir_path);
-    if ( dap_global_db_init( dap_config_get_item_str_default( g_config,"global_db","path",l_gdb_path),
-                             dap_config_get_item_str_default( g_config,"global_db", "driver", "mdbx")) != 0 ) {
+    if ( dap_global_db_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init global db module" );
         return -58;
     }
@@ -530,6 +528,8 @@ int main( int argc, const char **argv )
 
         }
         dap_server_set_default(l_server);
+        dap_chain_net_announce_addrs();
+        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 

@@ -33,11 +33,17 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-include (cellframe-sdk/cmake/OS_Detection.cmake)
 
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+include (dap-sdk/cmake/OS_Detection.cmake)
+
+if(DARWIN)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE ON) #MDBX crashes on apple
+else()
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-#set(BUILD_CRYPTO_TESTS ON)
+#set(BUILD_CELLFRAME_NODE_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
 
 set(BUILD_WITH_ZIP OFF)
@@ -49,9 +55,12 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
+set(DAP_USE_RPMALLOC OFF)
+
 if(LINUX)
 set(BUILD_WITH_PYTHON_ENV ON)
 set(SUPPORT_PYTHON_PLUGINS ON)
+set(MDBX_FORCE_DISABLE_CXX ON)  # Use it to force disabled compiling C++ part of MDBX library
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
@@ -61,9 +70,8 @@ if(LINUX OR DARWIN)
 endif()
 
 if(BUILD_CELLFRAME_NODE_TESTS)
-    enable_testing()
-    set(CELLFRAME_MODULES ${CELLFRAME_MODULES} "test-framework")
-    add_subdirectory(test)
+    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    set(BUILD_CELLFRAME_SDK_TESTS ON)
 endif()
 
 add_subdirectory(dap-sdk)
@@ -87,8 +95,6 @@ if(UNIX)
         add_definitions("-DDAP_DARWIN_LIBRARY")
 
     endif()
-
-
 
   if(LINUX)
     message("[*] Linux package setup")
@@ -356,14 +362,26 @@ else()
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
 	    
-
+        #install all from dist.linux/share except updater files and node-serivice
         if(NOT ADD_UPDATER)
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE )
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
         else()
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-node*service*" EXCLUDE)
         endif()
+
+        #install node service depends on sanitasizes values
+        if (DEFINED ENV{DAP_ASAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.asan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        elseif(DEFINED ENV{DAP_UBSAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.ubsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        elseif(DEFINED ENV{DAP_TSAN})
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.tsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        else()
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+        endif()
+        
     elseif(BSD)
-	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
