@@ -131,7 +131,17 @@ linux-arm64-debian-bullseye:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
-  
+
+linux-arm64-debian-bullseye-dbg:
+    extends: .build
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    script:
+      - ./prod_build/build.sh --target linux debug
+      - ./prod_build/pack.sh --target linux debug
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+
 linux-armhf-debian-bullseye-гupdtr:
     extends: .build
     image: demlabs/arm32v7/debian-bullseye:linuxbuilder
