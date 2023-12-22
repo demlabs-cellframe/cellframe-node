@@ -42,6 +42,11 @@ else()
     set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 endif()
 
+# problem in /usr/include/linux/netlink.h:99:24: note: expanded from macro 'NLMSG_OK' (nlh)->nlmsg_len <= (len)
+if(CMAKE_C_COMPILER MATCHES "clang")
+    add_compile_options(-Wno-sign-compare)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
