@@ -42,6 +42,11 @@ else()
     set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 endif()
 
+# problem in /usr/include/linux/netlink.h:99:24: note: expanded from macro 'NLMSG_OK' (nlh)->nlmsg_len <= (len)
+if(CMAKE_C_COMPILER MATCHES "clang")
+    add_compile_options(-Wno-sign-compare)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
@@ -200,6 +205,8 @@ if(UNIX)
         ${NODE_TOOL_SOURCES}
         sources/cellframe_node.h
     )
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -231,14 +238,6 @@ if(BSD)
 endif()
 
 
-target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
-target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
-
-if(BUILD_DIAGTOOL)
-    message("[*] Diagtool build on")
-    add_subdirectory(diagtool)
-endif()
-
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
@@ -247,6 +246,11 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+    
+    if(BUILD_DIAGTOOL)
+        message("[*] Diagtool build on")
+        add_subdirectory(diagtool)
+    endif()
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
@@ -326,13 +330,19 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
-        list(REMOVE_DUPLICATES ALL_LIBRARIES)
-        target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+	    set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+
+	    list(REMOVE_DUPLICATES ALL_LIBRARIES)
+	    target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
+	    target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} crc32c_adler )
+	    target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} crc32c_adler )
+
     endif()
 endif()
 
