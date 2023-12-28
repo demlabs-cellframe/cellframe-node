@@ -45,7 +45,9 @@
 #include "dap_config.h"
 #include "dap_server.h"
 #include "dap_http.h"
+#ifndef DAP_OS_ANDROID
 #include "dap_http_folder.h"
+#endif
 #include "dap_events.h"
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
@@ -67,7 +69,7 @@
 #include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 
-#ifdef DAP_OS_LINUX
+#if defined(DAP_OS_LINUX) && !defined(DAP_OS_ANDROID)
 #include "dap_chain_net_srv_vpn.h"
 #endif
 
@@ -113,10 +115,6 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 static char s_system_ca_dir[MAX_PATH];
 static char s_system_wallet_dir[MAX_PATH];
 
-#ifdef __ANDROID__
-int cellframe_node_tool_Main(int argc, const char **argv)
-#else
-
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
 static int s_wallet_sign_file(int argc, const char **argv);
@@ -127,6 +125,7 @@ static int s_cert_create_cert_pkey(int argc, const char **argv);
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
+
 
 struct options {
     char *cmd;
@@ -145,6 +144,10 @@ struct options {
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show }
 };
+
+#ifdef __ANDROID__
+int cellframe_node_tool_Main(int argc, const char **argv)
+#else
 
 int main(int argc, const char **argv)
 #endif
