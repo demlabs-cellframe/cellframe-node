@@ -647,11 +647,7 @@ void exit_if_server_already_running( void ) {
 
     pid_t pid = get_pid_from_file(s_pid_file_path);
 
-    struct flock lock;
-    int fd = open(s_pid_file_path, O_WRONLY);
-    memset(&lock, 0, sizeof(lock));
-    lock.l_type = F_WRLCK;
-
+    int bl = 0;
     bool  mf = false;
 
     #ifdef _WIN32
@@ -660,8 +656,16 @@ void exit_if_server_already_running( void ) {
         if ( GetLastError( ) == 183 ) {
             mf = true;
         }
+    #else
+
+    struct flock lock;
+    int fd = open(s_pid_file_path, O_WRONLY);
+    memset(&lock, 0, sizeof(lock));
+    lock.l_type = F_WRLCK;
+    bl = fcntl(fd, F_SETLK, &lock);
+
     #endif
-        if ((fcntl(fd, F_SETLK, &lock) == -1) || mf ) {
+        if (bl == -1 || mf ) {
         log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
                             "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
         exit( -2 );
