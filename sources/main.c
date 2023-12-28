@@ -140,6 +140,7 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
+
 #ifdef __ANDROID__
 #include "cellframe_node.h"
 #include <android/log.h>
@@ -240,6 +241,8 @@ int main( int argc, const char **argv )
     log_it(L_DEBUG, "Parsing command line args");
 #ifndef _WIN32
     s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
+    save_process_pid_in_file(s_pid_file_path);
+
 #ifdef __ANDROID__
     jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
     char **argv = malloc(sizeof(char*) * (argc + 1));
@@ -472,8 +475,6 @@ int main( int argc, const char **argv )
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
 
-    save_process_pid_in_file(s_pid_file_path);
-
     if ( bServerEnabled ) {
 
         int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
@@ -646,6 +647,11 @@ void exit_if_server_already_running( void ) {
 
     pid_t pid = get_pid_from_file(s_pid_file_path);
 
+    struct flock lock;
+    int fd = open(s_pid_file_path, O_WRONLY);
+    memset(&lock, 0, sizeof(lock));
+    lock.l_type = F_WRLCK;
+
     bool  mf = false;
 
     #ifdef _WIN32
@@ -655,8 +661,7 @@ void exit_if_server_already_running( void ) {
             mf = true;
         }
     #endif
-
-    if ( (pid != 0 && is_process_running(pid)) || mf ) {
+        if ((fcntl(fd, F_SETLK, &lock) == -1) || mf ) {
         log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
                             "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
         exit( -2 );
