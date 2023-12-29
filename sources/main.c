@@ -150,7 +150,9 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
+#ifndef DAP_OS_WINDOWS
 static const char *s_pid_file_path = NULL;
+#endif
 
 #ifdef __ANDROID__
 JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
@@ -239,7 +241,7 @@ int main( int argc, const char **argv )
 
 
     log_it(L_DEBUG, "Parsing command line args");
-#ifndef _WIN32
+#ifndef DAP_OS_WINDOWS
     s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
     save_process_pid_in_file(s_pid_file_path);
 
@@ -609,6 +611,7 @@ void parse_args( int argc, const char **argv ) {
 
         case 0: // --stop
         {
+#ifndef DAP_OS_WINDOWS
             pid_t pid = get_pid_from_file(s_pid_file_path);
 
             if ( pid == 0 ) {
@@ -623,6 +626,10 @@ void parse_args( int argc, const char **argv ) {
 
             log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
             exit( -21 );
+#else
+            // TODO OpenEvent + SetEvent
+            exit (-22);
+#endif
         }
 
         case 'D':
