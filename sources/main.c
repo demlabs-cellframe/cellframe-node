@@ -653,7 +653,7 @@ void parse_args( int argc, const char **argv ) {
 void exit_if_server_already_running( void ) {
 
 #ifdef DAP_OS_WINDOWS
-    CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56")
+    CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56");
     if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
         log_it( L_WARNING, "DapServer is already running, multiple instances are prohibited by config. Exiting...");
         exit( -2 );
