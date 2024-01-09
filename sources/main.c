@@ -140,6 +140,7 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
+
 #ifdef __ANDROID__
 #include "cellframe_node.h"
 #include <android/log.h>
@@ -149,7 +150,9 @@
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
+#ifndef DAP_OS_WINDOWS
 static const char *s_pid_file_path = NULL;
+#endif
 
 #ifdef __ANDROID__
 JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
@@ -238,8 +241,10 @@ int main( int argc, const char **argv )
 
 
     log_it(L_DEBUG, "Parsing command line args");
-#ifndef _WIN32
+#ifndef DAP_OS_WINDOWS
     s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path","/tmp");
+    save_process_pid_in_file(s_pid_file_path);
+
 #ifdef __ANDROID__
     jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
     char **argv = malloc(sizeof(char*) * (argc + 1));
@@ -472,8 +477,6 @@ int main( int argc, const char **argv )
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
 
-    save_process_pid_in_file(s_pid_file_path);
-
     if ( bServerEnabled ) {
 
         int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
@@ -608,6 +611,7 @@ void parse_args( int argc, const char **argv ) {
 
         case 0: // --stop
         {
+#ifndef DAP_OS_WINDOWS
             pid_t pid = get_pid_from_file(s_pid_file_path);
 
             if ( pid == 0 ) {
@@ -622,6 +626,10 @@ void parse_args( int argc, const char **argv ) {
 
             log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
             exit( -21 );
+#else
+            // TODO OpenEvent + SetEvent
+            exit (-22);
+#endif
         }
 
         case 'D':
@@ -644,22 +652,21 @@ void parse_args( int argc, const char **argv ) {
 
 void exit_if_server_already_running( void ) {
 
-    pid_t pid = get_pid_from_file(s_pid_file_path);
-
-    bool  mf = false;
-
-    #ifdef _WIN32
-        CreateMutexW( NULL, FALSE, (WCHAR *) L"DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56" );
-
-        if ( GetLastError( ) == 183 ) {
-            mf = true;
-        }
-    #endif
-
-    if ( (pid != 0 && is_process_running(pid)) || mf ) {
-        log_it( L_WARNING, "Proccess %"DAP_UINT64_FORMAT_U" is running, don't allow "
-                            "to run more than one copy of DapServer, exiting...", (uint64_t)pid );
+#ifdef DAP_OS_WINDOWS
+    CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56");
+    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
+        log_it( L_WARNING, "DapServer is already running, multiple instances are prohibited by config. Exiting...");
         exit( -2 );
     }
+#else
+    pid_t pid = get_pid_from_file(s_pid_file_path);
+    struct flock lock = { .l_type = F_WRLCK };
+    int fd = open(s_pid_file_path, O_WRONLY);
+    if (fcntl(fd, F_SETLK, &lock) == -1) {
+        log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
+                ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
+        exit( -2 );
+    }
+#endif
 }
 
