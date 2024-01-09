@@ -142,9 +142,10 @@ path={PREFIX}/var/lib/global_db
 #debug_more=true
 
 # Plugins
-#[plugins]
-enabled=true
+[plugins]
+py_path={PREFIX}/var/lib/plugins
+# enabled=true
 # Load Python-based plugins
 #py_load=true   
 # Path to Pyhon-based plugins
-#py_path={PREFIX}/var/lib/plugins
+

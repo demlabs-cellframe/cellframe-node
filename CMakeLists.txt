@@ -33,12 +33,21 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
+
 include (dap-sdk/cmake/OS_Detection.cmake)
 
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
-#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+if(DARWIN)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE ON) #MDBX crashes on apple
+else()
+    set(BUILD_WITH_GDB_DRIVER_MDBX ON)
+endif()
+
+# problem in /usr/include/linux/netlink.h:99:24: note: expanded from macro 'NLMSG_OK' (nlh)->nlmsg_len <= (len)
+if(CMAKE_C_COMPILER MATCHES "clang")
+    add_compile_options(-Wno-sign-compare)
+endif()
+
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #add_definitions("-DDAP_TPS_TEST")
 
@@ -52,8 +61,9 @@ option(ADD_UPDATER OFF)
 #endif()
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+set(BUILD_WITH_PYTHON_ENV ON)
+set(SUPPORT_PYTHON_PLUGINS ON)
+set(MDBX_FORCE_DISABLE_CXX ON)  # Use it to force disabled compiling C++ part of MDBX library
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
@@ -198,6 +208,8 @@ if(UNIX)
         ${NODE_TOOL_SOURCES}
         sources/cellframe_node.h
     )
+    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
+    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -318,9 +330,12 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
-        list(REMOVE_DUPLICATES ALL_LIBRARIES)
-        target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+	    set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+
+	    list(REMOVE_DUPLICATES ALL_LIBRARIES)
+	    target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
+        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
