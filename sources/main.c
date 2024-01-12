@@ -482,8 +482,9 @@ int main( int argc, const char **argv )
         int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
 
         if( l_port > 0 ) {
-            l_server = dap_server_new( (dap_config_get_item_str(g_config, "server", "listen_address")),
-                                      (uint16_t) l_port, SERVER_TCP, NULL );
+            const char *l_listen_address = dap_config_get_item_str(g_config, "server", "listen_address");
+            l_server = dap_server_new( &l_listen_address,
+                                      (uint16_t *) &l_port, 1, SERVER_TCP, NULL );
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
 
