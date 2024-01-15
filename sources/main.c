@@ -101,7 +101,7 @@
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_LINUX) && !defined(DAP_OS_ANDROID)
+#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
 #include "dap_chain_net_srv_vpn.h"
 #include "dap_chain_net_vpn_client.h"
 #endif
@@ -562,6 +562,9 @@ int main( int argc, const char **argv )
         dap_plugin_start_all();
     }
 
+    //go live!
+    dap_chain_net_try_online_all();
+    
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules

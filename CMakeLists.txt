@@ -243,7 +243,7 @@ if(UNIX AND NOT WIN32)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
     set(NODE_LIBRARIES cellframe-sdk )
 
-    set(NODE_CLI_LIBRARIES m cellframe-sdk)
+    set(NODE_CLI_LIBRARIES dap_core dap_io dap_crypto dap_app_cli dap_chain_net m )
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
     
@@ -425,4 +425,3 @@ else()
 
 endif()
 INCLUDE(CPack)
-
