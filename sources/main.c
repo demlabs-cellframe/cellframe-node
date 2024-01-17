@@ -476,23 +476,19 @@ int main( int argc, const char **argv )
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
-
+    
+    uint16_t l_listen_addrs_count = 0;
     if ( bServerEnabled ) {
-
-        int32_t l_port = dap_config_get_item_int32(g_config, "server", "listen_port_tcp");
-
-        if( l_port > 0 ) {
-            const char *l_listen_address = dap_config_get_item_str(g_config, "server", "listen_address");
-            l_server = dap_server_new( &l_listen_address,
-                                      (uint16_t *) &l_port, 1, SERVER_TCP, NULL );
+        char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_listen_addrs_count);
+        if( l_listen_addrs && l_listen_addrs_count > 0) {
+            l_server = dap_server_new( l_listen_addrs, l_listen_addrs_count, SERVER_TCP, NULL);
         } else
             log_it( L_WARNING, "Server is enabled but no port is defined" );
-
     }
 
     if ( l_server ) { // If listener server is initialized
         // TCP-specific things
-        if ( dap_config_get_item_int32_default(g_config, "server", "listen_port_tcp",-1) > 0) {
+        if (l_listen_addrs_count) {
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
@@ -541,7 +537,7 @@ int main( int argc, const char **argv )
     log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
     if (dns_bootstrap_balancer_enabled) {
         // DNS server start
-        dap_dns_server_start(dap_config_get_item_uint16_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT));
+        dap_dns_server_start(dap_config_get_array_str(g_config, "bootstrap_balancer", "dns_listen_port", NULL));
     }
     bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
     log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
