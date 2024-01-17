@@ -21,8 +21,7 @@ auto_online={AUTO_ONLINE}
 enabled={SERVER_ENABLED}
 news_url_enabled=false
 bugreport_url_enabled=false
-listen_address={SERVER_ADDR}
-listen_port_tcp={SERVER_PORT}
+listen_address=[{SERVER_ADDR}:{SERVER_PORT}]
 # External IPv4 address
 #ext_address=8.9.10.11
 # External IPv6 address
@@ -35,8 +34,7 @@ listen_port_tcp={SERVER_PORT}
 # Listening path have priority above listening address 
 #listen_path={PREFIX}/var/run/node_notify
 #listen_path_mode=600
-listen_address={NOTIFY_SRV_ADDR}
-listen_port={NOTIFY_SRV_PORT}
+listen_address=[{NOTIFY_SRV_ADDR}:{NOTIFY_SRV_PORT}]
 
 [stream]
 # For now its IAES but thats depricated
