@@ -200,14 +200,15 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL,"Can't init general configurations" );
         return -1;
     }
-
+#ifndef DAP_OS_WINDOWS
+    char l_default_dir[MAX_PATH] = {'\0'};
+    sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
+    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path", l_default_dir) ;
+    save_process_pid_in_file(s_pid_file_path);
+#endif
 
     log_it(L_DEBUG, "Parsing command line args");
     parse_args( argc, argv );
-    #ifndef DAP_OS_WINDOWS
-        s_pid_file_path = dap_config_get_item_str_default( g_config,  "resources", "pid_path","/tmp") ;
-        save_process_pid_in_file(s_pid_file_path);
-    #endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
