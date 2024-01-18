@@ -51,7 +51,7 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
-if(NOT LINUX)
+if(LINUX)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
