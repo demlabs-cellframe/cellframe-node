@@ -480,10 +480,8 @@ int main( int argc, const char **argv )
     uint16_t l_listen_addrs_count = 0;
     if ( bServerEnabled ) {
         char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_listen_addrs_count);
-        if( l_listen_addrs && l_listen_addrs_count > 0) {
-            l_server = dap_server_new( l_listen_addrs, l_listen_addrs_count, SERVER_TCP, NULL);
-        } else
-            log_it( L_WARNING, "Server is enabled but no port is defined" );
+        if(!l_listen_addrs || !l_listen_addrs_count || !(l_server = dap_server_new(l_listen_addrs, l_listen_addrs_count, SERVER_TCP, NULL)))
+            log_it( L_WARNING, "Server is enabled but no address is defined" );
     }
 
     if ( l_server ) { // If listener server is initialized
