@@ -232,6 +232,8 @@ int main( int argc, const char **argv )
     dap_events_init(l_thread_cnt, 0);
     dap_events_start();
 
+    dap_link_manager_init();
+
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
     if ( bServerEnabled && dap_server_init() != 0 ) {
@@ -502,6 +504,7 @@ int main( int argc, const char **argv )
         dap_plugin_deinit();
     }
 
+    dap_link_manager_deinit();
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();

@@ -8,6 +8,7 @@ test/build
 *.autosave
 *.user
 .vscode/
+.devcontainer/
 # Object files
 *.o
 *.ko
