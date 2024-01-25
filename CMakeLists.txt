@@ -63,7 +63,7 @@ option(ADD_UPDATER OFF)
 set(DAP_USE_RPMALLOC OFF)
 
 if(LINUX)
-set(BUILD_WITH_PYTHON_ENV ON)
+set(BUILD_WITH_PYTHON_ENV OFF)
 set(SUPPORT_PYTHON_PLUGINS ON)
 set(MDBX_FORCE_DISABLE_CXX ON)  # Use it to force disabled compiling C++ part of MDBX library
 endif()
