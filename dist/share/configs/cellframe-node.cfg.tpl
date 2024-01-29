@@ -70,6 +70,7 @@ http_server=false
 # Links check defaults
 [link_manager]
 #timer_update_states=5000
+#min_links_num=10
 
 [srv]
 allow_unsigned_orders=false
