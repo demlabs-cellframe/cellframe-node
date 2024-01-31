@@ -560,6 +560,9 @@ int main( int argc, const char **argv )
         dap_chain_plugins_init(g_config);
 #endif
         dap_plugin_start_all();
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+        dap_chain_plugins_save_thread();
+#endif
     }
 
     //go live!
