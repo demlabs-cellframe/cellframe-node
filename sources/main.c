@@ -470,7 +470,7 @@ int main( int argc, const char **argv )
     log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
     if (dns_bootstrap_balancer_enabled) {
         // DNS server start
-        dap_dns_server_start(dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
+        dap_dns_server_start((char *)dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
     }
     bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
     log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
