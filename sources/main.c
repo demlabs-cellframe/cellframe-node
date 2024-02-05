@@ -550,7 +550,11 @@ int main( int argc, const char **argv )
     }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
         dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
         DAP_DELETE(l_plugins_path_default);
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -560,6 +564,9 @@ int main( int argc, const char **argv )
         dap_chain_plugins_init(g_config);
 #endif
         dap_plugin_start_all();
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+        dap_chain_plugins_save_thread();
+#endif
     }
 
     //go live!

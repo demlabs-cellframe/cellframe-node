@@ -18,6 +18,7 @@
 #include "dap_http.h"
 #include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
+#include "dap_plugin.h"
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
 #endif
@@ -42,7 +43,7 @@ static void sig_exit_handler(int sig_code) {
     clear_pid_file();
 	
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-    dap_chain_plugins_deinit();
+    dap_plugin_deinit();
 #endif
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();

@@ -47,6 +47,7 @@
 #include "dap_defines.h"
 
 static dap_app_cli_connect_param_t *cparam;
+static const char *listen_socket = NULL;
 
 /**
  * split string to argc and argv
@@ -159,12 +160,20 @@ int shell_reader_loop()
         /* Remove leading and trailing whitespace from the line.
          Then, if there is anything left, add it to the history list
          and execute it. */
-        s = rl_stripwhite(line);
-
+        //s = rl_stripwhite(line);
+        s = dap_strstrip(line);
         if(*s)
         {
             add_history(s);
+            cparam = dap_app_cli_connect(listen_socket);
+            if(!cparam)
+            {
+                printf("Can't connect to %s\n",dap_get_appname());
+                DAP_DELETE(listen_socket);
+                exit(-1);
+            }
             execute_line(s);
+            dap_app_cli_disconnect(cparam);
         }
 
         DAP_DELETE(line);
@@ -219,22 +228,22 @@ int main(int argc, const char *argv[])
     // connect to node
 
 #ifndef _WIN32
-    const char* listen_socket = dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path"); // unix socket mode
+    listen_socket = dap_strdup(dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path")); // unix socket mode
 #else
     const char* listen_socket = NULL;
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
-
-    cparam = dap_app_cli_connect(listen_socket);
     dap_config_close(g_config);
-    if(!cparam)
-    {
-        printf("Can't connect to %s\n",dap_get_appname());
-        exit(-1);
-    }
 
     if(argc > 1){
+        cparam = dap_app_cli_connect(listen_socket);
+        if(!cparam)
+        {
+            printf("Can't connect to %s\n",dap_get_appname());
+            DAP_DELETE(listen_socket);
+            exit(-1);
+        }
         dap_app_cli_cmd_state_t cmd = {
             .cmd_name           = (char*)argv[1],
             .cmd_param_count    = argc - 2,
@@ -269,6 +278,7 @@ int main(int argc, const char *argv[])
 #ifdef _WIN32
         WSACleanup();
 #endif
+        DAP_DELETE(listen_socket);
     return 0;
 }
 
