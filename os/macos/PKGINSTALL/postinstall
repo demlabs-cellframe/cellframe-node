@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP_NAME=CellframeNode
+APP_NAME=Cellframe
 DAP_PREFIX=/Users/$USER/Applications/${APP_NAME}/Contents/Resources
 NODE=com.demlabs.cellframe-node
 
