@@ -5,7 +5,7 @@
 	<key>Label</key>
 	<string>com.demlabs.cellframe-node</string>
 	<key>Program</key>
-	<string>/Applications/CellframeNode.app/Contents/MacOS/cellframe-node</string>
+	<string>/Applications/Cellframe.app/Contents/MacOS/cellframe-node</string>
 	<key>RunAtLoad</key>
 	<true/>
 	<key>KeepAlive</key>
