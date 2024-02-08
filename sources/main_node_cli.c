@@ -230,7 +230,7 @@ int main(int argc, const char *argv[])
 #ifndef _WIN32
     listen_socket = dap_strdup(dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path")); // unix socket mode
 #else
-    const char* listen_socket = NULL;
+    listen_socket = dap_strdup(dap_config_get_item_str( g_config, "conserver", "listen_port_tcp"));
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
