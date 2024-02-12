@@ -109,7 +109,7 @@
 #include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
-#include "dap_stream_ch_chain.h"
+#include "dap_chain_ch.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
 #include "dap_chain_net_srv_xchange.h"
@@ -468,6 +468,13 @@ int main( int argc, const char **argv )
         dap_server_set_default(l_server);
         dap_chain_net_announce_addrs();
         dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
+
+        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
+        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
+        if (http_bootstrap_balancer_enabled) {
+            // HTTP URL add
+            dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
+        }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
@@ -475,17 +482,15 @@ int main( int argc, const char **argv )
     log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
     if (dns_bootstrap_balancer_enabled) {
         // DNS server start
-        dap_dns_server_start(dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
-    }
-    bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-    if (http_bootstrap_balancer_enabled) {
-        // HTTP URL add
-        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
+        dap_dns_server_start((char *)dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
     }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
         dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
         DAP_DELETE(l_plugins_path_default);
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
@@ -495,6 +500,10 @@ int main( int argc, const char **argv )
         dap_chain_plugins_init(g_config);
 #endif
         dap_plugin_start_all();
+
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+        dap_chain_plugins_save_thread();
+#endif
     }
 
     rc = dap_events_wait();

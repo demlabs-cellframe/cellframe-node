@@ -73,7 +73,7 @@
 
 #include "dap_stream_session.h"
 #include "dap_stream.h"
-#include "dap_stream_ch_chain.h"
+#include "dap_chain_ch.h"
 #include "dap_stream_ch_chain_net.h"
 #include "dap_stream_ch_chain_net_srv.h"
 
