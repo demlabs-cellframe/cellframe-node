@@ -13,6 +13,7 @@ EXEC_PREFIX=/Applications/$APP_NAME.app/Contents/Resources
 mkdir -p $DAP_PREFIX
 mkdir -p $DAP_PREFIX/etc
 mkdir -p $DAP_PREFIX/share 
+mkdir -p $DAP_PREFIX/var/run/ 
 
 sudo cp -rf /Applications/$APP_NAME.app/Contents/Resources/etc/* $DAP_PREFIX/etc
 sudo cp -rf /Applications/$APP_NAME.app/Contents/Resources/share/* $DAP_PREFIX/share
