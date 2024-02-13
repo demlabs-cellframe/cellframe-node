@@ -201,7 +201,8 @@ QStringList AbstractDiagnostic::get_networks()
     result.remove(' ');
     result.remove("\r");
     result.remove("\n");
-    result.remove("Networks:");
+    result.remove("networks:");
+    qDebug() << result;
     if(!(result.isEmpty() || result.isNull() || result.contains('\'') || result.contains("error") || result.contains("Error") || result.contains("err")))
     {
         listNetworks = result.split("\t", QString::SkipEmptyParts);
@@ -254,7 +255,7 @@ QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
     proc.waitForFinished(5000);
     QString result = proc.readAll();
 
-    QRegularExpression rx(R"(\.(.+): Total (.+) records)");
+    QRegularExpression rx(R"(\.*total: .*\.(.*): (\d))");
 
     ///TODO: bug in requests. Always returns both chains
 //    QRegularExpressionMatch match = rx.match(result);
@@ -276,7 +277,7 @@ QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
         QRegularExpressionMatch match = matchItr.next();
         resultObj.insert(match.captured(1), match.captured(2));
     }
-
+    qDebug() << resultObj;
     return resultObj;
 }
 
@@ -319,7 +320,7 @@ QJsonObject AbstractDiagnostic::get_blocks_count(QString net)
 
     QJsonObject last_block;
     last_block.insert("hash", match_date.captured(1));
-    QDateTime dt = QDateTime::fromString(match_date.captured(2));
+    QDateTime dt = QDateTime::fromString(match_date.captured(2), Qt::RFC2822Date);
     qint64 timestamp = dt.toSecsSinceEpoch();
     last_block.insert("timestamp", QString::number(timestamp));
 
@@ -362,7 +363,7 @@ QJsonObject AbstractDiagnostic::get_events_count(QString net)
 
     QJsonObject last_block;
     last_block.insert("hash", match_date.captured(1));
-    QDateTime dt = QDateTime::fromString(match_date.captured(2));
+    QDateTime dt = QDateTime::fromString(match_date.captured(2), Qt::RFC2822Date);
     qint64 timestamp = dt.toSecsSinceEpoch();
     last_block.insert("timestamp", QString::number(timestamp));
 
