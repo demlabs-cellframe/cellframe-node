@@ -185,6 +185,7 @@ int main(int argc, const char **argv)
   }
 
   s_help();
+  dap_config_close(g_config);
   return -1;
 }
 
