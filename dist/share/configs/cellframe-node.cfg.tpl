@@ -136,8 +136,8 @@ ca_folders=[{PREFIX}/var/lib/ca,{PREFIX}/share/ca]
 
 [global_db]
 path={PREFIX}/var/lib/global_db
+store_time_limit=6
 #driver={DB_DRIVER}
-
 #debug_more=true
 
 # Plugins

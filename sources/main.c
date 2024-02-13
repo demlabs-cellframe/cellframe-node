@@ -550,16 +550,27 @@ int main( int argc, const char **argv )
     }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-        dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        DAP_DELETE(l_plugins_path_default);
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        //Init python plugins
-        log_it(L_NOTICE, "Loading python plugins");
-        dap_plugins_python_app_content_init(l_server);
-        dap_chain_plugins_init(g_config);
 #endif
-        dap_plugin_start_all();
+        int ret_code = 0;
+        if (!(ret_code = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default)))){
+            DAP_DELETE(l_plugins_path_default);
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            //Init python plugins
+            log_it(L_NOTICE, "Loading python plugins");
+            dap_plugins_python_app_content_init(l_server);
+            dap_chain_plugins_init(g_config);
+#endif
+            dap_plugin_start_all();
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            dap_chain_plugins_save_thread();
+#endif
+        } else {
+            log_it(L_ERROR, "Plugin initialization error (return code: %d).", ret_code);
+        }
     }
 
     //go live!
