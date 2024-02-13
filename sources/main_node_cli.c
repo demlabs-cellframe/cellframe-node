@@ -159,7 +159,7 @@ int shell_reader_loop()
         /* Remove leading and trailing whitespace from the line.
          Then, if there is anything left, add it to the history list
          and execute it. */
-        s = rl_stripwhite(line);
+        s = dap_strstrip(line);
 
         if(*s)
         {
