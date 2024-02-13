@@ -11,7 +11,7 @@ gdb_groups_prefix=subzero
 node-role={NODE_TYPE}
 seed_nodes_aliases=[subzero.cellframe.root.0,subzero.cellframe.root.1,subzero.cellframe.root.2]
 seed_nodes_hostnames=[0.root.subzero.cellframe.net,1.root.subzero.cellframe.net,2.root.subzero.cellframe.net]
-seed_nodes_addrs=[ACCA::0000::0000::0000,ACCA::0000::0000::0001,ACCA::0000::0000::0002]
+seed_nodes_addrs=[608C::F7B7::D476::2438,7497::4FB4::CFA1::9823,5641::292F::13F5::F039]
 seed_nodes_port=[8190,8190,8190]
 
 #[auth]
