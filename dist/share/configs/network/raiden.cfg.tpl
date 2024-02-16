@@ -9,10 +9,14 @@ gdb_groups_prefix=raiden
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
+
+# If true connecting only to seed_nodes_addrs and permanent_nodes_addrs
+#links_static_only=true
 seed_nodes_aliases=[raiden.cellframe.root.0,raiden.cellframe.root.1,raiden.cellframe.root.2]
 seed_nodes_hostnames=[0.root.raiden.cellframe.net,1.root.raiden.cellframe.net,2.root.raiden.cellframe.net]
-seed_nodes_addrs=[BBBB::0000::0000::0000,BBBB::0000::0000::0001,BBBB::0000::0000::0002]
 seed_nodes_port=[8079,8079,8079]
+seed_nodes_addrs=[BBBB::0000::0000::0000,BBBB::0000::0000::0001,BBBB::0000::0000::0002]
+#permanent_nodes_addrs=[DDDD::0000::0000::0003,DDDD::0000::0000::0004]
 
 #[auth]
 #type=ca
