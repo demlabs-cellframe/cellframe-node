@@ -44,7 +44,7 @@
 
 #include "dap_config.h"
 #include "dap_server.h"
-#include "dap_http.h"
+#include "dap_http_server.h"
 #include "dap_http_folder.h"
 #include "dap_events.h"
 #include "dap_enc.h"
