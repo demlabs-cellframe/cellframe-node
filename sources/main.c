@@ -58,7 +58,7 @@
 #include "dap_config.h"
 #include "dap_server.h"
 #include "dap_notify_srv.h"
-#include "dap_http.h"
+#include "dap_http_server.h"
 #include "dap_http_folder.h"
 #include "dap_chain_node_dns_client.h"
 #include "dap_chain_node_dns_server.h"
@@ -436,7 +436,7 @@ int main( int argc, const char **argv )
 
 #ifdef DAP_MODULES_DYNAMIC
         if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-            if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
+            if(dap_modules_dynamic_load_cdb(DAP_HTTP_SERVER( l_server ))){
                 log_it(L_CRITICAL,"Can't init CDB module");
                 return -3;
             }else{
@@ -446,34 +446,34 @@ int main( int argc, const char **argv )
 #endif
 
         // Handshake URL
-        enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
+        enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
         // Streaming URLs
-        dap_stream_add_proc_http( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM );
-        dap_stream_ctl_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
+        dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
+        dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
 
         const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
         if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-                dap_chain_mempool_add_proc(DAP_HTTP(l_server), MEMPOOL_URL);
+                dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
         }
 
         // Built in WWW server
 
         if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP(l_server), "/",
+                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
                                 dap_config_get_item_str(g_config,
                                                             "resources",
                                                             "www_root") );
         }
         dap_server_set_default(l_server);
         dap_chain_net_announce_addrs();
-        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
+        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
 
         bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
         log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
         if (http_bootstrap_balancer_enabled) {
             // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
@@ -505,7 +505,7 @@ int main( int argc, const char **argv )
         dap_chain_plugins_save_thread();
 #endif
     }
-
+    dap_chain_net_try_online_all();
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
