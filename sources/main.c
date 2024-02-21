@@ -461,7 +461,6 @@ int main( int argc, const char **argv )
                                                             "www_root") );
         }
         dap_server_set_default(l_server);
-        dap_chain_net_announce_addrs();
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
 
         bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
