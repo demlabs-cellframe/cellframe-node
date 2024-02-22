@@ -15,7 +15,7 @@
 #include "dap_stream_ctl.h"
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
-#include "dap_http.h"
+#include "dap_http_server.h"
 #include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
 #include "dap_plugin.h"
