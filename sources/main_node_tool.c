@@ -427,11 +427,7 @@ static int s_cert_pkey_show(int argc, const char **argv)
         printf("Can't serialize cert %s", argv[4]);
         exit(-135);
     }
-
-    char *l_hash_str = dap_chain_hash_fast_to_str_new(&l_hash);
-    printf("%s\n", l_hash_str);
-    DAP_DELETE(l_hash_str);
-
+    printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
     return 0;
 }
 
