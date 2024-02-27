@@ -122,8 +122,12 @@ static int s_wallet_create_from(int argc, const char **argv);
 static int s_wallet_sign_file(int argc, const char **argv);
 static int s_cert_create(int argc, const char **argv);
 static int s_cert_dump(int argc, const char **argv);
+static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy);
 static int s_cert_create_pkey(int argc, const char **argv);
-static int s_cert_create_cert_pkey(int argc, const char **argv);
+static inline int s_cert_create_cert_pkey(int argc, const char **argv)
+{ return s_cert_copy(argc, argv, false); }
+static inline int s_cert_rename(int argc, const char **argv)
+{ return s_cert_copy(argc, argv, true); }
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
@@ -141,6 +145,7 @@ struct options {
 { "cert", {"dump"}, 1, s_cert_dump },
 { "cert", {"create_pkey"}, 1, s_cert_create_pkey },
 { "cert", {"create_cert_pkey"}, 1, s_cert_create_cert_pkey },
+{ "cert", {"rename"}, 1, s_cert_rename },
 { "cert", {"add_metadata"}, 1, s_cert_add_metadata },
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show }
@@ -354,39 +359,48 @@ static int s_cert_create_pkey(int argc, const char **argv) {
           exit(-7023);
         }
 }
-static int s_cert_create_cert_pkey(int argc, const char **argv) {
-    if ( argc >= 5 ) {
-      const char *l_cert_name = argv[3];
-      const char *l_cert_new_name = argv[4];
-      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-      if ( l_cert ) {
-        if ( l_cert->enc_key->pub_key_data_size ) {
-          // Create empty new cert
-          dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
-          l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
 
-          // Copy only public key
-          l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
-                                                           l_cert->enc_key->pub_key_data_size);
-          if(!l_cert_new->enc_key->pub_key_data) {
-            log_it(L_CRITICAL, "Memory allocation error");
-            return -1;
-          }
-          l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
-
-          dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
-          //dap_cert_delete_by_name(l_cert_name);
-          //dap_cert_delete_by_name(l_cert_new_name);
-        } else {
-          log_it(L_ERROR,"Can't produce pkey from this cert type");
-          exit(-7023);
-        }
-      } else {
+static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
+{
+    if (argc < 5) {
+        log_it(L_ERROR, "Incorrect arguments count");
         exit(-7021);
-      }
+    }
+    const char *l_cert_name = argv[3];
+    const char *l_cert_new_name = argv[4];
+    dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+    if (!l_cert) {
+        log_it(L_ERROR, "Can't read specified certificate");
+        exit(-7023);
+    }
+    if (!l_cert->enc_key->pub_key_data || !l_cert->enc_key->pub_key_data_size) {
+        log_it(L_ERROR, "Invalid certificate key, no public key found");
+        exit(-7022);
+    }
+    // Create empty new cert
+    dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
+    l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
+    // Copy public key
+    l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
+                                                     l_cert->enc_key->pub_key_data_size);
+    if (!l_cert_new->enc_key->pub_key_data) {
+        log_it(L_CRITICAL, g_error_memory_alloc);
+        return -1;
+    }
+    l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
+    // Copy private key for rename
+    if (l_cert->enc_key->priv_key_data && l_cert->enc_key->priv_key_data_size && a_pvt_key_copy) {
+        l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE(l_cert->enc_key->priv_key_data,
+                                                          l_cert->enc_key->priv_key_data_size);
+        if (!l_cert_new->enc_key->priv_key_data) {
+            log_it(L_CRITICAL, g_error_memory_alloc);
+            return -1;
+        }
+        l_cert_new->enc_key->priv_key_data_size = l_cert->enc_key->priv_key_data_size;
     }
     return 0;
 }
+
 static int s_cert_add_metadata(int argc, const char **argv) {
     if (argc >= 5) {
       const char *l_cert_name = argv[3];
