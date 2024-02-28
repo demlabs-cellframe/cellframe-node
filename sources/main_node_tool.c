@@ -378,7 +378,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         exit(-7022);
     }
     // Create empty new cert
-    dap_cert_t * l_cert_new = dap_cert_new(l_cert_new_name);
+    dap_cert_t *l_cert_new = dap_cert_new(l_cert_new_name);
     l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
     // Copy public key
     l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
@@ -398,7 +398,11 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         }
         l_cert_new->enc_key->priv_key_data_size = l_cert->enc_key->priv_key_data_size;
     }
-    return 0;
+    dap_cert_delete(l_cert);
+    int ret = dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
+    if (!ret && a_pvt_key_copy) // Remove original cert after renaming
+        ret = dap_cert_delete_file(l_cert_name, s_system_ca_dir);
+    return ret;
 }
 
 static int s_cert_add_metadata(int argc, const char **argv) {
