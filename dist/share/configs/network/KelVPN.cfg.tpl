@@ -11,11 +11,14 @@ bridged_network_ids=[0x0404202200000000]
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
+
+# If true connecting only to seed_nodes_addrs and permanent_nodes_addrs
+#links_static_only=true
 seed_nodes_aliases=[kelvpn.root.0,kelvpn.root.1,kelvpn.root.2]
 seed_nodes_hostnames=[0.root.kelvpn.com,1.root.kelvpn.com,2.root.kelvpn.com]
-seed_nodes_addrs=[1807::2023::0000::0000,1807::2023::0000::0001,1807::2023::0000::0002]
 seed_nodes_port=[8079,8079,8079]
-require_links=3
+seed_nodes_addrs=[1807::2023::0000::0000,1807::2023::0000::0001,1807::2023::0000::0002]
+#permanent_nodes_addrs=[1807::2023::0000::0003,1807::2023::0000::0004]
 
 #[auth]
 #type=ca

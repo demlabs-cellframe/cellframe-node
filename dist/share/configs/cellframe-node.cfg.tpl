@@ -67,6 +67,11 @@ http_server=false
 [node_client]
 #timer_update_states=300
 
+# Links check defaults
+[link_manager]
+#timer_update_states=5000
+#min_links_num=10
+
 [srv]
 allow_unsigned_orders=false
 allow_unverified_orders=false
