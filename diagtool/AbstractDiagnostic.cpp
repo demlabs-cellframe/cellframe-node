@@ -201,10 +201,10 @@ QStringList AbstractDiagnostic::get_networks()
     result.remove(' ');
     result.remove("\r");
     result.remove("\n");
-    result.remove("Networks:");
+    result.remove("networks:");
     if(!(result.isEmpty() || result.isNull() || result.contains('\'') || result.contains("error") || result.contains("Error") || result.contains("err")))
     {
-        listNetworks = result.split("\t", QString::SkipEmptyParts);
+        listNetworks = result.split(",", QString::SkipEmptyParts);
     }
 
     return listNetworks;
@@ -220,30 +220,33 @@ QJsonObject AbstractDiagnostic::get_net_info(QString net)
 
     // ---------- State & TargetState ----------------
 
-    QRegularExpression rx(R"***(^Network "(\S+)" has state (\S+) \(target state (\S*)\), .*cur node address ([A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}))***");
-    QRegularExpressionMatch match = rx.match(result);
-    if (!match.hasMatch()) {
-        return {};
-    }
+    result.remove(' ');
+    result.remove("\r");
+    result.remove("status:\n");
+    result.remove("links:\n");
+    result.remove("states:\n");
 
-    QJsonObject resultObj({
-                                {"state"              , match.captured(2)},
-                                {"target_state"       , match.captured(3)},
-                                {"node_address"       , match.captured(4)}
+    QStringList dataList = result.split("\n", QString::SkipEmptyParts);
+
+
+    if(dataList.length() == 6)
+    {
+        QJsonObject resultObj({
+                                {"network"             , dataList[0].remove("net:")},
+                                {"node_address"        , dataList[1].remove("current_addr:")},
+                                {"active_links_count"  , dataList[2].remove("active:")},
+                                {"links_count"         , dataList[3].remove("total:")},
+                                {"state"               , dataList[4].remove("current:")},
+                                {"target_state"        , dataList[5].remove("target:")},
+                                {"balancer"            , get_balancer_links(net)}
                             });
 
-    // ---------- Links count ----------------
-    QRegularExpression rxLinks(R"(\), active links (\d+) from (\d+),)");
-    match = rxLinks.match(result);
-    if (!match.hasMatch()) {
         return resultObj;
     }
+    else
+        qDebug()<<"Error parse 'net -net get state'";
 
-    resultObj.insert("active_links_count", match.captured(1));
-    resultObj.insert("links_count"       , match.captured(2));
-    resultObj.insert("balancer", get_balancer_links(net));
-
-    return resultObj;
+    return QJsonObject{};
 }
 
 QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
