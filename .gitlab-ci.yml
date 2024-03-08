@@ -79,6 +79,19 @@ macos-amd64:
       paths:
         - build_*/*.pkg
 
+macos-amd64-rwd:
+    extends: .build
+    image: demlabs/amd64/debian-bullseye:osxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh amd64-osx
+    script:
+      - ./prod_build/build.sh --target osx rwd #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target osx rwd --sign /opt/buildtools/sign/macos/demlabs.sh
+      - mv ./build_osx_rwd/cellframe-node_$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")_amd64.pkg ./build_osx_rwd/cellframe-node_$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")_amd64_rwd.pkg 
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
+    artifacts:
+      paths:
+        - build_*/*.pkg
+
 linux-amd64-debian-buster-dbg:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
@@ -187,6 +200,7 @@ linux-arm64-debian-bookworm-updtr:
     - linux-arm64-debian-bullseye 
     - linux-amd64-debian-buster-rwd
     - macos-amd64
+    - macos-amd64-rwd
    
   script: 
     - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue

@@ -245,7 +245,7 @@ static int s_wallet_sign_file(int argc, const char **argv) {
       s_help();
       exit(-3000);
     }
-    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3], s_system_wallet_dir);
+    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[3], s_system_wallet_dir, NULL);
     if ( !l_wallet ) {
       log_it(L_ERROR,"Can't open wallet \"%s\"",argv[3]);
       s_help();
