@@ -472,7 +472,7 @@ int main( int argc, const char **argv )
         log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
         if (http_bootstrap_balancer_enabled) {
             // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
