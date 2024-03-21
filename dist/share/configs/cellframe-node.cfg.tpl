@@ -63,9 +63,12 @@ http_server=false
 # debug_more=true
 #threshold_enabled=true
 
-# Synchronizatiob defaults
-[node_client]
-#timer_update_states=300
+# Links check defaults
+[link_manager]
+#timer_update_states=5000
+#min_links_num=10
+#max_attempts_num=5
+#debug_more=true
 
 [srv]
 allow_unsigned_orders=false
