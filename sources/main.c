@@ -495,17 +495,6 @@ int main( int argc, const char **argv )
             // Init HTTP-specific values
             dap_http_new( l_server, dap_get_appname() );
 
-#ifdef DAP_MODULES_DYNAMIC
-            if( dap_config_get_item_bool_default(g_config,"cdb","enabled",false) ) {
-                if(dap_modules_dynamic_load_cdb(DAP_HTTP( l_server ))){
-                    log_it(L_CRITICAL,"Can't init CDB module");
-                    return -3;
-                }else{
-                    log_it(L_NOTICE, "Central DataBase (CDB) is initialized");
-                }
-            }
-#endif
-
             // Handshake URL
             enc_http_add_proc( DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
@@ -566,7 +555,7 @@ int main( int argc, const char **argv )
 #endif
             dap_plugin_start_all();
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            dap_chain_plugins_save_thread();
+            dap_chain_plugins_save_thread(g_config);
 #endif
         } else {
             log_it(L_ERROR, "Plugin initialization error (return code: %d).", ret_code);
