@@ -224,20 +224,25 @@ QJsonObject AbstractDiagnostic::get_net_info(QString net)
     result.remove("\r");
     result.remove("status:\n");
     result.remove("links:\n");
+    result.remove("sync_status:\n");    
     result.remove("states:\n");
 
     QStringList dataList = result.split("\n", QString::SkipEmptyParts);
 
+    qDebug() << dataList;
 
-    if(dataList.length() == 6)
+    if(dataList.length() == 9)
     {
         QJsonObject resultObj({
                                 {"network"             , dataList[0].remove("net:")},
                                 {"node_address"        , dataList[1].remove("current_addr:")},
                                 {"active_links_count"  , dataList[2].remove("active:")},
                                 {"links_count"         , dataList[3].remove("total:")},
-                                {"state"               , dataList[4].remove("current:")},
-                                {"target_state"        , dataList[5].remove("target:")},
+                                {"sync_datums"         , dataList[4].remove("sync_datums:")},
+                                {"total_datums"        , dataList[5].remove("total_datums:")},
+                                {"percent"             , dataList[6].remove("percent:")},
+                                {"state"               , dataList[7].remove("current:")},
+                                {"target_state"        , dataList[8].remove("target:")},
                                 {"balancer"            , get_balancer_links(net)}
                             });
 
@@ -248,6 +253,7 @@ QJsonObject AbstractDiagnostic::get_net_info(QString net)
 
     return QJsonObject{};
 }
+
 
 QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
 {
