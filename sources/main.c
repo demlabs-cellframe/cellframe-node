@@ -239,11 +239,6 @@ int main( int argc, const char **argv )
         return -4;
     }
 
-    if ( dap_chain_net_link_manager_init() ) {
-        log_it( L_CRITICAL, "Can't init link manager module" );
-        return -5;
-    }
-
     if ( dap_http_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init http server module" );
         return -5;
