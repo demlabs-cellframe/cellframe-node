@@ -92,29 +92,10 @@ NET_NAME="subzero"
 if [ "$DAP_SUBZERO_ENABLED" = "true" ]; then
     
     DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
-    rm $DAP_NET_CFG.old
-fi
-
-
-NET_NAME="raiden"
-
-if [ "$DAP_RAIDEN_ENABLED" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
     if [ -e "$DAP_CFG_NET" ]; then
         mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled raiden"
-    fi
+        echo "[*] Disabled subzero"
+    fi    
 
 #    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
 #    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
@@ -126,8 +107,33 @@ if [ "$DAP_RAIDEN_ENABLED" = "true" ]; then
 #    fi
 #
 #    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-#    sed -i .old "s/{NODE_TYPE}/$DAP_RAIDEN_ROLE/" $DAP_NET_CFG  || true
+#    sed -i .old "s/{NODE_TYPE}/$DAP_SUBZERO_ROLE/" $DAP_NET_CFG  || true
 #    rm $DAP_NET_CFG.old
+fi
+
+
+NET_NAME="raiden"
+
+if [ "$DAP_RAIDEN_ENABLED" = "true" ]; then
+
+#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+#    if [ -e "$DAP_CFG_NET" ]; then
+#        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
+#        echo "[*] Disabled raiden"
+#    fi
+
+    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
+    DAP_NET_CFG=""
+    if [ -e "$DAP_CFG_NET" ]; then
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.new"
+    else
+	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
+    fi
+
+    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
+    sed -i .old "s/{NODE_TYPE}/$DAP_RAIDEN_ROLE/" $DAP_NET_CFG  || true
+    rm $DAP_NET_CFG.old
 fi
 
 
