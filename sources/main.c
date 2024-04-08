@@ -355,10 +355,6 @@ int main( int argc, const char **argv )
         return -61;
     }
 
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
-
     if( dap_chain_cs_dag_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -62;
@@ -402,6 +398,10 @@ int main( int argc, const char **argv )
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
+    }
+
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
+        log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
     if( dap_chain_net_srv_init() ){
