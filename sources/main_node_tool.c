@@ -6,9 +6,9 @@
  * Copyright  (c) 2017-2019
  * All rights reserved.
 
- This file is part of DAP (Deus Applications Prototypes) the open source project
+ This file is part of DAP (Demlabs Application Protocol) the open source project
 
-    DAP (Deus Applicaions Prototypes) is free software: you can redistribute it and/or modify
+    DAP (Demlabs Application Protocol) is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -379,8 +379,8 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     }
     // Create empty new cert
     dap_cert_t *l_cert_new = dap_cert_new(l_cert_new_name);
-    l_cert_new->enc_key = dap_enc_key_new( l_cert->enc_key->type);
-    // Copy public key
+    l_cert_new->enc_key = dap_enc_key_new(l_cert->enc_key->type);
+    // Copy public key (copy only memory address of key storage)
     l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
                                                      l_cert->enc_key->pub_key_data_size);
     if (!l_cert_new->enc_key->pub_key_data) {
@@ -388,7 +388,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         return -1;
     }
     l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
-    // Copy private key for rename
+    // Copy private key for rename (copy only memory address of key storage)
     if (l_cert->enc_key->priv_key_data && l_cert->enc_key->priv_key_data_size && a_pvt_key_copy) {
         l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE(l_cert->enc_key->priv_key_data,
                                                           l_cert->enc_key->priv_key_data_size);
@@ -398,10 +398,10 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         }
         l_cert_new->enc_key->priv_key_data_size = l_cert->enc_key->priv_key_data_size;
     }
-    dap_cert_delete(l_cert);
     int ret = dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
     if (!ret && a_pvt_key_copy) // Remove original cert after renaming
         ret = dap_cert_delete_file(l_cert_name, s_system_ca_dir);
+    dap_cert_delete(l_cert);    // Do not remove it before disk saving op
     return ret;
 }
 
