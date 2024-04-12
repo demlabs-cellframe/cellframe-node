@@ -67,7 +67,7 @@ http_server=false
 [link_manager]
 #timer_update_states=5000
 #min_links_num=10
-#max_attempts_num=5
+#max_attempts_num=2
 #debug_more=true
 
 [srv]

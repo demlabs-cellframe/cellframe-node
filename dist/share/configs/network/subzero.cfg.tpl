@@ -10,7 +10,7 @@ gdb_groups_prefix=subzero
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
 links_required=3
-# Will be used first. If count of permanent links lees than required than missing links wiil be filled with net balancer
+# Will be used first. If count of permanent links less than required than missing links will be filled with net balancer
 # permanent_nodes_addrs=[]
 seed_nodes_aliases=[subzero.cellframe.root.0,subzero.cellframe.root.1,subzero.cellframe.root.2]
 seed_nodes_hosts=[0.root.subzero.cellframe.net:8190, 1.root.subzero.cellframe.net:8190, 2.root.subzero.cellframe.net:8190]
