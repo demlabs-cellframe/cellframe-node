@@ -474,19 +474,29 @@ int main( int argc, const char **argv )
 #else
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
 #endif
-        dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        DAP_DELETE(l_plugins_path_default);
+        int rc_plugin_init = 0;
+        rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
+        if (rc_plugin_init) {
+            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);    
+            DAP_DELETE(l_plugins_path_default);
+        } else {
+            DAP_DELETE(l_plugins_path_default);
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        //Init python plugins
-        log_it(L_NOTICE, "Loading python plugins");
-        dap_plugins_python_app_content_init(l_server);
-        dap_chain_plugins_init(g_config);
+            //Init python plugins
+            log_it(L_NOTICE, "Loading python plugins");
+            dap_plugins_python_app_content_init(l_server);
+            rc_plugin_init = dap_chain_plugins_init(g_config);
 #endif
-        dap_plugin_start_all();
+            dap_plugin_start_all();
 
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-        dap_chain_plugins_save_thread(g_config);
+            if (!rc_plugin_init) {
+                dap_chain_plugins_save_thread(g_config);
+            } else {
+                log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
+            }
 #endif
+        }
     }
     dap_chain_net_try_online_all();
     rc = dap_events_wait();
