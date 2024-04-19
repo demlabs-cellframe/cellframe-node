@@ -70,9 +70,9 @@ endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
-#only "common" method will be compiled on win32, on linux\darvin it will be full
-set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
-
+if(LINUX OR DARWIN)
+    set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
+endif()
 
 if(BUILD_CELLFRAME_NODE_TESTS)
     set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
