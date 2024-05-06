@@ -17,7 +17,7 @@ node-role={NODE_TYPE}
 # If permanent addresses pointed without hosts then information about host will be retrieved from GDB
 #permanent_nodes_hosts=[]
 # This addresses will have priviledged acceess to some GDB groups
-authorized_nodes_addrs=[BBBB::0000::0000::0000, BBBB::0000::0000::0001, BBBB::0000::0000::0002]
+authorized_nodes_addrs=[BCA3::B097::DCDC::CB2B, 038E::0C9B::A3E8::C533, CC88::3F68::5313::1577]
 # This hosts wiil be used as bootstrap balancers for first net access
 seed_nodes_hosts=[0.root.raiden.cellframe.net:8079, 1.root.raiden.cellframe.net:8079, 2.root.raiden.cellframe.net:8079]
 
