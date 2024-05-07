@@ -362,12 +362,10 @@ static int s_cert_create_pkey(int argc, const char **argv) {
 
 static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
 {
-    printf("1  \n" );
     if (argc < 5) {
         log_it(L_ERROR, "Incorrect arguments count");
         exit(-7021);
     }
-    printf("2  \n" );
     const char *l_cert_name = argv[3];
     const char *l_cert_new_name = argv[4];
     dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
@@ -375,12 +373,10 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         log_it(L_ERROR, "Can't read specified certificate");
         exit(-7023);
     }
-    printf("3  \n" );
     if (!l_cert->enc_key->pub_key_data || !l_cert->enc_key->pub_key_data_size) {
         log_it(L_ERROR, "Invalid certificate key, no public key found");
         exit(-7022);
     }
-    printf("4 \n" );
     // Create empty new cert
     dap_cert_t *l_cert_new = dap_cert_new(l_cert_new_name);
     l_cert_new->enc_key = dap_enc_key_new(l_cert->enc_key->type);
@@ -402,14 +398,12 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         }
         l_cert_new->enc_key->priv_key_data_size = l_cert->enc_key->priv_key_data_size;
     }
-    printf("5 \n" );
     int ret = dap_cert_save_to_folder(l_cert_new, s_system_ca_dir);
     if (!ret && a_pvt_key_copy) // Remove original cert after renaming
         ret = dap_cert_delete_file(l_cert_name, s_system_ca_dir);
     dap_cert_delete(l_cert);    // Do not remove it before disk saving op
     DAP_DEL_Z(l_cert_new->enc_key->pub_key_data);
     DAP_DEL_Z(l_cert_new->enc_key->priv_key_data);
-    //DAP_DEL_Z(l_cert_new->enc_key);
     dap_cert_delete(l_cert_new); 
     return ret;
 }
