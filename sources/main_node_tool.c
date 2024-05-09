@@ -402,6 +402,9 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     if (!ret && a_pvt_key_copy) // Remove original cert after renaming
         ret = dap_cert_delete_file(l_cert_name, s_system_ca_dir);
     dap_cert_delete(l_cert);    // Do not remove it before disk saving op
+    DAP_DEL_Z(l_cert_new->enc_key->pub_key_data);
+    DAP_DEL_Z(l_cert_new->enc_key->priv_key_data);
+    dap_cert_delete(l_cert_new); 
     return ret;
 }
 
