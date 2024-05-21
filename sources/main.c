@@ -380,12 +380,11 @@ int main( int argc, const char **argv )
         return -68;
     }
 
+#ifndef _WIN32
     if( dap_chain_net_srv_vpn_pre_init() ){
         log_it(L_ERROR, "Can't pre-init vpn service");
     }
-    
 
-#ifndef _WIN32
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
