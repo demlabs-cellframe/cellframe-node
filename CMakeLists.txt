@@ -51,7 +51,7 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
-if(!LINUX)
+if(LINUX)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
@@ -398,7 +398,11 @@ else()
             
             INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             
-           
+            #install python-modules
+            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+
            INSTALL(DIRECTORY ${cpython310static_SOURCE_DIR}/lib/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
