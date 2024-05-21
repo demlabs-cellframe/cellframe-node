@@ -404,6 +404,8 @@ else()
             INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
             INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+
+           INSTALL(DIRECTORY ${cpython310static_SOURCE_DIR}/lib/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
 
