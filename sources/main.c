@@ -92,7 +92,6 @@
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_app.h"
-#include "dap_chain_net_srv_app_db.h"
 #include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
@@ -106,24 +105,21 @@
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
 
-#include "dap_stream_session.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
-#include "dap_chain_ch.h"
-#include "dap_stream_ch_chain_net.h"
-#include "dap_stream_ch_chain_net_srv.h"
+#include "dap_chain_net_srv_order.h"
 #include "dap_chain_net_srv_xchange.h"
+#include "dap_chain_net_srv_voting.h"
+#include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
 
 #include "dap_common.h"
 #include "dap_events_socket.h"
 #include "dap_client.h"
-#include "dap_http_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
 
-#include "dap_defines.h"
 #include "dap_file_utils.h"
 #include "dap_plugin.h"
 
@@ -356,6 +352,14 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't provide exchange capability");
     }
 
+    if (dap_chain_net_srv_voting_init()) {
+        log_it(L_ERROR, "Can't provide voting capability");
+    }
+    
+    if (dap_chain_net_srv_bridge_init()) {
+        log_it(L_ERROR, "Can't provide bridge capability");
+    }
+    
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
     }
@@ -371,6 +375,10 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
+    if( dap_chain_net_srv_vpn_pre_init() ){
+        log_it(L_ERROR, "Can't pre-init vpn service");
+    }
+
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -520,6 +528,8 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_pos_delegate_deinit();
     dap_chain_net_srv_stake_lock_deinit();
+    dap_chain_net_srv_bridge_deinit();
+    dap_chain_net_srv_voting_deinit();
     dap_chain_net_deinit();
     dap_global_db_deinit();
     dap_chain_deinit();
