@@ -14,6 +14,8 @@ case "$1" in
 	upgrade)
 		echo "[*] Stopping cellframe-node.service"
         systemctl stop cellframe-node || true
+		echo "[*] Stopping cellframe-diagtool.service"
+        systemctl stop cellframe-diagtool || true
 		;;
 
 	failed-upgrade)

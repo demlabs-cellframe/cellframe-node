@@ -50,7 +50,7 @@ listen_address=[{NOTIFY_SRV_ADDR}:{NOTIFY_SRV_PORT}]
 # Bootstrap balancer server
 [bootstrap_balancer]
 dns_server=false
-http_server=false
+http_server=true
 
 # Ledger defaults
 [ledger]
