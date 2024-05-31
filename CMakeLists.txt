@@ -52,8 +52,8 @@ option(ADD_UPDATER OFF)
 #endif()
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV OFF)
-    set(SUPPORT_PYTHON_PLUGINS OFF)
+    set(BUILD_WITH_PYTHON_ENV ON)
+    set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
