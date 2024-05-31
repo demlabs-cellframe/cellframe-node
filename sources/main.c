@@ -528,6 +528,7 @@ int main( int argc, const char **argv )
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_pos_delegate_deinit();
     dap_chain_net_srv_stake_lock_deinit();
+    dap_chain_net_balancer_deinit();
     dap_chain_net_srv_bridge_deinit();
     dap_chain_net_srv_voting_deinit();
     dap_chain_net_deinit();
