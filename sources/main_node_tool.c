@@ -90,7 +90,6 @@
 #define ENC_HTTP_URL "/enc_init"
 #define STREAM_CTL_URL "/stream_ctl"
 #define STREAM_URL "/stream"
-#define SLIST_URL "/nodelist"
 #define MAIN_URL "/"
 #define LOG_TAG "main_node_tool"
 
