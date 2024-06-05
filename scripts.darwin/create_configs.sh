@@ -18,16 +18,16 @@ export NOTIFY_SRV_ADDR=127.0.0.1
 export NOTIFY_SRV_PORT=8080
 
 # Raiden testnet
-export DAP_RAIDEN_ENABLED=true
+export DAP_RAIDEN_ENABLED=false
 export DAP_RAIDEN_ROLE=full
 
 # Raiden testnet
-export DAP_RIEMANN_ENABLED=true
+export DAP_RIEMANN_ENABLED=false
 export DAP_RIEMANN_ROLE=full
 
 
 # Subzero testnet
-export DAP_SUBZERO_ENABLED=true
+export DAP_SUBZERO_ENABLED=false
 export DAP_SUBZERO_ROLE=full
 
 # Backbone
@@ -44,7 +44,7 @@ export DAP_KELVPN_MINKOWSKI_ENABLED=false
 export DAP_KELVPN_MINKOWSKI_ROLE=full
 
 # Milena testnet
-export DAP_MILEENA_ENABLED=false
+export DAP_MILEENA_ENABLED=true
 export DAP_MILEENA_ROLE=full
 
 export DAP_DB_DRIVER=sqlite
