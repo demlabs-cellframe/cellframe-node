@@ -101,7 +101,7 @@ Description: Riemann: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/mileena_enabled
-Default: false
+Default: true
 Choices: true, false
 Type: select
 Description: Mileena: Enable network
@@ -158,7 +158,7 @@ Description: Backbone Mainnet: Node role
  root - Special predefined root nodes, usually produces zerochain and acts like archive as well
 
 Template: cellframe-node/kelvpn_enabled
-Default: false
+Default: true
 Choices: true, false
 Type: select
 Description: KelVPN: Enable network
