@@ -531,8 +531,8 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
         size_t l_sign_ser_size = l_sign_unserialized_size;
         uint8_t *l_sign_ser = dap_enc_key_serialize_sign(l_key, l_sign_unserialized, &l_sign_ser_size);
         if ( l_sign_ser ) {
-            dap_sign_t *l_ret = DAP_NEW_Z_SIZE(dap_sign_t,
-                                               sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size);
+            dap_sign_t *l_ret;
+            DAP_NEW_Z_SIZE_RET(l_ret, dap_sign_t, sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size, NULL);
             // write serialized public key to dap_sign_t
             memcpy(l_ret->pkey_n_sign, l_pub_key, l_pub_key_size);
             l_ret->header.type = dap_sign_type_from_key_type(l_key->type);
