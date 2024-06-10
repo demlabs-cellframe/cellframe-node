@@ -1,0 +1,47 @@
+var DB_DRIVER=mdbx
+
+if $HOST_OS==MacOS
+    var DB_DRIVER=sqlite
+endif
+
+#will copy from template if not exists and populate placeholders
+#default - not alter config if exists
+#ensure - copy and populate
+fromtemplate cellframe-node default
+
+# "network" command will use template on first start and populate placeholders
+# on reinstalls it work only with existing enabled|disabled configs (or template if none exists)
+# "default" action will not alter config if it exists in on or off state (not-first install)
+# "ensure" will activate config to desired state from oposite, or from template if it not exists
+
+network     Backbone    ensure     on
+network     KelVPN      default     on 
+network     riemann     default     off
+network     raiden      default     off
+network     mileena     default     off
+network     subzero     ensure      off    #subzero is devnet, force-to disable it 
+
+
+# config commands works with cellframe-node / network/.cfg|.cfg dis files, not templated one
+# all configs at this stage should be initialized by "network" & "fromtemplate" commands
+
+config  cellframe-node  general         auto_online         default     true
+config  cellframe-node  general         debug_mode          default     false
+config  cellframe-node  server          enabled             default     false
+config  cellframe-node  server          listen_address      default     127.0.0.1
+config  cellframe-node  server          listen_port_tcp     default     8079
+config  cellframe-node  notify_server   listen_address      default     127.0.0.1
+config  cellframe-node  notify_server   listen_port         default     8080
+
+config cellframe-node  global_db       driver          default     $DB_DRIVER
+if MacOS == $HOST_OS
+    config cellframe-node  global_db       driver          ensure     $DB_DRIVER
+endif
+
+config  Backbone     general     node-role   default     full
+config  KelVPN       general     node-role   default     full
+config  raiden       general     node-role   default     full
+config  riemann      general     node-role   default     full
+config  mileena      general     node-role   default     full
+config  subzero      general     node-role   default     full
+ 
