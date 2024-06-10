@@ -133,7 +133,7 @@
 #include "dap_defines.h"
 #include "dap_file_utils.h"
 #include "dap_plugin.h"
-
+#include "dap_chain_net_srv_vpn_common.h"
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
     #include "dap_chain_plugins.h"
     #include "dap_plugins_python_app_context.h"
