@@ -202,12 +202,11 @@ QStringList AbstractDiagnostic::get_networks()
     result.remove("\r");
     result.remove("\n");
     result.remove("networks:");
-    qDebug() << result;
     if(!(result.isEmpty() || result.isNull() || result.contains('\'') || result.contains("error") || result.contains("Error") || result.contains("err")))
     {
-        listNetworks = result.split("\t", QString::SkipEmptyParts);
+        listNetworks = result.split(",", QString::SkipEmptyParts);
     }
-
+    
     return listNetworks;
 }
 
@@ -217,31 +216,39 @@ QJsonObject AbstractDiagnostic::get_net_info(QString net)
     proc.start(QString(CLI_PATH),
                QStringList()<<"net"<<"-net"<<QString(net)<<"get"<<"status");
     proc.waitForFinished(5000);
+    
     QString result = proc.readAll();
-
-    // ---------- State & TargetState ----------------
-
-    QRegularExpression rx(R"***(^Network "(\S+)" has state (\S+) \(target state (\S*)\), .*cur node address ([A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}::[A-F0-9]{4}))***");
-    QRegularExpressionMatch match = rx.match(result);
-    if (!match.hasMatch()) {
-        return {};
+    
+    QRegularExpression rx_state(R"(.*current: ([A-Z,_]+).*)");
+    QRegularExpression rx_addr(R"(.*current_addr: (.+))");
+    
+    QJsonObject resultObj;
+    
+    QRegularExpressionMatch match_addr = rx_addr.match(result);
+    if (match_addr.hasMatch()) {
+        resultObj.insert("node_address", match_addr.captured(1));
     }
 
-    QJsonObject resultObj({
-                                {"state"              , match.captured(2)},
-                                {"target_state"       , match.captured(3)},
-                                {"node_address"       , match.captured(4)}
-                            });
+    QRegularExpressionMatch match_state = rx_state.match(result);
+    if (match_state.hasMatch()) {
+        resultObj.insert("state", match_state.captured(1));
+    }
 
     // ---------- Links count ----------------
-    QRegularExpression rxLinks(R"(\), active links (\d+) from (\d+),)");
-    match = rxLinks.match(result);
-    if (!match.hasMatch()) {
-        return resultObj;
+    QRegularExpression rxLinksActive(R"(.*active: (.*))");
+    QRegularExpression rxLinksRequired(R"(.*required: (.*))");
+    
+    QRegularExpressionMatch match_active = rxLinksActive.match(result);
+    if (match_active.hasMatch()) {
+        resultObj.insert("active_links_count", match_active.captured(1));
     }
-
-    resultObj.insert("active_links_count", match.captured(1));
-    resultObj.insert("links_count"       , match.captured(2));
+    
+    QRegularExpressionMatch match_req = rxLinksRequired.match(result);
+    if (match_req.hasMatch()) {
+        resultObj.insert("links_count", match_req.captured(1));
+    }
+    
+    
     resultObj.insert("balancer", get_balancer_links(net));
 
     return resultObj;
@@ -277,7 +284,6 @@ QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
         QRegularExpressionMatch match = matchItr.next();
         resultObj.insert(match.captured(1), match.captured(2));
     }
-    qDebug() << resultObj;
     return resultObj;
 }
 
@@ -294,17 +300,18 @@ QJsonObject AbstractDiagnostic::get_blocks_count(QString net)
                QStringList()<<"block"<<"list"<<"-net"<<QString(net) <<"-chain" << "main");
     proc.waitForFinished(5000);
     QString result = proc.readAll();
-
-    QRegularExpression rx(R"(\.(.+): Have (.+) blocks)");
+    
+    QRegularExpression rx(R"(\.(.+) with filter - .*, have blocks: (.+))");
     QRegularExpression rx_creation(R"(.*(0x.*): ts_create=(.*))");
     
 
     QRegularExpressionMatch match = rx.match(result);
-
+    qDebug()<<"has match "<<match.hasMatch();
     if (!match.hasMatch()) {
         return {};
     }
 
+    qDebug()<<"has match "<<match.captured(1) << match.captured(2);
     QJsonObject resultObj;
     resultObj.insert(match.captured(1), match.captured(2));
 
@@ -401,18 +408,17 @@ QJsonObject AbstractDiagnostic::get_balancer_links(QString net)
     QString result = proc.readAll();
 
     QJsonObject resultObj;
-    for (auto line : result.split("\n"))
-    {
-        if (line.split(":").length() < 2)
-            continue;
 
-        if(line.startsWith("Uplinks:"))
-            resultObj.insert("uplinks", line.split(":")[1].trimmed());
-        if(line.startsWith("Downlinks:"))
-            resultObj.insert("downlinks", line.split(":")[1].trimmed());
+    QRegularExpression rx(R"(Total links: \d+ \| Uplinks: (\d+) \| Downlinks: (\d+))");
+    QRegularExpressionMatch match = rx.match(result);
+
+    if (!match.hasMatch()) {
+        return {};
     }
 
-    qDebug() << resultObj;
+    resultObj.insert("uplinks", match.captured(1));
+    resultObj.insert("downlinks", match.captured(2));
+
 
     return resultObj;
 }
