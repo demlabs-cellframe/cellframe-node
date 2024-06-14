@@ -37,7 +37,9 @@
 #include "dap_app_cli_shell.h"
 
 #ifdef __ANDROID__
-    #include "cellframe_node.h"
+#include "cellframe_node.h"
+#include <android/log.h>
+#include <jni.h>
 #endif
 
 #ifdef _WIN32
@@ -183,7 +185,7 @@ int shell_reader_loop()
 }
 
 #ifdef __ANDROID__
-int cellframe_node__cli_Main(int argc, const char *argv[])
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeCliMain(int argc, const char *argv[])
 #else
 
 int main(int argc, const char *argv[])
