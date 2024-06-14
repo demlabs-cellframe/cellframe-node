@@ -235,6 +235,8 @@ if(BUILD_DIAGTOOL)
     add_subdirectory(diagtool)
 endif()
 
+add_subdirectory(conftool)
+
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
@@ -386,6 +388,8 @@ else()
             INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         endif()
     endif()
+
+    INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
