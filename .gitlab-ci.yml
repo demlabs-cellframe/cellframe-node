@@ -98,7 +98,8 @@ linux-amd64-debian-buster-tps:
     script:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DBUILD_WITH_TPS_TEST=ON
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*tps*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
 
 linux-amd64-debian-buster-updtr:
     extends: .build
