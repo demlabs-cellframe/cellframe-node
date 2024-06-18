@@ -412,21 +412,17 @@ int main( int argc, const char **argv )
 #endif
         dap_server_set_default(l_server);
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-
-        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-        if (http_bootstrap_balancer_enabled) {
-            // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false) ) {
+            log_it(L_DEBUG, "HTTP balancer enabled");
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER,
+                                     DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        }
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false) ) {
+            log_it(L_DEBUG, "DNS balancer enabled");
+            dap_dns_server_start("bootstrap_balancer");
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {        
-        dap_dns_server_start("bootstrap_balancer");
-    }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
