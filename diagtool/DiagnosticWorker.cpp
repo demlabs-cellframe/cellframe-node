@@ -30,7 +30,7 @@ DiagnosticWorker::DiagnosticWorker(QObject * parent)
             Qt::QueuedConnection);
 
     m_diagnostic->start_diagnostic();
-    m_diagnostic->set_timeout(30000); //30 sec
+    m_diagnostic->set_timeout(3000); //30 sec
 }
 DiagnosticWorker::~DiagnosticWorker()
 {
