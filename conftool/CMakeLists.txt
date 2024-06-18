@@ -17,10 +17,7 @@ if(NOT ftxui_POPULATED)
   add_subdirectory(${ftxui_SOURCE_DIR} ${ftxui_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-find_package(Qt5 5.15 REQUIRED COMPONENTS
-    Core
-    Network
-)
+
 
 set(CMAKE_AUTOMOC ON)
 
