@@ -537,21 +537,20 @@ int main( int argc, const char **argv )
         dap_server_set_default(l_server);
         dap_chain_net_announce_addrs();
         dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
+        bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
+        log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
+        if (dns_bootstrap_balancer_enabled) {
+            // DNS server start
+            dap_dns_server_start(dap_config_get_item_uint16_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT));
+        }
+        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
+        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
+        if (http_bootstrap_balancer_enabled) {
+            // HTTP URL add
+            dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
+        }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {
-        // DNS server start
-        dap_dns_server_start(dap_config_get_item_uint16_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT));
-    }
-    bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-    if (http_bootstrap_balancer_enabled) {
-        // HTTP URL add
-        dap_http_simple_proc_add(DAP_HTTP(l_server), "/"DAP_UPLINK_PATH_BALANCER, 2048, dap_chain_net_balancer_http_issue_link);
-    }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
