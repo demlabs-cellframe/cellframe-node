@@ -139,6 +139,10 @@ if(UNIX)
         SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
 
+    if(BUILD_WITH_TPS_TEST)
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tps" )
+    endif()
+
     if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
         if(ADD_UPDATER)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
