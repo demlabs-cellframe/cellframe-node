@@ -39,8 +39,12 @@ set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 #set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-#set(BUILD_CELLFRAME_NODE_TESTS ON)
-#add_definitions("-DDAP_TPS_TEST")
+# set(BUILD_CELLFRAME_NODE_TESTS ON)
+
+#set (BUILD_WITH_TPS_TEST ON)
+if (BUILD_WITH_TPS_TEST)
+    add_definitions("-DDAP_TPS_TEST")
+endif()
 
 set(BUILD_WITH_ZIP OFF)
 option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
@@ -51,12 +55,12 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
-if(!LINUX)
+if(LINUX)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -398,7 +402,13 @@ else()
             
             INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             
-           
+            INSTALL(DIRECTORY ${cpython310static_SOURCE_DIR}/lib/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+            
+            #install python-modules
+            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/python3.10/site-packages USE_SOURCE_PERMISSIONS)
+            INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+
            INSTALL(DIRECTORY ${cpython310static_SOURCE_DIR}/lib/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
         endif()
     endif()
