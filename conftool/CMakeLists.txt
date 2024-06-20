@@ -23,7 +23,7 @@ set(CMAKE_AUTOMOC ON)
 
 
 add_executable(${PROJECT_NAME} ./confctl.cpp 
-                                ./ui/mainui.cpp
+                                
                                 ./ui/question.cpp
                                 ./commands/abstractcommand.cpp 
                                 ./commands/networkcommand.cpp
@@ -39,3 +39,6 @@ target_link_libraries(cellframe-node-config
   PRIVATE ftxui::component # Not needed for this example.
 )
 
+IF (WIN32)
+  target_link_libraries(cellframe-node-config PRIVATE ws2_32)
+ENDIF()

@@ -26,7 +26,7 @@ command param1 param2 param3 ....
 #include <vector>
 #include "commands/abstractcommand.h"
 #include <stdexcept>
-#include "ui/mainui.h"
+
 
 #ifdef __linux__
 #include <unistd.h>       //Linux
@@ -231,7 +231,7 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-    run();
+    
     print_help();
     return 0;
 }

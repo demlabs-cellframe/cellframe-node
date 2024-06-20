@@ -1,7 +1,7 @@
 #include "networkcommand.h"
 #include <stdexcept>
 #include <filesystem>
-#include <format>
+
 #include "../build_config.h"
 #include "../config/cellframeconfigfile.h"
 
@@ -33,15 +33,13 @@ CNetworkCommand::CNetworkCommand(std::vector <std::string> cmd_tokens): CAbstrac
     //check such net is available: lookup for config files in share dir
     fs::path net_cfg_template_path = config_path(this->net_name, CFG_GENERAL, CFG_TEMPLATE);
     if (!fs::exists(net_cfg_template_path))
-        throw std::invalid_argument(string_format("network_cmd: [%s] not found in share config path [%s]", 
-                                                    this->net_name.c_str(),
-                                                    net_cfg_template_path.c_str() ));
+        throw std::invalid_argument("network_cmd: template not found in share config path");
     
     
     std::map <std::string, std::function<void ()>> actions;
     actions["default"] = [this, &cmd_tokens](){
         if (cmd_tokens.size() < 4 || allowed_states.end() == std::find(allowed_states.begin(), allowed_states.end(), cmd_tokens[3]))
-            throw std::invalid_argument(string_format("network_cmd: [default] require 'on or off' state for net [%s]", this->net_name.c_str() ));
+            throw std::invalid_argument("network_cmd: [default] require 'on or off' state for net");
             
         this->default_val = cmd_tokens[3];
             
@@ -50,13 +48,13 @@ CNetworkCommand::CNetworkCommand(std::vector <std::string> cmd_tokens): CAbstrac
     actions["ensure"] = [this, &cmd_tokens](){
         
         if (cmd_tokens.size() < 4 || allowed_states.end() == std::find(allowed_states.begin(), allowed_states.end(), cmd_tokens[3]))
-            throw std::invalid_argument(string_format("network_cmd: [Cnsure] require 'on or off' state for net [%s]", this->net_name.c_str() ));
+            throw std::invalid_argument("network_cmd: [ensure] require 'on or off' state for net" );
         this->default_val = cmd_tokens[3];
     };
     
     this->action = cmd_tokens[2];
     if (actions.find(this->action) == actions.end())
-        throw std::invalid_argument(string_format("network_cmd: unknown action [%s] for net [%s] ", this->action.c_str(), this->net_name.c_str()));
+        throw std::invalid_argument("network_cmd: unknown action for network_cmd");
     
     actions[this->action]();
 }
