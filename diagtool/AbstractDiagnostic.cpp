@@ -262,18 +262,7 @@ QJsonObject AbstractDiagnostic::get_mempool_count(QString net)
     proc.waitForFinished(5000);
     QString result = proc.readAll();
 
-    QRegularExpression rx(R"(\.*total: .*\.(.*): (\d))");
-
-    ///TODO: bug in requests. Always returns both chains
-//    QRegularExpressionMatch match = rx.match(result);
-//    if (!match.hasMatch()) {
-//        return {};
-//    }
-
-//    proc.start(QString(CLI_PATH),
-//               QStringList()<<"mempool_list"<<"-net"<<QString(net)<<"-chain"<<"zero");
-//    proc.waitForFinished(5000);
-//    result = proc.readAll();
+    QRegularExpression rx(R"(\.*total: .*\.(.*): (\d+))");
 
     QJsonObject resultObj;
 
