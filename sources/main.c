@@ -142,9 +142,8 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
-
 #ifdef __ANDROID__
-#include "cellframe_node.h"
+#include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
 #endif
@@ -159,7 +158,7 @@ static const char *s_pid_file_path = NULL;
 #ifdef __ANDROID__
 JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 #else
-int main( int argc, const char **argv )
+int __declspec(dllexport) __stdcall dap_main( int argc, const char **argv )
 #endif
 {
     dap_server_t *l_server = NULL; // DAP Server instance
@@ -193,8 +192,8 @@ int main( int argc, const char **argv )
 
     //zero argumet from jni call is always a working dir
     jstring string = (jstring)((*javaEnv)->GetObjectArrayElement(javaEnv, argvStr, 0));
-    g_sys_dir_path = (*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
-    
+    g_sys_dir_path = (char*)(*javaEnv)->GetStringUTFChars(javaEnv, string, 0);
+
 #elif DAP_OS_UNIX
     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -205,7 +204,7 @@ int main( int argc, const char **argv )
         #ifdef DAP_OS_ANDROID
         __android_log_write(ANDROID_LOG_INFO, LOG_TAG, l_log_dir);
         #endif
-        
+
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
         #ifdef DAP_OS_ANDROID
@@ -218,7 +217,7 @@ int main( int argc, const char **argv )
                 __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "Log file:");
                 __android_log_write(ANDROID_LOG_INFO, LOG_TAG,l_log_file);
                 __android_log_write(ANDROID_LOG_INFO, LOG_TAG,"Can't init common functions");
-        
+
             #endif
             return -2;
         }
@@ -248,6 +247,7 @@ int main( int argc, const char **argv )
     save_process_pid_in_file(s_pid_file_path);
 
 #ifdef __ANDROID__
+    setcfg(g_config);
     jsize argc = (*javaEnv)->GetArrayLength(javaEnv, argvStr);
     char **argv = malloc(sizeof(char*) * (argc + 1));
     argv[0] = strdup(dap_get_appname());
@@ -304,10 +304,10 @@ int main( int argc, const char **argv )
     }
 
 #ifndef DAP_OS_ANDROID
-	if ( dap_http_folder_init() != 0 ){
-	    log_it( L_CRITICAL, "Can't init http server module" );
-	    return -55;
-	}
+    if ( dap_http_folder_init() != 0 ){
+        log_it( L_CRITICAL, "Can't init http server module" );
+        return -55;
+    }
 #endif
 
     if ( dap_http_simple_module_init() != 0 ) {
@@ -421,11 +421,11 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_voting_init()) {
         log_it(L_ERROR, "Can't provide voting capability");
     }
-    
+
     if (dap_chain_net_srv_bridge_init()) {
         log_it(L_ERROR, "Can't provide bridge capability");
     }
-    
+
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
     }
@@ -443,7 +443,7 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_vpn_pre_init() ){
         log_it(L_ERROR, "Can't pre-init vpn service");
     }
-    
+
 
 #ifndef _WIN32
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
@@ -523,14 +523,14 @@ int main( int argc, const char **argv )
             }
 
 #ifndef DAP_OS_ANDROID
-	        // Built in WWW server
+            // Built in WWW server
 
             if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                     dap_http_folder_add( DAP_HTTP(l_server), "/",
                                     dap_config_get_item_str(g_config,
                                                                 "resources",
                                                                 "www_root") );
-	        }
+            }
 #endif
 
         }
@@ -579,7 +579,7 @@ int main( int argc, const char **argv )
 
     //go live!
     dap_chain_net_try_online_all();
-    
+
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules

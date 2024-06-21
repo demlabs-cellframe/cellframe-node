@@ -203,10 +203,9 @@ if(UNIX)
         ${NODE_SOURCES}
         ${NODE_CLI_SOURCES}
         ${NODE_TOOL_SOURCES}
-        sources/cellframe_node.h
     )
-    add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
-    add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
+    #add_library(${NODE_CLI_TARGET} SHARED ${NODE_CLI_SOURCES})
+    #add_library(${NODE_TOOL_TARGET} SHARED ${NODE_TOOL_SOURCES})
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -334,8 +333,8 @@ if(UNIX AND NOT WIN32)
 
 	    list(REMOVE_DUPLICATES ALL_LIBRARIES)
 	    target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
-        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
-        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
+        #target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} )
+        #target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} )
     else()
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
@@ -390,8 +389,8 @@ else()
     endif()
 
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    #INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    #INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if (BUILD_DIAGTOOL)
         if(WIN32)

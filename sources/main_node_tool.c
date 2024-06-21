@@ -96,10 +96,6 @@
 #define MAIN_URL "/"
 #define LOG_TAG "main_node_tool"
 
-#ifdef __ANDROID__
-    #include "cellframe_node.h"
-#endif
-
 #undef log_it
 #ifdef DAP_OS_WINDOWS
 #define log_it(_log_level, string, ...) __mingw_printf(string, ##__VA_ARGS__)
