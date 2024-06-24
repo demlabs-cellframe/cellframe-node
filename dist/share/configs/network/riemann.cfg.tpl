@@ -17,7 +17,8 @@ node-role={NODE_TYPE}
 # If permanent addresses pointed without hosts then information about host will be retrieved from GDB
 #permanent_nodes_hosts=[]
 # This addresses will have priviledged acceess to some GDB groups
-authorized_nodes_addrs=[DDDD::0000::0000::0000, DDDD::0000::0000::0001, DDDD::0000::0000::0002]
+authorized_nodes_addrs=[D420::C2A9::0637::040C,AC33::9A06::AAD8::B288,5DA8::C171::E316::C923]
+
 # This hosts wiil be used as bootstrap balancers for first net access
 seed_nodes_hosts=[0.root.riemann.cellframe.net:8079, 1.root.riemann.cellframe.net:8079, 2.root.riemann.cellframe.net:8079]
 
