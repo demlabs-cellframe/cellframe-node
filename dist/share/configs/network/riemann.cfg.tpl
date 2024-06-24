@@ -6,6 +6,8 @@ id=0x000000000000dddd
 name=riemann
 native_ticker=tKEL
 gdb_groups_prefix=riemann
+bridged_network_ids=[0x000000000000bbbb]
+
 
 # Possible values: light, full, archive, master, root
 node-role={NODE_TYPE}
