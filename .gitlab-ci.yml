@@ -4,7 +4,7 @@ variables:
 
 stages:
     - build
-    - version_increment
+    - post_build
     - publish
     - deploy
 
@@ -61,20 +61,19 @@ stages:
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
-  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq ".value // 0")'
-  - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}"
+  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
+  - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
  
     #re-create version.mk based on current data
-  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version2.mk
-  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version2.mk
-  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version2.mk
-  - cat ./version2.mk
+  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
+  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
+  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
+  - cat ./version.mk
      #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-     
 
 amd64:windows.release:
     extends: .build
@@ -84,7 +83,7 @@ amd64:windows.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
 
 amd64:macos.release:
     extends: .build
@@ -94,9 +93,9 @@ amd64:macos.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
-      #- ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      #- /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
+      - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
     artifacts:
       paths:
         - build_*/*.pkg
@@ -109,9 +108,9 @@ amd64:linux.debug:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-      #- ./prod_build/pack.sh --target linux debug
-      #- /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target linux debug
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 amd64:linux.rwd:
     extends: .build
@@ -121,19 +120,19 @@ amd64:linux.rwd:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-      #- ./prod_build/pack.sh --target linux rwd
-      #- /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target linux rwd
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 amd64:linux.tps:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     when: manual
-    before_script: /opt/buildtools/prepare_environment.sh amd64-linux
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
     script:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
-      - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.updtr:
     extends: .build
@@ -143,9 +142,9 @@ amd64:linux.updtr:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
-      #- ./prod_build/pack.sh --target linux release
-      #- /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.release:
     extends: .build
@@ -155,12 +154,12 @@ amd64:linux.release:
       - *fill_version_mk
     script: 
       - echo "Do hard work"
-     # - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-     # - ./prod_build/pack.sh --target linux release
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
-     # - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
 
 armhf:linux.release:
     extends: .build
@@ -171,10 +170,10 @@ armhf:linux.release:
       - *fill_version_mk
     script: 
       - echo "Do hard work"
-     # - ./prod_build/build.sh --target linux release
-     # - ./prod_build/pack.sh --target linux release
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
 arm64:linux.release:
     extends: .build
@@ -184,10 +183,10 @@ arm64:linux.release:
       - *fill_version_mk
     script: 
       - echo "Do hard work"
-     # - ./prod_build/build.sh --target linux release
-     # - ./prod_build/pack.sh --target linux release
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-     # - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
 .arm64:linux.updtr:
     extends: .build
@@ -201,10 +200,10 @@ arm64:linux.release:
     
     script: 
       - echo "Do hard work"
-    #  - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
-    #  - ./prod_build/pack.sh --target linux release
-    #  - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-    #  - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
 .armhf:linux.updtr:
     extends: .build
@@ -218,8 +217,27 @@ arm64:linux.release:
       - *fill_version_mk
     script: 
       - echo "Do hard work"
-    #  - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
-    #  - ./prod_build/pack.sh --target linux release
-    #  - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-    #  - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
+
+version:up:
+  stage: post_build
+  tags:
+    - ansible-runner
+  variables:
+    GIT_STRATEGY: none
+  rules:
+    - when: on_success
+  
+  script:
+    - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+    - echo ${PATCH_NUM_VAR_NAME}
+    - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
+    - PATCH_NUM=$((PATCH_NUM + 1))
+    - 'echo "New patch version: ${PATCH_NUM}"'
+    - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+    
 
