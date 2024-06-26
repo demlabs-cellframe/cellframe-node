@@ -216,7 +216,7 @@ arm64:linux.release:
 version:up:
   stage: post_build
   tags:
-    - - ansible-runner
+    - ansible-runner
   variables:
     GIT_STRATEGY: none
   
