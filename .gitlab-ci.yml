@@ -4,7 +4,7 @@ variables:
 
 stages:
     - build
-    - version_increment
+    - post_build
     - publish
     - deploy
 
@@ -68,13 +68,23 @@ stages:
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
  
     #re-create version.mk based on current data
-  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version2.mk
-  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version2.mk
-  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version2.mk
+  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
+  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
+  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
   - cat ./version2.mk
      #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-     
+
+version:up:
+  stage: post_build
+  script:
+    - "PATCH_NUM=$((PATCH_NUM + 1))"
+    - echo $PATCH_NUM"
+    
+    #- 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${CI_COMMIT_REF_NAME}_PATCH_NUM" --form "key=${CI_COMMIT_REF_NAME}_PATCH_NUM" --form "value=$PATCH_NUM"'
+
+
+    
 
 amd64:windows.release:
     extends: .build
