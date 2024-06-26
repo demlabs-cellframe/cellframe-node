@@ -83,7 +83,7 @@ amd64:windows.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      #- ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
 
 amd64:macos.release:
     extends: .build
