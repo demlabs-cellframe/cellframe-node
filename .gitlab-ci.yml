@@ -77,6 +77,7 @@ stages:
 
 version:up:
   stage: post_build
+  extends: .ci-ansible
   script:
     - "PATCH_NUM=$((PATCH_NUM + 1))"
     - echo $PATCH_NUM"
