@@ -4,6 +4,7 @@ variables:
 
 stages:
     - build
+    - version_increment
     - publish
     - deploy
 
@@ -19,6 +20,8 @@ stages:
   stage: build
   timeout: 3 hours 30 minutes
   dependencies: []
+  before_script:
+    - echo "This is befor-scrip for build tasks"
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /-asan$/
       variables:                                   
@@ -53,14 +56,14 @@ stages:
 
   allow_failure: true
 
-windows-amd64:
+windows.release:amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:windowsbuilder 
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
 
-macos-amd64:
+macos.release:amd64:
     extends: .build
     image: demlabs/amd64/debian-bullseye:osxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-osx
@@ -72,7 +75,7 @@ macos-amd64:
       paths:
         - build_*/*.pkg
 
-linux-amd64-debian-buster-dbg:
+linux.debug:amd64:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
@@ -81,7 +84,7 @@ linux-amd64-debian-buster-dbg:
       - ./prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-linux-amd64-debian-buster-rwd:
+linux.rwd:amd64:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
@@ -90,7 +93,7 @@ linux-amd64-debian-buster-rwd:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-linux-amd64-debian-buster-updtr:
+linux.updtr:amd64:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
@@ -99,7 +102,7 @@ linux-amd64-debian-buster-updtr:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-linux-amd64-debian-buster:
+linux.release:amd64:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh amd64-linux
@@ -111,7 +114,7 @@ linux-amd64-debian-buster:
       - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
 
-linux-armhf-debian-bullseye:
+linux.release:armhf:
     extends: .build
     image: demlabs/arm32v7/debian-bullseye:linuxbuilder
 
@@ -122,17 +125,7 @@ linux-armhf-debian-bullseye:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
-linux-arm64-debian-bullseye:
-    extends: .build
-    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
-    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
-    script: 
-      - ./prod_build/build.sh --target linux release
-      - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
-  
-linux-armhf-debian-bullseye-гupdtr:
+linux.updtr:armhf:
     extends: .build
     image: demlabs/arm32v7/debian-bullseye:linuxbuilder
     
@@ -146,7 +139,17 @@ linux-armhf-debian-bullseye-гupdtr:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
-linux-arm64-debian-bullseye-updtr:
+linux.release:arm64:
+    extends: .build
+    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    before_script: /opt/buildtools/prepare_environment.sh arm64-linux
+    script: 
+      - ./prod_build/build.sh --target linux release
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+  
+linux.updtr:arm64:
     extends: .build
     image: demlabs/arm64v8/debian-bullseye:linuxbuilder
     before_script: /opt/buildtools/prepare_environment.sh arm64-linux
@@ -161,109 +164,3 @@ linux-arm64-debian-bullseye-updtr:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
 
-.dpublish:
-  extends: .publish
-  needs: 
-    - linux-amd64-debian-buster 
-    - linux-amd64-debian-buster-dbg
-    - linux-armhf-debian-bullseye 
-    - linux-arm64-debian-bullseye 
-    - linux-amd64-debian-buster-rwd
-    - macos-amd64
-   
-  script: 
-    - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-    - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect    
-
-.publish_ext:
-  extends: .publish
-  needs: 
-    - linux-amd64-debian-buster-updtr
-   
-  script: 
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-
-
-.publish_updtr:
-  extends: .publish
-  needs: 
-    - publish_ext
-    - linux-amd64-debian-buster-updtr
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "master"
-      when: manual
-  allow_failure: true
-  script: 
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/updates/ build_*/*.deb 
-  
-
-raiden_deploy:
-  extends: .deploy
-  needs:
-    - linux-amd64-debian-buster-rwd
-  script:
-    - source version.mk
-    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
-                 
-    - cd /home/gitlab-runner/playbooks/nodes_network
-    - ansible-playbook deploy_node_deb.yml || true
-  variables:
-    instanses:  raiden 
-
-riemann_deploy:
-  extends: .deploy
-  needs:
-    - linux-amd64-debian-buster-rwd
-  script:
-    - source version.mk
-    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
-                 
-    - cd /home/gitlab-runner/playbooks/nodes_network
-    - ansible-playbook deploy_node_deb.yml || true
-  variables:
-    instanses:  riemann
-
-subzero_deploy:
-  extends: .deploy
-  needs:
-    - linux-amd64-debian-buster-rwd
-  script:
-    - source version.mk
-    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
-                 
-    - cd /home/gitlab-runner/playbooks/nodes_network
-    - ansible-playbook deploy_node_deb.yml || true
-  variables:
-    instanses:  subzero
-
-scorpion_deploy:
-  extends: .deploy
-  needs:
-    - linux-amd64-debian-buster-rwd
-  script:
-    - source version.mk
-    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
-                 
-    - cd /home/gitlab-runner/playbooks/nodes_network
-    - ansible-playbook deploy_node_deb.yml || true
-  variables:
-    instanses:  scorpion 
-
-
-kelvpn_deploy:
-  extends: .deploy
-  needs:
-    - linux-amd64-debian-buster-rwd
-  script:
-    - source version.mk
-    - export pakage=https://internal-pub.cellframe.net/linux/cellframe-node/$CI_COMMIT_REF_NAME/cellframe-node-$VERSION_MAJOR.$VERSION_MINOR-$VERSION_PATCH-rwd-amd64.deb
-                 
-    - cd /home/gitlab-runner/playbooks/nodes_network
-    - ansible-playbook deploy_node_deb.yml || true
-  variables:
-    instanses:  kelvpn
