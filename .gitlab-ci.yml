@@ -61,18 +61,19 @@ stages:
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
-  - echo "Patch number for ${PATCH_NUM_VAR_NAME}" is ${PATCH_NUM}
+  - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME}" is ${PATCH_NUM}
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
-    #create var
-  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=1" || true'
-     
+ 
     #re-create version.mk based on current data
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version2.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version2.mk
   - echo "VERSION_PATCH=$PATCH_NUM" >> ./version2.mk
   - cat ./version2.mk
+     #create var
+  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=1" || true'
+     
 
 amd64:windows.release:
     extends: .build
