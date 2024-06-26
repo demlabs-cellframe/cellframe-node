@@ -59,7 +59,7 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - echo "Patch number for ${CI_COMMIT_REF_NAME}" is ${PATCH_NUM}
+  - echo "Patch number for ${CI_COMMIT_REF_SLUG}" is ${PATCH_NUM}
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
