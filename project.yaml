@@ -9,6 +9,7 @@ build_dependencies:
     - 'libffi-dev'
     - 'file'
     - 'python3-dev'
+    - 'curl'
     
 
 deploy_dependencies:
