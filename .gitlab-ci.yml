@@ -61,7 +61,7 @@ stages:
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
-  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}")'
+  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq .value)'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME}" is ${PATCH_NUM}
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
@@ -129,8 +129,8 @@ amd64:linux.updtr:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
     before_script: 
-      - *fill_version_mk
       - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
     script:
       - echo "Do hard work"
       #- ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
