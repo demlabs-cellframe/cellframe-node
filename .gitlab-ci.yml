@@ -61,7 +61,7 @@ stages:
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
-  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq ".value // empty")'
+  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
