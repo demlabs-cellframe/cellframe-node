@@ -22,7 +22,7 @@ stages:
   dependencies: []
   variables:
     PATCH_NUM: "${${CI_COMMIT_REF_NAME}_PATCH_NUM}"
-    PATCH_NUM_MAIN: "${main_PATCH_NUM}"
+    PATCH_NUM_MAIN: "${release-5.3_PATCH_NUM}"
 
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /-asan$/
