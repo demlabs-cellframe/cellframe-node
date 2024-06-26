@@ -10,6 +10,7 @@ build_dependencies:
     - 'file'
     - 'python3-dev'
     - 'curl'
+    - 'jq'
     
 
 deploy_dependencies:
