@@ -59,12 +59,13 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
+  - PATCH_NUM_VAR_NAME=$(echo "hello world" | tr "-" _)_PATCH_NUM
+  - echo ${PATCH_NUM_VAR_NAME}
   - echo "Patch number for ${CI_COMMIT_REF_SLUG}" is ${PATCH_NUM}
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
     #create var
-  - PATCH_NUM_VAR_NAME=$(echo "hello world" | tr "-" _)_PATCH_NUM
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=1" || true'
      
     #re-create version.mk based on current data
