@@ -219,6 +219,8 @@ version:up:
     - ansible-runner
   variables:
     GIT_STRATEGY: none
+  rules:
+    - when: on_success
   
   script:
     - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
