@@ -1,7 +1,3 @@
 VERSION_MAJOR=5
 VERSION_MINOR=3
-<<<<<<< HEAD
 VERSION_PATCH=170
-=======
-VERSION_PATCH=169
->>>>>>> origin/release-5.3
