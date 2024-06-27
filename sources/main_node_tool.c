@@ -529,7 +529,7 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
             return;
         uint8_t* l_sign_unserialized = DAP_NEW_Z_SIZE(uint8_t, l_sign_unserialized_size);
         size_t l_sign_ser_size = l_sign_unserialized_size;
-        uint8_t *l_sign_ser = dap_enc_key_serialize_sign(l_key, l_sign_unserialized, &l_sign_ser_size);
+        uint8_t *l_sign_ser = dap_enc_key_serialize_sign(l_key->type, l_sign_unserialized, &l_sign_ser_size);
         if ( l_sign_ser ) {
             dap_sign_t *l_ret;
             DAP_NEW_Z_SIZE_RET(l_ret, dap_sign_t, sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size, NULL);
