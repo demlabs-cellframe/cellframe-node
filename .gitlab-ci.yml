@@ -20,6 +20,7 @@ stages:
   stage: build
   timeout: 3 hours 30 minutes
   dependencies: []
+  interruptible: true
   variables:
     
     PATCH_NUM_MAIN: "${release_5_3_PATCH_NUM}"
