@@ -20,6 +20,7 @@ stages:
   stage: build
   timeout: 3 hours 30 minutes
   dependencies: []
+  interruptible: true
   variables:
     
     PATCH_NUM_MAIN: "${release_5_3_PATCH_NUM}"
@@ -74,6 +75,9 @@ stages:
   - cat ./version.mk
      #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+  - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
+  - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
+
 
 amd64:windows.release:
     extends: .build
@@ -124,6 +128,18 @@ amd64:linux.rwd:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
+amd64:linux.tps:
+    extends: .build
+    image: demlabs/amd64/debian-buster:linuxbuilder
+    when: manual
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
+    script:
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
+      - ./prod_build/pack.sh --target linux release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
 amd64:linux.updtr:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
@@ -134,7 +150,7 @@ amd64:linux.updtr:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.release:
     extends: .build
