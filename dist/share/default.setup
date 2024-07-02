@@ -1,18 +1,52 @@
-var DB_DRIVER=mdbx
+# Cellframe-node default setup files
 
-#will copy from template if not exists and populate placeholders
-#default - not alter config if exists
-#ensure - copy and populate
-fromtemplate cellframe-node default
+# commands: 
+# var: saves VALUE to VARIABLE. Access to VARIABLE is possible in _value_ parts of commands throug ${VARIABLE}.   
+#   var VARIABLE=VALUE  
+#   var VAR_COPY=${VARIABLE}
+# Predefined variables:
+#   ${HOST_OS} -> Linux | Windows | Macos
+#   ${HOSTNAME} -> hostname of a machine
+#   ${CONFIGS_PATH} -> /opt/cellframe-node/ for linux, 
+#                      Common Documents (usually C:\Users\Public\Documents\cellframe-node\) for Windows
+#
+# fromtemplate: create and populate config from "share/configs" templates  
+#   fromtemplate <configname> <defaut|ensure>
+#       fromtemplate cellframe-node default
+#       fromtemplate riemann ensure
+#       
+#   operation "default" - check if config already exists, and do nothing if it is.
+#   operation "ensure" -  re-create config from template even if it exists.  
+#
+# network: manipulate network config state
+#   network <netname> <default|ensure> <on|off>  
+#       network     Backbone    ensure     off
+#       network     riemann     default     on
+#   
+#   Puts a confing in a desired state: <netname.cfg> for "on" and <netname.cfg.dis> for "off"
+#   operation "default" - check if config already exists, and do nothing if it is. If config not exists - like "fromtemplate" command.
+#   operation "ensure" -  check if config already exists, and swith it do desired state. If config not exists - like "fromtemplate" command.
+#
+# config: manipulate configuration files
+#   config <configname> <section> <param> <default|ensure> VALUE
+#
+#   config  cellframe-node  server      enabled  default  false   
+#   config  cellframe-node  global_db   driver   default  ${DB_DRIVER}
+#   config  riemann  general   newparam   ensure  mynewval
+#   
+#   operation "default" - check if value already set, and do nothing if it is. Set value otherwise.
+#   operation "ensure" -  set a value to config no matter what.
+#
+# if: conditions
+#   if ${VAR1}==${VAR2}
+#       #do somthin
+#   endif
 
-# "network" command will use template on first start and populate placeholders
-# on reinstalls it work only with existing enabled|disabled configs (or template if none exists)
-# "default" action will not alter config if it exists in on or off state (not-first install)
-# "ensure" will activate config to desired state from oposite, or from template if it not exists
 
+# Setup Script
 network     Backbone    ensure     off
 network     KelVPN      ensure     off 
-network     riemann     default     on
+network     riemann     default     on|
 network     raiden      default     on
 network     mileena     default     on
 network     subzero     default      off    #subzero is devnet, force-to disable it 

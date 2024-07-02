@@ -50,7 +50,7 @@ bool CFromTemplateCommand::execute(bool non_intercative, int flags)
     {
         std::cout <<"[C] [fromtemplate default] " 
         <<"copy "<<  path_from << " to "<<  path_to << std::endl;
-        if (!(flags & F_DRYRUN)) fs::copy(path_from, path_to);
+        if (!(flags & F_DRYRUN)) fs::copy(path_from, path_to, fs::copy_options::overwrite_existing);
     }
     
     //populate

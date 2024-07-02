@@ -69,7 +69,6 @@ FunctionEnd
 !insertmacro MUI_LANGUAGE 	"Russian"
 
 Function createRuntimePaths
-	CreateDirectory "$ConfigPath\var\log"
 	CreateDirectory "$ConfigPath\var\lib\global_db"
 	CreateDirectory "$ConfigPath\var\lib\wallet"	
 	CreateDirectory "$ConfigPath\var\lib\ca"

@@ -225,7 +225,7 @@ if(WIN32)
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
     target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
 endif()
 if(BSD)
