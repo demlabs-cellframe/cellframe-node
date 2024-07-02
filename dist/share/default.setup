@@ -46,7 +46,7 @@
 # Setup Script
 network     Backbone    ensure     off
 network     KelVPN      ensure     off 
-network     riemann     default     on|
+network     riemann     default     on
 network     raiden      default     on
 network     mileena     default     on
 network     subzero     default      off    #subzero is devnet, force-to disable it 
