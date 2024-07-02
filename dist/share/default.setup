@@ -44,6 +44,8 @@
 
 
 # Setup Script
+fromtemplate cellframe-node default
+
 network     Backbone    ensure     off
 network     KelVPN      ensure     off 
 network     riemann     default     on
