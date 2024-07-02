@@ -88,6 +88,8 @@ amd64:windows.release:
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target windows release 
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
 
 amd64:macos.release:
     extends: .build
