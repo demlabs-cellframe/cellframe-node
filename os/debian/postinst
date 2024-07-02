@@ -1,5 +1,4 @@
 #!/bin/bash -e
-. /usr/share/debconf/confmodule
 
 DAP_APP_NAME="cellframe-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
@@ -27,7 +26,6 @@ chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PRE
 
 echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
-#....
 
 echo "[!] Set cfg permissions"
 #set rwo permissions to configs

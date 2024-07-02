@@ -73,7 +73,6 @@ Function createRuntimePaths
 	CreateDirectory "$ConfigPath\var\lib\global_db"
 	CreateDirectory "$ConfigPath\var\lib\wallet"	
 	CreateDirectory "$ConfigPath\var\lib\ca"
-	CreateDirectory "$CommonDocuments\${APP_NAME}\log"
 FunctionEnd
 
 InstallDir "$PROGRAMFILES64\${APP_NAME}"
@@ -134,6 +133,5 @@ Section "Uninstall"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
 	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"
-	Delete "$DESKTOP\${APP_NAME}.lnk"
 	;RMDir "$INSTDIR"
 SectionEnd
