@@ -120,21 +120,21 @@ inline std::string escape(const std::string &str) {
 fs::path config_path(const std::string &name, ENetworkConfigType type, ENetworkConfigState state) {
     if (name == "cellframe-node")
     {   if (state == CFG_TEMPLATE)
-            return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"share"/"configs"/"cellframe-node.cfg";
+            return fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs"/"cellframe-node.cfg";
         else
-            return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"etc"/"cellframe-node.cfg";
+            return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"cellframe-node.cfg";
     }
     switch (type)
     { 
         case CFG_GENERAL:
-            if (state == CFG_ON) return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"etc"/"network/"/(name + ".cfg");        
-            if (state == CFG_OFF) return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"etc"/"network/"/(name + ".cfg.dis");
-            if (state == CFG_TEMPLATE) return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"share"/"configs"/"network/"/(name + ".cfg");
+            if (state == CFG_ON) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg");        
+            if (state == CFG_OFF) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg.dis");
+            if (state == CFG_TEMPLATE) return fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs"/"network/"/(name + ".cfg");
             break;
         case CFG_MAINCHAIN:
-            return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"etc"/"network/"/name/"main.cfg";        
+            return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"main.cfg";        
         case CFG_ZEROCHAIN:
-            return fs::path{CELLFRAME_NODE_INSTALL_PATH}/"etc"/"network/"/name/"zerochain.cfg";
+            return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"zerochain.cfg";
 
     }
     throw std::invalid_argument("cfg for such params cant be detectd");
@@ -293,7 +293,6 @@ void CellframeConfigurationFile::replace_placeholders(std::map<std::string, std:
         line = line.substr(0, line.find("#")); //skip comments 
         if(line.empty()) continue; //skip empties  
         auto nline = pman.replacePlaceholders(line);
-        std::cout << nline <<std::endl;
         lines[current_line] = nline;
     }
 }

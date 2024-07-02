@@ -7,7 +7,7 @@ initial setup of cellframe-node as intended by developers.
 
 It will not alter any user settings if they exists. 
 
-//  cellframe-confctl --init /path/to/cellframe-node.setup [-v | --verbose]
+//  cellframe-node-config --init /path/to/cellframe-node.setup [-v | --verbose]
 
 // .setup file syntax:
 command param1 param2 param3 ....
@@ -34,6 +34,7 @@ command param1 param2 param3 ....
 
 #ifdef _WIN32
 #include <winsock.h>      //Windows
+#include <windows.h>
 #endif 
 
 std::string getHostName(void)
@@ -70,14 +71,14 @@ std::string getCmdOption(char ** begin, char ** end, const std::string & option_
 
 void print_help()
 {
-    std::cout << "cellframe-confctl -h | --help" << std::endl;
-    std::cout << "cellframe-confctl -v | --verbose" << std::endl;
-    std::cout << "cellframe-confctl -d | --dry-run" << std::endl;
+    std::cout << "cellframe-node-config -h | --help" << std::endl;
+    std::cout << "cellframe-node-config -v | --verbose" << std::endl;
+    std::cout << "cellframe-node-config -d | --dry-run" << std::endl;
     std::cout << "\tprints this help message" << std::endl;
-    std::cout << "cellframe-confctl -i | --init /path/to/cellframe-node.setup" << std::endl;
+    std::cout << "cellframe-node-config -i | --init /path/to/cellframe-node.setup" << std::endl;
     std::cout << "\tdo initial configuration based on provided setup script" << std::endl;
-    std::cout << "cellframe-confctl -e | --exec command action [and command action [and command action]] - interpert all tokens after -c as setup-script, line delim is \"and\" word"  << std::endl;
-    std::cout << "possible actions"  << std::endl;
+    std::cout << "cellframe-node-config -e | --exec command action [and command action [and command action]] - interpert all tokens after -c as setup-script, line delim is \"and\" word"  << std::endl;
+    std::cout << "Possible actions"  << std::endl;
     std::cout << "\t var VAR=VAL"  << std::endl;
     std::cout << "\t network Netname default|ensure on|off"  << std::endl;
     std::cout << "\t config confname group param default|ensure val"  << std::endl;
@@ -148,18 +149,90 @@ bool run_commands(std::vector <std::unique_ptr<CAbstractScriptCommand>> &command
     return true;
 }
 
+#ifdef WIN32
+
+LONG GetDWORDRegKey(HKEY hKey, const std::wstring &strValueName, DWORD &nValue, DWORD nDefaultValue)
+{
+    nValue = nDefaultValue;
+    DWORD dwBufferSize(sizeof(DWORD));
+    DWORD nResult(0);
+    LONG nError = ::RegQueryValueExW(hKey,
+        strValueName.c_str(),
+        0,
+        NULL,
+        reinterpret_cast<LPBYTE>(&nResult),
+        &dwBufferSize);
+    if (ERROR_SUCCESS == nError)
+    {
+        nValue = nResult;
+    }
+    return nError;
+}
+
+
+LONG GetBoolRegKey(HKEY hKey, const std::wstring &strValueName, bool &bValue, bool bDefaultValue)
+{
+    DWORD nDefValue((bDefaultValue) ? 1 : 0);
+    DWORD nResult(nDefValue);
+    LONG nError = GetDWORDRegKey(hKey, strValueName.c_str(), nResult, nDefValue);
+    if (ERROR_SUCCESS == nError)
+    {
+        bValue = (nResult != 0) ? true : false;
+    }
+    return nError;
+}
+
+
+LONG GetStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue)
+{
+    strValue = strDefaultValue;
+    WCHAR szBuffer[512];
+    DWORD dwBufferSize = sizeof(szBuffer);
+    ULONG nError;
+    nError = RegQueryValueExW(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+    if (ERROR_SUCCESS == nError)
+    {
+        strValue = szBuffer;
+    }
+    return nError;
+}
+
+#endif
+
 void populate_variables()
 {
     variable_storage["HOST_OS"] = HOST_OS;
     variable_storage["HOSTNAME"] = getHostName();
-    variable_storage["INSTALL_PATH"]=CELLFRAME_NODE_INSTALL_PATH;
+
+    #ifdef __linux__ 
+        variable_storage["CONFIGS_PATH"] = "/opt/cellframe-node/";
+    #endif
+
+    #ifdef WIN32 
+        HKEY hKey;
+        LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey);
+        bool bExistsAndSuccess (lRes == ERROR_SUCCESS);
+        bool bDoesNotExistsSpecifically (lRes == ERROR_FILE_NOT_FOUND);
+        std::wstring path;
+        GetStringRegKey(hKey, L"Common Documents", path, L"");
+        std::string stdpath(path.begin(),path.end());
+        variable_storage["CONFIGS_PATH"] = (std::filesystem::path{stdpath}/"cellframe-node/").string();
+    #endif
+
 }
 
 int init_configs(int argc, char *argv[], int flags)
 {   
     //--init already exists, give me filename
     std::string init_file_name = getCmdOption(argv, argv+argc, "--init", "-i");
+
+    std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
     
+    if (!node_intall_path.empty())
+    {
+        variable_storage["CONFIGS_PATH"] = node_intall_path;
+    }
+
     bool non_interactive = cmdOptionExists(argv, argv+argc, "--non-interactive") || cmdOptionExists(argv, argv+argc, "-n");
 
     if (init_file_name.empty())
@@ -173,6 +246,8 @@ int init_configs(int argc, char *argv[], int flags)
         std::cout << "Setup file "  << init_file_name << " not found" << std::endl;
         return -1;
     }
+    
+    std::cout << "Cellframe-node configs install path: " << variable_storage["CONFIGS_PATH"] << std::endl;
     
     auto commands = parse_setup_file(init_file_name, flags);
     

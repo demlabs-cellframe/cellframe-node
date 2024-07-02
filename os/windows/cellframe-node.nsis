@@ -1,0 +1,139 @@
+; ***************************************************************
+; * Authors:
+; * Dmitry Puzyrkov <dmitry.puzrykov@demlabs.net>
+; * DeM Labs Inc.   https://demlabs.net
+; * Cellframe Project https://gitlab.demlabs.net/cellframe
+; * Copyright  (c) 2024
+; * All rights reserved.
+; ***************************************************************
+
+!define MULTIUSER_EXECUTIONLEVEL Admin
+!include "MUI2.nsh"
+!include "x64.nsh"
+
+Unicode true
+!define APP_NAME		"cellframe-node"
+!define NODE_NAME		"cellframe-node"
+!define EXE_NAME		"${APP_NAME}.exe"
+!define PUBLISHER		"Cellframe Network"
+!define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+
+
+!define ICON "cellframe.ico"
+!define BANNER "cellframe.bmp"
+
+!define MUI_ICON "${ICON}"
+!define MUI_UNICON "${ICON}"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "${BANNER}"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${BANNER}"
+
+
+Name 	"${APP_NAME}"
+OutFile	"${APP_NAME} ${APP_VERSION} installer.exe"
+BrandingText "${APP_NAME} by ${PUBLISHER}"
+
+Var CommonDocuments
+Var ConfigPath
+
+VIAddVersionKey "ProductName"		"${APP_NAME}"
+VIAddVersionKey "CompanyName"		"${PUBLISHER}"
+VIAddVersionKey "LegalCopyright"	"${PUBLISHER} 2024"
+VIAddVersionKey "FileDescription"	"Cellframe Node Installer"
+VIAddVersionKey "FileVersion"		"${APP_VERSION}"
+VIAddVersionKey "ProductVersion"	"${APP_VERSION}"
+VIProductVersion "${APP_VERSION}.0"
+
+Function .onInit
+	${If} ${RunningX64}
+		${EnableX64FSRedirection}
+		SetRegView 64
+	${else}
+        MessageBox MB_OK "${APP_NAME} supports x64 architectures only"
+        Abort
+    ${EndIf}
+	ReadRegStr $CommonDocuments HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" "Common Documents"
+	StrCpy $ConfigPath "$CommonDocuments\${NODE_NAME}"
+FunctionEnd
+
+
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES  
+
+!insertmacro MUI_LANGUAGE 	"English"
+!insertmacro MUI_LANGUAGE 	"Russian"
+
+Function createRuntimePaths
+	CreateDirectory "$ConfigPath\var\log"
+	CreateDirectory "$ConfigPath\var\lib\global_db"
+	CreateDirectory "$ConfigPath\var\lib\wallet"	
+	CreateDirectory "$ConfigPath\var\lib\ca"
+	CreateDirectory "$CommonDocuments\${APP_NAME}\log"
+FunctionEnd
+
+InstallDir "$PROGRAMFILES64\${APP_NAME}"
+
+!define PRODUCT_NAME "${APP_NAME}"
+!define PRODUCT_VERSION "${APP_VERSION}"
+!define PRODUCT_FULLNAME "${APP_NAME} ${APP_VERSION}"
+!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_FULLNAME}"
+!define PRODUCT_UNINST_ROOT_KEY "HKLM"
+!define PRODUCT_UNINSTALL_EXE "uninstall.exe"
+
+Section "${APP_NAME}" CORE
+	SectionIn RO
+	SetOutPath "$INSTDIR"
+
+	File "opt/cellframe-node/bin/${NODE_NAME}.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
+
+	Call createRuntimePaths
+
+	InitPluginsDir
+	SetOutPath "$PLUGINSDIR"
+
+	SetOutPath "$ConfigPath\etc"
+	File /r "opt/cellframe-node/etc/"
+
+	SetOutPath "$ConfigPath\share"
+	File /r "opt/cellframe-node/share/*"
+		
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\Uninstall.exe"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayVersion" "${APP_VERSION}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
+	
+	WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${NODE_NAME}.exe" 		"RUNASADMIN"
+	
+	WriteUninstaller "$INSTDIR\Uninstall.exe"
+	
+	;${DisableX64FSRedirection}
+	;nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "${NODE_NAME}"'
+	;${EnableX64FSRedirection}
+	
+	WriteRegStr HKLM "Software\${APP_NAME}" "Path" "$INSTDIR"
+	WriteRegStr HKLM "Software\${APP_NAME}" "Version" "${APP_VERSION}"
+
+	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -i $ConfigPath\share\default.setup"
+SectionEnd
+
+Section "Uninstall"
+	SetRegView 64
+	Delete "$INSTDIR\${NODE_NAME}.exe"
+	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
+	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
+	Delete "$INSTDIR\${NODE_NAME}-config.exe"
+	DeleteRegKey HKLM "${UNINSTALL_PATH}"
+	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
+	Delete "$INSTDIR\Uninstall.exe"
+	Delete "$DESKTOP\${APP_NAME}.lnk"
+	;RMDir "$INSTDIR"
+SectionEnd

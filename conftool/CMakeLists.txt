@@ -22,7 +22,7 @@ endif()
 set(CMAKE_AUTOMOC ON)
 
 
-add_executable(${PROJECT_NAME} ./confctl.cpp 
+add_executable(${PROJECT_NAME} ./main.cpp 
                                 
                                 ./ui/question.cpp
                                 ./commands/abstractcommand.cpp 
@@ -42,3 +42,5 @@ target_link_libraries(cellframe-node-config
 IF (WIN32)
   target_link_libraries(cellframe-node-config PRIVATE ws2_32)
 ENDIF()
+
+
