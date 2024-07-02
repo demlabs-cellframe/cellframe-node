@@ -59,14 +59,14 @@ CConfigCommand::CConfigCommand(std::vector <std::string> cmd_tokens):CAbstractSc
 bool is_placeholder(const std::string &val)
 {
     if (val.empty()) return true;
-    return val[0]=='{' && val[val.size()-1]=='}';
+    return val[0]=='$' && val[val.size()-1]=='}';
 }
 
 bool CConfigCommand::execute(bool non_intercative, int flags)
 {   
-    //can't do this in ctr, cause storage-cmds can be not executed yet.
-    if (!this->value.empty() && this->value[0] == '$') this->value = variable_storage[this->value.substr(1)];
-
+    //can't do this in ctr, cause storage-cmds can be not executed yet.  
+    this->value = substitute_variables(this->value);
+    
     auto cfg_on_path = config_path(this->cfg_name, CFG_GENERAL, CFG_ON );
     auto cfg_off_path = config_path(this->cfg_name, CFG_GENERAL, CFG_OFF );
     

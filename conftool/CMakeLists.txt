@@ -19,6 +19,7 @@ endif()
 
 
 
+
 set(CMAKE_AUTOMOC ON)
 
 
@@ -37,7 +38,11 @@ target_link_libraries(cellframe-node-config
   PRIVATE ftxui::screen
   PRIVATE ftxui::dom
   PRIVATE ftxui::component # Not needed for this example.
+  stdc++fs
 )
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
 
 IF (WIN32)
   target_link_libraries(cellframe-node-config PRIVATE ws2_32)

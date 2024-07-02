@@ -74,7 +74,9 @@ class PlaceholderManager {
     std::string replacePlaceholders(
         std::string input, const std::map<std::string, std::vector<std::any>> &args = {}) {
         for (const auto &itPh : placeholders_)
+        {
             replaceEachPh(input, args, itPh.second);
+        }
         return input;
     }
 
@@ -256,6 +258,7 @@ std::string CellframeConfigurationFile::set(const std::string & group, const std
     else 
     {
         lines.emplace(lines.begin()+line_set_to, param+"="+value);
+        lines.emplace(lines.begin()+line_set_to + 1, "\n");
     }
     return lines[line_set_to];
 }
@@ -274,25 +277,30 @@ bool CellframeConfigurationFile::save()
     return true;
 }
 
+
 void CellframeConfigurationFile::replace_placeholders(std::map<std::string, std::string> data)
 {
     if (flags & F_VERBOSE)  std::cout << "[VC] replacing placeholders in" << this->path<< std::endl;
     
     int current_line = -1;
-    std::string group_name;
-    utils::PlaceholderManager pman;
-    for (auto var: data){
-        pman.addPlaceholder(std::make_shared<utils::Placeholder<>>(
-        std::string("{{"+var.first+"}}"), [=] { return var.second; }));
-    }
-
+    
     for( auto line : lines)
     {
         current_line ++;
         trim(line);
         line = line.substr(0, line.find("#")); //skip comments 
         if(line.empty()) continue; //skip empties  
-        auto nline = pman.replacePlaceholders(line);
+        auto nline = substitute_variables(line);
         lines[current_line] = nline;
     }
+}
+
+std::string substitute_variables(const std::string &string)
+{
+    utils::PlaceholderManager pman;
+    for (auto var: variable_storage){
+        pman.addPlaceholder(std::make_shared<utils::Placeholder<>>(
+        std::string("\\${"+var.first+"}"), [=] { return var.second; }));
+    }
+    return pman.replacePlaceholders(string);
 }

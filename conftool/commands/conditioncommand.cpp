@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iterator>
 #include <numeric>
+#include "../config/cellframeconfigfile.h"
 
 CAbstractScriptCommand::Registrar<CConditionOpenCommand> if_registrar("if");
 CAbstractScriptCommand::Registrar<CConditionCloseCommand> endif_registrar("endif");
@@ -51,8 +52,8 @@ bool CConditionOpenCommand::execute(bool non_intercative, int flags)
     
     if (flags & F_VERBOSE) std::cout << "[VE] Condition exec: " << a1val << " " << this->cond_op << " "<<a2val << " -> ";
 
-    if (this->arg1[0] == '$') a1val = variable_storage[this->arg1.substr(1)];
-    if (!this->arg2.empty() && this->arg2[0] == '$') a2val = variable_storage[this->arg2.substr(1)];
+    a1val = substitute_variables(arg1);
+    a2val = substitute_variables(arg2);
  
     bool res = false;
     std::string opsym = "";

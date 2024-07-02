@@ -51,3 +51,5 @@ struct CellframeConfigurationFile {
         std::vector<std::string> lines;
         int flags;
 };
+
+std::string substitute_variables(const std::string &string);

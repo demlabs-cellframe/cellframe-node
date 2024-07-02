@@ -1,5 +1,5 @@
 #include "storagecommand.h"
-
+#include "../config/cellframeconfigfile.h"
 
 CAbstractScriptCommand::Registrar<CVariableCommand> var_registrar("var");
 
@@ -18,8 +18,8 @@ CVariableCommand::CVariableCommand(std::vector <std::string> cmd_tokens):CAbstra
 
 bool CVariableCommand::execute(bool non_intercative, int flags)
 {   
-    std::string real_val = this->val;
-    if (real_val[0] == '$') real_val = variable_storage[real_val];
+    std::string real_val = substitute_variables(this->val);
+    
     variable_storage[this->var] = real_val;
     if (flags & F_VERBOSE)
     {
