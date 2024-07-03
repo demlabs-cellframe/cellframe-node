@@ -123,10 +123,24 @@ static int s_cert_create(int argc, const char **argv);
 static int s_cert_dump(int argc, const char **argv);
 static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy);
 static int s_cert_create_pkey(int argc, const char **argv);
-static inline int s_cert_create_cert_pkey(int argc, const char **argv)
-{ return s_cert_copy(argc, argv, false); }
-static inline int s_cert_rename(int argc, const char **argv)
-{ return s_cert_copy(argc, argv, true); }
+static inline int s_cert_create_cert_pkey(int argc, const char **argv){
+    int res = s_cert_copy(argc, argv, false);
+    if (res == 0) {
+        log_it(L_NOTICE, "A certificate with a public key has been created.");
+    } else {
+        log_it(L_ERROR, "\nFailed to create a certificate with a public key. Error code: %d.", res);
+    }
+    return res;
+}
+static inline int s_cert_rename(int argc, const char **argv) {
+    int res = s_cert_copy(argc, argv, true);
+    if (res == 0) {
+        log_it(L_NOTICE, "Certificate renaming has been completed.");
+    } else {
+        log_it(L_ERROR, "\nFailed to rename the certificate.");
+    }
+    return res;
+}
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
@@ -167,9 +181,13 @@ int main(int argc, const char **argv)
   }
 
   size_t l_size = sizeof(s_opts) / sizeof(struct options);
+  bool l_find_cmd = false;
+  bool l_find_subcmd = true;
   for (size_t i = 0; i < l_size; i++) {
       int argv_index = 1;
       if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
+          l_find_cmd = true;
+          l_find_subcmd = false;
           int match = 1;
           for (int isub = 0; isub < s_opts[i].count_of_subcommands; isub++) {
               if ((argc - 1) < ++argv_index) {
@@ -186,6 +204,13 @@ int main(int argc, const char **argv)
               return l_ret;
           }
       }
+  }
+  if (!l_find_cmd) {
+      printf("Command %s not found.\n", argv[1]);
+  }
+  if (!l_find_subcmd) {
+      printf("No subcommand was found for the %s command or the number of command arguments is less than the minimum.\n",
+             argv[1]);
   }
 
   s_help();
@@ -233,11 +258,18 @@ static int s_wallet_create(int argc, const char **argv) {
 
     l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
-    return l_wallet ? 0 : -1;
+    if (l_wallet) {
+        log_it(L_NOTICE, "Wallet %s has been created.", l_wallet_name);
+        return 0;
+    } else {
+        log_it(L_ERROR, "Failed to create a wallet.");
+        return -1;
+    }
 }
 
 static int s_wallet_create_from(int argc, const char **argv) {
-    return 0;
+    printf("The wallet create_from command is not implemented.");
+    return -1;
 }
 
 static int s_wallet_sign_file(int argc, const char **argv) {
@@ -260,9 +292,10 @@ static int s_wallet_sign_file(int argc, const char **argv) {
       FILE *l_data_file = fopen( argv[5],"rb" );
       if ( l_data_file ) {
         fclose(l_data_file);
+        log_it(L_NOTICE, "Certificate %s was successfully created from wallet %s.", argv[5], argv[3]);
+        exit(0);
       }
-    }
-    else {
+    } else {
       log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
                                          ,l_cert_index,l_wallet_certs_number );
       s_help();
@@ -273,6 +306,7 @@ static int s_wallet_sign_file(int argc, const char **argv) {
 
 static int s_cert_create(int argc, const char **argv) {
     if ( argc < 5 ) {
+      log_it( L_ERROR, "Wrong 'cert create' command params\n");
       s_help();
       exit(-500);
     }
@@ -309,6 +343,7 @@ static int s_cert_create(int argc, const char **argv) {
         DAP_DELETE(l_cert_path);
         exit(-500);
     }
+    log_it(L_NOTICE, "Cert %s created", l_cert_path);
     DAP_DELETE(l_cert_path);
     return 0;
 }
@@ -324,18 +359,27 @@ static int s_cert_dump(int argc, const char **argv)
         dap_cert_delete_by_name(l_cert_name);
       }
       else {
+        log_it( L_ERROR, "Can't open '%s' cert\n", l_cert_name);
         exit(-702);
       }
+    } else {
+        log_it( L_ERROR, "Wrong 'cert dump' command params\n");
     }
     return 0;
 }
 
 static int s_cert_create_pkey(int argc, const char **argv) {
-    if (argc < 5) exit(-7023);
+    if (argc < 5) {
+        log_it( L_ERROR, "Wrong 'cert create_pkey' command params\n");
+        exit(-7023);
+    }
       const char *l_cert_name = argv[3];
       const char *l_cert_pkey_path = argv[4];
       dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-      if ( !l_cert ) exit( -7021 );
+      if ( !l_cert ) {
+          log_it(L_ERROR, "Failed to open %s certificate.", l_cert_name);
+          exit(-7021);
+      }
         l_cert->enc_key->pub_key_data_size = dap_enc_ser_pub_key_size(l_cert->enc_key);
         if ( l_cert->enc_key->pub_key_data_size ) {
           //l_cert->key_private->pub_key_data = DAP_NEW_SIZE(void, l_cert->key_private->pub_key_data_size);
@@ -352,6 +396,7 @@ static int s_cert_create_pkey(int argc, const char **argv) {
             exit(-7022);
           }
           dap_cert_delete_by_name(l_cert_name);
+          log_it(L_NOTICE, "Created %s public key based on %s private key.", l_cert_pkey_path, l_cert_name);
           return 0;
         } else {
           log_it(L_ERROR,"Can't produce pkey from this cert type");
@@ -409,33 +454,42 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
 
 static int s_cert_add_metadata(int argc, const char **argv) {
     if (argc >= 5) {
-      const char *l_cert_name = argv[3];
-      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
-      if ( l_cert ) {
-        char **l_params = dap_strsplit(argv[4], ":", 4);
-        dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
-        if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
-          dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
-        } else {
-          dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
+        const char *l_cert_name = argv[3];
+        dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+        if ( l_cert ) {
+            char **l_params = dap_strsplit(argv[4], ":", 4);
+            dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
+            if (l_type == DAP_CERT_META_STRING || l_type == DAP_CERT_META_SIGN || l_type == DAP_CERT_META_CUSTOM) {
+                dap_cert_add_meta(l_cert, l_params[0], l_type, (void *)l_params[3], strtoul(l_params[2], NULL, 10));
+            } else {
+                dap_cert_add_meta_scalar(l_cert, l_params[0], l_type,
                                    strtoull(l_params[3], NULL, 10), strtoul(l_params[2], NULL, 10));
+            }
+            dap_strfreev(l_params);
+            dap_cert_save_to_folder(l_cert, s_system_ca_dir);
+            dap_cert_delete_by_name(l_cert_name);
+            log_it(L_NOTICE, "The metainformation was successfully added to %s certificate", l_cert_name);
+            return 0;
         }
-        dap_strfreev(l_params);
-        dap_cert_save_to_folder(l_cert, s_system_ca_dir);
-        dap_cert_delete_by_name(l_cert_name);
-        return 0;
-      }
-      else {
+        else {
+            log_it(L_ERROR, "Can't open %s certificate", l_cert_name);
+            exit(-800);
+        }
+    } else {
+        log_it( L_ERROR, "Wrong 'cert add_metadata' command params\n");
         exit(-800);
-      }
     }
-    return -1;
 }
 static int s_cert_sign(int argc, const char **argv) {
-    return 0;
+    log_it(L_ERROR, "The command 'cert sign' is not implemented.");
+    return -1;
 }
 static int s_cert_pkey_show(int argc, const char **argv)
 {
+    if (argc != 5) {
+        log_it( L_ERROR, "Wrong 'cert pkey show' command params\n");
+        exit(-800);
+    }
     dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
     if (!l_cert) {
         printf("Not found cert %s\n", argv[4]);
