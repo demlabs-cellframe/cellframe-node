@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "dap_chain_node_cli.h"
-//#include "dap_client.h"
 #include "dap_common.h"
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"
@@ -36,162 +35,34 @@
 #include "dap_app_cli_net.h"
 #include "dap_app_cli_shell.h"
 
-#ifdef __ANDROID__
-    #include "cellframe_node.h"
-#endif
-
-#ifdef _WIN32
+#ifdef DAP_OS_WINDOWS
 #include "registry.h"
+#elif defined DAP_OS_ANDROID
+#include "cellframe_node.h"
+#include <android/log.h>
+#include <jni.h>
 #endif
 
 #include "dap_defines.h"
 
+#define NODE_NAME "cellframe-node"
+
 static dap_app_cli_connect_param_t *cparam;
 static const char *listen_socket = NULL;
 
-/**
- * split string to argc and argv
- */
-static char** split_word(char *line, int *argc)
-{
-    if(!line)
-    {
-        if(argc)
-            *argc = 0;
-        return NULL ;
-    }
-    char **argv = DAP_NEW_Z_SIZE(char*, sizeof(char*) * strlen(line));
-    int n = 0;
-    char *s, *start = line;
-    size_t len = strlen(line);
-    for(s = line; s <= line + len; s++) {
-        if(whitespace(*s)) {
-            *s = '\0';
-            argv[n] = start;
-            s++;
-            // miss spaces
-            for(; whitespace(*s); s++)
-                ;
-            start = s;
-            n++;
-        }
-    }
-    // last param
-    if(len) {
-        argv[n] = start;
-        n++;
-    }
-    if(argc)
-        *argc = n;
-    return argv;
-}
-
-/*
- * Execute a command line.
- */
-int execute_line(char *line)
-{
-    register int i;
-    char *word;
-
-    /* Isolate the command word. */
-    i = 0;
-    while(line[i] && whitespace(line[i]))
-        i++;
-    word = line + i;
-
-    /*    while(line[i] && !whitespace(line[i]))
-     i++;
-
-     if(line[i])
-     line[i++] = '\0';
-
-     command = find_command(word);
-
-     if(!command)
-     {
-     fprintf(stderr, "%s: No such command\n", word);
-     return (-1);
-     }*/
-
-    /* Get argument to command, if any.
-     while(whitespace(line[i]))
-     i++;
-     word = line + i;*/
-
-    int argc = 0;
-    char **argv = split_word(word, &argc);
-
-    // Call the function
-    if(argc > 0) {
-        dap_app_cli_cmd_state_t cmd = {
-            .cmd_name           = (char*)argv[0],
-            .cmd_param_count    = argc - 1,
-            .cmd_param          = argc - 1 > 0 ? (char**)(argv + 1) : NULL
-        };
-        // Send command
-        int res = dap_app_cli_post_command(cparam, &cmd);
-        DAP_DELETE(argv);
-        return res;
-    }
-    fprintf(stderr, "No command\n");
-    DAP_DELETE(argv);
-    return -1; //((*(command->func))(argc, (const char **) argv, NULL));
-}
-
-/**
- *  Read and execute commands until EOF is reached.  This assumes that
- *  the input source has already been initialized.
- */
-int shell_reader_loop()
-{
-    char *line, *s;
-
-    rl_initialize(); /* Bind our completer. */
-    int done = 0;
-    // Loop reading and executing lines until the user quits.
-    for(; done == 0;) {
-        // Read a line of input
-        line = rl_readline("> ");
-
-        if(!line)
-            break;
-
-        /* Remove leading and trailing whitespace from the line.
-         Then, if there is anything left, add it to the history list
-         and execute it. */
-        s = dap_strstrip(line);
-        if (*s) {
-            add_history(s);
-            cparam = dap_app_cli_connect(listen_socket);
-            if(!cparam)
-            {
-                printf("Can't connect to %s\n",dap_get_appname());
-                DAP_DELETE(listen_socket);
-                exit(-1);
-            }
-            execute_line(s);
-            dap_app_cli_disconnect(cparam);
-        }
-
-        DAP_DELETE(line);
-    }
-
-    return 0;
-}
-
-#ifdef __ANDROID__
-int cellframe_node__cli_Main(int argc, const char *argv[])
+#ifdef DAP_OS_ANDROID
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeCliMain(int argc, const char *argv[])
 #else
-
 int main(int argc, const char *argv[])
 #endif
 {
-    dap_set_appname("cellframe-node");
-#ifdef _WIN32
+    dap_set_appname(NODE_NAME "-cli");
+#ifdef DAP_OS_WINDOWS
     SetConsoleCP(1252);
     SetConsoleOutputCP(1252);
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2,2), &wsaData);
+    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), NODE_NAME);
 #elif DAP_OS_MAC
     char * l_username = NULL;
     exec_with_ret(&l_username,"whoami|tr -d '\n'");
@@ -202,81 +73,37 @@ int main(int argc, const char *argv[])
     g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s", NODE_NAME);
 #elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    g_sys_dir_path = dap_strdup_printf("/opt/%s", NODE_NAME);
 #endif
-    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
+    /*if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
     }
 
-    {
+    */{
         char l_config_dir[MAX_PATH] = {'\0'};
         sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
         dap_config_init(l_config_dir);
     }
     dap_log_level_set(L_CRITICAL);
-
-    if((g_config = dap_config_open(dap_get_appname())) == NULL) {
-        printf("Can't init general configurations %s.cfg\n", dap_get_appname());
-        exit(-1);
+    int res = dap_app_cli_main(NODE_NAME, argc, argv);
+    switch (res) {
+        case DAP_CLI_ERROR_FORMAT:
+            printf("Response format error!\n");
+            break;
+        case DAP_CLI_ERROR_SOCKET:
+            printf("Socket read error!\n");
+            break;
+        case DAP_CLI_ERROR_TIMEOUT:
+            printf("No response recieved\n");
+            break;
+        case DAP_CLI_ERROR_INCOMPLETE:
+            printf("Connection closed by peer\n");
+        default:
+            break;
     }
-
-    // connect to node
-
-#ifndef _WIN32
-    listen_socket = dap_strdup(dap_config_get_item_str( g_config, "conserver", "listen_unix_socket_path")); // unix socket mode
-#else
-    listen_socket = dap_strdup(dap_config_get_item_str( g_config, "conserver", "listen_port_tcp"));
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
-    dap_config_close(g_config);
-
-    if(argc > 1){
-        cparam = dap_app_cli_connect(listen_socket);
-        if(!cparam)
-        {
-            printf("Can't connect to %s\n",dap_get_appname());
-            DAP_DELETE(listen_socket);
-            exit(-1);
-        }
-        dap_app_cli_cmd_state_t cmd = {
-            .cmd_name           = (char*)argv[1],
-            .cmd_param_count    = argc - 2,
-            .cmd_param          = argc - 2 > 0 ? (char**)(argv + 2) : NULL
-        };
-        int res = dap_app_cli_post_command(cparam, &cmd);
-        dap_app_cli_disconnect(cparam);
-#ifdef _WIN32
-        WSACleanup();
-#endif
-        switch (res) {
-            case DAP_CLI_ERROR_FORMAT:
-                printf("Response format error!\n");
-                break;
-            case DAP_CLI_ERROR_SOCKET:
-                printf("Socket read error!\n");
-                break;
-            case DAP_CLI_ERROR_TIMEOUT:
-                printf("No response recieved\n");
-                break;
-            case DAP_CLI_ERROR_INCOMPLETE:
-                printf("Connection closed by peer\n");
-            default:
-                break;
-        }
-        return res;
-    }else{
-        // command not found, start interactive shell
-        shell_reader_loop();
-        dap_app_cli_disconnect(cparam);
-    }
-#ifdef _WIN32
-        WSACleanup();
-#endif
-        DAP_DELETE(listen_socket);
-    return 0;
+    return res;
 }
 

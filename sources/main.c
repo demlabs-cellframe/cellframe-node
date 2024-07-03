@@ -131,10 +131,6 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
-#ifdef __ANDROID__
-    #include "cellframe_node.h"
-#endif
-
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
@@ -142,8 +138,11 @@ void exit_if_server_already_running( void );
 static const char *s_pid_file_path = NULL;
 #endif
 
-#ifdef __ANDROID__
-int cellframe_node_Main(int argc, const char **argv)
+#ifdef DAP_OS_ANDROID
+#include "dap_app_cli.h"
+#include <android/log.h>
+#include <jni.h>
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 #else
 int main( int argc, const char **argv )
 #endif
