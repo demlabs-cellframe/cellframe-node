@@ -126,7 +126,7 @@ static int s_cert_create_pkey(int argc, const char **argv);
 static inline int s_cert_create_cert_pkey(int argc, const char **argv){
     int res = s_cert_copy(argc, argv, false);
     if (res == 0) {
-        log_it(L_NOTICE, "A certificate with a public key has been created.");
+        log_it(L_NOTICE, "A certificate with a public key has been created.\n");
     } else {
         log_it(L_ERROR, "\nFailed to create a certificate with a public key. Error code: %d.", res);
     }
@@ -135,7 +135,7 @@ static inline int s_cert_create_cert_pkey(int argc, const char **argv){
 static inline int s_cert_rename(int argc, const char **argv) {
     int res = s_cert_copy(argc, argv, true);
     if (res == 0) {
-        log_it(L_NOTICE, "Certificate renaming has been completed.");
+        log_it(L_NOTICE, "Certificate renaming has been completed.\n");
     } else {
         log_it(L_ERROR, "\nFailed to rename the certificate.");
     }
@@ -259,7 +259,7 @@ static int s_wallet_create(int argc, const char **argv) {
     l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
     if (l_wallet) {
-        log_it(L_NOTICE, "Wallet %s has been created.", l_wallet_name);
+        log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
         return 0;
     } else {
         log_it(L_ERROR, "Failed to create a wallet.");
@@ -292,7 +292,7 @@ static int s_wallet_sign_file(int argc, const char **argv) {
       FILE *l_data_file = fopen( argv[5],"rb" );
       if ( l_data_file ) {
         fclose(l_data_file);
-        log_it(L_NOTICE, "Certificate %s was successfully created from wallet %s.", argv[5], argv[3]);
+        log_it(L_NOTICE, "Certificate %s was successfully created from wallet %s.\n", argv[5], argv[3]);
         exit(0);
       }
     } else {
@@ -343,7 +343,7 @@ static int s_cert_create(int argc, const char **argv) {
         DAP_DELETE(l_cert_path);
         exit(-500);
     }
-    log_it(L_NOTICE, "Cert %s created", l_cert_path);
+    log_it(L_NOTICE, "Cert %s created\n", l_cert_path);
     DAP_DELETE(l_cert_path);
     return 0;
 }
@@ -396,7 +396,7 @@ static int s_cert_create_pkey(int argc, const char **argv) {
             exit(-7022);
           }
           dap_cert_delete_by_name(l_cert_name);
-          log_it(L_NOTICE, "Created %s public key based on %s private key.", l_cert_pkey_path, l_cert_name);
+          log_it(L_NOTICE, "Created %s public key based on %s private key.\n", l_cert_pkey_path, l_cert_name);
           return 0;
         } else {
           log_it(L_ERROR,"Can't produce pkey from this cert type");
@@ -468,7 +468,7 @@ static int s_cert_add_metadata(int argc, const char **argv) {
             dap_strfreev(l_params);
             dap_cert_save_to_folder(l_cert, s_system_ca_dir);
             dap_cert_delete_by_name(l_cert_name);
-            log_it(L_NOTICE, "The metainformation was successfully added to %s certificate", l_cert_name);
+            log_it(L_NOTICE, "The metainformation was successfully added to %s certificate\n", l_cert_name);
             return 0;
         }
         else {
@@ -622,7 +622,7 @@ static void s_help()
     printf( "%s usage:\n\n", l_tool_appname);
 
     printf(" * Create new key wallet and generate signatures with same names plus index \n" );
-    printf("\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
+    printf("\t%s wallet create <wallet_name> <signature_type> [<signature_type_2>[...<signature_type_N>]]\n\n", l_tool_appname);
 
 #if 0
     printf(" * Create new key wallet from existent certificates in the system\n");
