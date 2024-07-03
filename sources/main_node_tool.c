@@ -383,7 +383,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
                                                      l_cert->enc_key->pub_key_data_size);
     if (!l_cert_new->enc_key->pub_key_data) {
-        log_it(L_CRITICAL, "%s", g_error_memory_alloc);
+        log_it(L_CRITICAL, "%s", c_error_memory_alloc);
         return -1;
     }
     l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
@@ -392,7 +392,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
         l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE(l_cert->enc_key->priv_key_data,
                                                           l_cert->enc_key->priv_key_data_size);
         if (!l_cert_new->enc_key->priv_key_data) {
-            log_it(L_CRITICAL, "%s", g_error_memory_alloc);
+            log_it(L_CRITICAL, "%s", c_error_memory_alloc);
             return -1;
         }
         l_cert_new->enc_key->priv_key_data_size = l_cert->enc_key->priv_key_data_size;
