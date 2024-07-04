@@ -16,7 +16,7 @@ AbstractDiagnostic::AbstractDiagnostic(QObject *parent)
 #elif defined(Q_OS_WIN)
     s_nodeDataPath = QString("%1/cellframe-node").arg(regGetUsrPath());
 #elif defined(Q_OS_MACOS)
-    s_nodeDataPath = QString("/Users/%1/Applications/Cellframe.app/Contents/Resources/").arg(getenv("USER"));
+    s_nodeDataPath = QString("Applications/CellframeNode.app/Contents/Resources/");
 #endif
     s_timer_update = new QTimer();
     s_mac = get_mac();

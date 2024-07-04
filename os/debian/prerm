@@ -2,25 +2,32 @@
 
 case "$1" in
 	remove|purge|abort-install|abort-upgrade)
-		echo "[*] Stopping cellframe-node.service"
+		echo "[*] Stopping cellframe-node and services..."
 		systemctl stop cellframe-node || true
-		echo "[*] Disabling cellframe-node.service"
+		systemctl stop cellframe-diagtool || true
+		systemctl stop cellframe-updater || true
+
+		echo "[*] Disabling cellframe-node and services..."
 		systemctl disable cellframe-node || true
+		systemctl disable cellframe-diagtool || true
+		systemctl disable cellframe-updater || true
 		;;
 
 	disappear)
 		;;
 
 	upgrade)
-		echo "[*] Stopping cellframe-node.service"
+		echo "[*] Stopping cellframe-node and services..."
         systemctl stop cellframe-node || true
-		echo "[*] Stopping cellframe-diagtool.service"
-        systemctl stop cellframe-diagtool || true
+		systemctl stop cellframe-diagtool || true
+        systemctl stop cellframe-updater || true
 		;;
 
 	failed-upgrade)
-		echo "[*] Stopping cellframe-node.service"
+		echo "[*] Stopping cellframe-node and services"
         systemctl stop cellframe-node || true
+		systemctl stop cellframe-diagtool || true
+        systemctl stop cellframe-updater || true
         ;;
 
 	*)

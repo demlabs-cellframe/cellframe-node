@@ -1,0 +1,335 @@
+; ***************************************************************
+; * Authors:
+; * Dmitry Puzyrkov <dmitry.puzrykov@demlabs.net>
+; * DeM Labs Inc.   https://demlabs.net
+; * Cellframe Project https://gitlab.demlabs.net/cellframe
+; * Copyright  (c) 2024
+; * All rights reserved.
+; ***************************************************************
+
+!define MULTIUSER_EXECUTIONLEVEL Admin
+!include "MUI2.nsh"
+!include "x64.nsh"
+!include nsDialogs.nsh
+!include LogicLib.nsh
+!include MUI2.nsh
+!include "WordFunc.nsh"
+
+!define StrTrimNewLines "!insertmacro StrTrimNewLines Init ''"
+!define UnStrTrimNewLines "!insertmacro StrTrimNewLines Init Un"
+!macro StrTrimNewLines OutVar String
+!verbose push
+!verbose 3
+!if "${OutVar}" == "Init"
+	!undef ${String}StrTrimNewLines
+	!define ${String}StrTrimNewLines "!insertmacro StrTrimNewLines "
+	!if "${String}" != ""
+	Function un.StrTrimNewLines
+	!else
+	Function StrTrimNewLines
+	!endif
+	!insertmacro StrTrimNewLines Func ''
+	FunctionEnd
+!else if "${OutVar}" == "Func"
+	Exch $0
+	Push $1
+n:	StrCpy $1 $0 1 -1
+	StrCmp $1 '$\r' +2
+	StrCmp $1 '$\n' +1 e
+	StrCpy $0 $0 -1
+	Goto n
+e:	Pop $1
+	Exch $0
+!else
+	Push "${String}"
+	!ifdef __UNINSTALL__
+	Call un.StrTrimNewLines
+	!else
+	Call StrTrimNewLines
+	!endif
+	Pop "${OutVar}"
+!endif
+!verbose pop
+!macroend
+
+
+Unicode true
+!define APP_NAME		"cellframe-node"
+!define NODE_NAME		"cellframe-node"
+!define EXE_NAME		"${APP_NAME}.exe"
+!define PUBLISHER		"Cellframe Network"
+!define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+
+
+!define ICON "cellframe.ico"
+!define BANNER "cellframe.bmp"
+
+!define MUI_ICON "${ICON}"
+!define MUI_UNICON "${ICON}"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "${BANNER}"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${BANNER}"
+
+
+Name 	"${APP_NAME}"
+OutFile	"${APP_NAME}-${APP_VERSION}-installer.exe"
+BrandingText "${APP_NAME} by ${PUBLISHER}"
+
+Var CommonDocuments
+Var ConfigPath
+
+VIAddVersionKey "ProductName"		"${APP_NAME}"
+VIAddVersionKey "CompanyName"		"${PUBLISHER}"
+VIAddVersionKey "LegalCopyright"	"${PUBLISHER} 2024"
+VIAddVersionKey "FileDescription"	"Cellframe Node Installer"
+VIAddVersionKey "FileVersion"		"${APP_VERSION}"
+VIAddVersionKey "ProductVersion"	"${APP_VERSION}"
+VIProductVersion "${APP_VERSION}.0"
+
+Function .onInit
+	${If} ${RunningX64}
+		${EnableX64FSRedirection}
+		SetRegView 64
+	${else}
+        MessageBox MB_OK "${APP_NAME} supports x64 architectures only"
+        Abort
+    ${EndIf}
+	ReadRegStr $CommonDocuments HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" "Common Documents"
+	StrCpy $ConfigPath "$CommonDocuments\${NODE_NAME}"
+FunctionEnd
+
+
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+Page custom pgNetSelectCreate pgNetSelectLeave
+!insertmacro MUI_PAGE_FINISH
+
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES  
+
+!insertmacro MUI_LANGUAGE 	"English"
+!insertmacro MUI_LANGUAGE 	"Russian"
+
+Function createRuntimePaths
+	CreateDirectory "$ConfigPath\var\lib\global_db"
+	CreateDirectory "$ConfigPath\var\lib\wallet"	
+	CreateDirectory "$ConfigPath\var\lib\ca"
+FunctionEnd
+
+InstallDir "$PROGRAMFILES64\${APP_NAME}"
+
+!define PRODUCT_NAME "${APP_NAME}"
+!define PRODUCT_VERSION "${APP_VERSION}"
+!define PRODUCT_FULLNAME "${APP_NAME} ${APP_VERSION}"
+!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_FULLNAME}"
+!define PRODUCT_UNINST_ROOT_KEY "HKLM"
+!define PRODUCT_UNINSTALL_EXE "uninstall.exe"
+
+
+Var NetworksDialog
+Var NetBackboneCb
+Var NetKelVPNCb
+Var NetRiemannCb
+Var NetRaidenCb
+Var NetMileenaCb
+Var NetSubzeroCb
+
+Var NetBackboneState
+Var NetKelVPNState
+Var NetRiemannState
+Var NetRaidenState
+Var NetMileenaState
+Var NetSubzeroState
+
+${StrTrimNewLines}
+
+Function getNetworksStates
+
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network Backbone check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetBackboneState
+	${StrTrimNewLines} $NetBackboneState $NetBackboneState
+	
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network KelVPN check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetKelVPNState
+	${StrTrimNewLines} $NetKelVPNState $NetKelVPNState
+	
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network riemann check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetRiemannState
+	${StrTrimNewLines} $NetRiemannState $NetRiemannState
+	
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network raiden check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetRaidenState
+	${StrTrimNewLines} $NetRaidenState $NetRaidenState
+
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network mileena check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetMileenaState
+	${StrTrimNewLines} $NetMileenaState $NetMileenaState
+
+	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network subzero check" 
+	Pop $0 ; Exit code / error
+	Pop $1 ; stdout output
+	${WordFind} $1 " " "-01" $NetSubzeroState
+	${StrTrimNewLines} $NetSubzeroState $NetSubzeroState
+
+FunctionEnd
+${UnStrTrimNewLines}
+
+Section "${APP_NAME}" CORE
+	SectionIn RO
+	SetOutPath "$INSTDIR"
+
+	File "opt/cellframe-node/bin/${NODE_NAME}.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
+	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
+
+	Call createRuntimePaths
+
+	InitPluginsDir
+	SetOutPath "$PLUGINSDIR"
+
+	SetOutPath "$ConfigPath\etc"
+	File /r "opt/cellframe-node/etc/"
+
+	SetOutPath "$ConfigPath\share"
+	File /r "opt/cellframe-node/share/*"
+		
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\Uninstall.exe"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayVersion" "${APP_VERSION}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
+	
+	WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${NODE_NAME}.exe" 		"RUNASADMIN"
+	
+	WriteUninstaller "$INSTDIR\Uninstall.exe"
+	
+	;${DisableX64FSRedirection}
+	;nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "${NODE_NAME}"'
+	;${EnableX64FSRedirection}
+	
+	WriteRegStr HKLM "Software\${APP_NAME}" "Path" "$INSTDIR"
+	WriteRegStr HKLM "Software\${APP_NAME}" "Version" "${APP_VERSION}"
+
+	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -i $ConfigPath\share\default.setup"
+
+	; check net states after install to show in checkboxes
+	Call getNetworksStates
+
+SectionEnd
+
+
+Function checkEnabledNets
+
+	${If} $NetBackboneState == "on"
+		${NSD_Check} $NetBackboneCb
+	${EndIf}
+	
+	${If} $NetKelVPNState == "on"
+		${NSD_Check} $NetKelVPNCb
+	${EndIf}
+	
+	${If} $NetRiemannState == "on"
+		${NSD_Check} $NetRiemannCb
+	${EndIf}
+
+	${If} $NetRaidenState == "on"
+		${NSD_Check} $NetRaidenCb
+	${EndIf}
+
+	${If} $NetMileenaState == "on"
+		${NSD_Check} $NetMileenaCb
+	${EndIf}
+
+	${If} $NetSubzeroState == "on"
+		${NSD_Check} $NetMileenaCb
+	${EndIf}
+
+FunctionEnd
+
+Function pgNetSelectCreate
+    !insertmacro MUI_HEADER_TEXT "Network Settings" "Select enabled networks"
+
+
+    nsDialogs::Create 1018
+    Pop $NetworksDialog
+
+    ${If} $NetworksDialog == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateGroupBox} 10% 10u 80% 110u "Networks:"
+    Pop $0
+
+		${NSD_CreateCheckbox} 20% 26u 20% 10u "Backbone"
+		Pop $NetBackboneCb
+		
+		${NSD_CreateCheckbox} 20% 40u 20% 10u "KelVPN"
+		Pop $NetKelVPNCb
+
+		${NSD_CreateCheckbox} 20% 54u 20% 10u "Riemann"
+		Pop $NetRiemannCb
+
+		${NSD_CreateCheckbox} 20% 68u 20% 10u "Raiden"
+		Pop $NetRaidenCb
+
+		${NSD_CreateCheckbox} 20% 82u 20% 10u "Mileena"
+		Pop $NetMileenaCb
+
+		${NSD_CreateCheckbox} 20% 96u 20% 10u "Subzero"
+		Pop $NetSubzeroCb
+
+	Call checkEnabledNets
+
+    nsDialogs::Show
+FunctionEnd
+
+!macro ensureNetworkState netname state  
+  	${If} ${state} == 1
+		nsExec::ExecToStack  "$INSTDIR\${NODE_NAME}-config.exe -e network ${netname} ensure on"
+	${else}
+		nsExec::ExecToStack  "$INSTDIR\${NODE_NAME}-config.exe -e network ${netname} ensure off"
+	${endif}
+!macroend
+
+Function pgNetSelectLeave
+
+	${NSD_GetState} $NetBackboneCb $NetBackboneState
+	${NSD_GetState} $NetKelVPNCb $NetKelVPNState
+	${NSD_GetState} $NetRiemannCb $NetRiemannState
+	${NSD_GetState} $NetRaidenCb $NetRaidenState
+	${NSD_GetState} $NetMileenaCb $NetMileenaState
+	
+	
+	!insertmacro ensureNetworkState "Backbone" $NetBackboneState
+	!insertmacro ensureNetworkState "KelVPN" $NetKelVPNState
+	!insertmacro ensureNetworkState "riemann" $NetRiemannState
+	!insertmacro ensureNetworkState "raiden" $NetRaidenState
+	!insertmacro ensureNetworkState "mileena" $NetMileenaState
+	!insertmacro ensureNetworkState "subzero" $NetSubzeroState
+		
+FunctionEnd
+
+
+Section "Uninstall"
+	SetRegView 64
+	Delete "$INSTDIR\${NODE_NAME}.exe"
+	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
+	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
+	Delete "$INSTDIR\${NODE_NAME}-config.exe"
+	DeleteRegKey HKLM "${UNINSTALL_PATH}"
+	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
+	Delete "$INSTDIR\Uninstall.exe"
+	;RMDir "$INSTDIR"
+SectionEnd

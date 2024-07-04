@@ -160,14 +160,7 @@ int main( int argc, const char **argv )
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
+    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
