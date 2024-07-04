@@ -33,9 +33,8 @@ chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
 #set rwx permissions to dirs
 chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
 
-echo "[!] Starting up cellframe-node"
-systemctl enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
-systemctl start cellframe-node  || true
+echo "[!] Setting up cellframe-node as service"
+$DAP_PREFIX/bin/cellframe-node-config -e service enable
 
 if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
     echo "[!] Starting up cellframe-diagtool"
@@ -51,5 +50,7 @@ if [ -e "$DAP_PREFIX/share/cellframe-updater.service" ]; then
     systemctl start cellframe-updater.timer || true
 fi
 
+echo "[!] Starting up cellframe-node"
+$DAP_PREFIX/bin/cellframe-node-config -e service start
 
 echo "[!] Done"
