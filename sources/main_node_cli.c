@@ -44,8 +44,6 @@
 #include "registry.h"
 #endif
 
-#include "dap_defines.h"
-
 static dap_app_cli_connect_param_t *cparam;
 static const char *listen_socket = NULL;
 

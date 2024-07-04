@@ -28,69 +28,12 @@
 #include <getopt.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <windows.h>
-#include <mswsock.h>
-#include <ws2tcpip.h>
-#include <io.h>
-#endif
-
-#include <pthread.h>
-
 #include "dap_common.h"
-
-#include "sig_unix_handler.h"
-
 #include "dap_config.h"
-#include "dap_server.h"
-#include "dap_http_server.h"
-#include "dap_http_folder.h"
-#include "dap_events.h"
-#include "dap_enc.h"
-#include "dap_enc_ks.h"
-#include "dap_enc_http.h"
-#include "dap_chain.h"
-#include "dap_chain_wallet.h"
-
 #include "dap_cert.h"
 #include "dap_cert_file.h"
-
-#include "dap_chain_cs_dag.h"
-#include "dap_chain_cs_dag_event.h"
-#include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_pos.h"
-
-#include "dap_chain_net.h"
-#include "dap_chain_net_srv.h"
-#include "dap_chain_net_srv_app.h"
-#include "dap_chain_net_srv_app_db.h"
-#include "dap_chain_net_srv_datum.h"
-
-#ifdef DAP_OS_LINUX
-#include "dap_chain_net_srv_vpn.h"
-#endif
-
-#include "dap_stream_session.h"
-#include "dap_stream.h"
-#include "dap_chain_ch.h"
-#include "dap_stream_ch_chain_net.h"
-#include "dap_stream_ch_chain_net_srv.h"
-
 #include "dap_chain_wallet.h"
 
-#include "dap_client.h"
-#include "dap_http_simple.h"
-#include "dap_process_manager.h"
-#include "dap_defines.h"
-#ifdef _WIN32
-#include "registry.h"
-#endif
-
-#define ENC_HTTP_URL "/enc_init"
-#define STREAM_CTL_URL "/stream_ctl"
-#define STREAM_URL "/stream"
-#define MAIN_URL "/"
 #define LOG_TAG "main_node_tool"
 
 #ifdef __ANDROID__
