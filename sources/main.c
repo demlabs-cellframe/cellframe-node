@@ -6,9 +6,9 @@
  * Copyright  (c) 2017-2020
  * All rights reserved.
 
- This file is part of DAP (Demlabs Application Protocol) the open source project
+ This file is part of DAP (Distributed Applications Platform) the open source project
 
-    DAP (Demlabs Application Protocol) is free software: you can redistribute it and/or modify
+    DAP (Distributed Applications Platform) is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -160,14 +160,7 @@ int main( int argc, const char **argv )
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
+    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
@@ -230,7 +223,7 @@ int main( int argc, const char **argv )
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
-    if ( bServerEnabled && dap_server_init() != 0 ) {
+    if ( dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
         return -4;
     }
