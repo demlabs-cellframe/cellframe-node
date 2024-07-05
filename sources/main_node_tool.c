@@ -630,7 +630,7 @@ static void s_help()
 #endif
 
     printf(" * Sign file\n");
-    printf("\t%s wallet sign_file <wallet name> <cert index> <data file>", l_tool_appname);
+    printf("\t%s wallet sign_file <wallet name> <cert index> <data file>\n\n", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
     printf("\t%s cert create <cert name> <key type> [<key length>]\n\n", l_tool_appname);
