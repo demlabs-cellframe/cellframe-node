@@ -54,7 +54,100 @@ std::string getHostName(void)
     return res;
 }
 
+#ifdef WIN32
+
+LONG GetDWORDRegKey(HKEY hKey, const std::wstring &strValueName, DWORD &nValue, DWORD nDefaultValue)
+{
+    nValue = nDefaultValue;
+    DWORD dwBufferSize(sizeof(DWORD));
+    DWORD nResult(0);
+    LONG nError = ::RegQueryValueExW(hKey,
+        strValueName.c_str(),
+        0,
+        NULL,
+        reinterpret_cast<LPBYTE>(&nResult),
+        &dwBufferSize);
+    if (ERROR_SUCCESS == nError)
+    {
+        nValue = nResult;
+    }
+    return nError;
+}
+
+
+LONG GetBoolRegKey(HKEY hKey, const std::wstring &strValueName, bool &bValue, bool bDefaultValue)
+{
+    DWORD nDefValue((bDefaultValue) ? 1 : 0);
+    DWORD nResult(nDefValue);
+    LONG nError = GetDWORDRegKey(hKey, strValueName.c_str(), nResult, nDefValue);
+    if (ERROR_SUCCESS == nError)
+    {
+        bValue = (nResult != 0) ? true : false;
+    }
+    return nError;
+}
+
+
+LONG GetStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue)
+{
+    strValue = strDefaultValue;
+    WCHAR szBuffer[512];
+    DWORD dwBufferSize = sizeof(szBuffer);
+    ULONG nError;
+    nError = RegQueryValueExW(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+    if (ERROR_SUCCESS == nError)
+    {
+        strValue = szBuffer;
+    }
+    return nError;
+}
+
+#endif
+
 namespace fs = std::filesystem;
+
+std::string getNodeConfigPath(){
+    #ifdef __linux__ 
+        return "/opt/cellframe-node/";
+    #endif
+    
+    #ifdef __APPLE__ 
+        return  "/Applications/CellframeNode.app/Contents/Resources/";
+    #endif
+
+    #ifdef WIN32 
+        HKEY hKey;
+        LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey);
+        bool bExistsAndSuccess (lRes == ERROR_SUCCESS);
+        bool bDoesNotExistsSpecifically (lRes == ERROR_FILE_NOT_FOUND);
+        std::wstring path;
+        GetStringRegKey(hKey, L"Common Documents", path, L"");
+        std::string stdpath(path.begin(),path.end());
+        return (std::filesystem::path{stdpath}/"cellframe-node/").string();
+    #endif
+}
+
+std::string getNodeBinaryPath(){
+    #ifdef __linux__ 
+        return "/opt/cellframe-node/bin/";
+    #endif
+    
+    #ifdef __APPLE__ 
+        return  "/Applications/CellframeNode.app/Contents/MacOS/";
+    #endif
+
+    #ifdef WIN32 
+        //HKLM "Software\${APP_NAME}" "Path"
+        HKEY hKey;
+        LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\cellframe-node\\", 0, KEY_READ, &hKey);
+        bool bExistsAndSuccess (lRes == ERROR_SUCCESS);
+        bool bDoesNotExistsSpecifically (lRes == ERROR_FILE_NOT_FOUND);
+        std::wstring path;
+        GetStringRegKey(hKey, L"Path", path, L"");
+        std::string stdpath(path.begin(),path.end());
+        return (std::filesystem::path{stdpath}).string();
+    #endif
+}
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
@@ -155,80 +248,13 @@ bool run_commands(std::vector <std::unique_ptr<CAbstractScriptCommand>> &command
     return true;
 }
 
-#ifdef WIN32
-
-LONG GetDWORDRegKey(HKEY hKey, const std::wstring &strValueName, DWORD &nValue, DWORD nDefaultValue)
-{
-    nValue = nDefaultValue;
-    DWORD dwBufferSize(sizeof(DWORD));
-    DWORD nResult(0);
-    LONG nError = ::RegQueryValueExW(hKey,
-        strValueName.c_str(),
-        0,
-        NULL,
-        reinterpret_cast<LPBYTE>(&nResult),
-        &dwBufferSize);
-    if (ERROR_SUCCESS == nError)
-    {
-        nValue = nResult;
-    }
-    return nError;
-}
-
-
-LONG GetBoolRegKey(HKEY hKey, const std::wstring &strValueName, bool &bValue, bool bDefaultValue)
-{
-    DWORD nDefValue((bDefaultValue) ? 1 : 0);
-    DWORD nResult(nDefValue);
-    LONG nError = GetDWORDRegKey(hKey, strValueName.c_str(), nResult, nDefValue);
-    if (ERROR_SUCCESS == nError)
-    {
-        bValue = (nResult != 0) ? true : false;
-    }
-    return nError;
-}
-
-
-LONG GetStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue)
-{
-    strValue = strDefaultValue;
-    WCHAR szBuffer[512];
-    DWORD dwBufferSize = sizeof(szBuffer);
-    ULONG nError;
-    nError = RegQueryValueExW(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
-    if (ERROR_SUCCESS == nError)
-    {
-        strValue = szBuffer;
-    }
-    return nError;
-}
-
-#endif
 
 void populate_variables()
 {
     variable_storage["HOST_OS"] = HOST_OS;
     variable_storage["HOSTNAME"] = getHostName();
-
-    #ifdef __linux__ 
-        variable_storage["CONFIGS_PATH"] = "/opt/cellframe-node/";
-    #endif
-
-    #ifdef WIN32 
-        HKEY hKey;
-        LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey);
-        bool bExistsAndSuccess (lRes == ERROR_SUCCESS);
-        bool bDoesNotExistsSpecifically (lRes == ERROR_FILE_NOT_FOUND);
-        std::wstring path;
-        GetStringRegKey(hKey, L"Common Documents", path, L"");
-        std::string stdpath(path.begin(),path.end());
-        variable_storage["CONFIGS_PATH"] = (std::filesystem::path{stdpath}/"cellframe-node/").string();
-    #endif
-
-    #ifdef __APPLE__ 
-        variable_storage["CONFIGS_PATH"] = "/Applications/CellframeNode.app/Contents/Resources/";
-    #endif
-
+    variable_storage["CONFIGS_PATH"] = getNodeConfigPath();
+    variable_storage["NODE_BINARY_PATH"] = getNodeBinaryPath();
 }
 
 int init_configs(int argc, char *argv[], int flags)
