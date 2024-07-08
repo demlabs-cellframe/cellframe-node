@@ -31,8 +31,12 @@ add_executable(${PROJECT_NAME} ./main.cpp
                                 ./commands/conditioncommand.cpp
                                 ./commands/storagecommand.cpp
                                 ./commands/configcommand.cpp
+                                ./commands/servicecommand.cpp
                                 ./commands/fromtemplatecommand.cpp
-                                ./config/cellframeconfigfile.cpp)
+                                ./config/cellframeconfigfile.cpp
+                                ./service/service_win.cpp
+                                ./service/service_linux.cpp
+                                ./service/service_macos.cpp)
 
 target_link_libraries(cellframe-node-config
   PRIVATE ftxui::screen

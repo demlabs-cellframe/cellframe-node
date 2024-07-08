@@ -41,7 +41,14 @@
 #   if ${VAR1}==${VAR2}
 #       #do somthin
 #   endif
-
+#  
+# service enable: enable cellframe-node as system-service
+# service disable: disable cellframe-node as system-service
+# service status:  get status cellframe-node as system-service
+# service start:    run cellframe-node as system-service
+# service stop:     stop cellframe-node as system-service
+# service restart #stop + start
+#
 
 # Setup Script
 
@@ -63,7 +70,7 @@ config  cellframe-node  general                 auto_online         default     
 config  cellframe-node  general                 debug_mode          default     false
 config  cellframe-node  server                  enabled             default     false
 config  cellframe-node  server                  listen_address      default     [127.0.0.1:8079]
-config  cellframe-node  notify_server           listen_address      default     [127.0.0.1:8080]
+config  cellframe-node  notify_server           listen_address      ensure     [127.0.0.1:8080]
 config  cellframe-node  bootstrap_balancer      http_server         ensure      true
 
 config cellframe-node  global_db        driver           default     ${DB_DRIVER}
@@ -89,4 +96,3 @@ config  raiden       general     node-role   default     full
 config  riemann      general     node-role   default     full
 config  mileena      general     node-role   default     full
 config  subzero      general     node-role   default     full
- 
