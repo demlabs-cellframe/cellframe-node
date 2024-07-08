@@ -18,3 +18,7 @@ echo "[!] Set cfg permissions"
 chmod 666 $(find ${DAP_PREFIX}/ -type f)
 #set rwx permissions to dirs
 chmod 777 $(find ${DAP_PREFIX}/ -type d)
+
+echo "[!] Copy daemon plist"
+cp /Applications/CellframeNode.app/Contents/Resources/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
+/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service enable
