@@ -63,7 +63,7 @@ config  cellframe-node  general                 auto_online         default     
 config  cellframe-node  general                 debug_mode          default     false
 config  cellframe-node  server                  enabled             default     false
 config  cellframe-node  server                  listen_address      default     [127.0.0.1:8079]
-config  cellframe-node  notify_server           listen_address      default     [127.0.0.1:8080]
+config  cellframe-node  notify_server           listen_address      ensure     [127.0.0.1:8080]
 config  cellframe-node  bootstrap_balancer      http_server         ensure      true
 
 config cellframe-node  global_db        driver           default     ${DB_DRIVER}
