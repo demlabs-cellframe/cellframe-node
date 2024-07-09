@@ -160,7 +160,8 @@ static int s_wallet_create(int argc, const char **argv) {
     }
 
     if ( l_sig_type.type == SIG_TYPE_NULL ) {
-      log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s", argv[4], g_str_valid_type_sign_for_wallet);
+      log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+              argv[4], dap_chain_wallet_get_recommended_signature_types());
       s_help( );
       exit( -2004 );
     }
@@ -168,9 +169,10 @@ static int s_wallet_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (l_sig_type.type == SIG_TYPE_TESLA)
+    if (dap_sign_type_is_depricated(l_sig_type))
     {
-        log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant:\n%s", g_str_valid_type_sign_for_wallet);
+        log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant:\n%s",
+                dap_chain_wallet_get_recommended_signature_types());
         exit( -2004 );
     }
 
