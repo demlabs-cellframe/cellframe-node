@@ -31,3 +31,4 @@ bool CVariableCommand::execute(bool non_intercative, int flags)
     }
     return true;
 }
+
