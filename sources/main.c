@@ -82,7 +82,6 @@
 #include "dap_chain_cs_block_pos.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
 #include "dap_chain_cs_esbocs.h"
 
@@ -296,11 +295,6 @@ int main( int argc, const char **argv )
     if( dap_chain_cs_dag_poa_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -63;
-    }
-
-    if( dap_chain_cs_dag_pos_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoS module");
-        return -64;
     }
 
     if( dap_chain_cs_blocks_init() ) {

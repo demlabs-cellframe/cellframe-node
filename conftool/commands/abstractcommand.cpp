@@ -58,3 +58,5 @@ bool CAbstractScriptCommand::is_condition_open(){
 bool CAbstractScriptCommand::is_condition_close(){
     return false;
 }
+
+std::map<std::string, std::string> variable_storage;
