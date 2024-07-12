@@ -44,8 +44,6 @@
 #include "registry.h"
 #endif
 
-#include "dap_defines.h"
-
 static dap_app_cli_connect_param_t *cparam;
 static const char *listen_socket = NULL;
 
@@ -199,7 +197,7 @@ int main(int argc, const char *argv[])
         printf("Fatal Error: Can't obtain username");
         return 2;
     }
-    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
+    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources", l_username);
     DAP_DELETE(l_username);
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());

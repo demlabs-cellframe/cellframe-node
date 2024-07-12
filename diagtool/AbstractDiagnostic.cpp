@@ -16,7 +16,7 @@ AbstractDiagnostic::AbstractDiagnostic(QObject *parent)
 #elif defined(Q_OS_WIN)
     s_nodeDataPath = QString("%1/cellframe-node").arg(regGetUsrPath());
 #elif defined(Q_OS_MACOS)
-    s_nodeDataPath = QString("/Users/%1/Applications/Cellframe.app/Contents/Resources/").arg(getenv("USER"));
+    s_nodeDataPath = QString("Applications/CellframeNode.app/Contents/Resources/");
 #endif
     s_timer_update = new QTimer();
     s_mac = get_mac();
@@ -286,43 +286,38 @@ QJsonObject AbstractDiagnostic::get_blocks_count(QString net)
 {
     QProcess proc;
     proc.start(QString(CLI_PATH),
-               QStringList()<<"block"<<"list"<<"-net"<<QString(net) <<"-chain" << "main");
+               QStringList()<<"block"<<"last"<<"-net"<<QString(net) <<"-chain" << "main");
     proc.waitForFinished(5000);
     QString result = proc.readAll();
     
-    QRegularExpression rx(R"(\.(.+) with filter - .*, have blocks: (.+))");
-    QRegularExpression rx_creation(R"(.*(0x.*): ts_create=(.*))");
+    QRegularExpression rx_block_count(R"(\.(.+) has blocks: (.+))");
+    QRegularExpression rx_creation(R"(.*ts_created: (.*))");
+    QRegularExpression rx_hash(R"(.*Last block hash: (.*))");
     
 
-    QRegularExpressionMatch match = rx.match(result);
-    qDebug()<<"has match "<<match.hasMatch();
-    if (!match.hasMatch()) {
+    QRegularExpressionMatch block_count_match = rx_block_count.match(result);
+    QRegularExpressionMatch timestamp_match = rx_creation.match(result);
+    QRegularExpressionMatch hash_match = rx_hash.match(result);
+
+    if (!block_count_match.hasMatch()) {
         return {};
     }
 
-    qDebug()<<"has match "<<match.captured(1) << match.captured(2);
     QJsonObject resultObj;
-    resultObj.insert(match.captured(1), match.captured(2));
-
-    
-    QRegularExpressionMatchIterator matchItr = rx_creation.globalMatch(result);
-    
-    //rewind to end
-    QRegularExpressionMatch match_date;
-    
-    while (matchItr.hasNext()){ 
-        match_date = matchItr.next();
-    }
+    resultObj.insert(block_count_match.captured(1), block_count_match.captured(2));
 
     QJsonObject last_block;
-    last_block.insert("hash", match_date.captured(1));
-    QDateTime dt = QDateTime::fromString(match_date.captured(2), Qt::RFC2822Date);
+    last_block.insert("hash", hash_match.captured(1));
+    
+    qDebug() << "TS: "<<timestamp_match.captured(1);
+    QDateTime dt = QDateTime::fromString(timestamp_match.captured(1), Qt::RFC2822Date);
     qint64 timestamp = dt.toSecsSinceEpoch();
     last_block.insert("timestamp", QString::number(timestamp));
 
     resultObj.insert("last_block", last_block);
-    qDebug() << resultObj;
 
+    qDebug() << "Block last "<<net<<":";
+    qDebug() << resultObj;
     return resultObj;
 
 }
@@ -331,41 +326,40 @@ QJsonObject AbstractDiagnostic::get_events_count(QString net)
 {
     QProcess proc;
     proc.start(QString(CLI_PATH),
-               QStringList()<<"dag"<<"event"<<"list"<<"-net"<<QString(net) <<"-chain" << "zerochain");
+               QStringList()<<"dag"<<"event"<<"last"<<"-net"<<QString(net) <<"-chain" << "zerochain");
     proc.waitForFinished(5000);
     QString result = proc.readAll();
 
-    QRegularExpression rx_event_count(R"(\.(.+) have total (.+) events)");
-    QRegularExpression rx_creation(R"(.*(0x.*): ts_create=(.*))");
+    QRegularExpression rx_event_count(R"(\.(.+) has events: (.+))");
+    QRegularExpression rx_creation(R"(.*ts_created: (.*))");
+    QRegularExpression rx_hash(R"(.*Last event hash: (.*))");
+    
 
-    QRegularExpressionMatch match = rx_event_count.match(result);
-        
-    if (!match.hasMatch()) {
+    QRegularExpressionMatch event_count_match = rx_event_count.match(result);
+    QRegularExpressionMatch timestamp_match = rx_creation.match(result);
+    QRegularExpressionMatch hash_match = rx_hash.match(result);
+
+    if (!event_count_match.hasMatch()) {
         return {};
     }
 
     QJsonObject resultObj;
-    
-    resultObj.insert(match.captured(1), match.captured(2));
+    resultObj.insert(event_count_match.captured(1), event_count_match.captured(2));
 
-    QRegularExpressionMatchIterator matchItr = rx_creation.globalMatch(result);
+    QJsonObject last_event;
+    last_event.insert("hash", hash_match.captured(1));
     
-    //rewind to end
-    QRegularExpressionMatch match_date;
-    
-    while (matchItr.hasNext()){ 
-        match_date = matchItr.next();
-    }
-
-    QJsonObject last_block;
-    last_block.insert("hash", match_date.captured(1));
-    QDateTime dt = QDateTime::fromString(match_date.captured(2), Qt::RFC2822Date);
+    qDebug() << "TS: "<<timestamp_match.captured(1);
+    QDateTime dt = QDateTime::fromString(timestamp_match.captured(1), Qt::RFC2822Date);
     qint64 timestamp = dt.toSecsSinceEpoch();
-    last_block.insert("timestamp", QString::number(timestamp));
+    last_event.insert("timestamp", QString::number(timestamp));
 
-    resultObj.insert("last_event", last_block);
+    resultObj.insert("last_event", last_event);
+
+    last_event.insert("timestamp", QString::number(timestamp));
+
+    qDebug() << "Event last "<<net<<":";
     qDebug() << resultObj;
-
     
     return resultObj;
 }

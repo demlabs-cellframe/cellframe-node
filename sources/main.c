@@ -82,7 +82,6 @@
 #include "dap_chain_cs_block_pos.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
 #include "dap_chain_cs_esbocs.h"
 
@@ -160,14 +159,7 @@ int main( int argc, const char **argv )
 #ifdef _WIN32
     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
+    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
     g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
@@ -230,7 +222,7 @@ int main( int argc, const char **argv )
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
 
-    if ( bServerEnabled && dap_server_init() != 0 ) {
+    if ( dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
         return -4;
     }
@@ -303,11 +295,6 @@ int main( int argc, const char **argv )
     if( dap_chain_cs_dag_poa_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -63;
-    }
-
-    if( dap_chain_cs_dag_pos_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoS module");
-        return -64;
     }
 
     if( dap_chain_cs_blocks_init() ) {

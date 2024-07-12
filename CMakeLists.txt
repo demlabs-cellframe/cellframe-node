@@ -36,9 +36,8 @@ set(SUBMODULES_NO_BUILD ON)
 include (dap-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
-#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-#set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 # set(BUILD_CELLFRAME_NODE_TESTS ON)
 
 #set (BUILD_WITH_TPS_TEST ON)
@@ -60,7 +59,7 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-dag-pos cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -79,11 +78,11 @@ add_subdirectory(cellframe-sdk)
 
 if(UNIX)
     if(DARWIN)
-        SET(CMAKE_INSTALL_PREFIX "${USERDIR_PATH}/Applications/Cellframe.app")
-        SET(CPACK_INSTALL_PREFIX "${USERDIR_PATH}/Applications/Cellframe.app")
-        SET(DESTDIR "${USERDIR_PATH}/Applications/Cellframe.app")
+        SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
+        SET(CPACK_INSTALL_PREFIX "/Applications/CellframeNode.app")
+        SET(DESTDIR "/Applications/CellframeNode.app")
 
-        set(BUNDLE_NAME "Cellframe.app")
+        set(BUNDLE_NAME "CellframeNode.app")
         set(BUNDLE_PATH "${CMAKE_INSTALL_PREFIX}")
         set(BINDIR ${BUNDLE_PATH}/Contents/MacOS)
         set(LIBDIR ${BUNDLE_PATH})
@@ -161,7 +160,7 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "debconf (>=1.5), dpkg (>=1.17), bash (>=4), debconf-utils, dconf-cli, less, pv, psmisc, logrotate, irqbalance, xz-utils")
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")
 
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
@@ -226,7 +225,7 @@ if(WIN32)
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
     target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
 endif()
 if(BSD)
@@ -238,6 +237,8 @@ if(BUILD_DIAGTOOL)
     message("[*] Diagtool build on")
     add_subdirectory(diagtool)
 endif()
+
+add_subdirectory(conftool)
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -348,10 +349,9 @@ if(DARWIN)
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
+    INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
 
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts.darwin/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
@@ -379,10 +379,16 @@ else()
 	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
+    if(WIN32)
+        INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+    endif()
+
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-
+    
     if (BUILD_DIAGTOOL)
         if(WIN32)
             INSTALL(TARGETS cellframe-diagtool.exe DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
@@ -390,6 +396,8 @@ else()
             INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         endif()
     endif()
+
+    INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
@@ -417,7 +425,6 @@ else()
         endif()
     endif()
 
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin FILES_MATCHING PATTERN "*"  PATTERN "*" PERMISSIONS OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;WORLD_READ;GROUP_READ )
 
 endif()
 INCLUDE(CPack)
