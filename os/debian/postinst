@@ -1,366 +1,56 @@
 #!/bin/bash -e
-. /usr/share/debconf/confmodule
 
-
-
-DAP_CHAINS_NAME="cellframe"
-DAP_APP_NAME="$DAP_CHAINS_NAME-node"
+DAP_APP_NAME="cellframe-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 
-new_ver=$(dpkg-query --show --showformat='${Version}' $DAP_APP_NAME)
-old_ver="$2"
-
-echo "New version: $new_ver"
-echo "Old version: $old_ver"
-
-OLD_MINOR=( $( printf "%s\n"  "$old_ver" | cut -c 3-3 | sort -nr) )
-NEW_MINOR=( $( printf "%s\n"  "$new_ver" | cut -c 3-3 | sort -nr) )
-
-
-if (( NEW_MINOR > OLD_MINOR )); then
-    echo "Need update cellframe-node configs..."
-else
-    echo "No need to update cellframe-node configs, write as new"
-fi
-
-
-DAP_CFG_TPL="$DAP_PREFIX/share/configs/$DAP_APP_NAME.cfg.tpl"
-
-# Store write config to new if present smth
-DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-
 # Check profile.d symlink
-
 [ -e "/etc/profile.d/$DAP_APP_NAME.sh" ] || ln -sf $DAP_PREFIX/share/profile.d/$DAP_APP_NAME.sh /etc/profile.d/$DAP_APP_NAME.sh
-
-# Init node config
-if [ -e "$DAP_CFG" ]; then
-    if (( NEW_MINOR > OLD_MINOR )); then
-        echo "Need update cellframe-node.cfg ..."
-        DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-    else
-        echo "No need to update cellframe-node.cfg, write as new"
-        DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg.dpkg-new"
-    fi
-else
-    DAP_CFG="$DAP_PREFIX/etc/$DAP_APP_NAME.cfg"
-fi
-
-cat $DAP_CFG_TPL > $DAP_CFG || true
-
-sed -i "s/{PREFIX}/\/opt\/$DAP_APP_NAME/g" $DAP_CFG  || true
-
-db_get cellframe-node/debug_mode || true
-sed -i "s/{DEBUG_MODE}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/auto_online || true
-sed -i "s/{AUTO_ONLINE}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/server_enabled || true
-sed -i "s/{SERVER_ENABLED}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/server_port || true
-sed -i "s/{SERVER_PORT}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/server_addr || true
-sed -i "s/{SERVER_ADDR}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/notify_srv_addr || true
-sed -i "s/{NOTIFY_SRV_ADDR}/$RET/g" $DAP_CFG  || true
-
-db_get cellframe-node/notify_srv_port || true
-sed -i "s/{NOTIFY_SRV_PORT}/$RET/g" $DAP_CFG  || true
-
-#set db driver to mdbx for debian
-sed -i "s/{DB_DRIVER}/mdbx/g" $DAP_CFG  || true
-
-# Init subzero
-NET_NAME="subzero"
-
-db_get cellframe-node/subzero_enabled || true
-if [ "$RET" = "true" ]; then
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/subzero_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled subzero"
-fi
-
-# Init raiden
-NET_NAME="raiden"
-
-db_get cellframe-node/raiden_enabled || true
-if [ "$RET" = "true" ]; then
-
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/raiden_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled raiden"
-fi
-
-# Init raiden
-NET_NAME="riemann"
-
-db_get cellframe-node/riemann_enabled || true
-if [ "$RET" = "true" ]; then
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/riemann_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled riemann"
-fi
-
-
-# Init mileena
-NET_NAME="mileena"
-
-db_get cellframe-node/mileena_enabled || true
-if [ "$RET" = "true" ]; then
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-    if [ -e "$DAP_CFG_NET" ]; then
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-    else
-	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/mileena_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled mileena"
-fi
-
-
-# Init Minkowski
-NET_NAME="kelvpn-minkowski"
-
-db_get cellframe-node/kelvpn_minkowski_enabled || true
-if [ "$RET" = "true" ]; then
-    
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    if [ -e "$DAP_CFG_NET" ]; then
-        mv "$DAP_CFG_NET" "$DAP_CFG_NET".dis
-        echo "[*] Disabled kelvpn"
-    fi
-    
-#    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-#    DAP_NET_CFG=""
-#    if [ -e "$DAP_CFG_NET" ]; then
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg-new"
-#    else
-#	DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-#    fi
-
-#    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-#    db_get cellframe-node/kelvpn_minkowski_node_type || true
-#    NODE_TYPE=$RET
-#    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-#    echo "[*] Enabled subzero"
-fi
-
-# Init Backbone
-NET_NAME="Backbone"
-
-db_get cellframe-node/backbone_enabled || true
-if [ "$RET" = "true" ]; then
-    
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-
-    if [ -e "$DAP_CFG_NET" ]; then
-        if (( NEW_MINOR > OLD_MINOR )); then
-            echo "Need update Backbone.cfg ..."
-            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-        else
-            echo "No need to update Backbone.cfg, write as new"
-            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg.new"
-        fi
-    else
-        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/backbone_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled Backbone Mainnet"
-fi
-
-
-# Init Backbone
-NET_NAME="KelVPN"
-
-db_get cellframe-node/kelvpn_enabled || true
-if [ "$RET" = "true" ]; then
-    
-    DAP_CFG_NET="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    DAP_CFG_NET_TPL="$DAP_PREFIX/share/configs/network/$NET_NAME.cfg.tpl"
-    DAP_NET_CFG=""
-
-    if [ -e "$DAP_CFG_NET" ]; then
-        if (( NEW_MINOR > OLD_MINOR )); then
-            echo "Need update KelVPN.cfg ..."
-            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-        else
-            echo "No need to update KelVPN.cfg, write as new"
-            DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg.dpkg.new"
-        fi
-    else
-        DAP_NET_CFG="$DAP_PREFIX/etc/network/$NET_NAME.cfg"
-    fi
-
-    cat $DAP_CFG_NET_TPL > $DAP_NET_CFG || true
-    db_get cellframe-node/kelvpn_node_type || true
-    NODE_TYPE=$RET
-    sed -i "s/{NODE_TYPE}/$NODE_TYPE/g" $DAP_NET_CFG  || true
-    echo "[*] Enabled KelVPN Mainnet"
-fi
-
-mkdir -p $DAP_PREFIX/var/log     || true
-mkdir -p $DAP_PREFIX/var/plugins || true
-
-#Set up Python plugins
-db_get cellframe-node/enable_python_plugins || true
-if [ "$RET" = "true" ]; then
-    sed -i 's/#\[plugins\]/\[plugins\]/g' $DAP_CFG || true
-    sed -i 's/#py_load=.*/py_load=true/g' $DAP_CFG || true
-    db_get cellframe-node/python_plugins_path || true
-    sed -i "s|#py_path=.*|py_path=$RET|g" $DAP_CFG || true
-    echo "[*] Enabled Python plugins"
-fi
-
-cat /etc/passwd| grep cellframe-node || adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
 
 #unconditianly create directories on pkg instllation
 echo "[*] Creating run, lib, var dirs...."
 mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
 
-echo "[*] Check /etc/systemd/system/$DAP_APP_NAME.service file..."
-if [ -e /etc/systemd/system/$DAP_APP_NAME.service ]; then
-    echo "[*] Restarting $DAP_APP_NAME to implement changes"
-    systemctl --system stop $DAP_APP_NAME  >> /dev/null|| true
-    echo "[*] Stopped $DAP_APP_NAME"
-    systemctl daemon-reload || true
-    systemctl --system start $DAP_APP_NAME || true
-    echo "[*] Started $DAP_APP_NAME"
-else
-    echo "[!] Installing $DAP_APP_NAME as systemd service (haven't found /etc/systemd/system/$DAP_APP_NAME.service)"
-    ln -sf $DAP_PREFIX/share/$DAP_APP_NAME.service /etc/systemd/system/$DAP_APP_NAME.service || true
-    systemctl --system enable $DAP_PREFIX/share/$DAP_APP_NAME.service || true
-#    systemctl --system start $DAP_APP_NAME
-    echo "[ ] Execute 'systemctl start $DAP_APP_NAME' to start $DAP_APP_NAME service"
-
-    #USERMAN=`users | awk '{print $1}'`
-    
-    echo "[ ] Additional configuration"
-    adduser --system --no-create-home --group --home /opt/cellframe-node cellframe-node || true
-    #usermod -aG $DAP_CHAINS_NAME `users | awk '{print $1}'`
-    for username in $(cat /etc/passwd | grep "/home" | cut -d ':' -f1); do
-        usermod -aG cellframe-node $username || true
-    done
-    
-    #mkdir -p $DAP_PREFIX/var/{run,lib/ca,lib/wallet,lib/global_db,var/plugins} || true
-    touch $DAP_PREFIX/var/run/cellframe-node.pid || true
-    #chown -R $USERMAN:$USERMAN $DAP_PREFIX
-    for filename in $(find $DAP_PREFIX | grep -v bugreport); do
-        if [ -d $filename ]; then
-            chmod 0775 $filename 2>/dev/null || true
-        else
-            chmod 0664 $filename 2>/dev/null || true
-        fi
-    done
-
-    #diagtool service
-    if [ -f "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
-        if [ -e /etc/systemd/system/cellframe-diagtool.service ]; then
-            echo "[*] Restarting cellframe-diagtool service"
-            systemctl --system stop cellframe-diagtool  >> /dev/null|| true
-            echo "[*] Stopped cellframe-diagtool"
-            systemctl daemon-reload || true
-            systemctl --system start cellframe-diagtool || true
-            echo "[*] Started cellframe-diagtool"
-        else
-            echo "[!] Installing cellframe-diagtool as systemd service"
-            ln -sf $DAP_PREFIX/share/cellframe-diagtool.service /etc/systemd/system/cellframe-diagtool.service || true
-            systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
-        fi
-    fi
-    #updater service
-
-    systemctl daemon-reload || true
-    echo "[!] Installing cellframe-updater as systemd service"
-    ln -sf $DAP_PREFIX/share/cellframe-updater.service /etc/systemd/system/cellframe-updater.service || true
-    ln -sf $DAP_PREFIX/share/cellframe-updater.timer /etc/systemd/system/cellframe-updater.timer || true
-    systemctl --system enable $DAP_PREFIX/share/cellframe-updater.service || true
-    systemctl start cellframe-updater.timer || true
-    systemctl start cellframe-updater.service || true
-
-    echo "[*] Restarting cellframe-updater service"
-    #systemctl --system stop cellframe-updater  || true
-    #echo "[*] Stopped cellframe-updater"
-    systemctl daemon-reload || true
-    
-    systemctl --system start cellframe-updater || true
-    
-    echo "[*] Started cellframe-updater"
-    systemctl enable $DAP_PREFIX/share/cellframe-updater.timer || true
-
-    chmod 0666 $DAP_CFG || true
-    chmod 0666 $DAP_CFG_TPL || true
-    chmod 0774 $DAP_PREFIX/bin/* || true
-    chmod 0777 $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
-    
-    #set rwo permissions to configs
-    chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
-    #set rwx permissions to dirs
-    chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
-    
-    service cellframe-node start || true
-    systemctl restart cellframe-node || true
-    
-fi
-
 if [ -e /.dockerenv ]
 then
-echo "[ ] Disabling logrotate in docker-container"
+    echo "[ ] No logrotate in docker-container"
 else
-echo "[ ] Enabling logrotate" 
-chmod 644  $DAP_PREFIX/share/logrotate/$DAP_APP_NAME || true
-chmod 644  $DAP_PREFIX/share/logrotate/logrotate.timer || true
-systemctl disable logrotate.timer || true
-systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer || true
+    echo "[!] Enabling logrotate" 
+    chmod 644  $DAP_PREFIX/share/logrotate/$DAP_APP_NAME || true
+    chmod 644  $DAP_PREFIX/share/logrotate/logrotate.timer || true
+    systemctl enable $DAP_PREFIX/share/logrotate/logrotate.timer || true
 fi
+
+#set permissions
+echo "[!] Set exec permissions"
+chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
+
+echo "[!] Run cellframe-config for configuration..."
+$DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
+
+echo "[!] Set cfg permissions"
+#set rwo permissions to configs
+chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
+#set rwx permissions to dirs
+chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
+
+echo "[!] Setting up cellframe-node as service"
+$DAP_PREFIX/bin/cellframe-node-config -e service enable
+
+if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
+    echo "[!] Starting up cellframe-diagtool"
+    systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
+    systemctl start cellframe-diagtool || true
+fi
+
+if [ -e "$DAP_PREFIX/share/cellframe-updater.service" ]; then
+    echo "[!] Starting up cellframe-updater"
+    systemctl --system enable $DAP_PREFIX/share/cellframe-updater.service || true
+    systemctl --system enable $DAP_PREFIX/share/cellframe-updater.timer || true
+    systemctl start cellframe-updater || true
+    systemctl start cellframe-updater.timer || true
+fi
+
+echo "[!] Starting up cellframe-node"
+$DAP_PREFIX/bin/cellframe-node-config -e service start
 
 echo "[!] Done"
