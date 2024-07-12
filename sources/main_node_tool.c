@@ -28,69 +28,12 @@
 #include <getopt.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <windows.h>
-#include <mswsock.h>
-#include <ws2tcpip.h>
-#include <io.h>
-#endif
-
-#include <pthread.h>
-
 #include "dap_common.h"
-
-#include "sig_unix_handler.h"
-
 #include "dap_config.h"
-#include "dap_server.h"
-#include "dap_http_server.h"
-#include "dap_http_folder.h"
-#include "dap_events.h"
-#include "dap_enc.h"
-#include "dap_enc_ks.h"
-#include "dap_enc_http.h"
-#include "dap_chain.h"
-#include "dap_chain_wallet.h"
-
 #include "dap_cert.h"
 #include "dap_cert_file.h"
-
-#include "dap_chain_cs_dag.h"
-#include "dap_chain_cs_dag_event.h"
-#include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_pos.h"
-
-#include "dap_chain_net.h"
-#include "dap_chain_net_srv.h"
-#include "dap_chain_net_srv_app.h"
-#include "dap_chain_net_srv_app_db.h"
-#include "dap_chain_net_srv_datum.h"
-
-#ifdef DAP_OS_LINUX
-#include "dap_chain_net_srv_vpn.h"
-#endif
-
-#include "dap_stream_session.h"
-#include "dap_stream.h"
-#include "dap_chain_ch.h"
-#include "dap_stream_ch_chain_net.h"
-#include "dap_stream_ch_chain_net_srv.h"
-
 #include "dap_chain_wallet.h"
 
-#include "dap_client.h"
-#include "dap_http_simple.h"
-#include "dap_process_manager.h"
-#include "dap_defines.h"
-#ifdef _WIN32
-#include "registry.h"
-#endif
-
-#define ENC_HTTP_URL "/enc_init"
-#define STREAM_CTL_URL "/stream_ctl"
-#define STREAM_URL "/stream"
-#define MAIN_URL "/"
 #define LOG_TAG "main_node_tool"
 
 #ifdef __ANDROID__
@@ -217,7 +160,8 @@ static int s_wallet_create(int argc, const char **argv) {
     }
 
     if ( l_sig_type.type == SIG_TYPE_NULL ) {
-      log_it( L_ERROR, "Wrong signature '%s'", argv[4] );
+      log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+              argv[4], dap_sign_get_str_recommended_types());
       s_help( );
       exit( -2004 );
     }
@@ -225,15 +169,22 @@ static int s_wallet_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (l_sig_type.type == SIG_TYPE_TESLA)
+    if (dap_sign_type_is_depricated(l_sig_type))
     {
-        log_it( L_ERROR, "Tesla algorithm is not supported, please, use another variant");
+        log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
+                dap_sign_get_str_recommended_types());
         exit( -2004 );
     }
 
     l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
-    return l_wallet ? 0 : -1;
+    if (l_wallet) {
+        log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
+        return 0;
+    } else {
+        log_it(L_ERROR, "Failed to create a wallet.");
+        return -1;
+    }
 }
 
 static int s_wallet_create_from(int argc, const char **argv) {
@@ -285,16 +236,23 @@ static int s_cert_create(int argc, const char **argv) {
       exit(-700);
     }
 
-    //
-    // Check unsupported tesla algorithm
-    //
-    if((dap_strcmp (argv[4],"sig_tesla") == 0)||(dap_strcmp (argv[4],"sig_picnic") == 0))
-    {
-       log_it( L_ERROR, "Tesla and Picnic algorithms are not supported, please, use another variant");
-       exit(-600);
+    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+
+    if (l_sig_type.type == SIG_TYPE_NULL) {
+        log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s.",
+               argv[4], dap_sign_get_str_recommended_types());
+        exit(-600);
     }
 
-    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    //
+    // Check unsupported algorithm
+    //
+    if (dap_sign_type_is_depricated(l_sig_type)) {
+        log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s.",
+               argv[4], dap_sign_get_str_recommended_types());
+        exit(-600);
+    }
+
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
 
     if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
@@ -568,7 +526,7 @@ static void s_help()
     printf( "%s usage:\n\n", l_tool_appname);
 
     printf(" * Create new key wallet and generate signatures with same names plus index \n" );
-    printf("\t%s wallet create <network name> <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
+    printf("\t%s wallet create <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
 #if 0
     printf(" * Create new key wallet from existent certificates in the system\n");

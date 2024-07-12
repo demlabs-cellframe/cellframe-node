@@ -103,6 +103,9 @@ FunctionEnd
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 Page custom pgNetSelectCreate pgNetSelectLeave
+
+
+!define MUI_FINISHPAGE_RUN "$INSTDIR\cellframe-node.exe"
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -125,6 +128,7 @@ InstallDir "$PROGRAMFILES64\${APP_NAME}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_FULLNAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 !define PRODUCT_UNINSTALL_EXE "uninstall.exe"
+
 
 
 Var NetworksDialog
@@ -223,7 +227,7 @@ Section "${APP_NAME}" CORE
 	WriteRegStr HKLM "Software\${APP_NAME}" "Version" "${APP_VERSION}"
 
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -i $ConfigPath\share\default.setup"
-
+	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service enable"
 	; check net states after install to show in checkboxes
 	Call getNetworksStates
 
@@ -253,7 +257,7 @@ Function checkEnabledNets
 	${EndIf}
 
 	${If} $NetSubzeroState == "on"
-		${NSD_Check} $NetMileenaCb
+		${NSD_Check} $NetSubzeroCb
 	${EndIf}
 
 FunctionEnd
@@ -310,6 +314,7 @@ Function pgNetSelectLeave
 	${NSD_GetState} $NetRiemannCb $NetRiemannState
 	${NSD_GetState} $NetRaidenCb $NetRaidenState
 	${NSD_GetState} $NetMileenaCb $NetMileenaState
+	${NSD_GetState} $NetSubzeroCb $NetSubzeroState
 	
 	
 	!insertmacro ensureNetworkState "Backbone" $NetBackboneState
@@ -324,6 +329,10 @@ FunctionEnd
 
 Section "Uninstall"
 	SetRegView 64
+	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service disable"
+	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service stop"
+	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
+	
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
 	Delete "$INSTDIR\${NODE_NAME}-cli.exe"

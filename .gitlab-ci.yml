@@ -137,7 +137,6 @@ amd64:linux.rwd:
 amd64:linux.tps:
     extends: .build
     image: demlabs/amd64/debian-buster:linuxbuilder
-    when: manual
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk

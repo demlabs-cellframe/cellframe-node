@@ -91,4 +91,3 @@ bool CConditionCloseCommand::execute(bool non_intercative, int flags)
 {   
     return true;
 }
-std::map<std::string, std::string> variable_storage;
