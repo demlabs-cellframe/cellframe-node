@@ -42,6 +42,7 @@
 
 #undef log_it
 #ifdef DAP_OS_WINDOWS
+#include "registry.h"
 #define log_it(_log_level, string, ...) __mingw_printf(string, ##__VA_ARGS__)
 #else
 #define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
