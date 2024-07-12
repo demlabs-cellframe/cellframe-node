@@ -56,6 +56,7 @@ e:	Pop $1
 Unicode true
 !define APP_NAME		"cellframe-node"
 !define NODE_NAME		"cellframe-node"
+!define DIAG_NAME		"cellframe-diagtool"
 !define EXE_NAME		"${APP_NAME}.exe"
 !define PUBLISHER		"Cellframe Network"
 !define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
@@ -196,6 +197,7 @@ Section "${APP_NAME}" CORE
 	File "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
+	File "opt/cellframe-node/bin/${DIAG_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
 
 	Call createRuntimePaths
@@ -219,9 +221,10 @@ Section "${APP_NAME}" CORE
 	
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	
-	;${DisableX64FSRedirection}
+	${DisableX64FSRedirection}
 	;nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "${NODE_NAME}"'
-	;${EnableX64FSRedirection}
+	;nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "${DIAG_NAME}"'
+	${EnableX64FSRedirection}
 	
 	WriteRegStr HKLM "Software\${APP_NAME}" "Path" "$INSTDIR"
 	WriteRegStr HKLM "Software\${APP_NAME}" "Version" "${APP_VERSION}"
@@ -332,11 +335,13 @@ Section "Uninstall"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service disable"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service stop"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
+	nsExec::ExecToLog /OEM  'taskkill /f /im ${DIAG_NAME}.exe'
 	
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
 	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
 	Delete "$INSTDIR\${NODE_NAME}-config.exe"
+	Delete "$INSTDIR\${DIAG_NAME}.exe"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
 	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"

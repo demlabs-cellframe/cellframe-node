@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME} ./main.cpp
                                 ./commands/storagecommand.cpp
                                 ./commands/configcommand.cpp
                                 ./commands/servicecommand.cpp
+                                ./commands/diagcommand.cpp
                                 ./commands/fromtemplatecommand.cpp
                                 ./config/cellframeconfigfile.cpp
                                 ./service/service_win.cpp

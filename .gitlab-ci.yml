@@ -87,7 +87,7 @@ amd64:windows.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target windows release -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target windows release 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_release/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
@@ -101,7 +101,7 @@ amd64:macos.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target osx release -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*-signed.pkg --redirect-from macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64

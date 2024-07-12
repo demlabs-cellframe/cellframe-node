@@ -24,7 +24,7 @@ CServiceCommand::CServiceCommand(std::vector <std::string> cmd_tokens): CAbstrac
 bool CServiceCommand::execute(bool non_intercative, int flags)
 { 
     if (this->action == "enable"){
-        if (CServiceControl::enable()) {
+        if (CServiceControl(NODE).enable()) {
             std::cout << "enabled" <<std::endl;
         }
         else{
@@ -34,7 +34,7 @@ bool CServiceCommand::execute(bool non_intercative, int flags)
     
     if (this->action == "disable")
     {
-       if (CServiceControl::disable()) {
+       if (CServiceControl(NODE).disable()) {
             std::cout << "disabled" <<std::endl;
         }
         else{
@@ -44,12 +44,12 @@ bool CServiceCommand::execute(bool non_intercative, int flags)
 
     if (this->action == "status")
     {
-        std::cout << (CServiceControl::serviceStatus() == ENABLED?"enabled":"disabled")<<std::endl;
+        std::cout << (CServiceControl(NODE).serviceStatus() == ENABLED?"enabled":"disabled")<<std::endl;
     }
 
     if (this->action == "start")
     {
-        if (CServiceControl::start())
+        if (CServiceControl(NODE).start())
         {
             std::cout << "started" << std::endl;
         }
@@ -61,7 +61,7 @@ bool CServiceCommand::execute(bool non_intercative, int flags)
     
     if (this->action == "stop")
     {
-        if (CServiceControl::stop())
+        if (CServiceControl(NODE).stop())
         {
             std::cout << "stoped" << std::endl;
         }
@@ -73,7 +73,7 @@ bool CServiceCommand::execute(bool non_intercative, int flags)
 
     if (this->action == "restart")
     {
-        if (CServiceControl::restart())
+        if (CServiceControl(NODE).restart())
         {
             std::cout << "restarted" << std::endl;
         }

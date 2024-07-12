@@ -14,12 +14,21 @@ enum EServiceStatus{
     DISABLED,
 };
 
+enum EServiceType{
+    NODE,
+    DIAG,
+};
+
 struct CServiceControl
 {
-    static bool enable();
-    static bool disable();
-    static EServiceStatus serviceStatus();
-    static bool start();
-    static bool stop();
-    static bool restart();    
+    CServiceControl(EServiceType sevice){this->service = service;}
+    bool enable();
+    bool disable();
+    EServiceStatus serviceStatus();
+    bool start();
+    bool stop();
+    bool restart();    
+
+    private:
+        EServiceType service;
 };

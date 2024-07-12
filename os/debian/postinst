@@ -37,9 +37,8 @@ echo "[!] Setting up cellframe-node as service"
 $DAP_PREFIX/bin/cellframe-node-config -e service enable
 
 if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
-    echo "[!] Starting up cellframe-diagtool"
-    systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
-    systemctl start cellframe-diagtool || true
+    echo "[!] Setting up cellframe-node as service"
+    $DAP_PREFIX/bin/cellframe-node-config -e diag enable
 fi
 
 if [ -e "$DAP_PREFIX/share/cellframe-updater.service" ]; then
@@ -53,4 +52,8 @@ fi
 echo "[!] Starting up cellframe-node"
 $DAP_PREFIX/bin/cellframe-node-config -e service start
 
+if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
+    echo "[!] Starting up cellframe-diagtool"
+    $DAP_PREFIX/bin/cellframe-node-config -e diag start
+fi
 echo "[!] Done"
