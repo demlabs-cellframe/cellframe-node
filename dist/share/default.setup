@@ -78,14 +78,15 @@ config cellframe-node  plugins          enabled          default     false
 
 # all os except win uses unix socket for cli
 if ${HOST_OS} != Windows
-    config cellframe-node  conserver    listen_unix_socket_path     default     ${CONFIGS_PATH}/var/run/node_cli
+    config cellframe-node  cli-server    listen-address          ensure    [${CONFIGS_PATH}/var/run/node_cli]
 endif
 
 # windows use tcp/ip for conserver
 if ${HOST_OS} == Windows
-    config cellframe-node  conserver    listen_port_tcp          default    12345
+    config cellframe-node  cli-server    listen-address          ensure    [127.0.0.1:12345]
 endif
 
+ 
 if Linux != ${HOST_OS}
     config cellframe-node  plugins       enabled          ensure     false
 endif
