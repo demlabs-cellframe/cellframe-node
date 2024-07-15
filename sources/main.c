@@ -130,10 +130,6 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
-#ifdef __ANDROID__
-    #include "cellframe_node.h"
-#endif
-
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
@@ -141,8 +137,11 @@ void exit_if_server_already_running( void );
 static const char *s_pid_file_path = NULL;
 #endif
 
-#ifdef __ANDROID__
-int cellframe_node_Main(int argc, const char **argv)
+#ifdef DAP_OS_ANDROID
+#include "dap_app_cli.h"
+#include <android/log.h>
+#include <jni.h>
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 #else
 int main( int argc, const char **argv )
 #endif
@@ -413,17 +412,10 @@ int main( int argc, const char **argv )
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
     
     uint16_t l_listen_addrs_count = 0;
-    if ( bServerEnabled ) {
-        char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_listen_addrs_count);
-        if(!l_listen_addrs || !l_listen_addrs_count || !(l_server = dap_server_new(l_listen_addrs, l_listen_addrs_count, DAP_SERVER_TCP, NULL)))
-            log_it( L_WARNING, "Server is enabled but no address is defined" );
-    }
+    if ( bServerEnabled )
+        l_server = dap_http_server_new("server", dap_get_appname());
 
     if ( l_server ) { // If listener server is initialized
-        // TCP-specific things
-            // Init HTTP-specific values
-        dap_http_new( l_server, dap_get_appname() );
-
         // Handshake URL
         enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
 
@@ -458,9 +450,8 @@ int main( int argc, const char **argv )
 
     bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
     log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {
-        // DNS server start
-        dap_dns_server_start((char *)dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
+    if (dns_bootstrap_balancer_enabled) {        
+        dap_dns_server_start("bootstrap_balancer");
     }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
