@@ -143,8 +143,8 @@ static int s_wallet_create(int argc, const char **argv) {
       exit( -2003 );
     }
 
-    const char *l_wallet_name = argv[3], *l_pass_str = argv[5];
-    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    const char *l_wallet_name = argv[3], *l_pass_str = argv[4];
+    dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[5] );
     dap_chain_wallet_t *l_wallet = NULL;
 
     //
@@ -176,7 +176,33 @@ static int s_wallet_create(int argc, const char **argv) {
         exit( -2004 );
     }
 
-    l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
+    if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
+        if (argc < 8) {
+            log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.");
+            exit(-2006);
+        }
+        dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};
+        size_t l_count_signs  = 0;
+        for (int i = 6; i < argc; i++) {
+            l_types[l_count_signs] = dap_sign_type_from_str(argv[i]);
+            if (l_types[l_count_signs].type == SIG_TYPE_NULL) {
+                log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+                        argv[i], dap_sign_get_str_recommended_types());
+                exit(-2007);
+            }
+            if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+            {
+                log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
+                        dap_sign_get_str_recommended_types());
+                exit( -2008 );
+            }
+            l_count_signs++;
+        }
+        l_wallet = dap_chain_wallet_create_with_seed_multi(l_wallet_name, s_system_wallet_dir,
+                                                               l_types, l_count_signs,
+                                                               NULL, 0, l_pass_str);
+    } else
+        l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
@@ -526,7 +552,7 @@ static void s_help()
     printf( "%s usage:\n\n", l_tool_appname);
 
     printf(" * Create new key wallet and generate signatures with same names plus index \n" );
-    printf("\t%s wallet create <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
+    printf("\t%s wallet create <wallet name> <password> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
 #if 0
     printf(" * Create new key wallet from existent certificates in the system\n");
