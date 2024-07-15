@@ -203,7 +203,6 @@ if(UNIX)
         ${NODE_SOURCES}
         ${NODE_CLI_SOURCES}
         ${NODE_TOOL_SOURCES}
-        sources/cellframe_node.h
     )
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
