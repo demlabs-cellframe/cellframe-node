@@ -40,7 +40,7 @@ fs::path config_path(const std::string &netname, ENetworkConfigType type, ENetwo
 struct CellframeConfigurationFile {
     CellframeConfigurationFile(fs::path filepath, int flags = 0);
     
-    bool exists(const std::string & group, const std::string & param, std::string *value = nullptr, int *line_no = nullptr);
+    bool exists(const std::string & group, const std::string & param, std::string *value = nullptr, int *line_no = nullptr, bool *group_exists = nullptr);
     std::string set(const std::string & group, const std::string & param, const std::string &value);
     void replace_placeholders(std::map<std::string, std::string> data);
     bool save();

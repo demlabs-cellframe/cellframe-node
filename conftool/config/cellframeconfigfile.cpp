@@ -195,7 +195,7 @@ cfg_pair parse_param_value(const std::string line)
     return {tokens[0], tokens[1]};
 }
 
-bool CellframeConfigurationFile::exists(const std::string & group, const std::string & param, std::string *value, int *line_no)
+bool CellframeConfigurationFile::exists(const std::string & group, const std::string & param, std::string *value, int *line_no, bool *group_exists)
 {
     if (flags & F_VERBOSE)  std::cout << "[VC] Check for existanse [" << group<<"] "<<param << " in "<<this->path <<std::endl;
     
@@ -223,6 +223,7 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
         {
             if (flags & F_VERBOSE)  std::cout << "[VC] No param in group [" << group_name<<"], group ends at  " << current_line-1 <<  std::endl;
             if (line_no) *line_no = current_line-1;
+            if (group_exists) *group_exists = group_found;
             return false;
         }
 
@@ -236,6 +237,7 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
                                                 << ":" <<res.val 
                                                 << " at line " 
                                                 << current_line << std::endl;
+            if (group_exists) *group_exists = group_found;
             if (value) *value = res.val;
             if (line_no) *line_no = current_line;
             return true;
@@ -243,6 +245,10 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
     }
     
     if (line_no) *line_no = current_line-1;
+
+    if (group_exists)
+        *group_exists = group_found;
+
     return false;
 }
 
@@ -253,10 +259,17 @@ std::string CellframeConfigurationFile::set(const std::string & group, const std
                             << group << "] "<<param<<"="<<value << std::endl;
 
     int line_set_to;
-    bool param_exists = exists(group, param, nullptr, &line_set_to);
+    bool group_exists = false;
+    bool param_exists = exists(group, param, nullptr, &line_set_to, &group_exists);
     if (param_exists) lines[line_set_to] = param+"="+value;
     else 
-    {
+    {   
+        if (!group_exists)
+        {
+            lines.emplace(lines.begin()+line_set_to, "["+group+"]");
+            line_set_to += 1;
+        }
+        
         lines.emplace(lines.begin()+line_set_to, param+"="+value);
         lines.emplace(lines.begin()+line_set_to + 1, "\n");
     }

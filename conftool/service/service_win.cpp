@@ -7,6 +7,34 @@
 #include <shlobj.h>
 
 
+#include <windows.h>
+#include <tlhelp32.h>
+#include <tchar.h>
+
+bool isProcessRunning(const TCHAR* const executableName) {
+    PROCESSENTRY32 entry;
+    entry.dwSize = sizeof(PROCESSENTRY32);
+
+    const auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+    if (!Process32First(snapshot, &entry)) {
+        CloseHandle(snapshot);
+        return false;
+    }
+
+    do {
+        std::cout << entry.szExeFile << " " << executableName << std::endl;
+        if (!_tcsicmp(entry.szExeFile, executableName)) {
+            std::cout << "found" << std::endl;
+            CloseHandle(snapshot);
+            return true;
+        }
+    } while (Process32Next(snapshot, &entry));
+
+    CloseHandle(snapshot);
+    return false;
+}
+
 int runShellAdmin(std::string app, std::string cmd)
 {
     // Launch itself as admin
@@ -51,11 +79,25 @@ bool CServiceControl::disable()
     return res == 0 ? true : false;
 }
 
-EServiceStatus CServiceControl::serviceStatus()
+unsigned int CServiceControl::serviceStatus()
 {
+    unsigned int status = 0;
+    
     std::string cmd = std::string("schtasks /query  /TN CellframeNode");
     int res = std::system(cmd.c_str());
-    return res==0 ? ENABLED : DISABLED;
+    
+    if (res == 0)
+    {
+        status |= SERVICE_ENABLED;
+    }
+    
+    if (isProcessRunning("cellframe-node.exe"))
+    {
+        std::cout << "proc running" << std::endl;
+        status |= PROCESS_RUNNING;
+    }
+    
+    return (unsigned)status;
 }
 
 bool CServiceControl::start()
