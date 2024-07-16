@@ -171,16 +171,33 @@ std::string getCmdOption(char ** begin, char ** end, const std::string & option_
 void print_help()
 {
     std::cout << "cellframe-node-config -h | --help" << std::endl;
+    std::cout << "\t prints this help message" << std::endl;
+    std::cout << "cellframe-node-config -s | --vars" << std::endl;
+    std::cout << "\t prints installation config variables." << std::endl;
     std::cout << "cellframe-node-config -v | --verbose" << std::endl;
+    std::cout << "\t enable verbose output" << std::endl;
     std::cout << "cellframe-node-config -d | --dry-run" << std::endl;
-    std::cout << "\tprints this help message" << std::endl;
+    std::cout << "\t do not actual do a file-system commands" << std::endl;
     std::cout << "cellframe-node-config -i | --init /path/to/cellframe-node.setup" << std::endl;
-    std::cout << "\tdo initial configuration based on provided setup script" << std::endl;
-    std::cout << "cellframe-node-config -e | --exec command action [and command action [and command action]] - interpert all tokens after -c as setup-script, line delim is \"and\" word"  << std::endl;
-    std::cout << "Possible actions"  << std::endl;
-    std::cout << "\t var VAR=VAL"  << std::endl;
-    std::cout << "\t network Netname default|ensure on|off"  << std::endl;
-    std::cout << "\t config confname group param default|ensure val"  << std::endl;
+    std::cout << "\t do initial configuration based on provided setup script" << std::endl;
+    std::cout << "cellframe-node-config -e | --exec <command> [and <command> [and <command>]...]" << std::endl;
+    std::cout << "\t execute provided commands. "  << std::endl<< std::endl;
+    std::cout << "Allowed commands:"  << std::endl;
+    std::cout << "\t network <netname> ensure on|off"  << std::endl;
+    std::cout << "\t\t enable | disable <netname> network"  << std::endl;
+    std::cout << "\tconfig  <configname>  <section>  <param> ensure  <value>"  << std::endl;
+    std::cout << "\t\t set a parameter <param> in section <section> in config <configname> to <value>"  << std::endl;
+    std::cout << "\t\t Possible configs: \"cellframe-node\",  \"<netname>\""  << std::endl;
+    std::cout << "\tservice  enable"  << std::endl;
+    std::cout << "\t\t set cellframe-node to autostart on boot"  << std::endl;
+    std::cout << "\tservice  disable"  << std::endl;
+    std::cout << "\t\t remove cellframe-node from autostart on boot"  << std::endl;
+    std::cout << "\tservice  start"  << std::endl;
+    std::cout << "\t\t start cellframe-node (if registred as service!)"  << std::endl;
+    std::cout << "\tservice  stop"  << std::endl;
+    std::cout << "\t\t stop cellframe-node (if registred as service!)"  << std::endl;
+    std::cout << "\tservice  status"  << std::endl;
+    std::cout << "\t\t get service & process statuses"  << std::endl;
 }
 
 std::unique_ptr<CAbstractScriptCommand> parse_line_to_cmd(std::string line, int line_no, int flags) {

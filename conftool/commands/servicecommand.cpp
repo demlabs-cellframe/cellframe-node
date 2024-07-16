@@ -44,7 +44,16 @@ bool CServiceCommand::execute(bool non_intercative, int flags)
 
     if (this->action == "status")
     {
-        std::cout << (CServiceControl::serviceStatus() == ENABLED?"enabled":"disabled")<<std::endl;
+        unsigned int status = CServiceControl::serviceStatus();
+        if (status & SERVICE_ENABLED)
+            std::cout << "service: enabled" << std::endl;
+        else
+            std::cout << "service: disabled" << std::endl;
+
+        if (status & PROCESS_RUNNING)
+            std::cout << "process: running" << std::endl;
+        else
+            std::cout << "process: notfound" << std::endl;
     }
 
     if (this->action == "start")

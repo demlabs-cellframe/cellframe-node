@@ -17,11 +17,25 @@ bool CServiceControl::disable()
     return res == 0 ? true : false;
 }
 
-EServiceStatus CServiceControl::serviceStatus()
+unsigned int CServiceControl::serviceStatus()
 {
+    unsigned int status = 0;
     std::string cmd = std::string();
-    int res = std::system("launchctl list com.demlabs.cellframe-node");
-    return res == 0 ? ENABLED : DISABLED;
+    int res = std::system("launchctl list com.demlabs.cellframe-node > /dev/null");
+    if (res == 0)
+    {
+        status |= SERVICE_ENABLED;
+    }
+
+    cmd = "pgrep cellframe-node > /dev/null";
+    res = std::system(cmd.c_str());
+
+    if (res == 0)
+    {
+        status |= PROCESS_RUNNING;
+    }
+
+    return (unsigned int)status;
 }
 
 bool CServiceControl::start()

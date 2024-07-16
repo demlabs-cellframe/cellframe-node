@@ -10,15 +10,15 @@
 #include <stdexcept>
 
 enum EServiceStatus{
-    ENABLED,
-    DISABLED,
+    SERVICE_ENABLED = 1 << 0,
+    PROCESS_RUNNING = 1 << 2,
 };
 
 struct CServiceControl
 {
     static bool enable();
     static bool disable();
-    static EServiceStatus serviceStatus();
+    static unsigned int serviceStatus();
     static bool start();
     static bool stop();
     static bool restart();    
