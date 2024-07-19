@@ -290,19 +290,23 @@ static int s_cert_create(int argc, const char **argv) {
 
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
 
-    if (l_sig_type.type == SIG_TYPE_NULL) {
-        log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s.",
-               argv[4], dap_sign_get_str_recommended_types());
+    if (l_sig_type.type == SIG_TYPE_NULL || l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
+        log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s",
+               argv[4], dap_cert_get_str_recomendated_sign());
         exit(-600);
+    } else if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
+        log_it(L_ERROR, "The sig_multi_chained signature is not applicable for certificate creation. "
+                              "Use the following signatures:\\n%s", dap_cert_get_str_recomendated_sign());
+        exit(-601);
     }
 
     //
     // Check unsupported algorithm
     //
     if (dap_sign_type_is_depricated(l_sig_type)) {
-        log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s.",
-               argv[4], dap_sign_get_str_recommended_types());
-        exit(-600);
+        log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s",
+               argv[4], dap_cert_get_str_recomendated_sign());
+        exit(-602);
     }
 
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
