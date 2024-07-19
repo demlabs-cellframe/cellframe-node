@@ -292,11 +292,11 @@ static int s_cert_create(int argc, const char **argv) {
 
     if (l_sig_type.type == SIG_TYPE_NULL || l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
         log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s",
-               argv[4], dap_cert_get_str_recomendated_sign());
+               argv[4], dap_cert_get_str_recommended_sign());
         exit(-600);
     } else if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
         log_it(L_ERROR, "The sig_multi_chained signature is not applicable for certificate creation. "
-                              "Use the following signatures:\\n%s", dap_cert_get_str_recomendated_sign());
+                              "Use the following signatures:\\n%s", dap_cert_get_str_recommended_sign());
         exit(-601);
     }
 
@@ -305,7 +305,7 @@ static int s_cert_create(int argc, const char **argv) {
     //
     if (dap_sign_type_is_depricated(l_sig_type)) {
         log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s",
-               argv[4], dap_cert_get_str_recomendated_sign());
+               argv[4], dap_cert_get_str_recommended_sign());
         exit(-602);
     }
 
