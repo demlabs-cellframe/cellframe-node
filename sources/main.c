@@ -132,6 +132,7 @@
 
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
+char * dap_get_path_relative_cfg(int argc, const char **argv);
 
 #ifndef DAP_OS_WINDOWS
 static const char *s_pid_file_path = NULL;
@@ -155,15 +156,8 @@ int main( int argc, const char **argv )
     #if defined(_WIN32) && defined(NDEBUG)
         S_SetExceptionFilter( );
     #endif
-#ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-#elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-#endif
+
+    g_sys_dir_path = dap_get_path_relative_cfg(argc, argv);
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
@@ -190,7 +184,7 @@ int main( int argc, const char **argv )
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH] = {'\0'};
     sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
-    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path", l_default_dir) ;
+    s_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir) ;
     save_process_pid_in_file(s_pid_file_path);
 #endif
 
@@ -572,6 +566,39 @@ void parse_args( int argc, const char **argv ) {
 
     if( !is_daemon )
         exit_if_server_already_running( );
+}
+
+char * dap_get_path_relative_cfg(int argc, const char **argv) {
+    int opt;
+    char* relative_path = NULL;
+    struct option long_options[] = {
+        {"relative_path", required_argument, 0, 'B'},
+        {0, 0, 0, 0}
+    };
+    while ((opt = getopt_long(argc, argv, "B:", long_options, NULL)) != -1) {
+        switch (opt)
+        {
+        case 'B':
+            relative_path = optarg;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (!relative_path) {
+    #ifdef _WIN32
+        relative_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    #elif DAP_OS_MAC
+        relative_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    #elif DAP_OS_ANDROID
+        relative_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    #elif DAP_OS_UNIX
+        relative_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    #endif
+    }
+
+    return relative_path;
 }
 
 void exit_if_server_already_running( void ) {
