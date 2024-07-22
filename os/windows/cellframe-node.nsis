@@ -102,7 +102,9 @@ FunctionEnd
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
+
 Page custom pgNetSelectCreate pgNetSelectLeave
+
 
 
 !define MUI_FINISHPAGE_RUN "$INSTDIR\cellframe-node.exe"
@@ -193,7 +195,7 @@ Section "${APP_NAME}" CORE
 	SectionIn RO
 	SetOutPath "$INSTDIR"
 
-	File "opt/cellframe-node/bin/${NODE_NAME}.exe"
+	File /oname=cellframe-node.tmp "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
@@ -263,6 +265,9 @@ Function checkEnabledNets
 FunctionEnd
 
 Function pgNetSelectCreate
+	GetDlgItem $R0 $HWNDPARENT 2
+	ShowWindow $R0 ${SW_HIDE}
+
     !insertmacro MUI_HEADER_TEXT "Network Settings" "Select enabled networks"
 
 
@@ -323,7 +328,9 @@ Function pgNetSelectLeave
 	!insertmacro ensureNetworkState "raiden" $NetRaidenState
 	!insertmacro ensureNetworkState "mileena" $NetMileenaState
 	!insertmacro ensureNetworkState "subzero" $NetSubzeroState
-		
+
+	Rename $INSTDIR\cellframe-node.tmp $INSTDIR\cellframe-node.exe
+
 FunctionEnd
 
 
