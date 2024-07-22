@@ -38,7 +38,7 @@ include (dap-sdk/cmake/OS_Detection.cmake)
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-# set(BUILD_CELLFRAME_NODE_TESTS ON)
+#set(BUILD_CELLFRAME_NODE_TESTS ON)
 
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
@@ -59,7 +59,8 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-block-poa cs-block-pos cs-esbocs cs-none srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
+set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
