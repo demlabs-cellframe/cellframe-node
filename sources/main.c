@@ -113,7 +113,6 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
 
-#include "dap_common.h"
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -132,7 +131,6 @@
 
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
-char * dap_get_path_relative_cfg(int argc, const char **argv);
 
 #ifndef DAP_OS_WINDOWS
 static const char *s_pid_file_path = NULL;
@@ -157,7 +155,7 @@ int main( int argc, const char **argv )
         S_SetExceptionFilter( );
     #endif
 
-    g_sys_dir_path = dap_get_path_relative_cfg(argc, argv);
+    g_sys_dir_path = dap_get_path_relative_cfg(&argc, argv);
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
@@ -566,39 +564,6 @@ void parse_args( int argc, const char **argv ) {
 
     if( !is_daemon )
         exit_if_server_already_running( );
-}
-
-char * dap_get_path_relative_cfg(int argc, const char **argv) {
-    int opt;
-    char* relative_path = NULL;
-    struct option long_options[] = {
-        {"relative_path", required_argument, 0, 'B'},
-        {0, 0, 0, 0}
-    };
-    while ((opt = getopt_long(argc, argv, "B:", long_options, NULL)) != -1) {
-        switch (opt)
-        {
-        case 'B':
-            relative_path = optarg;
-            break;
-        default:
-            break;
-        }
-    }
-
-    if (!relative_path) {
-    #ifdef _WIN32
-        relative_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-    #elif DAP_OS_MAC
-        relative_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
-    #elif DAP_OS_ANDROID
-        relative_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-    #elif DAP_OS_UNIX
-        relative_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-    #endif
-    }
-
-    return relative_path;
 }
 
 void exit_if_server_already_running( void ) {

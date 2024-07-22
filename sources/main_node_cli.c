@@ -60,21 +60,9 @@ int main(int argc, const char *argv[])
     SetConsoleOutputCP(1252);
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), NODE_NAME);
-#elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-        return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s", NODE_NAME);
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", NODE_NAME);
 #endif
+    g_sys_dir_path = dap_get_path_relative_cfg(&argc, argv);
+
     /*if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
