@@ -23,9 +23,9 @@ bool isProcessRunning(const TCHAR* const executableName) {
     }
 
     do {
-        std::cout << entry.szExeFile << " " << executableName << std::endl;
+        
         if (!_tcsicmp(entry.szExeFile, executableName)) {
-            std::cout << "found" << std::endl;
+            
             CloseHandle(snapshot);
             return true;
         }
