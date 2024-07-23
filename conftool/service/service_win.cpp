@@ -109,8 +109,8 @@ bool CServiceControl::start()
 
 bool CServiceControl::stop()
 {
-    std::string cmd = std::string("/end /TN CellframeNode");
-    long unsigned int res = runShellAdmin("schtasks.exe", cmd);
+    std::string cmd = std::string("/IM cellframe-node.exe  /F");
+    long unsigned int res = runShellAdmin("taskkill.exe", cmd);
     return res==0 ? true : false;
 }
 
