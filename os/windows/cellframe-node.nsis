@@ -329,7 +329,8 @@ Function pgNetSelectLeave
 	!insertmacro ensureNetworkState "mileena" $NetMileenaState
 	!insertmacro ensureNetworkState "subzero" $NetSubzeroState
 
-	Rename $INSTDIR\cellframe-node.tmp $INSTDIR\cellframe-node.exe
+	Delete "$INSTDIR\${NODE_NAME}.exe"
+	Rename 	"$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
 
 FunctionEnd
 

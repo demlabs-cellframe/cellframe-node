@@ -29,7 +29,7 @@ unsigned int CServiceControl::serviceStatus()
         status |= SERVICE_ENABLED;
     }
 
-    cmd = "pgrep cellframe-node > /dev/null";
+    cmd = "pgrep -x cellframe-node > /dev/null";
     res = std::system(cmd.c_str());
 
     if (res == 0)
