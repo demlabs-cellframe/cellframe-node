@@ -193,7 +193,9 @@ ${UnStrTrimNewLines}
 
 Section "${APP_NAME}" CORE
 	SectionIn RO
+
 	SetOutPath "$INSTDIR"
+	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
 
 	File /oname=cellframe-node.tmp "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
