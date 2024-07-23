@@ -153,7 +153,7 @@ int main( int argc, const char **argv )
         S_SetExceptionFilter( );
     #endif
 
-    g_sys_dir_path = dap_get_path_relative_cfg(&argc, argv);
+    g_sys_dir_path = dap_get_path_relative_cfg(&argc, &argv);
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);

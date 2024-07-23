@@ -61,7 +61,7 @@ int main(int argc, const char *argv[])
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
-    g_sys_dir_path = dap_get_path_relative_cfg(&argc, argv);
+    g_sys_dir_path = dap_get_path_relative_cfg(&argc, &argv);
 
     /*if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
