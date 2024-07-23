@@ -88,6 +88,8 @@
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
+#include "dap_chain_net_srv_app.h"
+#include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
@@ -334,6 +336,16 @@ int main( int argc, const char **argv )
     
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
+    }
+
+    if( dap_chain_net_srv_app_init() ){
+        log_it(L_CRITICAL,"Can't init dap chain network service applications module");
+        return -67;
+    }
+
+    if( dap_chain_net_srv_datum_init() ){
+        log_it(L_CRITICAL,"Can't init dap chain network service datum module");
+        return -68;
     }
 
 #ifndef _WIN32
