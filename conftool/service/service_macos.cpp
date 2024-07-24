@@ -2,18 +2,19 @@
 
 #include "service.h"
 #include "../commands/abstractcommand.h"
+#include "macos_auth.h"
 
 bool CServiceControl::enable()
 {
-    //starts too
-    int res = std::system("launchctl load -w /Library/LaunchDaemons/com.demlabs.cellframe-node.plist");
+    char *args[] = {"/bin/launchctl","load", "-w", "/Library/LaunchDaemons/com.demlabs.cellframe-node.plist", NULL};
+    int res = callSec("/usr/bin/sudo", args);
     return res == 0 ? true : false;
 }
 
 bool CServiceControl::disable()
 {
-    //stops too
-    int res = std::system("launchctl unload -w /Library/LaunchDaemons/com.demlabs.cellframe-node.plist");
+    char *args[] = {"/bin/launchctl", "unload", "-w", "/Library/LaunchDaemons/com.demlabs.cellframe-node.plist", NULL};
+    int res = callSec("/usr/bin/sudo", args);
     return res == 0 ? true : false;
 }
 
@@ -21,7 +22,7 @@ unsigned int CServiceControl::serviceStatus()
 {
     unsigned int status = 0;
     std::string cmd = std::string();
-    int res = std::system("launchctl list com.demlabs.cellframe-node > /dev/null");
+    int res = std::system("launchctl print system/com.demlabs.cellframe-node > /dev/null");
     if (res == 0)
     {
         status |= SERVICE_ENABLED;
