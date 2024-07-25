@@ -45,7 +45,7 @@
 #define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
 #endif
 
-static int s_init( int argc, const char * argv[] );
+static int s_init( int *argc, const char ** argv[] );
 static void s_help( );
 static int s_is_file_available (char *l_path, const char *name, const char *ext);
 static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
@@ -108,7 +108,7 @@ struct options {
 int main(int argc, const char **argv)
 #endif
 {
-  int ret = s_init( argc, argv );
+  int ret = s_init( &argc, &argv );
 
   if ( ret ) {
     log_it( L_ERROR, "Can't init modules" );
@@ -497,27 +497,12 @@ static int s_cert_pkey_show(int argc, const char **argv)
  * @param argv
  * @return
  */
-static int s_init( int argc, const char **argv )
+static int s_init( int *argc, const char ***argv )
 {
-    UNUSED(argc);
-    UNUSED(argv);
     dap_set_appname("cellframe-node");
-#ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-#elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-#endif
+
+    g_sys_dir_path = dap_get_path_relative_cfg(argc, argv);
+    
     if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
@@ -529,13 +514,15 @@ static int s_init( int argc, const char **argv )
     g_config = dap_config_open(dap_get_appname());
     if (g_config) {
         uint16_t l_ca_folders_size = 0;
-        char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
+        char **l_ca_folders = dap_config_get_item_str_path_array(g_config, "resources", "ca_folders", &l_ca_folders_size);
         dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);
+        dap_config_get_item_str_path_array_free(l_ca_folders, &l_ca_folders_size);
         int t = dap_strlen(s_system_ca_dir);
         if (s_system_ca_dir[t - 1] == '/')
             s_system_ca_dir[t-1] = '\0';
-        const char *l_wallet_folder = dap_config_get_item_str(g_config, "resources", "wallets_path");
+        char *l_wallet_folder = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", NULL);
         dap_stpcpy(s_system_wallet_dir, l_wallet_folder);
+        DAP_DEL_Z(l_wallet_folder);
     } else {
         dap_stpcpy(s_system_ca_dir, "./");
         dap_stpcpy(s_system_wallet_dir, "./");
