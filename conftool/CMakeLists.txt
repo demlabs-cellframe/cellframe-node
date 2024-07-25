@@ -15,7 +15,8 @@ add_executable(${PROJECT_NAME} ./main.cpp
                                 ./config/cellframeconfigfile.cpp
                                 ./service/service_win.cpp
                                 ./service/service_linux.cpp
-                                ./service/service_macos.cpp)
+                                ./service/service_macos.cpp
+                                ./service/macos_auth.m)
 
 target_link_libraries(cellframe-node-config
 )
@@ -23,6 +24,11 @@ target_link_libraries(cellframe-node-config
 if (LINUX OR WIN32)
   target_link_libraries(cellframe-node-config PRIVATE stdc++fs )
 endif()
+
+if (APPLE)
+target_link_libraries(cellframe-node-config PUBLIC "-framework Security -framework Foundation")
+endif()
+
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
