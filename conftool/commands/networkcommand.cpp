@@ -101,7 +101,7 @@ bool CNetworkCommand::execute(bool non_intercative, int flags)
         if (fs::exists(check_exist_path)) 
         {
             if (flags & F_VERBOSE) std::cout << "[VE][network default] File " << check_exist_path << " exists, but default state requested [" << this->default_val << "]";
-            std::cout << "Skip altering state for newtwork [" << this->net_name<<"] due to it was user-configured";
+            std::cout << "[C}[network default] Skip altering state for newtwork [" << this->net_name<<"] due to it was user-configured" << std::endl;
             return false;
         }
 
