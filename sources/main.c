@@ -369,28 +369,6 @@ int main( int argc, const char **argv )
 
     dap_chain_net_load_all();
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-    // vpn server
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
-        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
-            log_it(L_ERROR, "Can't init dap chain network service vpn module");
-            return -70;
-        }
-    }
-    // vpn client
-    if(dap_chain_net_vpn_client_init(g_config) != 0) {
-        log_it(L_ERROR, "Can't init dap chain network service vpn client");
-        return -72;
-    }
-
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
-        if(chain_net_geoip_init(g_config) != 0) {
-            log_it(L_CRITICAL, "Can't init geoip module");
-            return -73;
-        }
-    }
-#endif
-
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
@@ -441,6 +419,28 @@ int main( int argc, const char **argv )
     if (dns_bootstrap_balancer_enabled) {        
         dap_dns_server_start("bootstrap_balancer");
     }
+
+#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+    // vpn server
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
+        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
+            log_it(L_ERROR, "Can't init dap chain network service vpn module");
+            return -70;
+        }
+    }
+    // vpn client
+    if(dap_chain_net_vpn_client_init(g_config) != 0) {
+        log_it(L_ERROR, "Can't init dap chain network service vpn client");
+        return -72;
+    }
+
+    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
+        if(chain_net_geoip_init(g_config) != 0) {
+            log_it(L_CRITICAL, "Can't init geoip module");
+            return -73;
+        }
+    }
+#endif
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
