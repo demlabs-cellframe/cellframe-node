@@ -6,15 +6,13 @@
 
 bool CServiceControl::enable()
 {
-    char *args[] = {"/bin/launchctl","load", "-w", "/Library/LaunchDaemons/com.demlabs.cellframe-node.plist", NULL};
-    int res = callSec("/usr/bin/sudo", args);
+    int res = callSecScript("launchctl load -w /Library/LaunchDaemons/com.demlabs.cellframe-node.plist");
     return res == 0 ? true : false;
 }
 
 bool CServiceControl::disable()
 {
-    char *args[] = {"/bin/launchctl", "unload", "-w", "/Library/LaunchDaemons/com.demlabs.cellframe-node.plist", NULL};
-    int res = callSec("/usr/bin/sudo", args);
+    int res = callSecScript("launchctl unload -w /Library/LaunchDaemons/com.demlabs.cellframe-node.plist");
     return res == 0 ? true : false;
 }
 
