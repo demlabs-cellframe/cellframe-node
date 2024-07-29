@@ -100,7 +100,7 @@ config  riemann      general     node-role   default     full
 config  mileena      general     node-role   default     full
 config  subzero      general     node-role   default     full
 
-config Backbone general seed_nodes_hosts ensure seed_nodes_hosts=[0.root.scorpion.cellframe.net:8079,1.root.scorpion.cellframe.net:8079,2.root.scorpion.cellframe.net:8079,3.root.scorpion.cellframe.net:8079,4.root.scorpion.cellframe.net:8079]
+config Backbone general seed_nodes_hosts ensure [0.root.scorpion.cellframe.net:8079,1.root.scorpion.cellframe.net:8079,2.root.scorpion.cellframe.net:8079,3.root.scorpion.cellframe.net:8079,4.root.scorpion.cellframe.net:8079]
 
 config KelVPN general authorized_nodes_addrs ensure [4243::D90D::5B87::D579,6D8C::9224::5C12::8AD4,F546::A2C3::B230::6068]
 config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
