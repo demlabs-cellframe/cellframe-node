@@ -201,7 +201,7 @@ static int s_wallet_create(int argc, const char **argv) {
 
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 8) {
-            log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.");
+            log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.\n");
             exit(-2006);
         }
         dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};

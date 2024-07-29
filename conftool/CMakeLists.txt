@@ -4,6 +4,7 @@ include(FetchContent)
 
 project(cellframe-node-config)
 
+
 add_executable(${PROJECT_NAME} ./main.cpp 
                                 ./commands/abstractcommand.cpp 
                                 ./commands/networkcommand.cpp
@@ -14,8 +15,7 @@ add_executable(${PROJECT_NAME} ./main.cpp
                                 ./commands/fromtemplatecommand.cpp
                                 ./config/cellframeconfigfile.cpp
                                 ./service/service_win.cpp
-                                ./service/service_linux.cpp
-                                ./service/service_macos.cpp)
+                                ./service/service_linux.cpp)
 
 target_link_libraries(cellframe-node-config
 )
@@ -23,6 +23,18 @@ target_link_libraries(cellframe-node-config
 if (LINUX OR WIN32)
   target_link_libraries(cellframe-node-config PRIVATE stdc++fs )
 endif()
+
+if (APPLE)
+
+  target_link_libraries(cellframe-node-config PUBLIC "-framework Security -framework Foundation")
+
+  add_library(conftool_osx_ctrl STATIC ./service/service_macos.cpp ./service/macos_auth.m)
+    set_target_properties(conftool_osx_ctrl PROPERTIES
+     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  target_link_libraries(cellframe-node-config PUBLIC conftool_osx_ctrl)
+
+endif()
+
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
