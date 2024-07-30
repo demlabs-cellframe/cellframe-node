@@ -108,6 +108,7 @@ struct options {
 int main(int argc, const char **argv)
 #endif
 {
+  dap_set_appname("cellframe-node");
   int l_rel_path = 0;
 
     int opt;
@@ -527,7 +528,6 @@ static int s_cert_pkey_show(int argc, const char **argv)
  */
 static int s_init()
 {
-    dap_set_appname("cellframe-node");
     if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
