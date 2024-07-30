@@ -347,6 +347,7 @@ Section "Uninstall"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service disable"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service stop"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
+	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diag.exe'
 	
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
