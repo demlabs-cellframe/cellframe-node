@@ -335,6 +335,10 @@ Function pgNetSelectLeave
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Rename 	"$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
 
+	StrCpy $0 "'$INSTDIR\cellframe-diag.exe --tray'"
+	${DisableX64FSRedirection}
+	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeTray"'
+	${EnableX64FSRedirection}
 FunctionEnd
 
 
