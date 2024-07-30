@@ -45,7 +45,7 @@
 #define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
 #endif
 
-static int s_init( int *argc, const char ** argv[] );
+static int s_init();
 static void s_help( );
 static int s_is_file_available (char *l_path, const char *name, const char *ext);
 static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
@@ -108,7 +108,35 @@ struct options {
 int main(int argc, const char **argv)
 #endif
 {
-  int ret = s_init( &argc, &argv );
+  int l_rel_path = 0;
+
+    int opt;
+    while ((opt = getopt (argc, (char **)argv, "B:")) != -1) {
+        switch (opt)
+        {
+            case 'B':
+                g_sys_dir_path = optarg;
+                l_rel_path = 1;
+                break;
+            default:
+                break;
+        }
+    }
+    optind = 1;
+
+    if (!g_sys_dir_path) {
+    #ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    #elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    #elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    #elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    #endif
+    }
+
+  int ret = s_init();
 
   if ( ret ) {
     log_it( L_ERROR, "Can't init modules" );
@@ -125,7 +153,7 @@ int main(int argc, const char **argv)
   bool l_find_cmd = false;
   bool l_find_subcmd = true;
   for (size_t i = 0; i < l_size; i++) {
-      int argv_index = 1;
+      int argv_index = 1 + l_rel_path*2;
       if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
           l_find_cmd = true;
           l_find_subcmd = false;
@@ -141,7 +169,7 @@ int main(int argc, const char **argv)
               }
           }
           if (match) {
-              int l_ret = s_opts[i].handler(argc, argv);
+              int l_ret = s_opts[i].handler(l_rel_path ? argc-2 : argc, l_rel_path ? argv+2 : argv);
               return l_ret;
           }
       }
@@ -497,12 +525,9 @@ static int s_cert_pkey_show(int argc, const char **argv)
  * @param argv
  * @return
  */
-static int s_init( int *argc, const char ***argv )
+static int s_init()
 {
     dap_set_appname("cellframe-node");
-
-    g_sys_dir_path = dap_get_path_relative_cfg(argc, argv);
-    
     if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;

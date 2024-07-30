@@ -61,7 +61,33 @@ int main(int argc, const char *argv[])
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
-    g_sys_dir_path = dap_get_path_relative_cfg(&argc, &argv);
+
+    int opt, l_rel_path = 0;
+    while ((opt = getopt (argc, (char **)argv, "B:")) != -1) {
+        switch (opt)
+        {
+            case 'B':
+                g_sys_dir_path = optarg;
+                l_rel_path = 1;
+                break;
+            default:
+                break;
+        }
+    }
+    optind = 1;
+
+    if (!g_sys_dir_path) {
+    #ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    #elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    #elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    #elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    #endif
+    }
+
 
     /*if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
@@ -74,7 +100,7 @@ int main(int argc, const char *argv[])
         dap_config_init(l_config_dir);
     }
     dap_log_level_set(L_CRITICAL);
-    int res = dap_app_cli_main(NODE_NAME, argc, argv);
+    int res = dap_app_cli_main(NODE_NAME, l_rel_path ? argc - 2 : argc, l_rel_path ? argv + 2 : argv);
     switch (res) {
         case DAP_CLI_ERROR_FORMAT:
             printf("Response format error!\n");

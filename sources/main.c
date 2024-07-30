@@ -153,7 +153,33 @@ int main( int argc, const char **argv )
         S_SetExceptionFilter( );
     #endif
 
-    g_sys_dir_path = dap_get_path_relative_cfg(&argc, &argv);
+    int opt;
+    
+    while ((opt = getopt (argc, (char **)argv, "B:")) != -1) {
+        switch (opt)
+        {
+            case 'B':
+                g_sys_dir_path = optarg;
+                break;
+            default:
+                break;
+        }
+    }
+    optind = 1;
+
+    if (!g_sys_dir_path) {
+    #ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    #elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    #elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    #elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    #endif
+    }
+
+    log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
