@@ -1,0 +1,14 @@
+[Unit]
+Description=CellframeNode Tray
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=exec
+Restart=no
+ExecStart=/opt/cellframe-node-rc/bin/cellframe-diagtool --tray
+ExecStop=/bin/kill -SIGTERM $MAINPID
+
+
+[Install]
+WantedBy=graphical-session.target
