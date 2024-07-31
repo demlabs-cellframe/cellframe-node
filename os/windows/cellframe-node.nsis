@@ -236,7 +236,7 @@ Section "${APP_NAME}" CORE
 	; check net states after install to show in checkboxes
 	Call getNetworksStates
 
-	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe --tray'"
+	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe' --tray"
 	${DisableX64FSRedirection}
 	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeTray"'
 	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeTray"'
