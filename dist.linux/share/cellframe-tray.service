@@ -6,7 +6,7 @@ After=graphical-session.target
 [Service]
 Type=exec
 Restart=no
-ExecStart=/opt/cellframe-node-rc/bin/cellframe-diagtool --tray
+ExecStart=/opt/cellframe-node/bin/cellframe-diagtool --tray
 ExecStop=/bin/kill -SIGTERM $MAINPID
 
 
