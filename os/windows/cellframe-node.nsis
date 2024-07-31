@@ -201,7 +201,7 @@ Section "${APP_NAME}" CORE
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
-	File "opt/cellframe-node/bin/${NODE_NAME}-diag.exe"
+	File "opt/cellframe-node/bin/cellframe-diag.exe"
 
 	Call createRuntimePaths
 
