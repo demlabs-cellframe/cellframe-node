@@ -236,6 +236,12 @@ Section "${APP_NAME}" CORE
 	; check net states after install to show in checkboxes
 	Call getNetworksStates
 
+	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe --tray'"
+	${DisableX64FSRedirection}
+	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeTray"'
+	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeTray"'
+	${EnableX64FSRedirection}
+
 SectionEnd
 
 
@@ -335,10 +341,7 @@ Function pgNetSelectLeave
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Rename 	"$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
 
-	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe --tray'"
-	${DisableX64FSRedirection}
-	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeTray"'
-	${EnableX64FSRedirection}
+	
 FunctionEnd
 
 
