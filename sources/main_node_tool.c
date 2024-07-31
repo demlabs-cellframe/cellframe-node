@@ -200,6 +200,13 @@ static int s_wallet_create(int argc, const char **argv) {
         exit( -2004 );
     }
 
+    char *l_file_name = dap_strdup_printf("%s/%s.dwallet", dap_chain_wallet_get_path(g_config), l_wallet_name);
+    if (dap_file_test(l_file_name)) {
+        log_it(L_ERROR, "The '%s' wallet already exists.\n", l_wallet_name);
+        exit(-2007);
+    }
+    DAP_DELETE(l_file_name);
+
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 7) {
             log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.");
@@ -276,6 +283,13 @@ static int s_wallet_create_wp(int argc, const char **argv) {
                 dap_sign_get_str_recommended_types());
         exit( -2004 );
     }
+
+    char *l_file_name = dap_strdup_printf("%s/%s.dwallet", dap_chain_wallet_get_path(g_config), l_wallet_name);
+    if (dap_file_test(l_file_name)) {
+        log_it(L_ERROR, "The '%s' wallet already exists.\n", l_wallet_name);
+        exit(-2007);
+    }
+    DAP_DELETE(l_file_name);
 
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 8) {
@@ -709,7 +723,7 @@ static void s_help()
     //printf("\t%s wallet sign_file <wallet name> <cert index> <data file>\n\n", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
-    printf("\t%s cert create <cert name> <key type> [<key length>]\n\n", l_tool_appname);
+    printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
 
     printf(" * Dump cert data stored in <file path>\n");
     printf("\t%s cert dump <cert name>\n\n", l_tool_appname);
