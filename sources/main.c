@@ -205,6 +205,9 @@ int main( int argc, const char **argv )
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
+
+    dap_common_enable_cleaner_log(g_config);
+
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
         return -56;
