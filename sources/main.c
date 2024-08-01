@@ -153,19 +153,9 @@ int main( int argc, const char **argv )
         S_SetExceptionFilter( );
     #endif
 
-    int opt;
-    
-    while ((opt = getopt (argc, (char **)argv, "B:")) != -1) {
-        switch (opt)
-        {
-            case 'B':
-                g_sys_dir_path = optarg;
-                break;
-            default:
-                break;
-        }
-    }
-    optind = 1;
+    // get relative path to config
+    if (!dap_strcmp("-B" , argv[1]))
+        g_sys_dir_path = (char*)argv[2];
 
     if (!g_sys_dir_path) {
     #ifdef DAP_OS_WINDOWS

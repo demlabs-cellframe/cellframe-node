@@ -109,21 +109,13 @@ int main(int argc, const char **argv)
 #endif
 {
   dap_set_appname("cellframe-node");
-  int l_rel_path = 0;
 
-    int opt;
-    while ((opt = getopt (argc, (char **)argv, "B:")) != -1) {
-        switch (opt)
-        {
-            case 'B':
-                g_sys_dir_path = optarg;
-                l_rel_path = 1;
-                break;
-            default:
-                break;
-        }
+    // get relative path to config
+    int l_rel_path = 0;
+    if (!dap_strcmp("-B" , argv[1])) {
+        g_sys_dir_path = (char*)argv[2];
+        l_rel_path = 1;
     }
-    optind = 1;
 
     if (!g_sys_dir_path) {
     #ifdef DAP_OS_WINDOWS
