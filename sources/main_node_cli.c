@@ -64,7 +64,7 @@ int main(int argc, const char *argv[])
 
     // get relative path to config
     int l_rel_path = 0;
-    if (!dap_strcmp("-B" , argv[1])) {
+    if (argv[1] && argv[2] && !dap_strcmp("-B" , argv[1])) {
         g_sys_dir_path = (char*)argv[2];
         l_rel_path = 1;
     }
