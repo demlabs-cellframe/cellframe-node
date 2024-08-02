@@ -206,7 +206,17 @@ int main( int argc, const char **argv )
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
 
 
-    dap_common_enable_cleaner_log(g_config);
+    bool l_rotate_enabled = dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false);
+    if (l_rotate_enabled) {
+        int64_t l_timeout = dap_config_get_item_int64(g_config, "log", "rotate_timeout") * 60000;
+        int64_t l_int64_max_file_size = dap_config_get_item_int64(g_config, "log", "rotate_size");
+        log_it(L_NOTICE, "Cleaning of log files is enabled. Maximum log file size %ld MB. Re-check every %ld minutes.",
+               l_int64_max_file_size, l_timeout);
+        size_t l_size_max_file = (size_t)l_int64_max_file_size;
+        dap_common_enable_cleaner_log(l_timeout, &l_size_max_file);
+    } else {
+        log_it(L_DEBUG, "Log clearing disabled");
+    }
 
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
