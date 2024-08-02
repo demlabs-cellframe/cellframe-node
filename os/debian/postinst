@@ -40,6 +40,15 @@ if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
     echo "[!] Starting up cellframe-diagtool"
     systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
     systemctl start cellframe-diagtool || true
+
+    echo "[!] Starting up cellframe-tray"
+
+    if [ -d /run/user/$SUDO_UID ]; then
+        export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
+        echo "Use $XDG_RUNTIME_DIR as XDG_RUNTIME_DIR, for tray install"
+        su  $SUDO_USER -c "systemctl --user enable $DAP_PREFIX/share/cellframe-tray.service" || true
+        su  $SUDO_USER -c "systemctl --user start cellframe-tray.service" || true
+    fi
 fi
 
 if [ -e "$DAP_PREFIX/share/cellframe-updater.service" ]; then
