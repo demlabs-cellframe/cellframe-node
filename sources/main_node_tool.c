@@ -86,6 +86,7 @@ static inline int s_cert_rename(int argc, const char **argv) {
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
+static int s_cert_get_addr(int argc, const char **argv);
 
 struct options {
     char *cmd;
@@ -104,7 +105,8 @@ struct options {
 { "cert", {"rename"}, 1, s_cert_rename },
 { "cert", {"add_metadata"}, 1, s_cert_add_metadata },
 { "cert", {"sign"}, 1, s_cert_sign },
-{ "cert", {"pkey", "show"}, 2, s_cert_pkey_show }
+{ "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
+{"cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
 int main(int argc, const char **argv)
@@ -588,6 +590,20 @@ static int s_cert_pkey_show(int argc, const char **argv)
     return 0;
 }
 
+static int s_cert_get_addr(int argc, const char **argv) {
+    if (argc != 5) {
+        log_it( L_ERROR, "Wrong 'cert pkey show' command params\n");
+        exit(-900);
+    }
+    dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+    if (!l_cert) {
+        printf("Not found cert %s\n", argv[4]);
+        exit(-134);
+    }
+    dap_stream_node_addr_t l_addr = dap_stream_node_addr_from_cert(l_cert);
+    printf("%s\n", dap_stream_node_addr_to_str_static(l_addr));
+}
+
 /**
  * @brief s_init
  * @param argc
@@ -739,6 +755,9 @@ static void s_help()
 
     printf(" * Print hash of cert <cert name>\n");
     printf("\t%s cert pkey show <cert name>\n\n", l_tool_appname);
+
+    printf(" * Print addr of cert <cert name>\n");
+    printf("\t%s cert addr show <cert name>\n\n", l_tool_appname);
 
     printf(" * Add metadata item to <cert name>\n");
     printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n", l_tool_appname);
