@@ -69,7 +69,7 @@ network     subzero     default      off    #subzero is devnet, force-to disable
 config  cellframe-node  general                 auto_online         default     true
 config  cellframe-node  general                 debug_mode          default     false
 config  cellframe-node  server                  enabled             default     false
-config  cellframe-node  server                  listen_address      default     [127.0.0.1:8079]
+config  cellframe-node  server                  listen_address      default     [0.0.0.0:8079]
 config  cellframe-node  notify_server           listen_address      ensure     [127.0.0.1:8080]
 config  cellframe-node  bootstrap_balancer      http_server         ensure      true
 
@@ -101,6 +101,7 @@ config  mileena      general     node-role   default     full
 config  subzero      general     node-role   default     full
 
 config Backbone general seed_nodes_hosts ensure [0.root.scorpion.cellframe.net:8079,1.root.scorpion.cellframe.net:8079,2.root.scorpion.cellframe.net:8079,3.root.scorpion.cellframe.net:8079,4.root.scorpion.cellframe.net:8079]
+config Backbone general authorized_nodes_addrs ensure [FE39::A741::BCD1::1920,6F96::DAA6::2AF1::1004,7149::F58A::E7E2::A4BA,9DBE::6AC5::BFB0::5D8C,197A::C7D8::372D::6D64,F546::A2C3::B230::6068]
 
 config KelVPN general authorized_nodes_addrs ensure [4243::D90D::5B87::D579,6D8C::9224::5C12::8AD4,F546::A2C3::B230::6068]
 config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
