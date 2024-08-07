@@ -78,7 +78,7 @@ config cellframe-node  plugins          enabled          default     false
 
 # all os except win uses unix socket for cli
 if ${HOST_OS} != Windows
-    config cellframe-node  cli-server    listen-path          ensure    [${CONFIGS_PATH}/var/run/node_cli]
+    config cellframe-node  cli-server    listen-path          ensure    [../var/run/node_cli]
 endif
 
 # windows use tcp/ip for conserver
@@ -91,7 +91,7 @@ if Linux != ${HOST_OS}
     config cellframe-node  plugins       enabled          ensure     false
 endif
 
-config cellframe-node  plugins       py_path          ensure     ${CONFIGS_PATH}/var/lib/plugins
+config cellframe-node  plugins       py_path          ensure     ../var/lib/plugins
 
 config  Backbone     general     node-role   default     full
 config  KelVPN       general     node-role   default     full
