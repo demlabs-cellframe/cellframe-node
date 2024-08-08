@@ -142,11 +142,15 @@ if(UNIX)
     endif()
 
     if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+
+        if (DAP_CRYPTO_XKCP_PLAINC)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
+        endif()
         if(ADD_UPDATER)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
         elseif(BUILD_WITH_TPS_TEST)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tps" )
-        else()
+        elseif()
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
         endif()
     else() #to use -updtr postfix in rwd build without rwd
