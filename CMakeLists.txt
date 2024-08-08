@@ -54,6 +54,8 @@ option(ADD_UPDATER OFF)
 #    endif()
 #endif()
 
+option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
+
 if(LINUX)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
@@ -390,11 +392,7 @@ else()
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     
     if (BUILD_DIAGTOOL)
-        if(WIN32)
-            INSTALL(TARGETS cellframe-diagtool.exe DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-        else()
             INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-        endif()
     endif()
 
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )

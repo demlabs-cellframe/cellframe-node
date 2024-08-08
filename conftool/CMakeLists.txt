@@ -4,6 +4,8 @@ include(FetchContent)
 
 project(cellframe-node-config)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${PROJECT_NAME} ./main.cpp 
                                 ./commands/abstractcommand.cpp 
