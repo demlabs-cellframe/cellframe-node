@@ -45,7 +45,7 @@
 #define log_it(_log_level, string, ...) printf(string, ##__VA_ARGS__)
 #endif
 
-static int s_init( int argc, const char * argv[] );
+static int s_init();
 static void s_help( );
 static int s_is_file_available (char *l_path, const char *name, const char *ext);
 static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
@@ -86,6 +86,7 @@ static inline int s_cert_rename(int argc, const char **argv) {
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
+static int s_cert_get_addr(int argc, const char **argv);
 
 struct options {
     char *cmd;
@@ -104,13 +105,35 @@ struct options {
 { "cert", {"rename"}, 1, s_cert_rename },
 { "cert", {"add_metadata"}, 1, s_cert_add_metadata },
 { "cert", {"sign"}, 1, s_cert_sign },
-{ "cert", {"pkey", "show"}, 2, s_cert_pkey_show }
+{ "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
+{"cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
 int main(int argc, const char **argv)
 #endif
 {
-  int ret = s_init( argc, argv );
+  dap_set_appname("cellframe-node");
+
+    // get relative path to config
+    int l_rel_path = 0;
+    if (argv[1] && argv[2] && !dap_strcmp("-B" , argv[1])) {
+        g_sys_dir_path = (char*)argv[2];
+        l_rel_path = 1;
+    }
+
+    if (!g_sys_dir_path) {
+    #ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    #elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    #elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+    #elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    #endif
+    }
+
+  int ret = s_init();
 
   if ( ret ) {
     log_it( L_ERROR, "Can't init modules" );
@@ -127,7 +150,7 @@ int main(int argc, const char **argv)
   bool l_find_cmd = false;
   bool l_find_subcmd = true;
   for (size_t i = 0; i < l_size; i++) {
-      int argv_index = 1;
+      int argv_index = 1 + l_rel_path*2;
       if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
           l_find_cmd = true;
           l_find_subcmd = false;
@@ -143,7 +166,7 @@ int main(int argc, const char **argv)
               }
           }
           if (match) {
-              int l_ret = s_opts[i].handler(argc, argv);
+              int l_ret = s_opts[i].handler(l_rel_path ? argc-2 : argc, l_rel_path ? argv+2 : argv);
               return l_ret;
           }
       }
@@ -588,33 +611,29 @@ static int s_cert_pkey_show(int argc, const char **argv)
     return 0;
 }
 
+static int s_cert_get_addr(int argc, const char **argv) {
+    if (argc != 5) {
+        log_it( L_ERROR, "Wrong 'cert pkey show' command params\n");
+        exit(-900);
+    }
+    dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+    if (!l_cert) {
+        printf("Not found cert %s\n", argv[4]);
+        exit(-134);
+    }
+    dap_stream_node_addr_t l_addr = dap_stream_node_addr_from_cert(l_cert);
+    printf("%s\n", dap_stream_node_addr_to_str_static(l_addr));
+    return 0;
+}
+
 /**
  * @brief s_init
  * @param argc
  * @param argv
  * @return
  */
-static int s_init( int argc, const char **argv )
+static int s_init()
 {
-    UNUSED(argc);
-    UNUSED(argv);
-    dap_set_appname("cellframe-node");
-#ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-#elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-#endif
     if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
         printf("Fatal Error: Can't init common functions module");
         return -2;
@@ -626,13 +645,15 @@ static int s_init( int argc, const char **argv )
     g_config = dap_config_open(dap_get_appname());
     if (g_config) {
         uint16_t l_ca_folders_size = 0;
-        char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
+        char **l_ca_folders = dap_config_get_item_str_path_array(g_config, "resources", "ca_folders", &l_ca_folders_size);
         dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);
+        dap_config_get_item_str_path_array_free(l_ca_folders, &l_ca_folders_size);
         int t = dap_strlen(s_system_ca_dir);
         if (s_system_ca_dir[t - 1] == '/')
             s_system_ca_dir[t-1] = '\0';
-        const char *l_wallet_folder = dap_config_get_item_str(g_config, "resources", "wallets_path");
+        char *l_wallet_folder = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", NULL);
         dap_stpcpy(s_system_wallet_dir, l_wallet_folder);
+        DAP_DEL_Z(l_wallet_folder);
     } else {
         dap_stpcpy(s_system_ca_dir, "./");
         dap_stpcpy(s_system_wallet_dir, "./");
@@ -739,6 +760,9 @@ static void s_help()
 
     printf(" * Print hash of cert <cert name>\n");
     printf("\t%s cert pkey show <cert name>\n\n", l_tool_appname);
+
+    printf(" * Print addr of cert <cert name>\n");
+    printf("\t%s cert addr show <cert name>\n\n", l_tool_appname);
 
     printf(" * Add metadata item to <cert name>\n");
     printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n", l_tool_appname);
