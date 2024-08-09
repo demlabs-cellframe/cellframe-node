@@ -146,6 +146,11 @@ if(UNIX)
         if (DAP_CRYPTO_XKCP_PLAINC)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
         endif()
+
+        if (DAP_CRYPTO_XKCP_REFERENCE)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-ref" )
+        endif()
+        
         if(ADD_UPDATER)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-updtr" )
         elseif(BUILD_WITH_TPS_TEST)
