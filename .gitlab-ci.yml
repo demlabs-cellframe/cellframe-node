@@ -149,7 +149,7 @@ amd64:linux.rwd.noopt:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DAP_CRYPTO_XKCP_REFERENCE=ON
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DDAP_CRYPTO_XKCP_REFERENCE=ON
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
