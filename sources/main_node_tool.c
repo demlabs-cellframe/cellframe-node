@@ -642,7 +642,7 @@ static int s_init( int argc, const char **argv )
     g_config = dap_config_open(dap_get_appname());
     if (g_config) {
         uint16_t l_ca_folders_size = 0;
-        char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
+        const char **l_ca_folders = dap_config_get_array_str(g_config, "resources", "ca_folders", &l_ca_folders_size);
         dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);
         int t = dap_strlen(s_system_ca_dir);
         if (s_system_ca_dir[t - 1] == '/')
