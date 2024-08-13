@@ -56,11 +56,11 @@ var DB_DRIVER = mdbx
 
 fromtemplate cellframe-node default
 
-network     Backbone    default     off
-network     KelVPN      default     off 
-network     riemann     default     on
-network     raiden      default     on
-network     mileena     default     on
+network     Backbone    default     on
+network     KelVPN      default     on 
+network     riemann     default     off
+network     raiden      default     off
+network     mileena     default     off
 network     subzero     default      off    #subzero is devnet, force-to disable it 
 
 # config commands works with cellframe-node / network/.cfg|.cfg dis files, not templated one
