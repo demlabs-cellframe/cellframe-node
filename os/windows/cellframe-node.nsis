@@ -72,7 +72,7 @@ Unicode true
 
 
 Name 	"${APP_NAME}"
-OutFile	"${APP_NAME}-${APP_VERSION}-installer.exe"
+OutFile	"${APP_NAME}-${APP_VERSION_VISUAL}-installer.exe"
 BrandingText "${APP_NAME} by ${PUBLISHER}"
 
 Var CommonDocuments
