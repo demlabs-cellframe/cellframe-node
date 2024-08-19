@@ -62,8 +62,8 @@ option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV OFF)
-    set(SUPPORT_PYTHON_PLUGINS OFF)
+    set(BUILD_WITH_PYTHON_ENV ON)
+    set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
@@ -153,6 +153,10 @@ if(UNIX)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tps" )
         else()
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
+        endif()
+
+        if (CELLFRAME_NO_OPTIMIZATION)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
         endif()
     else() #to use -updtr postfix in rwd build without rwd
         if(ADD_UPDATER)
