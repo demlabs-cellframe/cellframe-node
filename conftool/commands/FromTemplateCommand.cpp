@@ -1,9 +1,9 @@
-#include "fromtemplatecommand.h"
+#include "FromTemplateCommand.h"
 #include <stdexcept>
 #include <filesystem>
 
 #include "../build_config.h"
-#include "../config/cellframeconfigfile.h"
+#include "../config/CellframeConfigFile.h"
 
 namespace fs = std::filesystem;
 

@@ -1,4 +1,4 @@
-#include "cellframeconfigfile.h"
+#include "CellframeConfigFile.h"
 
 #include <any>
 #include <chrono>
@@ -23,15 +23,15 @@ struct IPlaceholder {
 };
 
 class ArgCountError : public std::runtime_error {
-    public:
+public:
     explicit ArgCountError(const std::string &msg) : std::runtime_error(msg) {}
     ArgCountError() : std::runtime_error("Wrong number of arguments provided") {}
 };
 
 template <typename... Args>
 class Placeholder : public IPlaceholder {
-    public:
-        using FuncType = std::function<std::string(Args...)>;
+public:
+    using FuncType = std::function<std::string(Args...)>;
 
     Placeholder(std::string p, FuncType r) : pattern_(std::move(p)), resolver_(std::move(r)) {}
 
@@ -42,7 +42,7 @@ class Placeholder : public IPlaceholder {
         return invoke(args, std::index_sequence_for<Args...>{});
     }
 
-    private:
+private:
     std::string pattern_;
     FuncType resolver_;
 
@@ -53,15 +53,15 @@ class Placeholder : public IPlaceholder {
 };
 
 class SubstitutionError : public std::runtime_error {
-    public:
-        explicit SubstitutionError(const std::string &msg): std::runtime_error(msg) {}
-        SubstitutionError() : std::runtime_error("Error executing the replacing of the placeholder") {
+public:
+    explicit SubstitutionError(const std::string &msg): std::runtime_error(msg) {}
+    SubstitutionError() : std::runtime_error("Error executing the replacing of the placeholder") {
     }
 };
 
 class PlaceholderManager {
-    public:
-        typedef std::string(EscapingFnctTp)(const std::string &str);
+public:
+    typedef std::string(EscapingFnctTp)(const std::string &str);
 
     void addPlaceholder(const std::shared_ptr<IPlaceholder> &placeholder) {
         placeholders_[placeholder->getPattern()] = placeholder;
@@ -80,45 +80,69 @@ class PlaceholderManager {
         return input;
     }
 
-    private:
-        std::map<std::string, std::shared_ptr<IPlaceholder>> placeholders_;
+private:
+    std::map<std::string, std::shared_ptr<IPlaceholder>> placeholders_;
 
     void replaceEachPh(std::string &input,
-                        const std::map<std::string, std::vector<std::any>> &args,
-                        const std::shared_ptr<IPlaceholder> &ph) {
-    static const std::vector<std::any> empty{};
+                       const std::map<std::string, std::vector<std::any>> &args,
+                       const std::shared_ptr<IPlaceholder> &ph) {
+        static const std::vector<std::any> empty{};
 
-    const std::string &phStr = ph->getPattern();
-    std::regex regex(escapingFnct_(phStr));
-    auto it = args.find(phStr);
-    const std::vector<std::any> &vArgs = it != args.end() ? it->second : empty;
-    std::string fmt;
+        const std::string &phStr = ph->getPattern();
+        std::regex regex(escapingFnct_(phStr));
+        auto it = args.find(phStr);
+        const std::vector<std::any> &vArgs = it != args.end() ? it->second : empty;
+        std::string fmt;
 
-    try {
-        fmt = ph->resolve(vArgs);
         try {
-            input = std::regex_replace(input, regex, fmt);
-        } catch (...) {
-        throw SubstitutionError();
+            fmt = ph->resolve(vArgs);
+            try {
+                input = std::regex_replace(input, regex, fmt);
+            } catch (...) {
+                throw SubstitutionError();
+            }
+        } catch (const ArgCountError &) {
         }
-    } catch (const ArgCountError &) {
     }
-}
 
-    private:
-        std::function<EscapingFnctTp> escapingFnct_{utils::escape};
+private:
+    std::function<EscapingFnctTp> escapingFnct_{utils::escape};
 };
 
 
 inline std::string escape(const std::string &str) {
-  std::regex exp("\\{");
-  std::string res = std::regex_replace(str, exp, "\\{");
-  exp = std::regex("\\}");
-  res = std::regex_replace(res, exp, "\\}");
-  return res;
+    std::regex exp("\\{");
+    std::string res = std::regex_replace(str, exp, "\\{");
+    exp = std::regex("\\}");
+    res = std::regex_replace(res, exp, "\\}");
+    return res;
 }
 
 }
+
+fs::path get_config_path(EPathConfigType pathType)
+{
+    fs::path resultPath;
+    switch (pathType)
+    {
+    case CFG_NODE:
+        resultPath = fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs";
+        break;
+    case CFG_NODE_TEMPLATE:
+        resultPath = fs::path{variable_storage["CONFIGS_PATH"]}/"etc";
+        break;
+    case CFG_NETWORK:
+        resultPath = fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/";
+        break;
+    case CFG_NETWORK_TEMPLATE:
+        resultPath = fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs"/"network/";
+        break;                    
+    default:
+        break;
+    }
+    return resultPath;
+}
+
 fs::path config_path(const std::string &name, ENetworkConfigType type, ENetworkConfigState state) {
     if (name == "cellframe-node")
     {   if (state == CFG_TEMPLATE)
@@ -127,16 +151,16 @@ fs::path config_path(const std::string &name, ENetworkConfigType type, ENetworkC
             return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"cellframe-node.cfg";
     }
     switch (type)
-    { 
-        case CFG_GENERAL:
-            if (state == CFG_ON) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg");        
-            if (state == CFG_OFF) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg.dis");
-            if (state == CFG_TEMPLATE) return fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs"/"network/"/(name + ".cfg");
-            break;
-        case CFG_MAINCHAIN:
-            return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"main.cfg";        
-        case CFG_ZEROCHAIN:
-            return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"zerochain.cfg";
+    {
+    case CFG_GENERAL:
+        if (state == CFG_ON) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg");
+        if (state == CFG_OFF) return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/(name + ".cfg.dis");
+        if (state == CFG_TEMPLATE) return fs::path{variable_storage["CONFIGS_PATH"]}/"share"/"configs"/"network/"/(name + ".cfg");
+        break;
+    case CFG_MAINCHAIN:
+        return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"main.cfg";
+    case CFG_ZEROCHAIN:
+        return fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"network/"/name/"zerochain.cfg";
 
     }
     throw std::invalid_argument("cfg for such params cant be detectd");
@@ -191,7 +215,7 @@ cfg_pair parse_param_value(const std::string line)
     trim(tokens[0]);
     if (tokens.size() < 2)
         tokens.push_back("");
-        
+
     return {tokens[0], tokens[1]};
 }
 
@@ -233,10 +257,10 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
         if (res.param == param)
         {
             if (flags & F_VERBOSE)  std::cout << "[VC] in group [" << group_name<<"] found "
-                                                << res.param 
-                                                << ":" <<res.val 
-                                                << " at line " 
-                                                << current_line << std::endl;
+                          << res.param
+                          << ":" <<res.val
+                          << " at line "
+                          << current_line << std::endl;
             if (group_exists) *group_exists = group_found;
             if (value) *value = res.val;
             if (line_no) *line_no = current_line;
@@ -255,8 +279,8 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
 
 std::string CellframeConfigurationFile::set(const std::string & group, const std::string & param, const std::string &value)
 {
-    if (flags & F_VERBOSE)  std::cout << "[VC] set [" 
-                            << group << "] "<<param<<"="<<value << std::endl;
+    if (flags & F_VERBOSE)  std::cout << "[VC] set ["
+                  << group << "] "<<param<<"="<<value << std::endl;
 
     int line_set_to;
     bool group_exists = false;
@@ -313,7 +337,7 @@ std::string substitute_variables(const std::string &string)
     utils::PlaceholderManager pman;
     for (auto var: variable_storage){
         pman.addPlaceholder(std::make_shared<utils::Placeholder<>>(
-        std::string("\\${"+var.first+"}"), [=] { return var.second; }));
+            std::string("\\${"+var.first+"}"), [=] { return var.second; }));
     }
     return pman.replacePlaceholders(string);
 }

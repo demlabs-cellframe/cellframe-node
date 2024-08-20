@@ -8,14 +8,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${PROJECT_NAME} ./main.cpp 
-                                ./commands/abstractcommand.cpp 
-                                ./commands/networkcommand.cpp
-                                ./commands/conditioncommand.cpp
-                                ./commands/storagecommand.cpp
-                                ./commands/configcommand.cpp
-                                ./commands/servicecommand.cpp
-                                ./commands/fromtemplatecommand.cpp
-                                ./config/cellframeconfigfile.cpp
+                                ./commands/AbstractCommand.cpp 
+                                ./commands/NetworkCommand.cpp
+                                ./commands/ConditionCommand.cpp
+                                ./commands/StorageCommand.cpp
+                                ./commands/ConfigCommand.cpp
+                                ./commands/ServiceCommand.cpp
+                                ./commands/FromTemplateCommand.cpp
+                                ./commands/NetworkListCommand.cpp
+                                ./config/CellframeConfigFile.cpp
                                 ./service/service_win.cpp
                                 ./service/service_linux.cpp)
 
