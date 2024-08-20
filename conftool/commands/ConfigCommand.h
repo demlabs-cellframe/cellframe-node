@@ -1,5 +1,5 @@
 #pragma once
-#include "abstractcommand.h"
+#include "AbstractCommand.h"
 
 class CConfigCommand : public CAbstractScriptCommand {
     public:
