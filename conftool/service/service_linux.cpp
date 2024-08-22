@@ -1,7 +1,7 @@
  #ifdef __linux__ 
 
 #include "service.h"
-#include "../commands/abstractcommand.h"
+#include "../commands/AbstractCommand.h"
 
 bool CServiceControl::enable(){
     std::string cmd = "systemctl enable " + (std::filesystem::path{variable_storage["CONFIGS_PATH"]}/"share"/"cellframe-node.service > /dev/null").string();

@@ -33,13 +33,18 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
+option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." OFF)
+
+if( CELLFRAME_NO_OPTIMIZATION )
+    set(DAP_CRYPTO_XKCP_PLAINC ON)
+endif()
+
 include (dap-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
-
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
@@ -148,6 +153,10 @@ if(UNIX)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tps" )
         else()
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
+        endif()
+
+        if (CELLFRAME_NO_OPTIMIZATION)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
         endif()
     else() #to use -updtr postfix in rwd build without rwd
         if(ADD_UPDATER)
