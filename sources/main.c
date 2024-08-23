@@ -152,8 +152,10 @@ int main( int argc, const char **argv )
     #endif
 
     // get relative path to config
+    #if !DAP_OS_ANDROID
     if (argv[1] && argv[2] &&!dap_strcmp("-B" , argv[1]))
         g_sys_dir_path = (char*)argv[2];
+    #endif 
 
     if (!g_sys_dir_path) {
     #ifdef DAP_OS_WINDOWS
@@ -199,7 +201,10 @@ int main( int argc, const char **argv )
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
-    parse_args( argc, argv );
+    
+    #if !DAP_OS_ANDROID
+        parse_args( argc, argv );
+    #endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -235,10 +240,13 @@ int main( int argc, const char **argv )
         return -5;
     }
 
+    #if !DAP_OS_ANDROID
     if ( dap_http_folder_init() != 0 ){
         log_it( L_CRITICAL, "Can't init http server module" );
         return -55;
     }
+    #endif
+    
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
@@ -345,10 +353,11 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
-    if( dap_chain_net_srv_vpn_pre_init() ){
-        log_it(L_ERROR, "Can't pre-init vpn service");
-    }
-
+    #if !DAP_OS_ANDROID
+        if( dap_chain_net_srv_vpn_pre_init() ){
+            log_it(L_ERROR, "Can't pre-init vpn service");
+        }
+    #endif()
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -391,13 +400,14 @@ int main( int argc, const char **argv )
         }
 
         // Built in WWW server
-
-        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
-                                dap_config_get_item_str(g_config,
-                                                            "resources",
-                                                            "www_root") );
-        }
+        #if !DAP_OS_ANDROID
+            if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+                    dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
+                                    dap_config_get_item_str(g_config,
+                                                                "resources",
+                                                                "www_root") );
+            }
+        #endif
         dap_server_set_default(l_server);
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
 
@@ -482,7 +492,9 @@ int main( int argc, const char **argv )
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
-    dap_http_folder_deinit();
+    #if !DAP_OS_ANDROID
+        dap_http_folder_deinit();
+    #endif
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();

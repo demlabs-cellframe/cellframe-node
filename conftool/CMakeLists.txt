@@ -23,7 +23,7 @@ add_executable(${PROJECT_NAME} ./main.cpp
 target_link_libraries(cellframe-node-config
 )
 
-if (LINUX OR WIN32)
+if (LINUX OR WIN32 )
   target_link_libraries(cellframe-node-config PRIVATE stdc++fs )
 endif()
 
@@ -40,6 +40,10 @@ endif()
 
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+#if (ANDROID)
+#  add_definitions("-DANDROID_STL=c++_static")
+#endif()
 
 
 IF (WIN32)

@@ -38,7 +38,7 @@
 #ifdef DAP_OS_WINDOWS
 #include "registry.h"
 #elif defined DAP_OS_ANDROID
-#include "cellframe_node.h"
+
 #include <android/log.h>
 #include <jni.h>
 #endif
@@ -48,11 +48,9 @@
 static dap_app_cli_connect_param_t *cparam;
 static const char *listen_socket = NULL;
 
-#ifdef DAP_OS_ANDROID
-JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeCliMain(int argc, const char *argv[])
-#else
+#if !DAP_OS_ANDROID
 int main(int argc, const char *argv[])
-#endif
+
 {
     dap_set_appname(NODE_NAME "-cli");
 #ifdef DAP_OS_WINDOWS
@@ -110,4 +108,4 @@ int main(int argc, const char *argv[])
     }
     return res;
 }
-
+#endif
