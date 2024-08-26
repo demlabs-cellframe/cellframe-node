@@ -25,7 +25,7 @@ command param1 param2 param3 ....
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "commands/abstractcommand.h"
+#include "commands/AbstractCommand.h"
 #include <stdexcept>
 
 
@@ -183,8 +183,10 @@ void print_help()
     std::cout << "cellframe-node-config -e | --exec <command> [and <command> [and <command>]...]" << std::endl;
     std::cout << "\t execute provided commands. "  << std::endl<< std::endl;
     std::cout << "Allowed commands:"  << std::endl;
-    std::cout << "\t network <netname> ensure on|off"  << std::endl;
+    std::cout << "\tnetwork <netname> ensure on|off"  << std::endl;
     std::cout << "\t\t enable | disable <netname> network"  << std::endl;
+    std::cout << "\tnet_list all|on|off"  << std::endl;
+    std::cout << "\t\t on - active networks. off - not active networks. all or nothing - all network"  << std::endl;
     std::cout << "\tconfig  <configname>  <section>  <param> ensure  <value>"  << std::endl;
     std::cout << "\t\t set a parameter <param> in section <section> in config <configname> to <value>"  << std::endl;
     std::cout << "\t\t Possible configs: \"cellframe-node\",  \"<netname>\""  << std::endl;

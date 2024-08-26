@@ -72,7 +72,7 @@ Unicode true
 
 
 Name 	"${APP_NAME}"
-OutFile	"${APP_NAME}-${APP_VERSION}-installer.exe"
+OutFile	"${APP_NAME}-${APP_VERSION_VISUAL}-installer.exe"
 BrandingText "${APP_NAME} by ${PUBLISHER}"
 
 Var CommonDocuments
@@ -357,6 +357,7 @@ Section "Uninstall"
 	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
 	Delete "$INSTDIR\${NODE_NAME}-config.exe"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
+	DeleteRegKey HKLM "Software\${APP_NAME}"
 	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"
 	;RMDir "$INSTDIR"
