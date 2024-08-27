@@ -86,7 +86,7 @@ stages:
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
 
-amd64:windows.release:
+amd64:windows.rwd:
     extends: .build
     image: demlabs/windows/amd64:qt5
     before_script: 
@@ -94,10 +94,10 @@ amd64:windows.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows release -DBUILD_DIAGTOOL=ON
-      - ./prod_build/pack.sh --target windows release 
+      - ./prod_build/build.sh --target windows rwd -DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
-      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_release/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_rwd/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
 
 
 amd64:macos.release:
