@@ -107,4 +107,4 @@ config KelVPN general authorized_nodes_addrs ensure [4243::D90D::5B87::D579,6D8C
 config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
 
 config riemann general authorized_nodes_addrs ensure [D420::C2A9::0637::040C,AC33::9A06::AAD8::B288,5DA8::C171::E316::C923,72F9::511B::616A::A46F,A2C2::0CD4::38BA::2E8C,A983::7C3F::7FD4::4950,D1E4::F837::F42C::BFEF]
-config raiden general authorized_nodes_addrs ensure [BCA3::B097::DCDC::CB2B, 038E::0C9B::A3E8::C533, CC88::3F68::5313::1577, 72F9::511B::616A::A46F, A2C2::0CD4::38BA::2E8C, A983::7C3F::7FD4::4950, D1E4::F837::F42C::BFEF, B6E5::1B78::847A::F026]
+config raiden general authorized_nodes_addrs ensure [BCA3::B097::DCDC::CB2B,038E::0C9B::A3E8::C533,CC88::3F68::5313::1577,72F9::511B::616A::A46F,A2C2::0CD4::38BA::2E8C,A983::7C3F::7FD4::4950,D1E4::F837::F42C::BFEF,B6E5::1B78::847A::F026]
