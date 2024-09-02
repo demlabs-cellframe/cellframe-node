@@ -2,25 +2,51 @@
 
 case "$1" in
 	remove|purge|abort-install|abort-upgrade)
-		echo "[*] Stopping cellframe-node.service"
-		systemctl stop cellframe-node || true
-		echo "[*] Disabling cellframe-node.service"
-		systemctl disable cellframe-node || true
+		echo "[*] Stopping cellframe-node and services..."
+		systemctl stop cellframe-node.service || true
+		systemctl stop cellframe-diagtool.service || true
+		systemctl stop cellframe-updater.service || true
+
+		echo "[*] Disabling cellframe-node and services..."
+		systemctl disable cellframe-node.service || true
+		systemctl disable cellframe-diagtool.service || true
+		systemctl disable cellframe-updater.service || true
+
+		if [ -d /run/user/$SUDO_UID ]; then
+      		export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
+        	echo "Use $XDG_RUNTIME_DIR as XDG_RUNTIME_DIR, for tray install"
+        	su  $SUDO_USER -c "systemctl --user stop cellframe-tray.service" || true
+        	su  $SUDO_USER -c "systemctl --user disable cellframe-tray.service" || true
+    	fi	
 		;;
 
 	disappear)
 		;;
 
 	upgrade)
-		echo "[*] Stopping cellframe-node.service"
-        systemctl stop cellframe-node || true
-		echo "[*] Stopping cellframe-diagtool.service"
-        systemctl stop cellframe-diagtool || true
+		echo "[*] Stopping cellframe-node and services..."
+        systemctl stop cellframe-node.service || true
+		systemctl stop cellframe-diagtool.service || true
+        systemctl stop cellframe-updater.service || true
+		if [ -d /run/user/$SUDO_UID ]; then
+      		export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
+        	echo "Use $XDG_RUNTIME_DIR as XDG_RUNTIME_DIR, for tray install"
+        	su  $SUDO_USER -c "systemctl --user stop cellframe-tray.service" || true
+        	su  $SUDO_USER -c "systemctl --user disable cellframe-tray.service" || true
+    	fi	
 		;;
 
 	failed-upgrade)
-		echo "[*] Stopping cellframe-node.service"
-        systemctl stop cellframe-node || true
+		echo "[*] Stopping cellframe-node and services"
+        systemctl stop cellframe-node.service || true
+		systemctl stop cellframe-diagtool.service || true
+        systemctl stop cellframe-updater.service || true
+		if [ -d /run/user/$SUDO_UID ]; then
+      		export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
+        	echo "Use $XDG_RUNTIME_DIR as XDG_RUNTIME_DIR, for tray install"
+        	su  $SUDO_USER -c "systemctl --user stop cellframe-tray.service" || true
+        	su  $SUDO_USER -c "systemctl --user disable cellframe-tray.service" || true
+    	fi	
         ;;
 
 	*)

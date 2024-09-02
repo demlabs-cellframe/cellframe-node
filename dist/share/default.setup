@@ -1,0 +1,110 @@
+# Cellframe-node default setup files
+
+# commands: 
+# var: saves VALUE to VARIABLE. Access to VARIABLE is possible in _value_ parts of commands throug ${VARIABLE}.   
+#   var VARIABLE=VALUE  
+#   var VAR_COPY=${VARIABLE}
+# Predefined variables:
+#   ${HOST_OS} -> Linux | Windows | Macos
+#   ${HOSTNAME} -> hostname of a machine
+#   ${CONFIGS_PATH} -> /opt/cellframe-node/ for linux, 
+#                      Common Documents (usually C:\Users\Public\Documents\cellframe-node\) for Windows
+#
+# fromtemplate: create and populate config from "share/configs" templates  
+#   fromtemplate <configname> <defaut|ensure>
+#       fromtemplate cellframe-node default
+#       fromtemplate riemann ensure
+#       
+#   operation "default" - check if config already exists, and do nothing if it is.
+#   operation "ensure" -  re-create config from template even if it exists.  
+#
+# network: manipulate network config state
+#   network <netname> <default|ensure> <on|off>  
+#       network     Backbone    ensure     off
+#       network     riemann     default     on
+#   
+#   Puts a confing in a desired state: <netname.cfg> for "on" and <netname.cfg.dis> for "off"
+#   operation "default" - check if config already exists, and do nothing if it is. If config not exists - like "fromtemplate" command.
+#   operation "ensure" -  check if config already exists, and swith it do desired state. If config not exists - like "fromtemplate" command.
+#
+# config: manipulate configuration files
+#   config <configname> <section> <param> <default|ensure> VALUE
+#
+#   config  cellframe-node  server      enabled  default  false   
+#   config  cellframe-node  global_db   driver   default  ${DB_DRIVER}
+#   config  riemann  general   newparam   ensure  mynewval
+#   
+#   operation "default" - check if value already set, and do nothing if it is. Set value otherwise.
+#   operation "ensure" -  set a value to config no matter what.
+#
+# if: conditions
+#   if ${VAR1}==${VAR2}
+#       #do somthin
+#   endif
+#  
+# service enable: enable cellframe-node as system-service
+# service disable: disable cellframe-node as system-service
+# service status:  get status cellframe-node as system-service
+# service start:    run cellframe-node as system-service
+# service stop:     stop cellframe-node as system-service
+# service restart #stop + start
+#
+
+# Setup Script
+
+var DB_DRIVER = mdbx
+
+fromtemplate cellframe-node default
+
+network     Backbone    default     on
+network     KelVPN      default     on 
+network     riemann     default     off
+network     raiden      default     off
+network     mileena     default     off
+network     subzero     default      off    #subzero is devnet, force-to disable it 
+
+# config commands works with cellframe-node / network/.cfg|.cfg dis files, not templated one
+# all configs at this stage should be initialized by "network" & "fromtemplate" commands
+
+config  cellframe-node  general                 auto_online         default     true
+config  cellframe-node  general                 debug_mode          default     false
+config  cellframe-node  server                  enabled             default     false
+config  cellframe-node  server                  listen_address      default     [0.0.0.0:8079]
+config  cellframe-node  notify_server           listen_address      ensure     [127.0.0.1:8080]
+config  cellframe-node  bootstrap_balancer      http_server         ensure      true
+
+config cellframe-node  global_db        driver           default     ${DB_DRIVER}
+config cellframe-node  plugins          enabled          default     false
+
+# all os except win uses unix socket for cli
+if ${HOST_OS} != Windows
+    config cellframe-node  cli-server    listen-path          ensure    [../var/run/node_cli]
+endif
+
+# windows use tcp/ip for conserver
+if ${HOST_OS} == Windows
+    config cellframe-node  cli-server    listen-address          ensure    [127.0.0.1:12345]
+endif
+
+ 
+if Linux != ${HOST_OS}
+    config cellframe-node  plugins       enabled          ensure     false
+endif
+
+config cellframe-node  plugins       py_path          ensure      ${CONFIGS_PATH}/var/lib/plugins
+
+config  Backbone     general     node-role   default     full
+config  KelVPN       general     node-role   default     full
+config  raiden       general     node-role   default     full
+config  riemann      general     node-role   default     full
+config  mileena      general     node-role   default     full
+config  subzero      general     node-role   default     full
+
+config Backbone general seed_nodes_hosts ensure [0.root.scorpion.cellframe.net:8079,1.root.scorpion.cellframe.net:8079,2.root.scorpion.cellframe.net:8079,3.root.scorpion.cellframe.net:8079,4.root.scorpion.cellframe.net:8079]
+config Backbone general authorized_nodes_addrs ensure [FE39::A741::BCD1::1920,6F96::DAA6::2AF1::1004,7149::F58A::E7E2::A4BA,9DBE::6AC5::BFB0::5D8C,197A::C7D8::372D::6D64,F546::A2C3::B230::6068,3168::6ED3::6B53::9A21,4B4D::8DB3::0BDC::4209,C35A::748F::11FC::F05D,73BC::A885::D21E::01CC,1B98::8F04::5822::87E9]
+
+config KelVPN general authorized_nodes_addrs ensure [4243::D90D::5B87::D579,6D8C::9224::5C12::8AD4,F546::A2C3::B230::6068,3168::6ED3::6B53::9A21,4B4D::8DB3::0BDC::4209,C35A::748F::11FC::F05D,73BC::A885::D21E::01CC,1B98::8F04::5822::87E9]
+config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
+
+config riemann general authorized_nodes_addrs ensure [D420::C2A9::0637::040C,AC33::9A06::AAD8::B288,5DA8::C171::E316::C923,72F9::511B::616A::A46F,A2C2::0CD4::38BA::2E8C,A983::7C3F::7FD4::4950,D1E4::F837::F42C::BFEF]
+config raiden general authorized_nodes_addrs ensure [BCA3::B097::DCDC::CB2B,038E::0C9B::A3E8::C533,CC88::3F68::5313::1577,72F9::511B::616A::A46F,A2C2::0CD4::38BA::2E8C,A983::7C3F::7FD4::4950,D1E4::F837::F42C::BFEF,B6E5::1B78::847A::F026]

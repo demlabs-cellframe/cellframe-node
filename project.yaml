@@ -9,7 +9,9 @@ build_dependencies:
     - 'libffi-dev'
     - 'file'
     - 'python3-dev'
-    
+    - 'curl'
+    - 'jq'
+    - 'xsltproc'
 
 deploy_dependencies:
   deb:

@@ -23,7 +23,7 @@ To successfully complete of the build, you need to have the following packages t
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils 
+sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils xsltproc
 ```
 
 #### MacOS Prerequsites 
@@ -57,7 +57,7 @@ Get into directory with cellframe-node and execute the following commands
 As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
 
 #### Build cellframe-node packages for MacOS
-Right now you can just type ```make install``` and it will install all the files in your system at /Users/<your username>/Applications/CellFrame.app
+Right now you can just type ```make install``` and it will install all the files in your system at /Applications/CellFrameNode.app
 
 #### Build cellframe-node package for Linux
 Use the following command ```cpack``` from the build directory to create cellframe-node installation package:

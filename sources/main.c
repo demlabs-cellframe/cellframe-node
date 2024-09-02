@@ -78,11 +78,8 @@
 #include "dap_chain_wallet.h"
 
 #include "dap_chain_cs_blocks.h"
-#include "dap_chain_cs_block_poa.h"
-#include "dap_chain_cs_block_pos.h"
 #include "dap_chain_cs_dag.h"
 #include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_dag_pos.h"
 #include "dap_chain_cs_none.h"
 #include "dap_chain_cs_esbocs.h"
 
@@ -91,8 +88,6 @@
 
 #include "dap_chain_net.h"
 #include "dap_chain_net_srv.h"
-#include "dap_chain_net_srv_app.h"
-#include "dap_chain_net_srv_datum.h"
 #include "dap_chain_net_srv_geoip.h"
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
@@ -114,7 +109,6 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
 
-#include "dap_common.h"
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -131,10 +125,6 @@
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 
-#ifdef __ANDROID__
-    #include "cellframe_node.h"
-#endif
-
 void parse_args( int argc, const char **argv );
 void exit_if_server_already_running( void );
 
@@ -142,8 +132,11 @@ void exit_if_server_already_running( void );
 static const char *s_pid_file_path = NULL;
 #endif
 
-#ifdef __ANDROID__
-int cellframe_node_Main(int argc, const char **argv)
+#ifdef DAP_OS_ANDROID
+#include "dap_app_cli.h"
+#include <android/log.h>
+#include <jni.h>
+JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
 #else
 int main( int argc, const char **argv )
 #endif
@@ -154,25 +147,29 @@ int main( int argc, const char **argv )
     int rc = 0;
 
     dap_set_appname("cellframe-node");
-    #if defined(_WIN32) && defined(NDEBUG)
-        S_SetExceptionFilter( );
-    #endif
-#ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-#elif DAP_OS_MAC
-    char * l_username = NULL;
-    exec_with_ret(&l_username,"whoami|tr -d '\n'");
-    if (!l_username){
-        printf("Fatal Error: Can't obtain username");
-    return 2;
-    }
-    g_sys_dir_path = dap_strdup_printf("/Users/%s/Applications/Cellframe.app/Contents/Resources", l_username);
-    DAP_DELETE(l_username);
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+#if defined(_WIN32) && defined(NDEBUG)
+    S_SetExceptionFilter( );
 #endif
+
+    // get relative path to config
+#if !DAP_OS_ANDROID
+    if (argv[1] && argv[2] &&!dap_strcmp("-B" , argv[1]))
+        g_sys_dir_path = (char*)argv[2];
+#endif
+
+    if (!g_sys_dir_path) {
+#ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+#elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+#elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+#endif
+    }
+
+    log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
@@ -199,12 +196,15 @@ int main( int argc, const char **argv )
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH] = {'\0'};
     sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
-    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path", l_default_dir) ;
+    s_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir) ;
     save_process_pid_in_file(s_pid_file_path);
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
+    
+#if !DAP_OS_ANDROID
     parse_args( argc, argv );
+#endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -240,10 +240,13 @@ int main( int argc, const char **argv )
         return -5;
     }
 
+#if !DAP_OS_ANDROID
     if ( dap_http_folder_init() != 0 ){
         log_it( L_CRITICAL, "Can't init http server module" );
         return -55;
     }
+#endif
+    
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
@@ -305,24 +308,9 @@ int main( int argc, const char **argv )
         return -63;
     }
 
-    if( dap_chain_cs_dag_pos_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoS module");
-        return -64;
-    }
-
     if( dap_chain_cs_blocks_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
         return -62;
-    }
-
-    if( dap_chain_cs_block_poa_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoA module");
-        return -63;
-    }
-
-    if( dap_chain_cs_block_pos_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain blocks consensus PoS module");
-        return -64;
     }
 
     if( dap_chain_cs_esbocs_init() ){
@@ -364,21 +352,12 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
-    if( dap_chain_net_srv_app_init() ){
-        log_it(L_CRITICAL,"Can't init dap chain network service applications module");
-        return -67;
-    }
-
-    if( dap_chain_net_srv_datum_init() ){
-        log_it(L_CRITICAL,"Can't init dap chain network service datum module");
-        return -68;
-    }
-
 #ifndef _WIN32
+#   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
         log_it(L_ERROR, "Can't pre-init vpn service");
     }
-
+#   endif
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -394,6 +373,58 @@ int main( int argc, const char **argv )
 #endif
 
     dap_chain_net_load_all();
+
+    if ( dap_chain_node_cli_init(g_config) ) {
+        log_it( L_CRITICAL, "Can't init server for console" );
+        return -11;
+    }
+
+    log_it(L_INFO, "Automatic mempool processing %s",
+           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
+    
+    uint16_t l_listen_addrs_count = 0;
+    if ( bServerEnabled )
+        l_server = dap_http_server_new("server", dap_get_appname());
+
+    if ( l_server ) { // If listener server is initialized
+        // Handshake URL
+        enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
+
+        // Streaming URLs
+        dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
+        dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
+
+        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
+                dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
+        }
+
+        // Built in WWW server
+#if !DAP_OS_ANDROID
+        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
+                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
+                                dap_config_get_item_str(g_config,
+                                                            "resources",
+                                                            "www_root") );
+        }
+#endif
+        dap_server_set_default(l_server);
+        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
+
+        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
+        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
+        if (http_bootstrap_balancer_enabled) {
+            // HTTP URL add
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        }
+    } else
+        log_it( L_INFO, "No enabled server, working in client mode only" );
+
+    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
+    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
+    if (dns_bootstrap_balancer_enabled) {        
+        dap_dns_server_start("bootstrap_balancer");
+    }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
@@ -416,65 +447,6 @@ int main( int argc, const char **argv )
         }
     }
 #endif
-
-    if ( dap_chain_node_cli_init(g_config) ) {
-        log_it( L_CRITICAL, "Can't init server for console" );
-        return -11;
-    }
-
-    log_it(L_INFO, "Automatic mempool processing %s",
-           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
-    
-    uint16_t l_listen_addrs_count = 0;
-    if ( bServerEnabled ) {
-        char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_listen_addrs_count);
-        if(!l_listen_addrs || !l_listen_addrs_count || !(l_server = dap_server_new(l_listen_addrs, l_listen_addrs_count, DAP_SERVER_TCP, NULL)))
-            log_it( L_WARNING, "Server is enabled but no address is defined" );
-    }
-
-    if ( l_server ) { // If listener server is initialized
-        // TCP-specific things
-            // Init HTTP-specific values
-        dap_http_new( l_server, dap_get_appname() );
-
-        // Handshake URL
-        enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
-
-        // Streaming URLs
-        dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
-        dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
-
-        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-                dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
-        }
-
-        // Built in WWW server
-
-        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
-                                dap_config_get_item_str(g_config,
-                                                            "resources",
-                                                            "www_root") );
-        }
-        dap_server_set_default(l_server);
-        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-
-        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-        if (http_bootstrap_balancer_enabled) {
-            // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
-        }
-    } else
-        log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {
-        // DNS server start
-        dap_dns_server_start((char *)dap_config_get_item_str_default(g_config, "bootstrap_balancer", "dns_listen_port", DNS_LISTEN_PORT_STR));
-    }
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
@@ -507,6 +479,7 @@ int main( int argc, const char **argv )
         }
     }
     dap_chain_net_try_online_all();
+    dap_chain_net_announce_addr_all();
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
@@ -520,7 +493,9 @@ int main( int argc, const char **argv )
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
+#if !DAP_OS_ANDROID
     dap_http_folder_deinit();
+#endif
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
