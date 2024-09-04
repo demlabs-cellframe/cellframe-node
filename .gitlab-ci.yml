@@ -152,7 +152,7 @@ amd64:linux.rwd.noopt:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DCELLFRAME_NO_OPTIMIZATION=ON
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*noopt-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.noopt
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_/*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.noopt
 
 
 amd64:linux.tps:
