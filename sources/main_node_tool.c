@@ -637,6 +637,7 @@ static int s_init()
         printf("Fatal Error: Can't init common functions module");
         return -2;
     }
+    dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
     dap_log_level_set(L_ERROR);
     char l_config_dir[MAX_PATH] = {'\0'};
     sprintf(l_config_dir, "%s/etc", g_sys_dir_path);

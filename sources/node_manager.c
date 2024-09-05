@@ -93,6 +93,7 @@ int node_manager_init(){
         log_it(L_CRITICAL,"Can't init common functions module");
         return -2;
     }
+    dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
     if(dap_config_init("build/config")!=0){
         log_it(L_CRITICAL,"Can't init configurations module");
         return -1;
