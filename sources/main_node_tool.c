@@ -633,10 +633,13 @@ static int s_cert_get_addr(int argc, const char **argv) {
  */
 static int s_init()
 {
-    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0) {
-        printf("Fatal Error: Can't init common functions module");
-        return -2;
-    }
+    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0)
+        return printf("Fatal Error: Can't init common functions module"), -2;
+#if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
+        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+#else
+        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+#endif
     dap_log_level_set(L_ERROR);
     char l_config_dir[MAX_PATH] = {'\0'};
     sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
