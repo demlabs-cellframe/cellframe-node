@@ -1,9 +1,9 @@
-#include "conditioncommand.h"
+#include "ConditionCommand.h"
 #include <sstream>
 #include <iostream>
 #include <iterator>
 #include <numeric>
-#include "../config/cellframeconfigfile.h"
+#include "../config/CellframeConfigFile.h"
 
 CAbstractScriptCommand::Registrar<CConditionOpenCommand> if_registrar("if");
 CAbstractScriptCommand::Registrar<CConditionCloseCommand> endif_registrar("endif");

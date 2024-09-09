@@ -1,5 +1,5 @@
-#include "abstractcommand.h"
-#include "networkcommand.h"
+#include "AbstractCommand.h"
+#include "NetworkCommand.h"
 #include <string>
 
 

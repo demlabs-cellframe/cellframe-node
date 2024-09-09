@@ -351,12 +351,14 @@ Section "Uninstall"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service stop"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
 	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diagtool.exe'
-	
+
+	Delete "$INSTDIR\cellframe-diagtool.exe"	
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
 	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
 	Delete "$INSTDIR\${NODE_NAME}-config.exe"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
+	DeleteRegKey HKLM "Software\${APP_NAME}"
 	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"
 	;RMDir "$INSTDIR"

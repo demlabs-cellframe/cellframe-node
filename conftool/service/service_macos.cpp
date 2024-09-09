@@ -1,7 +1,7 @@
 #ifdef __APPLE__
 
 #include "service.h"
-#include "../commands/abstractcommand.h"
+#include "../commands/AbstractCommand.h"
 #include "macos_auth.h"
 
 bool CServiceControl::enable()
