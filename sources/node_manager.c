@@ -89,10 +89,13 @@ void client_disconnect(dap_server_client_t *client,void * arg)
  * @return Zero if ok or error code
  */
 int node_manager_init(){
-    if(dap_common_init("build/log.txt")!=0){
-        log_it(L_CRITICAL,"Can't init common functions module");
-        return -2;
-    }
+    if ( dap_common_init("build/log.txt") )
+        return printf("Can't init common functions module"), -2;
+#if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
+        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+#else
+        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+#endif
     if(dap_config_init("build/config")!=0){
         log_it(L_CRITICAL,"Can't init configurations module");
         return -1;
