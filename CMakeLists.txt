@@ -33,13 +33,20 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
+option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." OFF)
+
+if( CELLFRAME_NO_OPTIMIZATION )
+    set(DAP_CRYPTO_XKCP_PLAINC ON)
+endif()
+
 include (dap-sdk/cmake/OS_Detection.cmake)
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
-set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-#set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+if (NOT ANDROID)
+    set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
+endif()
+    #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
-
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
@@ -149,6 +156,10 @@ if(UNIX)
         else()
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
         endif()
+
+        if (CELLFRAME_NO_OPTIMIZATION)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
+        endif()
     else() #to use -updtr postfix in rwd build without rwd
         if(ADD_UPDATER)
             set(CMAKE_BUILD_TYPE RelWithDebInfo) 
@@ -240,7 +251,9 @@ if(BUILD_DIAGTOOL)
     add_subdirectory(diagtool)
 endif()
 
+if (NOT ANDROID)
 add_subdirectory(conftool)
+endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -387,16 +400,18 @@ else()
         INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
     endif()
 
-    INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    
+    if (NOT ANDROID)
+        INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    endif()
     if (BUILD_DIAGTOOL)
             INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
 
+    if (NOT ANDROID)
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-
+    endif()
     if(NOT ANDROID)
 	    #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)

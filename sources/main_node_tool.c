@@ -53,10 +53,6 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 static char s_system_ca_dir[MAX_PATH];
 static char s_system_wallet_dir[MAX_PATH];
 
-#ifdef __ANDROID__
-int cellframe_node_tool_Main(int argc, const char **argv)
-#else
-
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
 static int s_wallet_create_wp(int argc, const char **argv);
@@ -109,6 +105,9 @@ struct options {
 {"cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
+#ifdef __ANDROID__
+int cellframe_node_tool_Main(int argc, const char **argv)
+#else
 int main(int argc, const char **argv)
 #endif
 {

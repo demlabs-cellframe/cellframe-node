@@ -1,5 +1,5 @@
 #pragma once
-#include "abstractcommand.h"
+#include "AbstractCommand.h"
 
 enum E_COND_OPS {
     COND_EQUAL,

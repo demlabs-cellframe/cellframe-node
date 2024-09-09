@@ -1,4 +1,4 @@
-#include "abstractcommand.h"
+#include "AbstractCommand.h"
 
 class CServiceCommand : public CAbstractScriptCommand {
     public:

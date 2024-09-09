@@ -1,7 +1,7 @@
  #ifdef WIN32 
 
 #include "service.h"
-#include "../commands/abstractcommand.h"
+#include "../commands/AbstractCommand.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <shlobj.h>
