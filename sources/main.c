@@ -169,19 +169,21 @@ int main( int argc, const char **argv )
 #endif
     }
 
-    log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
-
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
-        if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
-            printf("Fatal Error: Can't init common functions module");
-            return -2;
-        }
+        if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0)
+            return printf("Fatal Error: Can't init common functions module"), -2;
+#if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
+        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+#else
+        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+#endif
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
+    log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
         char l_config_dir[MAX_PATH] = {'\0'};
