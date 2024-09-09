@@ -238,7 +238,11 @@ if(WIN32)
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
     target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
+        set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    else()
+        set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mwindows")
+    endif()
 
 endif()
 if(BSD)
