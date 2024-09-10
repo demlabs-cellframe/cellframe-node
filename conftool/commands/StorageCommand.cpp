@@ -1,5 +1,5 @@
-#include "storagecommand.h"
-#include "../config/cellframeconfigfile.h"
+#include "StorageCommand.h"
+#include "../config/CellframeConfigFile.h"
 
 CAbstractScriptCommand::Registrar<CVariableCommand> var_registrar("var");
 

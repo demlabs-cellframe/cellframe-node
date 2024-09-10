@@ -18,7 +18,7 @@
 #include <iostream>
 #include <iterator>
 #include <numeric>
-#include "../commands/abstractcommand.h"
+#include "../commands/AbstractCommand.h"
 #include "../build_config.h"
 
 namespace fs = std::filesystem;
@@ -35,7 +35,15 @@ enum ENetworkConfigState{
     CFG_TEMPLATE = 1 << 3,
 };
 
+enum EPathConfigType{
+    CFG_NODE = 0,
+    CFG_NODE_TEMPLATE,
+    CFG_NETWORK,
+    CFG_NETWORK_TEMPLATE
+};
+
 fs::path config_path(const std::string &netname, ENetworkConfigType type, ENetworkConfigState state = CFG_ON); 
+fs::path get_config_path(EPathConfigType pathType = CFG_NETWORK); 
 
 struct CellframeConfigurationFile {
     CellframeConfigurationFile(fs::path filepath, int flags = 0);
@@ -46,10 +54,10 @@ struct CellframeConfigurationFile {
     bool save();
 
 
-    private:
-        fs::path path;
-        std::vector<std::string> lines;
-        int flags;
+private:
+    fs::path path;
+    std::vector<std::string> lines;
+    int flags;
 };
 
 std::string substitute_variables(const std::string &string);

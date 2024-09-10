@@ -1,9 +1,9 @@
-#include "servicecommand.h"
+#include "ServiceCommand.h"
 #include <stdexcept>
 #include <filesystem>
 
 #include "../build_config.h"
-#include "../config/cellframeconfigfile.h"
+#include "../config/CellframeConfigFile.h"
 #include "../service/service.h"
 
 namespace fs = std::filesystem;

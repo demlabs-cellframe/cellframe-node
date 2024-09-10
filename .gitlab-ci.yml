@@ -86,23 +86,23 @@ stages:
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
 
-amd64:windows.release:
+amd64:windows.rwd:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:windowsbuilder 
+    image: demlabs/windows/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows release #-DBUILD_DIAGTOOL=ON
-      - ./prod_build/pack.sh --target windows release 
+      - ./prod_build/build.sh --target windows rwd -DBUILD_DIAGTOOL=ON
+      - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
-      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_release/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_rwd/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
 
 
 amd64:macos.release:
     extends: .build
-    image: demlabs/amd64/debian-bullseye:osxbuilder
+    image: demlabs/macos/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-osx
       - *fill_version_mk
@@ -119,7 +119,7 @@ amd64:macos.release:
 
 amd64:linux.debug:
     extends: .build
-    image: demlabs/amd64/debian-buster:linuxbuilder
+    image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -131,7 +131,7 @@ amd64:linux.debug:
 
 amd64:linux.rwd:
     extends: .build
-    image: demlabs/amd64/debian-buster:linuxbuilder
+    image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -141,9 +141,23 @@ amd64:linux.rwd:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
+amd64:linux.rwd.opt:
+    extends: .build
+    image: demlabs/debian/amd64:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
+    script:
+      - echo "Do hard work"
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
+      - ./prod_build/pack.sh --target linux rwd
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
+
+
+
 amd64:linux.tps:
     extends: .build
-    image: demlabs/amd64/debian-buster:linuxbuilder
+    image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -154,7 +168,7 @@ amd64:linux.tps:
 
 amd64:linux.updtr:
     extends: .build
-    image: demlabs/amd64/debian-buster:linuxbuilder
+    image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -166,7 +180,7 @@ amd64:linux.updtr:
 
 amd64:linux.release:
     extends: .build
-    image: demlabs/amd64/debian-buster:linuxbuilder
+    image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -181,7 +195,7 @@ amd64:linux.release:
 
 armhf:linux.release:
     extends: .build
-    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
+    image: demlabs/debian/arm32:qt5
 
     before_script:
       - /opt/buildtools/prepare_environment.sh armhf-linux
@@ -195,7 +209,7 @@ armhf:linux.release:
 
 arm64:linux.release:
     extends: .build
-    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
+    image: demlabs/debian/arm64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh arm64-linux
       - *fill_version_mk
@@ -206,6 +220,17 @@ arm64:linux.release:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
+
+any:android.release:
+    extends: .build
+    image: demlabs/android/any:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh arm64-linux
+      - *fill_version_mk
+    script: 
+      - echo "Do hard work"
+      - ./prod_build/build.sh --target android release
+     
 .arm64:linux.updtr:
     extends: .build
     image: demlabs/arm64v8/debian-bullseye:linuxbuilder

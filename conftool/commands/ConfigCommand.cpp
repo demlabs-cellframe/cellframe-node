@@ -1,5 +1,5 @@
-#include "configcommand.h"
-#include "../config/cellframeconfigfile.h"
+#include "ConfigCommand.h"
+#include "../config/CellframeConfigFile.h"
 
 CAbstractScriptCommand::Registrar<CConfigCommand> cfg_registrar("config");
 

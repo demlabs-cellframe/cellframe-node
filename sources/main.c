@@ -109,7 +109,6 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
 
-#include "dap_common.h"
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -148,30 +147,43 @@ int main( int argc, const char **argv )
     int rc = 0;
 
     dap_set_appname("cellframe-node");
-    #if defined(_WIN32) && defined(NDEBUG)
-        S_SetExceptionFilter( );
-    #endif
-#ifdef _WIN32
-    g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-#elif DAP_OS_MAC
-    g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
-#elif DAP_OS_ANDROID
-    g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-#elif DAP_OS_UNIX
-    g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+#if defined(_WIN32) && defined(NDEBUG)
+    S_SetExceptionFilter( );
 #endif
+
+    // get relative path to config
+#if !DAP_OS_ANDROID
+    if (argv[1] && argv[2] &&!dap_strcmp("-B" , argv[1]))
+        g_sys_dir_path = (char*)argv[2];
+#endif
+
+    if (!g_sys_dir_path) {
+#ifdef DAP_OS_WINDOWS
+        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif DAP_OS_MAC
+        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+#elif DAP_OS_ANDROID
+        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+#elif DAP_OS_UNIX
+        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+#endif
+    }
 
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
         dap_mkdir_with_parents(l_log_dir);
         char * l_log_file = dap_strdup_printf( "%s/%s.log", l_log_dir, dap_get_appname());
-        if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0) {
-            printf("Fatal Error: Can't init common functions module");
-            return -2;
-        }
+        if (dap_common_init(dap_get_appname(), l_log_file, l_log_dir) != 0)
+            return printf("Fatal Error: Can't init common functions module"), -2;
+#if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
+        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+#else
+        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+#endif
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
+    log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
         char l_config_dir[MAX_PATH] = {'\0'};
@@ -186,12 +198,15 @@ int main( int argc, const char **argv )
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH] = {'\0'};
     sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
-    s_pid_file_path = dap_config_get_item_str_default(g_config,  "resources", "pid_path", l_default_dir) ;
+    s_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir) ;
     save_process_pid_in_file(s_pid_file_path);
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
+    
+#if !DAP_OS_ANDROID
     parse_args( argc, argv );
+#endif
 
       l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
     //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
@@ -240,10 +255,13 @@ int main( int argc, const char **argv )
         return -5;
     }
 
+#if !DAP_OS_ANDROID
     if ( dap_http_folder_init() != 0 ){
         log_it( L_CRITICAL, "Can't init http server module" );
         return -55;
     }
+#endif
+    
     if ( dap_http_simple_module_init() != 0 ) {
         log_it(L_CRITICAL,"Can't init http simple module");
         return -9;
@@ -350,10 +368,11 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
+#   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
         log_it(L_ERROR, "Can't pre-init vpn service");
     }
-
+#   endif
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -396,13 +415,14 @@ int main( int argc, const char **argv )
         }
 
         // Built in WWW server
-
+#if !DAP_OS_ANDROID
         if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                 dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
                                 dap_config_get_item_str(g_config,
                                                             "resources",
                                                             "www_root") );
         }
+#endif
         dap_server_set_default(l_server);
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
 
@@ -474,6 +494,7 @@ int main( int argc, const char **argv )
         }
     }
     dap_chain_net_try_online_all();
+    dap_chain_net_announce_addr_all();
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
@@ -487,7 +508,9 @@ int main( int argc, const char **argv )
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
+#if !DAP_OS_ANDROID
     dap_http_folder_deinit();
+#endif
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
