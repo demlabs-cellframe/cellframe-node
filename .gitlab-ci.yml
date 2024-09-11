@@ -141,7 +141,7 @@ amd64:linux.rwd:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-amd64:linux.rwd.noopt:
+amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -149,9 +149,9 @@ amd64:linux.rwd.noopt:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DCELLFRAME_NO_OPTIMIZATION=ON
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
       - ./prod_build/pack.sh --target linux rwd
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.noopt
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
 
 
 
