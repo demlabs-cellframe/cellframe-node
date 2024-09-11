@@ -236,7 +236,7 @@ static int s_wallet_create(int argc, const char **argv) {
         }
         dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};
         size_t l_count_signs  = 0;
-        for (int i = 6; i < argc; i++) {
+        for (int i = 5; i < argc; i++) {
             l_types[l_count_signs] = dap_sign_type_from_str(argv[i]);
             if (l_types[l_count_signs].type == SIG_TYPE_NULL) {
                 log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
