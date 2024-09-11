@@ -33,7 +33,7 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
 set(SUBMODULES_NO_BUILD ON)
-option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." OFF)
+option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
 if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
@@ -157,8 +157,8 @@ if(UNIX)
             SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-rwd" )
         endif()
 
-        if (CELLFRAME_NO_OPTIMIZATION)
-            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-noopt" )
+        if (NOT CELLFRAME_NO_OPTIMIZATION)
+            SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-opt" )
         endif()
     else() #to use -updtr postfix in rwd build without rwd
         if(ADD_UPDATER)
