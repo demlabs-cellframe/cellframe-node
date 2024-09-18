@@ -16,7 +16,7 @@
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
 #include "dap_http_server.h"
-#include "dap_chain_node_dns_server.h"
+#include "dap_dns_server.h"
 #include "sig_unix_handler.h"
 #include "dap_plugin.h"
 #ifdef DAP_MODULES_DYNAMIC
@@ -55,6 +55,7 @@ static void sig_exit_handler(int sig_code) {
     dap_enc_ks_deinit();
     enc_http_deinit();
     dap_http_deinit();
+    dap_dns_server_stop();
 #ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
 #endif

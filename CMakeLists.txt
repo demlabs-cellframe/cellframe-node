@@ -68,7 +68,7 @@ if(LINUX)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
-set(CELLFRAME_MODULES "core chains ledger network srv cs-dag-poa cs-esbocs cs-none
+set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
                         srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
 if(LINUX OR DARWIN)
