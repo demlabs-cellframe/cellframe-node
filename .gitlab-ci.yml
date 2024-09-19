@@ -12,6 +12,7 @@ workflow:
 stages:
     - build
     - post_build
+    - test
     - publish
     - deploy
 
@@ -140,6 +141,13 @@ amd64:linux.rwd:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+
+autotests:
+  extends: .ci-polygon
+  stage: test
+  script:
+    - echo "Check working directory"
+    - ls -la
 
 .amd64:linux.rwd.opt:
     extends: .build
