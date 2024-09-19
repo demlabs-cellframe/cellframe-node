@@ -22,6 +22,9 @@ stages:
 .ci-ansible:
   tags:
      - ci-ansible
+.ci-test:
+  tags:
+     - ci-test
     
 .build:  
   extends: .ci-polygon
@@ -143,11 +146,11 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 autotests:
-  extends: .ci-polygon
+  extends: .ci-test
   stage: test
   script:
     - echo "Check working directory"
-    - ls -la
+    - ls -la build_*
 
 .amd64:linux.rwd.opt:
     extends: .build
