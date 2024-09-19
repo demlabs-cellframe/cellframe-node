@@ -103,3 +103,10 @@ config  subzero      general     node-role   default     full
 config Backbone general seed_nodes_hosts ensure [0.root.scorpion.cellframe.net:8079,1.root.scorpion.cellframe.net:8079,2.root.scorpion.cellframe.net:8079,3.root.scorpion.cellframe.net:8079,4.root.scorpion.cellframe.net:8079]
 
 config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
+
+config Backbone esbocs consensus_debug true
+config KelVPN esbocs consensus_debug true
+config raiden esbocs consensus_debug true
+config riemann esbocs consensus_debug true
+config mileena esbocs consensus_debug true
+config subzero esbocs consensus_debug true
