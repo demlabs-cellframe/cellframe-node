@@ -201,7 +201,7 @@ set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 
 set( NODE_SOURCES
-  sources/main.c
+        sources/cellframe-node.c
   sources/sig_unix_handler.c
 )
 set( NODE_CLI_SOURCES
@@ -226,7 +226,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
+    add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
@@ -255,9 +255,7 @@ if(BUILD_DIAGTOOL)
     add_subdirectory(diagtool)
 endif()
 
-if (NOT ANDROID)
 add_subdirectory(conftool)
-endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
