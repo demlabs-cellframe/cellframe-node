@@ -150,7 +150,9 @@ autotests:
   stage: test
   script:
     - echo "Check working directory"
-    - /opt/tests-in-docker/test.sh linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+    - rm /opt/tests-in-docker/debs/*
+    - cp build_*/*.deb /opt/tests-in-docker/debs/
+    - /opt/tests-in-docker/test.sh *.deb
 
 .amd64:linux.rwd.opt:
     extends: .build
