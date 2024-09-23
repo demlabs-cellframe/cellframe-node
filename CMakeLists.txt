@@ -218,6 +218,8 @@ if(UNIX)
         ${NODE_CLI_SOURCES}
         ${NODE_TOOL_SOURCES}
     )
+    add_subdirectory(sources/android)
+
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -344,7 +346,7 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log  )
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
@@ -443,4 +445,3 @@ else()
 
 endif()
 INCLUDE(CPack)
-
