@@ -226,7 +226,7 @@ any:android.release:
     before_script: 
       - /opt/buildtools/prepare_environment.sh arm64-linux
       - 'apt install -y openjdk-17-jdk'
-      - 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/'
+      - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
       - *fill_version_mk
     script: 
       - ./prod_build/pack.sh --target android release
