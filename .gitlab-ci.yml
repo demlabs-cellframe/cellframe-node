@@ -150,7 +150,7 @@ autotests:
   stage: test
   script:
     - cp build_*/*.deb /opt/tests-in-docker/debs/
-    - /opt/tests-in-docker/testnet.sh build_*/*.deb
+    - /opt/tests-in-docker/test.sh $(basename build_*/*.deb)
 
 .amd64:linux.rwd.opt:
     extends: .build
