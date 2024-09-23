@@ -229,7 +229,9 @@ any:android.release:
       - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
       - *fill_version_mk
     script: 
-      - ./prod_build/pack.sh --target android release
+      - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
+
 
 version:up:
   stage: post_build
