@@ -149,8 +149,6 @@ autotests:
   extends: .ci-test
   stage: test
   script:
-    - echo "Check working directory"
-    - rm /opt/tests-in-docker/debs/*
     - cp build_*/*.deb /opt/tests-in-docker/debs/
     - /opt/tests-in-docker/test.sh *.deb
 
