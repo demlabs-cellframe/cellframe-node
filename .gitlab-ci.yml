@@ -106,6 +106,8 @@ amd64:linux.rwd.bld:
       
 autotests:
   extends: .ci-test
+  interruptible: true
+
   stage: test_proceed
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
