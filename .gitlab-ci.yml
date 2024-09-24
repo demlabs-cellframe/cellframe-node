@@ -107,6 +107,10 @@ amd64:linux.rwd.bld:
 autotests:
   extends: .ci-test
   stage: test_proceed
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "master"
+  variables:
+    GIT_STRATEGY: none
   dependencies:
     - amd64:linux.rwd.bld
   script:
