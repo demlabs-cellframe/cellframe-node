@@ -114,6 +114,7 @@ autotests:
       when: always
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
       when: manual
+      allow_failure: true
   variables:
     GIT_STRATEGY: none
   dependencies:
