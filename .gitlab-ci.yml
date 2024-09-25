@@ -110,7 +110,10 @@ autotests:
 
   stage: test_proceed
   rules:
-    - if: $CI_COMMIT_REF_NAME == "master"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
   variables:
     GIT_STRATEGY: none
   dependencies:
