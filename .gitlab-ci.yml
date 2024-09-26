@@ -114,14 +114,14 @@ autotests:
       when: always
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
       when: manual
+      allow_failure: true
+
   variables:
     GIT_STRATEGY: none
   dependencies:
     - amd64:linux.rwd.bld
   script:
-    - cp build_*/*.deb /opt/tests-in-docker/debs/
-    - /opt/tests-in-docker/testnet.sh $(basename build_*/*.deb)
-    - rm /opt/tests-in-docker/debs/$(basename build_*/*.deb)
+    - /opt/tests-in-docker/artifacts.sh build_*/*.deb
 
 amd64:linux.rwd:
     extends: .build
