@@ -60,8 +60,8 @@
 #include "dap_notify_srv.h"
 #include "dap_http_server.h"
 #include "dap_http_folder.h"
-#include "dap_chain_node_dns_client.h"
-#include "dap_chain_node_dns_server.h"
+#include "dap_dns_client.h"
+#include "dap_dns_server.h"
 #include "dap_chain_net_balancer.h"
 #include "dap_chain_net_node_list.h"
 
