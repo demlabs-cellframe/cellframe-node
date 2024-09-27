@@ -122,11 +122,6 @@ autotests:
     - amd64:linux.rwd.bld
   script:
     - /opt/tests-in-docker/artifacts.sh build_*/*.deb
-<<<<<<< HEAD
-=======
-
-
->>>>>>> f94b79047de62a94465c8d6d4ef70adfc502ec3d
 
 amd64:linux.rwd:
     extends: .build
