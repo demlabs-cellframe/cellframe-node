@@ -219,6 +219,15 @@ int main( int argc, const char **argv )
     dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
+    
+    if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
+        size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
+                l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
+        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+                         l_timeout_minutes, l_max_file_size);
+        int64_t l_timeout = l_timeout_minutes * 60000;
+        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, &l_max_file_size);
+    }
 
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
