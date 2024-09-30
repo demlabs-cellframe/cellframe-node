@@ -242,6 +242,12 @@ Section "${APP_NAME}" CORE
 	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeTray"'
 	${EnableX64FSRedirection}
 
+	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe'"
+	${DisableX64FSRedirection}
+	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeDiagtool"'
+	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeDiagtool"'
+	${EnableX64FSRedirection}
+
 SectionEnd
 
 
