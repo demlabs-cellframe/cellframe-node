@@ -136,10 +136,14 @@ static const char *s_pid_file_path = NULL;
 #include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
-JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
-#else
-int main( int argc, const char **argv )
 #endif
+
+void set_global_sys_dir(const char *dir)
+{
+    g_sys_dir_path = dap_strdup(dir);
+}
+
+int main( int argc, const char **argv )
 {
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
@@ -163,7 +167,8 @@ int main( int argc, const char **argv )
 #elif DAP_OS_MAC
         g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
-        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+        //must be set from jni through set_global_sys_dir befor main starts
+        //g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -180,6 +185,11 @@ int main( int argc, const char **argv )
 #else
         dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
+#ifdef DAP_OS_ANDROID
+        dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
+
+#endif
+
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
@@ -208,8 +218,7 @@ int main( int argc, const char **argv )
     parse_args( argc, argv );
 #endif
 
-      l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-    //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+    l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
     if ( l_debug_mode )
         log_it( L_ATT, "*** DEBUG MODE ***" );
