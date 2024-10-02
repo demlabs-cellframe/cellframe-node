@@ -181,7 +181,6 @@ amd64:linux.rwd:
       - ./prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-<<<<<<< HEAD
 .amd64:linux.rwd:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -193,8 +192,6 @@ amd64:linux.rwd:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-=======
->>>>>>> 6e37bed925fe1824c7a95306f1d80804c7288e7d
 
 .amd64:linux.rwd.opt:
     extends: .build
