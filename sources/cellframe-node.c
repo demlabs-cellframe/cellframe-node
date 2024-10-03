@@ -599,6 +599,7 @@ void exit_if_server_already_running( void ) {
     pid_t pid = get_pid_from_file(s_pid_file_path);
     struct flock lock = { .l_type = F_WRLCK };
     int fd = open(s_pid_file_path, O_WRONLY);
+    log_it( L_NOTICE, "open result - %d", fd);
     if (fcntl(fd, F_SETLK, &lock) == -1) {
         log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
                           ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
