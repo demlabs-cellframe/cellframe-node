@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <getopt.h>
 #include <signal.h>
+#include <errno.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -131,6 +133,8 @@ void exit_if_server_already_running( void );
 #ifndef DAP_OS_WINDOWS
 static const char *s_pid_file_path = NULL;
 #endif
+
+extern int errno;
 
 #ifdef DAP_OS_ANDROID
 #include "dap_app_cli.h"
@@ -599,7 +603,8 @@ void exit_if_server_already_running( void ) {
     pid_t pid = get_pid_from_file(s_pid_file_path);
     struct flock lock = { .l_type = F_WRLCK };
     int fd = open(s_pid_file_path, O_WRONLY);
-    log_it( L_NOTICE, "open result - %d", fd);
+    log_it(L_NOTICE, "this cellframe-node PID -- %d", getpid());
+    log_it( L_NOTICE, "errno - %d", errno);
     if (fcntl(fd, F_SETLK, &lock) == -1) {
         log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
                           ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
