@@ -198,7 +198,10 @@ int main( int argc, const char **argv )
     {
         char l_config_dir[MAX_PATH] = {'\0'};
         sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
-        dap_config_init(l_config_dir);
+        if (dap_config_init(l_config_dir) != 0) {
+            log_it( L_CRITICAL,"Can't init general configurations" );
+            return -1;
+        }
     }
 
     if ((g_config = dap_config_open(dap_get_appname())) == NULL ) {
