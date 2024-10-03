@@ -195,8 +195,7 @@ amd64:linux.rwd.opt:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
 
 
-
-amd64:linux.tps:
+.amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -207,7 +206,7 @@ amd64:linux.tps:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
-amd64:linux.updtr:
+.amd64:linux.updtr:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -219,7 +218,7 @@ amd64:linux.updtr:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
-amd64:linux.release:
+.amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -267,44 +266,12 @@ any:android.release:
     image: demlabs/android/any:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh arm64-linux
+      - 'apt install -y openjdk-17-jdk'
+      - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
       - *fill_version_mk
     script: 
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target android release
-     
-.arm64:linux.updtr:
-    extends: .build
-    image: demlabs/arm64v8/debian-bullseye:linuxbuilder
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh arm64-linux
-      - *fill_version_mk
-    
-    when: manual
-    allow_failure: true
-    
-    script: 
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
-      - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
-  
-.armhf:linux.updtr:
-    extends: .build
-    image: demlabs/arm32v7/debian-bullseye:linuxbuilder
-    
-    when: manual
-    allow_failure: true
-    
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh armhf-linux
-      - *fill_version_mk
-    script: 
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DADD_UPDATER=ON
-      - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+      - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
 
 
 version:up:

@@ -136,10 +136,14 @@ static const char *s_pid_file_path = NULL;
 #include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
-JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
-#else
-int main( int argc, const char **argv )
 #endif
+
+void set_global_sys_dir(const char *dir)
+{
+    g_sys_dir_path = dap_strdup(dir);
+}
+
+int main( int argc, const char **argv )
 {
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
@@ -163,7 +167,8 @@ int main( int argc, const char **argv )
 #elif DAP_OS_MAC
         g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
-        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+        //must be set from jni through set_global_sys_dir befor main starts
+        //g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -180,6 +185,11 @@ int main( int argc, const char **argv )
 #else
         dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
+#ifdef DAP_OS_ANDROID
+        dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
+
+#endif
+
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
@@ -211,8 +221,7 @@ int main( int argc, const char **argv )
     parse_args( argc, argv );
 #endif
 
-      l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-    //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+    l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
     if ( l_debug_mode )
         log_it( L_ATT, "*** DEBUG MODE ***" );
@@ -222,6 +231,15 @@ int main( int argc, const char **argv )
     dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
+    
+    if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
+        size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
+                l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
+        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+                         l_timeout_minutes, l_max_file_size);
+        int64_t l_timeout = l_timeout_minutes * 60000;
+        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, &l_max_file_size);
+    }
 
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
@@ -415,21 +433,17 @@ int main( int argc, const char **argv )
 #endif
         dap_server_set_default(l_server);
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-
-        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-        if (http_bootstrap_balancer_enabled) {
-            // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false) ) {
+            log_it(L_DEBUG, "HTTP balancer enabled");
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER,
+                                     DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        }
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false) ) {
+            log_it(L_DEBUG, "DNS balancer enabled");
+            dap_dns_server_start("bootstrap_balancer");
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {        
-        dap_dns_server_start("bootstrap_balancer");
-    }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
