@@ -598,8 +598,8 @@ int s_proc_running_check(const char *a_path) {
         pid_t f_pid = 0;
         fscanf( l_pidfile, "%d", &f_pid );
         if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
-            return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %llu",
-                           errno, dap_strerror(errno), (uint64_t)f_pid), 1;
+            return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %d",
+                           errno, dap_strerror(errno), f_pid), 1;
         }
         else
             l_pidfile = freopen(a_path, "w", l_pidfile);
