@@ -591,8 +591,7 @@ static struct option long_options[] = {
 int s_proc_running_check(const char *a_path) {
 #ifdef DAP_OS_WINDOWS
     CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56");
-    if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        return log_it( L_WARNING, "DapServer is already running, multiple instances are prohibited by config"), 1;
+    return GetLastError() == ERROR_ALREADY_EXISTS ? ( log_it(L_ERROR, "dap_server is already running"), 1 ) : 0;
 #else
     FILE *l_pidfile = fopen(a_path, "r");
     if (l_pidfile) {
