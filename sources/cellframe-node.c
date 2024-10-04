@@ -596,7 +596,7 @@ int s_proc_running_check(const char *a_path) {
     FILE *l_pidfile = fopen(a_path, "r");
     if (l_pidfile) {
         pid_t f_pid = 0;
-        fscanf( l_pidfile, "%lld", &f_pid );
+        fscanf( l_pidfile, "%d", &f_pid );
         if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
             return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %llu",
                            errno, dap_strerror(errno), (uint64_t)f_pid), 1;
