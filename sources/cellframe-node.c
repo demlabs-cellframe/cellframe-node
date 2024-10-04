@@ -598,10 +598,11 @@ int s_proc_running_check(const char *a_path) {
     if (l_pidfile) {
         pid_t f_pid = 0;
         fscanf( l_pidfile, "%lld", &f_pid );
-        struct flock lock = { .l_type = F_WRLCK };
-        if ( fcntl(fileno(l_pidfile), F_SETLK, &lock) == -1 )
+        struct flock lock = { .l_type = F_RDLCK };
+        if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
             return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %llu",
                            errno, dap_strerror(errno), (uint64_t)f_pid), 1;
+        }
         else
             l_pidfile = freopen(a_path, "w", l_pidfile);
     } else
@@ -611,7 +612,8 @@ int s_proc_running_check(const char *a_path) {
         return log_it(L_ERROR, "Can't open file %s for writing, error %d: %s", 
                                 a_path, errno, dap_strerror(errno)), 2;
     fprintf(l_pidfile, "%d", getpid());
-    return fclose(l_pidfile);
+    fflush(l_pidfile);
+    return lockf(fileno(l_pidfile), F_TLOCK, sizeof(pid_t));
 #endif
 }
 
