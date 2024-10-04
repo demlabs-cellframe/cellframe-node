@@ -236,7 +236,7 @@ int main( int argc, const char **argv )
         log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
                          l_timeout_minutes, l_max_file_size);
         int64_t l_timeout = l_timeout_minutes * 60000;
-        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, &l_max_file_size);
+        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
     }
 
     if ( dap_enc_init() != 0 ){
