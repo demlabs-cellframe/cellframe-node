@@ -604,10 +604,11 @@ void exit_if_server_already_running( void ) {
     struct flock lock = { .l_type = F_WRLCK };
     int fd = open(s_pid_file_path, O_WRONLY);
     log_it(L_NOTICE, "this cellframe-node PID -- %d", getpid());
-    log_it( L_NOTICE, "errno - %d", errno);
+    log_it( L_NOTICE, "errno open - %d", errno);
     if (fcntl(fd, F_SETLK, &lock) == -1) {
         log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
                           ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
+        log_it( L_NOTICE, "errno fcntl - %d", errno);
         exit( -2 );
     }
 #endif
