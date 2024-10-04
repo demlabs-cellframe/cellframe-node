@@ -138,10 +138,27 @@ static const char *s_pid_file_path = NULL;
 #include <jni.h>
 #endif
 
+
+#define STR_(X) #X
+#define STR(X) STR_(X)
+
+#ifndef BUILD_HASH
+    #define BUILD_HASH "0000000" // 0000000 means uninitialized
+#endif
+
+char *node_version() {
+    
+    static char VERSIONSTRING[64] = {0};
+    sprintf(VERSIONSTRING, "CellframeNode, %s, %s, %s", DAP_VERSION, BUILD_TS, BUILD_HASH);
+    return VERSIONSTRING;
+}
+
+
 void set_global_sys_dir(const char *dir)
 {
     g_sys_dir_path = dap_strdup(dir);
 }
+
 
 int main( int argc, const char **argv )
 {
@@ -159,6 +176,12 @@ int main( int argc, const char **argv )
 #if !DAP_OS_ANDROID
     if (argv[1] && argv[2] &&!dap_strcmp("-B" , argv[1]))
         g_sys_dir_path = (char*)argv[2];
+
+    if (argv[1] &&!dap_strcmp("-version" , argv[1])) //sorry for this...
+    {    
+        printf("%s\n", node_version());
+        exit(0);
+    }
 #endif
 
     if (!g_sys_dir_path) {
@@ -193,6 +216,7 @@ int main( int argc, const char **argv )
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
+
     log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
@@ -568,7 +592,7 @@ void parse_args( int argc, const char **argv ) {
 #endif
 
         }
-
+        
         case 'D':
         {
             log_it( L_INFO, "Daemonize server starting..." );
