@@ -420,7 +420,7 @@ int main( int argc, const char **argv )
                 dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
         }
 
-        if (dap_json_rpc_init(l_server)) {
+        if (dap_json_rpc_init(l_server, g_config)) {
             log_it( L_CRITICAL, "Can't init json-rpc" );
             return -12;
         } 
