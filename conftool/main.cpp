@@ -43,6 +43,7 @@ command param1 param2 param3 ....
 #include <windows.h>
 #endif 
 
+namespace conftool {
 std::string getHostName(void)
 {
     std::string res = "unknown";
@@ -106,8 +107,13 @@ LONG GetStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &
 
 namespace fs = std::filesystem;
 
-std::string getNodeConfigPath(){
-    #ifdef __linux__ 
+std::string getNodeConfigPath(std::string basepath){
+
+    #ifdef ANDROID
+        return basepath;
+    #endif
+
+    #ifdef __linux__
         return "/opt/cellframe-node/";
     #endif
     
@@ -115,7 +121,8 @@ std::string getNodeConfigPath(){
         return  "/Applications/CellframeNode.app/Contents/Resources/";
     #endif
 
-    #ifdef WIN32 
+
+    #ifdef WIN32
         HKEY hKey;
         LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey);
         bool bExistsAndSuccess (lRes == ERROR_SUCCESS);
@@ -268,27 +275,16 @@ bool run_commands(std::vector <std::unique_ptr<CAbstractScriptCommand>> &command
 }
 
 
-void populate_variables()
+void populate_variables(std::string basepath)
 {
     variable_storage["HOST_OS"] = HOST_OS;
     variable_storage["HOSTNAME"] = getHostName();
-    variable_storage["CONFIGS_PATH"] = getNodeConfigPath();
+    variable_storage["CONFIGS_PATH"] = getNodeConfigPath(basepath);
     variable_storage["NODE_BINARY_PATH"] = getNodeBinaryPath();
 }
 
-int init_configs(int argc, char *argv[], int flags)
+int init_configs(std::string init_file_name, int flags, int non_interactive)
 {   
-    //--init already exists, give me filename
-    std::string init_file_name = getCmdOption(argv, argv+argc, "--init", "-i");
-
-    std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
-    
-    if (!node_intall_path.empty())
-    {
-        variable_storage["CONFIGS_PATH"] = node_intall_path;
-    }
-
-    bool non_interactive = cmdOptionExists(argv, argv+argc, "--non-interactive") || cmdOptionExists(argv, argv+argc, "-n");
 
     if (init_file_name.empty())
     {
@@ -310,11 +306,14 @@ int init_configs(int argc, char *argv[], int flags)
 
     return 0;
 
-}       
+}
+}
+
+using namespace conftool;
 
 int main(int argc, char * argv[])
 {
-    populate_variables();
+    populate_variables(""); //basepath used only for android
 
     if(cmdOptionExists(argv, argv+argc, "-h") || cmdOptionExists(argv, argv+argc, "--help"))
     {
@@ -335,13 +334,21 @@ int main(int argc, char * argv[])
 
     if (cmdOptionExists(argv, argv+argc, "--dryrun") || cmdOptionExists(argv, argv+argc, "-d")) flags = flags | F_DRYRUN;
 
-
     if(cmdOptionExists(argv, argv+argc, "-i") || cmdOptionExists(argv, argv+argc, "--init"))
     {
-        return init_configs(argc, argv, flags);
+        //--init already exists, give me filename
+        std::string init_file_name = getCmdOption(argv, argv+argc, "--init", "-i");
+        std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
+
+        if (!node_intall_path.empty())
+        {
+            variable_storage["CONFIGS_PATH"] = node_intall_path;
+        }
+
+        bool non_interactive = cmdOptionExists(argv, argv+argc, "--non-interactive") || cmdOptionExists(argv, argv+argc, "-n");
+
+        return init_configs(init_file_name, flags, non_interactive);
     }
-
-
 
     if(cmdOptionExists(argv, argv+argc, "-e") || cmdOptionExists(argv, argv+argc, "--exec"))
     {
@@ -370,7 +377,6 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-    
     print_help();
     return 0;
 }

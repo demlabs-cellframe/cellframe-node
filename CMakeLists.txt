@@ -201,7 +201,7 @@ set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 
 set( NODE_SOURCES
-  sources/main.c
+        sources/cellframe-node.c
   sources/sig_unix_handler.c
 )
 set( NODE_CLI_SOURCES
@@ -218,6 +218,8 @@ if(UNIX)
         ${NODE_CLI_SOURCES}
         ${NODE_TOOL_SOURCES}
     )
+    add_subdirectory(sources/android)
+
   else()
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
@@ -226,7 +228,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    add_executable(${PROJECT_NAME} "sources/main.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
+    add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
@@ -255,9 +257,7 @@ if(BUILD_DIAGTOOL)
     add_subdirectory(diagtool)
 endif()
 
-if (NOT ANDROID)
 add_subdirectory(conftool)
-endif()
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
@@ -346,7 +346,7 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log  )
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
@@ -445,4 +445,3 @@ else()
 
 endif()
 INCLUDE(CPack)
-
