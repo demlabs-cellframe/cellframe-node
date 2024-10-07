@@ -145,6 +145,9 @@ void set_global_sys_dir(const char *dir)
 
 int main( int argc, const char **argv )
 {
+    if ( argv[1] && !dap_strcmp("-version", argv[1]) )
+        return printf("%s\n", dap_node_version()), 0;
+        
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
@@ -607,3 +610,14 @@ void exit_if_server_already_running( void ) {
 #endif
 }
 
+#ifndef BUILD_HASH
+#define BUILD_HASH "0000000" // 0000000 means uninitialized
+#endif
+
+#ifndef BUILD_TS
+#define BUILD_TS "undefined"
+#endif
+
+const char *dap_node_version() {
+    return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
+}
