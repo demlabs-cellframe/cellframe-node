@@ -126,16 +126,26 @@
 
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
-
+const char *dap_node_version();
 static int s_proc_running_check(const char *a_path);
-
-extern int errno;
 
 #ifdef DAP_OS_ANDROID
 #include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
 #endif
+
+#ifndef BUILD_HASH
+#define BUILD_HASH "0000000" // 0000000 means uninitialized
+#endif
+
+#ifndef BUILD_TS
+#define BUILD_TS "undefined"
+#endif
+
+const char *dap_node_version() {
+    return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
+}
 
 void set_global_sys_dir(const char *dir)
 {
@@ -617,16 +627,4 @@ int s_proc_running_check(const char *a_path) {
     fflush(l_pidfile);
     return lockf(fileno(l_pidfile), F_TLOCK, sizeof(pid_t));
 #endif
-}
-
-#ifndef BUILD_HASH
-#define BUILD_HASH "0000000" // 0000000 means uninitialized
-#endif
-
-#ifndef BUILD_TS
-#define BUILD_TS "undefined"
-#endif
-
-const char *dap_node_version() {
-    return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
 }
