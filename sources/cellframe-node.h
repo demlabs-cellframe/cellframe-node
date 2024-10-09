@@ -13,6 +13,7 @@ void set_global_sys_dir(const char *dir);
 typedef bool (*dap_notify_data_user_callback_t)(const char *data);
 void dap_notify_data_set_user_callback(dap_notify_data_user_callback_t callback);
 char *dap_cli_exec(int argc, char **argv);
+const char *dap_node_version();
 
 };
 #endif //NODE_CELLFRAME_NODE_H

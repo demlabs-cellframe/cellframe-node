@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <getopt.h>
 #include <signal.h>
+#include <errno.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -125,19 +127,26 @@
 
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
-
-void parse_args( int argc, const char **argv );
-void exit_if_server_already_running( void );
-
-#ifndef DAP_OS_WINDOWS
-static const char *s_pid_file_path = NULL;
-#endif
+const char *dap_node_version();
+static int s_proc_running_check(const char *a_path);
 
 #ifdef DAP_OS_ANDROID
 #include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
 #endif
+
+#ifndef BUILD_HASH
+#define BUILD_HASH "0000000" // 0000000 means uninitialized
+#endif
+
+#ifndef BUILD_TS
+#define BUILD_TS "undefined"
+#endif
+
+const char *dap_node_version() {
+    return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
+}
 
 void set_global_sys_dir(const char *dir)
 {
@@ -146,6 +155,9 @@ void set_global_sys_dir(const char *dir)
 
 int main( int argc, const char **argv )
 {
+    if ( argv[1] && !dap_strcmp("-version", argv[1]) )
+        return printf("%s\n", dap_node_version()), 0;
+        
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
@@ -209,15 +221,18 @@ int main( int argc, const char **argv )
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH] = {'\0'};
     sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
-    s_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir) ;
-    save_process_pid_in_file(s_pid_file_path);
+    char *l_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir);
+    int l_pid_check = s_proc_running_check(l_pid_file_path);
+    DAP_DELETE(l_pid_file_path);
+    if (l_pid_check)
+        return 2;
+#else
+    if ( s_proc_running_check("DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94"
+                              "B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56") )
+        return 2;
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
-    
-#if !DAP_OS_ANDROID
-    parse_args( argc, argv );
-#endif
 
     l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
@@ -544,7 +559,7 @@ static struct option long_options[] = {
     { NULL,   0, NULL, 0 } // must be a last element
 };
 
-void parse_args( int argc, const char **argv ) {
+/*void parse_args( int argc, const char **argv ) {
 
     int opt, option_index = 0, is_daemon = 0;
 
@@ -579,7 +594,7 @@ void parse_args( int argc, const char **argv ) {
         case 'D':
         {
             log_it( L_INFO, "Daemonize server starting..." );
-            exit_if_server_already_running( );
+            //exit_if_server_already_running( );
             is_daemon = 1;
             daemonize_process( );
             break;
@@ -590,27 +605,33 @@ void parse_args( int argc, const char **argv ) {
         }
     }
 
-    if( !is_daemon )
-        exit_if_server_already_running( );
-}
+    //if( !is_daemon )
+    //    exit_if_server_already_running( );
+}*/
 
-void exit_if_server_already_running( void ) {
-
+int s_proc_running_check(const char *a_path) {
 #ifdef DAP_OS_WINDOWS
-    CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56");
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        log_it( L_WARNING, "DapServer is already running, multiple instances are prohibited by config. Exiting...");
-        exit( -2 );
-    }
+    CreateEvent(0, TRUE, FALSE, a_path);
+    return GetLastError() == ERROR_ALREADY_EXISTS ? ( log_it(L_ERROR, "dap_server is already running"), 1 ) : 0;
 #else
-    pid_t pid = get_pid_from_file(s_pid_file_path);
-    struct flock lock = { .l_type = F_WRLCK };
-    int fd = open(s_pid_file_path, O_WRONLY);
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
-                          ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
-        exit( -2 );
-    }
+    FILE *l_pidfile = fopen(a_path, "r");
+    if (l_pidfile) {
+        pid_t f_pid = 0;
+        fscanf( l_pidfile, "%d", &f_pid );
+        if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
+            return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %d",
+                           errno, dap_strerror(errno), f_pid), 1;
+        }
+        else
+            l_pidfile = freopen(a_path, "w", l_pidfile);
+    } else
+        l_pidfile = fopen(a_path, "w");
+    
+    if (!l_pidfile)
+        return log_it(L_ERROR, "Can't open file %s for writing, error %d: %s", 
+                                a_path, errno, dap_strerror(errno)), 2;
+    fprintf(l_pidfile, "%d", getpid());
+    fflush(l_pidfile);
+    return lockf(fileno(l_pidfile), F_TLOCK, sizeof(pid_t));
 #endif
 }
-
