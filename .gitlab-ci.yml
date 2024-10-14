@@ -139,7 +139,7 @@ amd64:macos.release:
     artifacts:
       paths:
         - build_*/*.pkg
-amd64:macos.debug:
+.amd64:macos.debug:
     extends: .build
     image: demlabs/macos/amd64:qt5
     before_script: 
