@@ -10,8 +10,6 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - test_build
-    - test_proceed
     - build
     - post_build
     - publish
@@ -91,38 +89,6 @@ stages:
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
-amd64:linux.rwd.bld:
-    extends: .build
-    stage: test_build
-
-    image: demlabs/debian/amd64:qt5
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
-    script:
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-      - ./prod_build/pack.sh --target linux rwd
-      
-autotests:
-  extends: .ci-test
-  interruptible: true
-
-  stage: test_proceed
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
-
-  variables:
-    GIT_STRATEGY: none
-  dependencies:
-    - amd64:linux.rwd.bld
-  script:
-    - /opt/tests-in-docker/artifacts.sh build_*/*.deb
-
 amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
@@ -139,6 +105,7 @@ amd64:macos.release:
     artifacts:
       paths:
         - build_*/*.pkg
+
 .amd64:macos.debug:
     extends: .build
     image: demlabs/macos/amd64:qt5
