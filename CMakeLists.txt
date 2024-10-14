@@ -101,6 +101,11 @@ add_subdirectory(cellframe-sdk)
 
 if(UNIX)
     if(DARWIN)
+        SET(CMAKE_CXX_FLAGS_RELEASE "-O0")
+        SET(CMAKE_C_FLAGS_RELEASE "-O0")
+        SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O0")
+        SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O0")
+
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
         SET(CPACK_INSTALL_PREFIX "/Applications/CellframeNode.app")
         SET(DESTDIR "/Applications/CellframeNode.app")
@@ -122,7 +127,6 @@ if(UNIX)
 
   if(LINUX)
     message("[*] Linux package setup")
-
     SET( CPACK_GENERATOR "DEB")
     SET( CPACK_SYSTEM_TYPE "${DEBIAN_OS_RELEASE_NAME}")
     SET( CPACK_SYSTEM_VERSION "${DEBIAN_OS_VERSION}")
