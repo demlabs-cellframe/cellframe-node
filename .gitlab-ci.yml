@@ -98,7 +98,7 @@ amd64:macos.release:
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target osx debug #-DBUILD_DIAGTOOL=ON
-      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
+      - ./prod_build/pack.sh --target osx debug --sign /opt/buildtools/sign/macos/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*-signed.pkg --redirect-from macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
 
