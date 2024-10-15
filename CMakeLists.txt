@@ -101,11 +101,6 @@ add_subdirectory(cellframe-sdk)
 
 if(UNIX)
     if(DARWIN)
-        SET(CMAKE_CXX_FLAGS_RELEASE "-O0")
-        SET(CMAKE_C_FLAGS_RELEASE "-O0")
-        SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O0")
-        SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O0")
-
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
         SET(CPACK_INSTALL_PREFIX "/Applications/CellframeNode.app")
         SET(DESTDIR "/Applications/CellframeNode.app")
