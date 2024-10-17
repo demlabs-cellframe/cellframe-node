@@ -132,11 +132,11 @@ bool CConfigCommand::execute(bool non_intercative, int flags)
         std::string cfg_val;
         bool param_exists = cfg.exists(this->group, this->param, &cfg_val);
         std::cout << this->cfg_name << ": ["<<this->group<<"] " << this->param+"="+cfg_val<<std::endl;
-        return true;
+        return false;
     };
     
     //actions return true if config was altered and need to be saved
     bool res =  actions[this->action]();
     if (res) cfg.save();
-    return res;
+    return true;
 }
