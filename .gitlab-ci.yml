@@ -135,7 +135,7 @@ amd64:linux.rwd:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
       
 
 amd64:windows.rwd:
@@ -195,7 +195,7 @@ amd64:linux.rwd.opt:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
 
 
-.amd64:linux.tps:
+amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
