@@ -23,6 +23,17 @@ SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(DESTDIR "/opt/${PROJECT_NAME}")
 
+string(TIMESTAMP BUILD_TIMESTAMP "%d.%m.%Y")
+
+execute_process(
+    COMMAND git log -1 --format=%h
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+message("Build date: ${BUILD_TIMESTAMP}")
+message("Git SHA: ${GIT_COMMIT_HASH}")
+
 #SET(DAP_PQLR OFF)
 #possible need be setted during crosscompily
 #by default it uses dpkg --print-architecture
@@ -32,6 +43,8 @@ SET(DESTDIR "/opt/${PROJECT_NAME}")
 
 # init CellFrame SDK
 add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
+add_definitions("-DBUILD_TS=\"${BUILD_TIMESTAMP}\"")
+add_definitions("-DBUILD_HASH=\"${GIT_COMMIT_HASH}\"")
 set(SUBMODULES_NO_BUILD ON)
 option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
