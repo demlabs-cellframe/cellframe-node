@@ -324,11 +324,6 @@ int main( int argc, const char **argv )
         return -60;
     }
 
-    if( dap_chain_wallet_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
     if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
@@ -361,6 +356,11 @@ int main( int argc, const char **argv )
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
+    }
+
+    if( dap_chain_wallet_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
     }
 
     if( dap_chain_net_srv_init() ){
