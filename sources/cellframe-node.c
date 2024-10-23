@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <getopt.h>
 #include <signal.h>
+#include <errno.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -124,23 +126,37 @@
 
 #define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
-
-void parse_args( int argc, const char **argv );
-void exit_if_server_already_running( void );
-
-#ifndef DAP_OS_WINDOWS
-static const char *s_pid_file_path = NULL;
-#endif
+const char *dap_node_version();
+static int s_proc_running_check(const char *a_path);
 
 #ifdef DAP_OS_ANDROID
 #include "dap_app_cli.h"
 #include <android/log.h>
 #include <jni.h>
-JNIEXPORT int Java_com_CellframeWallet_Node_cellframeNodeMain(JNIEnv *javaEnv, jobject __unused jobj, jobjectArray argvStr)
-#else
-int main( int argc, const char **argv )
 #endif
+
+#ifndef BUILD_HASH
+#define BUILD_HASH "0000000" // 0000000 means uninitialized
+#endif
+
+#ifndef BUILD_TS
+#define BUILD_TS "undefined"
+#endif
+
+const char *dap_node_version() {
+    return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
+}
+
+void set_global_sys_dir(const char *dir)
 {
+    g_sys_dir_path = dap_strdup(dir);
+}
+
+int main( int argc, const char **argv )
+{
+    if ( argv[1] && !dap_strcmp("-version", argv[1]) )
+        return printf("%s\n", dap_node_version()), 0;
+        
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
@@ -163,7 +179,8 @@ int main( int argc, const char **argv )
 #elif DAP_OS_MAC
         g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif DAP_OS_ANDROID
-        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
+        //must be set from jni through set_global_sys_dir befor main starts
+        //g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -180,6 +197,11 @@ int main( int argc, const char **argv )
 #else
         dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
+#ifdef DAP_OS_ANDROID
+        dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
+
+#endif
+
         DAP_DELETE(l_log_dir);
         DAP_DELETE(l_log_file);
     }
@@ -198,18 +220,20 @@ int main( int argc, const char **argv )
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH] = {'\0'};
     sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
-    s_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir) ;
-    save_process_pid_in_file(s_pid_file_path);
+    char *l_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir);
+    int l_pid_check = s_proc_running_check(l_pid_file_path);
+    DAP_DELETE(l_pid_file_path);
+    if (l_pid_check)
+        return 2;
+#else
+    if ( s_proc_running_check("DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94"
+                              "B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56") )
+        return 2;
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
-    
-#if !DAP_OS_ANDROID
-    parse_args( argc, argv );
-#endif
 
-      l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-    //  bDebugMode = true;//dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
+    l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
     if ( l_debug_mode )
         log_it( L_ATT, "*** DEBUG MODE ***" );
@@ -219,6 +243,15 @@ int main( int argc, const char **argv )
     dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
+    
+    if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
+        size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
+                l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
+        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+                         l_timeout_minutes, l_max_file_size);
+        int64_t l_timeout = l_timeout_minutes * 60000;
+        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
+    }
 
     if ( dap_enc_init() != 0 ){
         log_it( L_CRITICAL, "Can't init encryption module" );
@@ -412,21 +445,17 @@ int main( int argc, const char **argv )
 #endif
         dap_server_set_default(l_server);
         dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-
-        bool http_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false);
-        log_it(L_DEBUG, "config bootstrap_balancer->http_server = \"%u\" ", http_bootstrap_balancer_enabled);
-        if (http_bootstrap_balancer_enabled) {
-            // HTTP URL add
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER, DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false) ) {
+            log_it(L_DEBUG, "HTTP balancer enabled");
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER,
+                                     DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
+        }
+        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false) ) {
+            log_it(L_DEBUG, "DNS balancer enabled");
+            dap_dns_server_start("bootstrap_balancer");
         }
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    bool dns_bootstrap_balancer_enabled = dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false);
-    log_it(L_DEBUG, "config bootstrap_balancer->dns_server = \"%u\" ", dns_bootstrap_balancer_enabled);
-    if (dns_bootstrap_balancer_enabled) {        
-        dap_dns_server_start("bootstrap_balancer");
-    }
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
@@ -523,7 +552,7 @@ static struct option long_options[] = {
     { NULL,   0, NULL, 0 } // must be a last element
 };
 
-void parse_args( int argc, const char **argv ) {
+/*void parse_args( int argc, const char **argv ) {
 
     int opt, option_index = 0, is_daemon = 0;
 
@@ -558,7 +587,7 @@ void parse_args( int argc, const char **argv ) {
         case 'D':
         {
             log_it( L_INFO, "Daemonize server starting..." );
-            exit_if_server_already_running( );
+            //exit_if_server_already_running( );
             is_daemon = 1;
             daemonize_process( );
             break;
@@ -569,27 +598,33 @@ void parse_args( int argc, const char **argv ) {
         }
     }
 
-    if( !is_daemon )
-        exit_if_server_already_running( );
-}
+    //if( !is_daemon )
+    //    exit_if_server_already_running( );
+}*/
 
-void exit_if_server_already_running( void ) {
-
+int s_proc_running_check(const char *a_path) {
 #ifdef DAP_OS_WINDOWS
-    CreateEvent(0, TRUE, FALSE, "DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56");
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        log_it( L_WARNING, "DapServer is already running, multiple instances are prohibited by config. Exiting...");
-        exit( -2 );
-    }
+    CreateEvent(0, TRUE, FALSE, a_path);
+    return GetLastError() == ERROR_ALREADY_EXISTS ? ( log_it(L_ERROR, "dap_server is already running"), 1 ) : 0;
 #else
-    pid_t pid = get_pid_from_file(s_pid_file_path);
-    struct flock lock = { .l_type = F_WRLCK };
-    int fd = open(s_pid_file_path, O_WRONLY);
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        log_it( L_WARNING, "DapServer is already running, pid %"DAP_UINT64_FORMAT_U
-                          ", multiple instances are prohibited by config. Exiting...", (uint64_t)pid);
-        exit( -2 );
-    }
+    FILE *l_pidfile = fopen(a_path, "r");
+    if (l_pidfile) {
+        pid_t f_pid = 0;
+        fscanf( l_pidfile, "%d", &f_pid );
+        if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
+            return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %d",
+                           errno, dap_strerror(errno), f_pid), 1;
+        }
+        else
+            l_pidfile = freopen(a_path, "w", l_pidfile);
+    } else
+        l_pidfile = fopen(a_path, "w");
+    
+    if (!l_pidfile)
+        return log_it(L_ERROR, "Can't open file %s for writing, error %d: %s", 
+                                a_path, errno, dap_strerror(errno)), 2;
+    fprintf(l_pidfile, "%d", getpid());
+    fflush(l_pidfile);
+    return lockf(fileno(l_pidfile), F_TLOCK, sizeof(pid_t));
 #endif
 }
-
