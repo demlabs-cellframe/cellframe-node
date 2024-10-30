@@ -61,6 +61,7 @@ endif()
 #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
 
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
+#set(BUILD_DAP_SDK_TESTS ON)
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
@@ -77,7 +78,7 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX)
+if(!LINUX)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
