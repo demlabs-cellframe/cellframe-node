@@ -111,6 +111,8 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
 
+#include "dap_chain_wallet_cache.h"
+
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
