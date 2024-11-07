@@ -143,6 +143,8 @@ static int s_proc_running_check(const char *a_path);
 #define BUILD_TS "undefined"
 #endif
 
+#define NODE_NAME "cellframe-node"
+
 const char *dap_node_version() {
     return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
 }
@@ -162,15 +164,15 @@ int main( int argc, const char **argv )
     bool bServerEnabled = false;
     int rc = 0;
 
-    dap_set_appname("cellframe-node");
+    dap_set_appname(NODE_NAME);
 #if defined(_WIN32) && defined(NDEBUG)
     S_SetExceptionFilter( );
 #endif
 
     // get relative path to config
 #if !DAP_OS_ANDROID
-    if (argv[1] && argv[2] &&!dap_strcmp("-B" , argv[1]))
-        g_sys_dir_path = (char*)argv[2];
+    if (argc > 2 && !dap_strcmp("-B" , argv[1]))
+        g_sys_dir_path = dap_strdup(argv[2]);
 #endif
 
     if (!g_sys_dir_path) {
@@ -185,7 +187,9 @@ int main( int argc, const char **argv )
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
     }
-
+    if ( !dap_dir_test(g_sys_dir_path) )
+        return printf("Invalid path \"%s\"", g_sys_dir_path), DAP_DELETE(g_sys_dir_path), -1;
+        
     {
         char *l_log_dir = dap_strdup_printf("%s/var/log", g_sys_dir_path);
         dap_mkdir_with_parents(l_log_dir);
@@ -208,8 +212,8 @@ int main( int argc, const char **argv )
     log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
 
     {
-        char l_config_dir[MAX_PATH] = {'\0'};
-        sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
+        char l_config_dir[MAX_PATH + 1];
+        snprintf(l_config_dir, sizeof(l_config_dir), "%s/etc", g_sys_dir_path);
         if (dap_config_init(l_config_dir) != 0) {
             log_it( L_CRITICAL,"Can't init general configurations" );
             return -1;
