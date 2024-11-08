@@ -620,7 +620,7 @@ static int s_cert_get_addr(int argc, const char **argv) {
  */
 static int s_init()
 {
-    if ( dap_common_init(dap_get_appname(), NULL, NULL) )
+    if ( dap_common_init(dap_get_appname(), NULL) )
         return printf("Fatal Error: Can't init common functions module"), -2;
 #if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
         dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
@@ -632,7 +632,7 @@ static int s_init()
         char l_config_dir[MAX_PATH];
         snprintf(l_config_dir, MAX_PATH, "%s/etc", g_sys_dir_path);
         if ( dap_config_init(l_config_dir) || !(g_config = dap_config_open(dap_get_appname())) )
-            return printf("Can't init general configurations %s/%s.cfg\n", l_config_dir, dap_get_appname()), -3;
+            return printf("Can't init general config \"%s/%s.cfg\"\n", l_config_dir, dap_get_appname()), -3;
     }
     char *l_ca_path = dap_config_get_item_str_path_default(g_config, "resources", "ca_folders", "."),
          *l_wal_path = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", ".");

@@ -63,16 +63,18 @@ int main(int argc, const char *argv[])
         g_sys_dir_path =
 #ifdef DAP_OS_WINDOWS
             dap_strdup_printf("%s/%s", regGetUsrPath(), NODE_NAME);
-        SetConsoleCP(1252);
-        SetConsoleOutputCP(1252);
-        WSADATA wsaData;
-        WSAStartup(MAKEWORD(2,2), &wsaData);
 #elif defined DAP_OS_MAC
             dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
 #elif defined DAP_OS_UNIX
             dap_strdup_printf("/opt/%s", NODE_NAME);
 #endif
     }
+#ifdef DAP_OS_WINDOWS
+    SetConsoleCP(1252);
+    SetConsoleOutputCP(1252);
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2,2), &wsaData);
+#endif
     dap_log_level_set(L_CRITICAL);
     int res = dap_app_cli_main(NODE_NAME, argc, argv);
     switch (res) {
