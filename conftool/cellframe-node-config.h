@@ -12,5 +12,7 @@ namespace conftool {
     int init_configs(std::string init_file_name, int flags, int non_interactive);
     std::unique_ptr<CAbstractScriptCommand> parse_line_to_cmd(std::string line, int line_no, int flags);
     bool run_commands(std::vector <std::unique_ptr<CAbstractScriptCommand>> &commands, int interactive, int flags);
+    void redirect_cout(std::streambuf *pstringbuf);
+    void reset_cout();
 }
 #endif //NODE_CELLFRAME_NODE_CONFIG_H

@@ -154,7 +154,7 @@ void set_global_sys_dir(const char *dir)
 
 int main( int argc, const char **argv )
 {
-    if ( argv[1] && !dap_strcmp("-version", argv[1]) )
+    if ( argc > 0 && argv[1] && !dap_strcmp("-version", argv[1]) )
         return printf("%s\n", dap_node_version()), 0;
         
     dap_server_t *l_server = NULL; // DAP Server instance
@@ -606,6 +606,8 @@ int s_proc_running_check(const char *a_path) {
 #ifdef DAP_OS_WINDOWS
     CreateEvent(0, TRUE, FALSE, a_path);
     return GetLastError() == ERROR_ALREADY_EXISTS ? ( log_it(L_ERROR, "dap_server is already running"), 1 ) : 0;
+#elif DAP_OS_ANDROID
+    return 0;
 #else
     FILE *l_pidfile = fopen(a_path, "r");
     if (l_pidfile) {

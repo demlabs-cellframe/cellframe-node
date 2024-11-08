@@ -79,12 +79,15 @@ public class MainActivity extends AppCompatActivity {
             nodeService.setup(true);
         }
 
+        if (txt.startsWith("netlist")){
+            addLogLine(">> " + nodeService.config("net_list"));
+        }
         if (txt.startsWith("config")){
             String cmd = txt.substring(txt.indexOf("config"));
-            nodeService.config("config cellframe-node general debug_mode ensure true");
-            nodeService.config("network Backbone ensure off");
-            nodeService.config("network KelVPN ensure off");
-            nodeService.config("network riemann ensure on");
+            addLogLine(">> " + nodeService.config("config cellframe-node general debug_mode ensure true"));
+            addLogLine(">> " + nodeService.config("network Backbone ensure off"));
+            addLogLine(">> " + nodeService.config("network KelVPN ensure off"));
+            addLogLine(">> " + nodeService.config("network riemann ensure on"));
         }
     }
 

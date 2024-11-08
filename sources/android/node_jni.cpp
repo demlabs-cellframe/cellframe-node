@@ -157,21 +157,32 @@ extern "C" JNIEXPORT jint JNICALL Java_com_cellframe_node_NodeService_initConfig
 
 
 
-extern "C" JNIEXPORT jint JNICALL Java_com_cellframe_node_NodeService_configure(
+extern "C" JNIEXPORT jstring JNICALL Java_com_cellframe_node_NodeService_configure(
         JNIEnv* env,
         jobject /* this */, jstring base_path, jstring config_command)
 {
     try {
+        std::stringstream stdout_stream;
+        conftool::redirect_cout(stdout_stream.rdbuf());
+
         conftool::populate_variables(jstring2string(env, base_path));
 
         std::vector < std::unique_ptr<CAbstractScriptCommand>> commands;
         commands.push_back(conftool::parse_line_to_cmd(jstring2string(env, config_command), 0, 0));
-        return conftool::run_commands(commands,false, 0);
+        conftool::run_commands(commands,false, 0);
+        conftool::reset_cout();
+        return env->NewStringUTF(stdout_stream.str().c_str());
     }
     catch (std::exception e){
         __android_log_print(ANDROID_LOG_ERROR, "CellframeNodeConfig", "Error in configuration init: %s" , e.what());
+        return env->NewStringUTF(e.what() );
     }
-    return -1;
+    return env->NewStringUTF("");
+}
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_cellframe_node_NodeService_nodeGetVersion(JNIEnv *env, jobject thiz) {
+    return env->NewStringUTF(dap_node_version());
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_com_cellframe_node_NodeService_clicommandArgs(JNIEnv *env, jobject instance,  jobjectArray stringArray)
@@ -217,6 +228,18 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_cellframe_node_NodeService_clic
 
     for(size_t i = 0; i < args.size(); i++)
         delete[] args[i];
+
+    return arr;
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL Java_com_cellframe_node_NodeService_clicommandJson(JNIEnv *env, jobject instance, jstring cmd)
+{
+    std::string rcmd = jstring2string(env, cmd);
+    char *answer = dap_cli_cmd_exec(const_cast<char*>(rcmd.c_str()));
+
+    int reslen = strlen(answer);
+    jbyteArray arr = env->NewByteArray(reslen);
+    env->SetByteArrayRegion(arr,0,reslen, (jbyte*)answer);
 
     return arr;
 }

@@ -46,11 +46,14 @@ NodeService extends Service {
 
     private native int nodeMainNative(String sys_dir);
     private native int initConfigs(String base_path, String setup_file_path);
-    private native int configure(String base_path, String commad);
+    private native String configure(String base_path, String commad);
     private native void setNotifyListenerNativeCallback(NJINotifyListener JNIListener);
     private native void clearNotifyListenerNativeCallbacks();
     private native byte[] clicommandString(String cmd);
     private native byte[] clicommandArgs(String[] args);
+    private native byte[] clicommandJson(String json);
+    private native String nodeGetVersion();
+
     private LinkedList<INodeNotifyListner> notify_listners = new LinkedList<INodeNotifyListner>();
 
 
@@ -101,7 +104,9 @@ NodeService extends Service {
         public boolean stopNode() throws RemoteException {
             Log.d(TAG, "Call stop");
             if (nodeThread == null || !isServiceStarted) return true;
-            nodeThread.interrupt();
+
+            clicommandString("exit");
+
             Log.d(TAG, "interrupting");
             try {
                 nodeThread.join();
@@ -113,11 +118,15 @@ NodeService extends Service {
         }
 
         @Override
-        public boolean config(String config_command) throws RemoteException {
+        public String config(String config_command) throws RemoteException {
             Log.d(TAG, "Call node config");
-            configure(getNodeWorkingDir(), config_command);
-            return false;
+            return configure(getNodeWorkingDir(), config_command);
         }
+
+        public String nodeVersion() throws RemoteException {
+            return nodeGetVersion();
+        }
+
 
         @Override
         public boolean isNodeRunning(){
@@ -137,6 +146,10 @@ NodeService extends Service {
 
         public String cliCommand(String args[]) throws RemoteException {
             return new String(clicommandArgs(args), StandardCharsets.US_ASCII);
+        }
+
+        public String cliCommandJson(String json) throws RemoteException {
+            return new String(clicommandJson(json), StandardCharsets.US_ASCII);
         }
 
         @Override
@@ -207,7 +220,8 @@ NodeService extends Service {
         super.onCreate();
         Log.d(TAG, "The service has been created".toUpperCase());
         Toast.makeText(this, "Service created", Toast.LENGTH_SHORT).show();
-        copyAssetsAndCreateConfigs(!isFirstStart(this));
+        copyAssetsAndCreateConfigs(isFirstStart(this));
+
         setNotFirstStart(this);
         startForeground(1, createNotification());
         //initConfigs("lol");

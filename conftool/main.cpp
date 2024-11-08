@@ -307,6 +307,18 @@ int init_configs(std::string init_file_name, int flags, int non_interactive)
     return 0;
 
 }
+
+static std::streambuf *oldbuf = nullptr;
+void redirect_cout(std::streambuf *pstringbuf)
+{
+    oldbuf = std::cout.rdbuf(pstringbuf);
+}
+
+void reset_cout()
+{
+    if (oldbuf) std::cout.rdbuf(oldbuf);
+    oldbuf = nullptr;
+}
 }
 
 using namespace conftool;
