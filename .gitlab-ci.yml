@@ -213,7 +213,7 @@ amd64:linux.tps:
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
     when: manual
-    allow_failure: true
+
     script:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
       - ./prod_build/pack.sh --target linux release
