@@ -9,6 +9,9 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer ")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer ")
+
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
