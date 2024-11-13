@@ -1,2 +1,11 @@
 #!/bin/sh
 echo "preinstall!"
+echo "backup resources"
+
+APP_NAME=CellframeNode
+DAP_PREFIX=/Applications/CellframeNode.app/Contents/Resources
+NODE=com.demlabs.cellframe-node
+loggedInUser=$(stat -f '%Su' $HOME)
+
+
+mv  $DAP_PREFIX /tmp/cfnodebkp || true
