@@ -4,12 +4,14 @@
 APP_NAME=CellframeNode
 DAP_PREFIX=/Applications/CellframeNode.app/Contents/Resources
 NODE=com.demlabs.cellframe-node
+loggedInUser=$(stat -f '%Su' $HOME)
 
 mkdir -p $DAP_PREFIX
 mkdir -p $DAP_PREFIX/etc
 mkdir -p $DAP_PREFIX/share 
 mkdir -p $DAP_PREFIX/var/run/ 
 mkdir -p $DAP_PREFIX/var/lib/ 
+mkdir -p $DAP_PREFIX/var/lib/wallet 
 
 /Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -i /Applications/CellframeNode.app/Contents/Resources/share/default.setup
 
@@ -21,4 +23,26 @@ chmod 777 $(find ${DAP_PREFIX}/ -type d)
 
 echo "[!] Copy daemon plist"
 cp /Applications/CellframeNode.app/Contents/Resources/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
+
+#migrates wallets from 5.2
+echo "Migrate 5.2 wallets"
+SOURCE_DIR="/Users/${loggedInUser}/Applications/Cellframe.app/Contents/Resources/var/lib/wallet/"
+DEST_DIR=${DAP_PREFIX}/var/lib/wallet 
+
+# Copy and rename files
+for SOURCE_FILE in "$SOURCE_DIR"*; do
+
+    if [[ -f "$SOURCE_FILE" ]]; then
+        BASE_NAME=$(basename "$SOURCE_FILE")
+        DEST_FILE="$DEST_DIR/$BASE_NAME"
+        COUNTER=1
+        while [[ -e "$DEST_FILE" ]]; do
+            DEST_FILE="$DEST_DIR/${BASE_NAME%.*}_$COUNTER.${BASE_NAME##*.}"
+            COUNTER=$((COUNTER + 1))
+        done
+        cp "$SOURCE_FILE" "$DEST_FILE"
+        echo "Copied: $SOURCE_FILE to $DEST_FILE"
+    fi
+done
+
 /Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service enable
