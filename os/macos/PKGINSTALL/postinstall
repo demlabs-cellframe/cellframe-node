@@ -27,7 +27,7 @@ cp /Applications/CellframeNode.app/Contents/Resources/com.demlabs.cellframe-node
 #migrates wallets from 5.2
 echo "Migrate 5.2 wallets"
 SOURCE_DIR="/Users/${loggedInUser}/Applications/Cellframe.app/Contents/Resources/var/lib/wallet/"
-DEST_DIR=${DAP_PREFIX}/var/lib/wallet 
+DEST_DIR=${DAP_PREFIX}/var/lib/wallet/ 
 
 # Copy and rename files
 for SOURCE_FILE in "$SOURCE_DIR"*; do
