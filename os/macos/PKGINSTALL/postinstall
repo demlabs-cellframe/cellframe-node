@@ -35,8 +35,11 @@ for SOURCE_FILE in "$SOURCE_DIR"*; do
     if [[ -f "$SOURCE_FILE" ]]; then
         BASE_NAME=$(basename "$SOURCE_FILE")
         DEST_FILE="$DEST_DIR/$BASE_NAME"
+        echo "BN: $BASE_NAME"
+        echo "DEST: $DEST_FILE"
         COUNTER=1
         while [[ -e "$DEST_FILE" ]]; do
+            echo "DEST: $DEST_FILE exists"
             DEST_FILE="$DEST_DIR/${BASE_NAME%.*}_$COUNTER.${BASE_NAME##*.}"
             COUNTER=$((COUNTER + 1))
         done
