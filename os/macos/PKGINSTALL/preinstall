@@ -7,5 +7,5 @@ DAP_PREFIX=/Applications/CellframeNode.app/Contents/Resources
 NODE=com.demlabs.cellframe-node
 loggedInUser=$(stat -f '%Su' $HOME)
 
-
+rm  -r /tmp/cfnodebkp/  || true
 mv  $DAP_PREFIX /tmp/cfnodebkp || true
