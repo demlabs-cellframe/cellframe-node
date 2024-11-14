@@ -13,7 +13,7 @@ mkdir -p $DAP_PREFIX/var/run/
 mkdir -p $DAP_PREFIX/var/lib/ 
 mkdir -p $DAP_PREFIX/var/lib/wallet 
 
-rsync -av --ignore-existing --remove-source-files /tmp/cfnodebkp/* $DAP_PREFIX
+rsync -av --ignore-existing --remove-source-files /tmp/cfnodebkp/Resources/* $DAP_PREFIX
 
 /Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -i /Applications/CellframeNode.app/Contents/Resources/share/default.setup
 
