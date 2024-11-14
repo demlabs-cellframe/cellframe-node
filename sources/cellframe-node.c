@@ -194,7 +194,7 @@ int main( int argc, const char **argv )
             printf("Can't create directory %s, error %d", l_path, errno);
             rc = -2;
         } else {
-            snprintf(l_path + pos, sizeof(l_path) - pos, "%s/%s.log", l_path, dap_get_appname());
+            snprintf(l_path + pos, sizeof(l_path) - pos, "/%s.log", dap_get_appname());
             if ( dap_common_init(dap_get_appname(), l_path) ) {
                 printf("Fatal Error: Can't init common functions module");
                 rc = -3;
@@ -222,8 +222,8 @@ int main( int argc, const char **argv )
     if (!( g_config = dap_config_open(dap_get_appname()) ))
         return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
 #ifndef DAP_OS_WINDOWS
-    char l_default_dir[MAX_PATH] = {'\0'};
-    sprintf(l_default_dir, "%s/tmp", g_sys_dir_path);
+    char l_default_dir[MAX_PATH + 1];
+    snprintf(l_default_dir, MAX_PATH + 1, "%s/tmp", g_sys_dir_path);
     char *l_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir);
     int l_pid_check = s_proc_running_check(l_pid_file_path);
     DAP_DELETE(l_pid_file_path);
@@ -253,7 +253,6 @@ int main( int argc, const char **argv )
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
         log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
                          l_timeout_minutes, l_max_file_size);
-        int64_t l_timeout = l_timeout_minutes * 60000;
         dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
     }
 
@@ -614,9 +613,8 @@ int s_proc_running_check(const char *a_path) {
     FILE *l_pidfile = fopen(a_path, "r");
     if (l_pidfile) {
         pid_t f_pid = 0;
-        fscanf( l_pidfile, "%d", &f_pid );
-        if (lockf(fileno(l_pidfile), F_TEST, 0) == -1) {
-            return log_it(L_ERROR, "Error %ld: \"%s\", dap_server is already running with PID %d",
+        if ( fscanf( l_pidfile, "%d", &f_pid ) && lockf(fileno(l_pidfile), F_TEST, 0) == -1 ) {
+            return log_it(L_ERROR, "Error %d: \"%s\", dap_server is already running with PID %d",
                            errno, dap_strerror(errno), f_pid), 1;
         }
         else
