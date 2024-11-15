@@ -212,6 +212,7 @@ endif()
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
+set(NODE_SIGN_TARGET "${PROJECT_NAME}-sign")
 
 set( NODE_SOURCES
         sources/cellframe-node.c
@@ -222,6 +223,9 @@ set( NODE_CLI_SOURCES
 )
 set( NODE_TOOL_SOURCES
   sources/main_node_tool.c
+)
+set( NODE_SIGN_SOURCES
+  sources/main_node_sign.c
 )
 
 if(UNIX)
@@ -237,6 +241,7 @@ if(UNIX)
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
     add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
+    add_executable(${NODE_SIGN_TARGET} ${NODE_TOOL_SOURCES})
   endif()
 endif()
 
@@ -244,6 +249,7 @@ if(WIN32)
     add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
+    add_executable(${NODE_SIGN_TARGET} "sources/main_node_sign.c")
 
     target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
 			kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
