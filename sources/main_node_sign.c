@@ -37,7 +37,6 @@
 #include "json.h"
 
 
-
 int main(int argc, const char **argv)
 {
   dap_set_appname("cellframe-node");
@@ -49,20 +48,34 @@ int main(int argc, const char **argv)
         l_rel_path = 1;
     }
 
-    if (!g_sys_dir_path) {
-    #ifdef DAP_OS_WINDOWS
-        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-    #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
-    #elif DAP_OS_UNIX
-        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-    #endif
-    }
+    // if (!g_sys_dir_path) {
+    // #ifdef DAP_OS_WINDOWS
+    //     g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+    // #elif DAP_OS_MAC
+    //     g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+    // #elif DAP_OS_UNIX
+    //     g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
+    // #endif
+    // }
+
+    // TODO: 
+    // Get data from stdin
 
 
+    // Parse json
 
 
+    // Make binary transaction
 
-  dap_config_close(g_config);
-  return -1;
+
+    // Sign it
+
+
+    // Convert to JSON transaction
+
+    // Send to stdout
+
+
+    dap_config_close(g_config);
+    return -1;
 }
