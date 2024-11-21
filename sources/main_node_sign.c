@@ -804,6 +804,11 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
     }
 
     json_object_object_add(json_obj_out, "items", json_arr_items);
+
+    json_object_object_add(json_obj_out, "timestamp", json_object_new_int64(dap_time_now()));
+    json_object_object_add(json_obj_out, "datum_type", json_object_new_string("tx"));
+
+
     const char *l_out_buf = json_object_to_json_string_ext(json_obj_out, JSON_C_TO_STRING_PRETTY );
     char *l_out = DAP_DUP_SIZE(l_out_buf, strlen(l_out_buf));
     json_object_put(json_obj_out);
