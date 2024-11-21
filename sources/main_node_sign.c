@@ -359,29 +359,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
         const uint8_t *l_item = NULL;
         switch (l_item_type) {
         case TX_ITEM_TYPE_IN: {
-            // Read prev_hash and out_prev_idx
-            const char *l_prev_hash_str = s_json_get_text(l_json_item_obj, "prev_hash");
-            int64_t l_out_prev_idx;
-            bool l_is_out_prev_idx = s_json_get_int64(l_json_item_obj, "out_prev_idx", &l_out_prev_idx);
-            // If prev_hash and out_prev_idx were read
-            if(l_prev_hash_str && l_is_out_prev_idx) {
-                dap_chain_hash_fast_t l_tx_prev_hash;
-                if(!dap_chain_hash_fast_from_str(l_prev_hash_str, &l_tx_prev_hash)) {
-                    // Create IN item
-                    dap_chain_tx_in_t *l_in_item = dap_chain_datum_tx_item_in_create(&l_tx_prev_hash, (uint32_t) l_out_prev_idx);
-                    if (!l_in_item) {
-                        printf("Unable to create in for transaction.");
-                        DAP_DEL_Z(l_tx);
-                        dap_list_free_full(l_sign_list, NULL);
-                        dap_list_free_full(l_tsd_list, NULL);
-                        dap_list_free_full(l_in_list, NULL);
-                        return NULL;
-                    }
-                    l_item = (const uint8_t*) l_in_item;
-                } else {
-                    printf("Invalid 'in' item, bad prev_hash %s", l_prev_hash_str);
-                }
-            }   
+            l_in_list = dap_list_append(l_in_list, l_json_item_obj);
         }
             break;
 
@@ -627,7 +605,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
             }
             size_t l_data_size = dap_strlen(l_tsd_data);
             dap_chain_tx_tsd_t *l_tsd = dap_chain_datum_tx_item_tsd_create((void*)l_tsd_data, (int)l_tsd_type, l_data_size);
-            l_item = (const uint8_t*) l_tsd;
+            l_tsd_list = dap_list_append(l_tsd_list, l_tsd);
         }
             break;
         }
@@ -638,6 +616,43 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
             DAP_DELETE(l_item);
         }
     }
+
+    dap_list_t *l_list = l_in_list;
+    while(l_list){
+        json_object *l_json_item_obj = (json_object*)l_in_list->data;
+        // Read prev_hash and out_prev_idx
+        const char *l_prev_hash_str = s_json_get_text(l_json_item_obj, "prev_hash");
+        int64_t l_out_prev_idx;
+        bool l_is_out_prev_idx = s_json_get_int64(l_json_item_obj, "out_prev_idx", &l_out_prev_idx);
+        // If prev_hash and out_prev_idx were read
+        if(l_prev_hash_str && l_is_out_prev_idx) {
+            dap_chain_hash_fast_t l_tx_prev_hash;
+            if(!dap_chain_hash_fast_from_str(l_prev_hash_str, &l_tx_prev_hash)) {
+                // Create IN item
+                dap_chain_tx_in_t *l_in_item = dap_chain_datum_tx_item_in_create(&l_tx_prev_hash, (uint32_t) l_out_prev_idx);
+                if (!l_in_item) {
+                    printf("Unable to create in for transaction.");
+                    DAP_DEL_Z(l_tx);
+                    dap_list_free_full(l_sign_list, NULL);
+                    dap_list_free_full(l_tsd_list, NULL);
+                    dap_list_free_full(l_in_list, NULL);
+                    return NULL;
+                }
+                dap_chain_datum_tx_add_item(&l_tx, (const uint8_t*) l_in_item);
+            } else {
+                printf("Invalid 'in' item, bad prev_hash %s", l_prev_hash_str);
+            }
+        } 
+        l_list = dap_list_next(l_list);
+    }
+    
+    l_list = l_tsd_list;
+    while(l_list) {
+        dap_chain_datum_tx_add_item(&l_tx, l_list->data);
+        l_items_ready++;
+        l_list = dap_list_next(l_list);
+    }
+    dap_list_free(l_tsd_list);          
 
     return l_tx;
 }
@@ -682,12 +697,12 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
             
             char l_pkey_base64[DAP_ENC_BASE64_ENCODE_SIZE(l_sign->header.sign_pkey_size) + 1];
             size_t l_pkey_base64_size = dap_enc_base64_encode(l_sign->pkey_n_sign, l_sign->header.sign_pkey_size, l_pkey_base64, DAP_ENC_DATA_TYPE_B64_URLSAFE); 
-            l_pkey_base64[DAP_ENC_BASE64_ENCODE_SIZE(l_sign->header.sign_pkey_size) + 1] = '\0';   
+            l_pkey_base64[l_pkey_base64_size] = '\0';   
             json_object_object_add(json_obj_item,"pub_key_b64", json_object_new_string(l_pkey_base64));     
 
             char l_sign_base64[DAP_ENC_BASE64_ENCODE_SIZE(l_sign->header.sign_size) + 1];
             size_t l_sign_base64_size = dap_enc_base64_encode(l_sign->pkey_n_sign + l_sign->header.sign_pkey_size, l_sign->header.sign_size, l_sign_base64, DAP_ENC_DATA_TYPE_B64_URLSAFE); 
-            l_sign_base64[DAP_ENC_BASE64_ENCODE_SIZE(l_sign->header.sign_pkey_size) + 1] = '\0';   
+            l_sign_base64[l_sign_base64_size] = '\0';   
             json_object_object_add(json_obj_item,"sig_b64", json_object_new_string(l_sign_base64));
 
         } break;
