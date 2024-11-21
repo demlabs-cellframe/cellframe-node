@@ -212,7 +212,7 @@ endif()
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
-set(NODE_SIGN_TARGET "${PROJECT_NAME}-sign")
+set(NODE_SIGN_TARGET "cellframe-sign-tool")
 
 set( NODE_SOURCES
         sources/cellframe-node.c
