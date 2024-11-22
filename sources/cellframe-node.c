@@ -407,12 +407,12 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    dap_chain_net_load_all();
-
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
     }
+
+    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
