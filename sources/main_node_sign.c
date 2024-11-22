@@ -550,7 +550,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                     dap_chain_tx_out_cond_t *l_out_cond_item = dap_chain_datum_tx_item_out_cond_create_fee(l_value);
                     l_item = (const uint8_t*) l_out_cond_item;
                     // Save value for using in In item
-                    if(l_item){
+                    if(!l_item){
                         printf("Unable to create conditional out for transaction "
                                                             "can of type %s described in item %zu.", l_subtype_str, i);
                     }
