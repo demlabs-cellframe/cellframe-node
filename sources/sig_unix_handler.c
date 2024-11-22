@@ -38,9 +38,10 @@ static void clear_pid_file() {
 }
 
 static void sig_exit_handler(int sig_code) {
+    
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
-
-    clear_pid_file();
+    exit(sig_code);
+    /*clear_pid_file();
 	
     dap_plugin_deinit();
     dap_chain_node_mempool_autoproc_deinit();
@@ -64,7 +65,7 @@ static void sig_exit_handler(int sig_code) {
     log_it(L_NOTICE,"Stopped Cellframe Node");
     fflush(stdout);
 
-    exit(0);
+    exit(0);*/
 }
 
 
