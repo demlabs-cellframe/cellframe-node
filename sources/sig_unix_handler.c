@@ -38,9 +38,9 @@ static void clear_pid_file() {
 }
 
 static void sig_exit_handler(int sig_code) {
-    
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
-    exit(sig_code);
+    fflush(stdout);
+    exit(0);
     /*clear_pid_file();
 	
     dap_plugin_deinit();
