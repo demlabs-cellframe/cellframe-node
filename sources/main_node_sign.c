@@ -58,7 +58,7 @@ static struct option const options[] =
 };
 
 static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_in);
-static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx);
+static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty);
 
 void bad_option(){
     printf("Usage: %s {-w, --wallet <path_to_wallet_file>} [OPTIONS]\n\r"
@@ -66,7 +66,8 @@ void bad_option(){
             "\t-w, --wallet     specifies wallet for datum sign\n\r"
             "\t-p, --passwd     specifies walled password if needed\n\r"
             "\t-f, --filename   specifies input json-file wits datum items. If not specified, it will be received from stdin\n\r"
-            "\t-o, --out        specifies output json-file. If not specified, it will be send into stdout\n\r", dap_get_appname());
+            "\t-o, --out        specifies output json-file. If not specified, it will be send into stdout\n\r"
+            "\t-b, --beauty     enables output JSON beautification\n\r", dap_get_appname());
 
     exit(EXIT_FAILURE);
 }
@@ -82,10 +83,11 @@ int main(int argc, char **argv)
     const char *l_in_file_path = NULL;
     const char *l_out_file_path = NULL;
     const char *l_pwd = NULL;
+    bool l_beautification = false;
 
     int optc = 0;
     int option_index = 0;
-    while ((optc = getopt_long(argc, argv, "w:p:f:o:", options, &option_index)) != -1){
+    while ((optc = getopt_long(argc, argv, "w:p:f:o:b", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
             l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
@@ -98,6 +100,9 @@ int main(int argc, char **argv)
         }break;
         case 'o':{
             l_out_file_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+        }break;
+        case 'b':{
+            l_beautification = true;
         }break;
         default:
             bad_option();
@@ -177,7 +182,7 @@ int main(int argc, char **argv)
     dap_enc_key_delete(l_owner_key);
 
     // Convert to JSON transaction
-    char *l_out = convert_tx_to_json_string(l_tx);
+    char *l_out = convert_tx_to_json_string(l_tx, l_beautification);
     if (!l_out){
         dap_chain_datum_tx_delete(l_tx);
         printf("error\n\r");
@@ -625,7 +630,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
 }
 
 
-static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
+static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty)
 {
     json_object* json_obj_out = json_object_new_object();
     json_object* l_json_arr_reply = NULL;
@@ -802,7 +807,7 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
     json_object_object_add(json_obj_out, "datum_type", json_object_new_string("tx"));
 
 
-    const char *l_out_buf = json_object_to_json_string_ext(json_obj_out, JSON_C_TO_STRING_PRETTY );
+    const char *l_out_buf = json_object_to_json_string_ext(json_obj_out, a_beauty ? JSON_C_TO_STRING_PRETTY : JSON_C_TO_STRING_PLAIN);
     char *l_out = DAP_DUP_SIZE(l_out_buf, strlen(l_out_buf));
     json_object_put(json_obj_out);
 
