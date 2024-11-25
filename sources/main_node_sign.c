@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     }
 
     if (!l_wallet_path){
-        printf("Path to wallet must be secified!\n\r");
+        printf("Path to wallet must be specified!\n\r");
         return -1;
     }
 
