@@ -517,7 +517,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     dap_cert_t *l_cert_new = dap_cert_new(l_cert_new_name);
     l_cert_new->enc_key = dap_enc_key_new(l_cert->enc_key->type);
     // Copy public key (copy only memory address of key storage)
-    l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
+    l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE((byte_t*)l_cert->enc_key->pub_key_data,
                                                      l_cert->enc_key->pub_key_data_size);
     if (!l_cert_new->enc_key->pub_key_data) {
         log_it(L_CRITICAL, "%s", c_error_memory_alloc);
@@ -526,7 +526,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
     // Copy private key for rename (copy only memory address of key storage)
     if (l_cert->enc_key->priv_key_data && l_cert->enc_key->priv_key_data_size && a_pvt_key_copy) {
-        l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE(l_cert->enc_key->priv_key_data,
+        l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE((byte_t*)l_cert->enc_key->priv_key_data,
                                                           l_cert->enc_key->priv_key_data_size);
         if (!l_cert_new->enc_key->priv_key_data) {
             log_it(L_CRITICAL, "%s", c_error_memory_alloc);
