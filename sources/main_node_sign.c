@@ -46,8 +46,8 @@
 #include "dap_enc_base64.h"
 #include "dap_chain_net_srv.h"
 
-#define LOG_TAG "sign_tool"
 
+#define LOG_TAG "sign_tool"
 
 static struct option const options[] =
 {
@@ -55,19 +55,37 @@ static struct option const options[] =
   {"passwd", required_argument, 0, 'p'},
   {"filename", required_argument, 0, 'f'},
   {"out", required_argument, 0, 'o'},
+  {"create", no_argument, 0, 'c'},
+  {"sign_type", required_argument, 0, 's'},
+  {"path", required_argument, 0, 'd'},
+  {"help", required_argument, 0, 'h'},
 };
 
 static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_in);
 static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty);
+static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type);
 
 void bad_option(){
-    printf("Usage: %s {-w, --wallet <path_to_wallet_file>} [OPTIONS]\n\r"
+    printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign}} \n\r"
             "Signs the datum passed to the input by specified wallet and send its items in json-format.\n\r"
-            "\t-w, --wallet     specifies wallet for datum sign\n\r"
+            "Datum sign options:\n\r"
+            "\t-w, --wallet     specifies path to wallet for datum sign or wallet name\n\r"
             "\t-p, --passwd     specifies walled password if needed\n\r"
             "\t-f, --filename   specifies input json-file wits datum items. If not specified, it will be received from stdin\n\r"
             "\t-o, --out        specifies output json-file. If not specified, it will be send into stdout\n\r"
-            "\t-b, --beauty     enables output JSON beautification\n\r", dap_get_appname());
+            "\t-b, --beauty     enables output JSON beautification\n\r"
+            "\n\r"
+            "\t-c, --create     create wallet -w with password -p\n\r"
+            "Wallet create options:\n\r"
+            "\t-w, --wallet     specifies wallet name\n\r"
+            "\t-d, --path       sprcifies path to save wallet file\n\r"
+            "\t-s, --sign_type  specifies wallet sign type. Available options: sig_bliss, sig_tesla, sig_picnic, sig_dil\n\r"
+            "Exapmple of usage for datum sign:\n\r\n\r"
+            "\tcellframe-sign-tool --wallet /home/user1/wallets/mywal.dwallet -f ~/in.json -o ~/out.json\n\r\n\r"
+            "Exapmple of usage for wallet creating:\n\r\n\r"
+            "\tcellframe-sign-tool --create -d /home/user1/wallets -w mywal -s sig_dil\n\r\n\r",
+
+            dap_get_appname());
 
     exit(EXIT_FAILURE);
 }
@@ -80,14 +98,17 @@ int main(int argc, char **argv)
 
     // get relative path to config
     const char *l_wallet_path = NULL;
+    const char *l_wallet_name = NULL;
     const char *l_in_file_path = NULL;
     const char *l_out_file_path = NULL;
     const char *l_pwd = NULL;
+    const char *l_sign_type = NULL;
     bool l_beautification = false;
+    bool l_create_wallet = false;
 
     int optc = 0;
     int option_index = 0;
-    while ((optc = getopt_long(argc, argv, "w:p:f:o:b", options, &option_index)) != -1){
+    while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:h", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
             l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
@@ -104,14 +125,31 @@ int main(int argc, char **argv)
         case 'b':{
             l_beautification = true;
         }break;
+        case 'c':{
+            l_create_wallet = true;
+        }break;
+        case 'd':{
+            l_wallet_name = l_wallet_path;
+            l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+        }break;
+        case 's':{
+            l_sign_type = DAP_DUP_SIZE(optarg, strlen(optarg));
+        }break;
         default:
             bad_option();
         }
     }
 
-    if (!l_wallet_path){
+    if (!l_wallet_path || (l_create_wallet && !l_wallet_name)){
         printf("Path to wallet must be specified!\n\r");
         return -1;
+    }
+
+    if (l_create_wallet){
+        int l_res = s_wallet_create(l_wallet_path, l_wallet_name, l_pwd, l_sign_type);
+        if (l_res)
+            printf("Can't create wallet. Error code (%d)", l_res);
+        return l_res;
     }
 
     FILE *l_input_file = NULL;
@@ -812,4 +850,69 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty
     json_object_put(json_obj_out);
 
     return l_out;
+}
+
+
+
+static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type) {
+    dap_sign_type_t l_sig_type = dap_sign_type_from_str(a_sig_type);
+    dap_chain_wallet_t *l_wallet = NULL;
+
+    //
+    // Check if wallet name has only digits and English letters
+    //
+
+    if ( l_sig_type.type == SIG_TYPE_NULL ) {
+      log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+              a_sig_type, dap_sign_get_str_recommended_types());
+      exit( -2004 );
+    }
+
+    //
+    // Check unsupported tesla algorithm
+    //
+    if (dap_sign_type_is_depricated(l_sig_type))
+    {
+        log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
+                dap_sign_get_str_recommended_types());
+        exit( -2004 );
+    }
+
+    if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
+        // if (argc < 7) {
+        //     log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.");
+        //     exit(-2006);
+        // }
+        // dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};
+        // size_t l_count_signs  = 0;
+        // for (int i = 6; i < argc; i++) {
+        //     l_types[l_count_signs] = dap_sign_type_from_str(argv[i]);
+        //     if (l_types[l_count_signs].type == SIG_TYPE_NULL) {
+        //         log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+        //                 argv[i], dap_sign_get_str_recommended_types());
+        //         exit(-2007);
+        //     }
+        //     if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+        //     {
+        //         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
+        //                 dap_sign_get_str_recommended_types());
+        //         exit( -2008 );
+        //     }
+        //     l_count_signs++;
+        // }
+        // l_wallet = dap_chain_wallet_create_with_seed_multi(l_wallet_name, s_system_wallet_dir,
+        //                                                        l_types, l_count_signs,
+        //                                                        NULL, 0, NULL);
+        printf("Multisigned wallet not supported yet.");
+        return -1;
+    } else
+        l_wallet = dap_chain_wallet_create(a_wallet_name, a_wallet_path, l_sig_type, a_pass);
+
+    if (l_wallet) {
+        log_it(L_NOTICE, "Wallet %s has been created.\n", a_wallet_name);
+        return 0;
+    } else {
+        log_it(L_ERROR, "Failed to create a wallet.");
+        return -1;
+    }
 }
