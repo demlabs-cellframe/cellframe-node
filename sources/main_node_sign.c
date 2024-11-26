@@ -79,7 +79,7 @@ void bad_option(){
             "Wallet create options:\n\r"
             "\t-w, --wallet     specifies wallet name\n\r"
             "\t-d, --path       sprcifies path to save wallet file\n\r"
-            "\t-s, --sign_type  specifies wallet sign type. Available options: sig_bliss, sig_tesla, sig_picnic, sig_dil\n\r"
+            "\t-s, --sign_type  specifies wallet sign type. Available options: sig_dil, sig_falcon\n\r"
             "Exapmple of usage for datum sign:\n\r\n\r"
             "\tcellframe-sign-tool --wallet /home/user1/wallets/mywal.dwallet -f ~/in.json -o ~/out.json\n\r\n\r"
             "Exapmple of usage for wallet creating:\n\r\n\r"
