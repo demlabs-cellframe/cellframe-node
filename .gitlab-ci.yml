@@ -91,7 +91,7 @@ stages:
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
-.amd64:linux.rwd.bld:
+amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
 
@@ -104,7 +104,7 @@ stages:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
       
-.autotests:
+autotests:
   extends: .ci-test
   interruptible: true
 
