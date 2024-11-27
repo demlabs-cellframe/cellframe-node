@@ -91,7 +91,7 @@ stages:
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
-amd64:linux.rwd.bld:
+.amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
 
@@ -104,7 +104,7 @@ amd64:linux.rwd.bld:
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
       
-autotests:
+.autotests:
   extends: .ci-test
   interruptible: true
 
@@ -137,7 +137,7 @@ amd64:linux.rwd:
       - echo "Do hard work"
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
       
-amd64:linux.release:
+.amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -149,7 +149,7 @@ amd64:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-amd64:windows.rwd:
+.amd64:windows.rwd:
     extends: .build
     image: demlabs/windows/amd64:qt5
     before_script: 
@@ -163,7 +163,7 @@ amd64:windows.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_rwd/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
 
 
-amd64:macos.release:
+.amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
     before_script: 
@@ -193,7 +193,7 @@ amd64:linux.debug:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 
-amd64:linux.rwd.opt:
+.amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -206,7 +206,7 @@ amd64:linux.rwd.opt:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
 
 
-amd64:linux.tps:
+.amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
     before_script: 
@@ -246,7 +246,7 @@ amd64:linux.tps:
       - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
 
-armhf:linux.release:
+.armhf:linux.release:
     extends: .build
     image: demlabs/debian/arm32:qt5
 
@@ -260,7 +260,7 @@ armhf:linux.release:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
-arm64:linux.release:
+.arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
     before_script: 
@@ -274,7 +274,7 @@ arm64:linux.release:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
 
-any:android.release:
+.any:android.release:
     extends: .build
     image: demlabs/android/any:qt5
     before_script: 
