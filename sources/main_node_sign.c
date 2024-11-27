@@ -94,9 +94,14 @@ int main(int argc, char **argv)
 {
     dap_set_appname("cellframe-sign-tool");
    
+    if (argc == 1){
+        bad_option();
+    }
+
     char *l_input_data = NULL;
 
     // get relative path to config
+    const char *l_wallet_str = NULL;
     const char *l_wallet_path = NULL;
     const char *l_wallet_name = NULL;
     const char *l_in_file_path = NULL;
@@ -111,7 +116,7 @@ int main(int argc, char **argv)
     while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:h", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
-            l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_wallet_str = DAP_DUP_SIZE(optarg, strlen(optarg));
         }break;
         case 'p':{
             l_pwd = DAP_DUP_SIZE(optarg, strlen(optarg));       
@@ -129,7 +134,6 @@ int main(int argc, char **argv)
             l_create_wallet = true;
         }break;
         case 'd':{
-            l_wallet_name = l_wallet_path;
             l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
         }break;
         case 's':{
@@ -140,6 +144,18 @@ int main(int argc, char **argv)
         }
     }
 
+    if ((l_sign_type || l_wallet_path) && !l_create_wallet){
+        printf("Wrong parameters\n\r");
+        bad_option();
+    }
+
+
+    if (l_create_wallet){
+        l_wallet_name = l_wallet_str;
+    } else {
+        l_wallet_path = l_wallet_str;
+    }
+    
     if (!l_wallet_path || (l_create_wallet && !l_wallet_name)){
         printf("Path to wallet must be specified!\n\r");
         return -1;
@@ -150,6 +166,8 @@ int main(int argc, char **argv)
         if (l_res)
             printf("Can't create wallet. Error code (%d)", l_res);
         return l_res;
+    } else {
+        l_wallet_path = l_wallet_str;
     }
 
     FILE *l_input_file = NULL;
