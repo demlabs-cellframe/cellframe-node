@@ -58,12 +58,14 @@ static struct option const options[] =
   {"create", no_argument, 0, 'c'},
   {"sign_type", required_argument, 0, 's'},
   {"path", required_argument, 0, 'd'},
-  {"help", required_argument, 0, 'h'},
+  {"help", no_argument, 0, 'h'},
+  {"seed", required_argument, 0, 'z'},
+  {"beauty", required_argument, 0, 'b'},
 };
 
 static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_in);
 static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty);
-static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type);
+static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type, const char *a_seed);
 
 void bad_option(){
     printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign}} \n\r"
@@ -78,8 +80,9 @@ void bad_option(){
             "\t-c, --create     create wallet -w with password -p\n\r"
             "Wallet create options:\n\r"
             "\t-w, --wallet     specifies wallet name\n\r"
-            "\t-d, --path       sprcifies path to save wallet file\n\r"
+            "\t-d, --path       specifies path to save wallet file\n\r"
             "\t-s, --sign_type  specifies wallet sign type. Available options: sig_dil, sig_falcon\n\r"
+            "\t-z, --seed       specifies seed phrase\n\r"
             "Exapmple of usage for datum sign:\n\r\n\r"
             "\tcellframe-sign-tool --wallet /home/user1/wallets/mywal.dwallet -f ~/in.json -o ~/out.json\n\r\n\r"
             "Exapmple of usage for wallet creating:\n\r\n\r"
@@ -107,13 +110,14 @@ int main(int argc, char **argv)
     const char *l_in_file_path = NULL;
     const char *l_out_file_path = NULL;
     const char *l_pwd = NULL;
+    const char *l_seed = NULL;
     const char *l_sign_type = NULL;
     bool l_beautification = false;
     bool l_create_wallet = false;
 
     int optc = 0;
     int option_index = 0;
-    while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:h", options, &option_index)) != -1){
+    while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:hz:", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
             l_wallet_str = DAP_DUP_SIZE(optarg, strlen(optarg));
@@ -139,6 +143,9 @@ int main(int argc, char **argv)
         case 's':{
             l_sign_type = DAP_DUP_SIZE(optarg, strlen(optarg));
         }break;
+        case 'z':{
+            l_seed = DAP_DUP_SIZE(optarg, strlen(optarg));
+        }break;
         default:
             bad_option();
         }
@@ -162,7 +169,7 @@ int main(int argc, char **argv)
     }
 
     if (l_create_wallet){
-        int l_res = s_wallet_create(l_wallet_path, l_wallet_name, l_pwd, l_sign_type);
+        int l_res = s_wallet_create(l_wallet_path, l_wallet_name, l_pwd, l_sign_type, l_seed);
         if (l_res)
             printf("Can't create wallet. Error code (%d)", l_res);
         return l_res;
@@ -872,13 +879,9 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty
 
 
 
-static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type) {
+static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type, const char *a_seed){
     dap_sign_type_t l_sig_type = dap_sign_type_from_str(a_sig_type);
     dap_chain_wallet_t *l_wallet = NULL;
-
-    //
-    // Check if wallet name has only digits and English letters
-    //
 
     if ( l_sig_type.type == SIG_TYPE_NULL ) {
       log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
@@ -886,14 +889,35 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
       exit( -2004 );
     }
 
-    //
-    // Check unsupported tesla algorithm
-    //
     if (dap_sign_type_is_depricated(l_sig_type))
     {
         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                 dap_sign_get_str_recommended_types());
         exit( -2004 );
+    }
+
+
+
+    uint8_t *l_seed = NULL;
+    size_t l_seed_size = 0;
+
+    if(a_seed) {
+        const char* l_seed_hash_str = dap_get_data_hash_str(a_seed, strlen(a_seed)).s;
+        printf("seed str: %s", a_seed);
+        printf("seed hash: %s", l_seed_hash_str);
+        size_t l_restore_str_size = dap_strlen(l_seed_hash_str);
+        if (l_restore_str_size > 3 && !dap_strncmp(l_seed_hash_str, "0x", 2) && (!dap_is_hex_string(l_seed_hash_str + 2, l_restore_str_size - 2))) {
+            l_seed_size = (l_restore_str_size - 2) / 2;
+            l_seed = DAP_NEW_Z_SIZE(uint8_t, l_seed_size + 1);
+            if(!l_seed) {
+                printf("Memory allocation error.");
+                exit(-100);
+            }
+            dap_hex2bin(l_seed, l_seed_hash_str + 2, l_restore_str_size - 2);
+        } else {
+            printf("Restored hash is invalid or too short, wallet is not created. Please use -seed 0x<hex_value>");
+            exit(-1);
+        }
     }
 
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
@@ -923,8 +947,13 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
         //                                                        NULL, 0, NULL);
         printf("Multisigned wallet not supported yet.");
         return -1;
-    } else
-        l_wallet = dap_chain_wallet_create(a_wallet_name, a_wallet_path, l_sig_type, a_pass);
+    } else {
+        if (!l_seed)
+            l_wallet = dap_chain_wallet_create(a_wallet_name, a_wallet_path, l_sig_type, a_pass);
+        else 
+            l_wallet = dap_chain_wallet_create_with_seed(a_wallet_name, a_wallet_path, l_sig_type, l_seed, l_seed_size, a_pass);
+    }
+        
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", a_wallet_name);
