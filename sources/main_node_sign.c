@@ -92,7 +92,12 @@ void bad_option(){
             "Exapmple of usage for datum sign:\n\r\n\r"
             "\tcellframe-sign-tool --wallet /home/user1/wallets/mywal.dwallet -f ~/in.json -o ~/out.json\n\r\n\r"
             "Exapmple of usage for wallet creating:\n\r\n\r"
-            "\tcellframe-sign-tool --create -d /home/user1/wallets -w mywal -s sig_dil\n\r\n\r",
+            "\tcellframe-sign-tool --create -d /home/user1/wallets -w mywal -s sig_dil -z \"word1 word2 word3\"\n\r\n\r"
+            "Exapmple of usage for printing wallet address:\n\r\n\r"
+            "\tBackbone net:"
+            "\tcellframe-sign-tool --get-addr -w /home/user1/wallets/mywal.dcert -i 0x0404202200000000\n\r\n\r"
+            "\tKelVPN net:"
+            "\tcellframe-sign-tool --get-addr -w /home/user1/wallets/mywal.dcert -i 0x1807202300000000\n\r\n\r",
 
             dap_get_appname());
 
