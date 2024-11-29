@@ -417,6 +417,11 @@ int main( int argc, const char **argv )
 
     dap_chain_net_load_all();
 
+    if (dap_global_db_clean_init()) {
+        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
+        return -33;
+    }
+
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
     
