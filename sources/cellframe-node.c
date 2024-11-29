@@ -412,16 +412,16 @@ int main( int argc, const char **argv )
     }
 #endif
 
+    if ( dap_chain_node_cli_init(g_config) ) {
+        log_it( L_CRITICAL, "Can't init server for console" );
+        return -11;
+    }
+
     dap_chain_net_load_all();
 
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
-    }
-
-    if ( dap_chain_node_cli_init(g_config) ) {
-        log_it( L_CRITICAL, "Can't init server for console" );
-        return -11;
     }
 
     log_it(L_INFO, "Automatic mempool processing %s",
