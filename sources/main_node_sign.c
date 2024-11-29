@@ -56,11 +56,13 @@ static struct option const options[] =
   {"filename", required_argument, 0, 'f'},
   {"out", required_argument, 0, 'o'},
   {"create", no_argument, 0, 'c'},
-  {"sign_type", required_argument, 0, 's'},
+  {"sign-type", required_argument, 0, 's'},
   {"path", required_argument, 0, 'd'},
   {"help", no_argument, 0, 'h'},
   {"seed", required_argument, 0, 'z'},
   {"beauty", required_argument, 0, 'b'},
+  {"get-addr", required_argument, 0, 'a'},
+  {"net-id", required_argument, 0, 'i'},
 };
 
 static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_in);
@@ -68,7 +70,7 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty
 static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type, const char *a_seed);
 
 void bad_option(){
-    printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign}} \n\r"
+    printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign} | {-a -w <path_to_wallet_file> -i 0x<net_id>}} \n\r"
             "Signs the datum passed to the input by specified wallet and send its items in json-format.\n\r"
             "Datum sign options:\n\r"
             "\t-w, --wallet     specifies path to wallet for datum sign or wallet name\n\r"
@@ -81,8 +83,12 @@ void bad_option(){
             "Wallet create options:\n\r"
             "\t-w, --wallet     specifies wallet name\n\r"
             "\t-d, --path       specifies path to save wallet file\n\r"
-            "\t-s, --sign_type  specifies wallet sign type. Available options: sig_dil, sig_falcon\n\r"
+            "\t-s, --sign-type  specifies wallet sign type. Available options: sig_dil, sig_falcon\n\r"
             "\t-z, --seed       specifies seed phrase\n\r"
+            "Wallet get address:\n\r"
+            "\t-a, --get-addr   print wallet address in specified net\n\r"
+            "\t-w, --wallet     specifies path to wallet file\n\r"
+            "\t-i, --net-id     hex id of net\n\r"
             "Exapmple of usage for datum sign:\n\r\n\r"
             "\tcellframe-sign-tool --wallet /home/user1/wallets/mywal.dwallet -f ~/in.json -o ~/out.json\n\r\n\r"
             "Exapmple of usage for wallet creating:\n\r\n\r"
@@ -112,12 +118,14 @@ int main(int argc, char **argv)
     const char *l_pwd = NULL;
     const char *l_seed = NULL;
     const char *l_sign_type = NULL;
+    const char *l_net_id_str = NULL;
     bool l_beautification = false;
     bool l_create_wallet = false;
+    bool l_get_wallet_addr = false;
 
     int optc = 0;
     int option_index = 0;
-    while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:hz:", options, &option_index)) != -1){
+    while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:hz:ai:", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
             l_wallet_str = DAP_DUP_SIZE(optarg, strlen(optarg));
@@ -146,6 +154,12 @@ int main(int argc, char **argv)
         case 'z':{
             l_seed = DAP_DUP_SIZE(optarg, strlen(optarg));
         }break;
+        case 'a':{
+            l_get_wallet_addr = true;
+        }break;
+        case 'i':{
+            l_net_id_str = DAP_DUP_SIZE(optarg, strlen(optarg));
+        }break;
         default:
             bad_option();
         }
@@ -168,6 +182,11 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    if (l_get_wallet_addr && !l_net_id_str){
+        printf("Net id must be specified for getting wallet addr!\n\r");
+        return -1;
+    }
+
     if (l_create_wallet){
         int l_res = s_wallet_create(l_wallet_path, l_wallet_name, l_pwd, l_sign_type, l_seed);
         if (l_res)
@@ -175,6 +194,20 @@ int main(int argc, char **argv)
         return l_res;
     } else {
         l_wallet_path = l_wallet_str;
+    }
+
+    if (l_get_wallet_addr){
+        dap_chain_wallet_t *l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pwd, NULL);
+        if(!l_wallet) {
+            printf("Can't open wallet");
+            return -1;
+        }
+        uint64_t l_net_id_ui64 = strtoull(l_net_id_str, NULL, 16);
+        dap_chain_net_id_t l_net_id = {.uint64 = l_net_id_ui64};
+        dap_chain_addr_t *l_addr = dap_chain_wallet_get_addr(l_wallet, l_net_id);
+        const char*l_addr_str = dap_chain_addr_to_str_static(l_addr);
+        printf("Wallet addr for net with id %"DAP_UINT64_FORMAT_X":\n\r%s\n\r", l_net_id_ui64, l_addr_str);
+        return 0;
     }
 
     FILE *l_input_file = NULL;
@@ -903,8 +936,6 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
 
     if(a_seed) {
         const char* l_seed_hash_str = dap_get_data_hash_str(a_seed, strlen(a_seed)).s;
-        printf("seed str: %s", a_seed);
-        printf("seed hash: %s", l_seed_hash_str);
         size_t l_restore_str_size = dap_strlen(l_seed_hash_str);
         if (l_restore_str_size > 3 && !dap_strncmp(l_seed_hash_str, "0x", 2) && (!dap_is_hex_string(l_seed_hash_str + 2, l_restore_str_size - 2))) {
             l_seed_size = (l_restore_str_size - 2) / 2;
@@ -956,10 +987,10 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
         
 
     if (l_wallet) {
-        log_it(L_NOTICE, "Wallet %s has been created.\n", a_wallet_name);
+        printf("Wallet %s has been created.\n", a_wallet_name);
         return 0;
     } else {
-        log_it(L_ERROR, "Failed to create a wallet.");
+        printf("Failed to create a wallet.");
         return -1;
     }
 }
