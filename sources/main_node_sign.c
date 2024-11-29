@@ -491,6 +491,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                     printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_XCHANGE");
                     break;
                 }
+                UNUSED(l_srv_uid); // TODO
                 //const char *l_params_str = s_json_get_text(l_json_item_obj, "params");
                 //size_t l_params_size = dap_strlen(l_params_str);
                 dap_chain_tx_out_cond_t *l_out_cond_item = NULL; //dap_chain_datum_tx_item_out_cond_create_srv_xchange(l_srv_uid, l_net->pub.id, l_token, l_value, l_params_str, l_params_size);
