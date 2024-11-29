@@ -70,7 +70,7 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx, bool a_beauty
 static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name, const char *a_pass, const char *a_sig_type, const char *a_seed);
 
 void bad_option(){
-    printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign} | {-a -w <path_to_wallet_file> -i 0x<net_id>}} \n\r"
+    printf("Usage: %s {{-w, --wallet <path_to_wallet_file>} [OPTIONS] | {-c -w <wallet_name> -d <path_to_save_wallet_file> -s <sign_type> -z <seed_phrase>} | {-a -w <path_to_wallet_file> -i 0x<net_id>}} \n\r"
             "Signs the datum passed to the input by specified wallet and send its items in json-format.\n\r"
             "Datum sign options:\n\r"
             "\t-w, --wallet     specifies path to wallet for datum sign or wallet name\n\r"
