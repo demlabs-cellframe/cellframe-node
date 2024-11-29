@@ -417,7 +417,7 @@ int main( int argc, const char **argv )
     dap_chain_net_load_all();
 
     if( dap_chain_wallet_cache_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        log_it(L_CRITICAL,"Can't init wallet cache module");
         return -61;
     }
 
