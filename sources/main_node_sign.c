@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     if (l_create_wallet){
         int l_res = s_wallet_create(l_wallet_path, l_wallet_name, l_pwd, l_sign_type, l_seed);
         if (l_res)
-            printf("Can't create wallet. Error code (%d)", l_res);
+            printf("Error %d (%s)\n\r", errno, strerror(errno));
         return l_res;
     } else {
         l_wallet_path = l_wallet_str;
@@ -199,8 +199,8 @@ int main(int argc, char **argv)
     if (l_get_wallet_addr){
         dap_chain_wallet_t *l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pwd, NULL);
         if(!l_wallet) {
-            printf("Can't open wallet");
-            return -1;
+            printf("Can't open wallet %s. Error %d (%s)\n\r", l_wallet_path, errno, strerror(errno));
+            return errno;
         }
         uint64_t l_net_id_ui64 = strtoull(l_net_id_str, NULL, 16);
         dap_chain_net_id_t l_net_id = {.uint64 = l_net_id_ui64};
@@ -233,6 +233,7 @@ int main(int argc, char **argv)
     if (!l_input_data && !l_total_bytes){
         printf("Can't read input data. Error: ");
         perror(l_in_file_path);
+        printf("\n\r");
         if (l_in_file_path)
             fclose(l_input_file);
         return -1;
@@ -245,7 +246,7 @@ int main(int argc, char **argv)
     // Parse json
     struct json_object *l_json = json_tokener_parse(l_input_data);
     if (!l_json){
-        printf("Can't parse json");
+        printf("Can't parse json\n\r");
         DAP_DELETE(l_input_data);
         return -1;
     }
@@ -253,7 +254,7 @@ int main(int argc, char **argv)
     // Make binary transaction
     dap_chain_datum_tx_t *l_tx = json_parse_input_tx (l_json);
     if (!l_tx){
-        printf("Can't create tx");
+        printf("Can't create tx\n\r");
         DAP_DELETE(l_input_data);
         return -1;
     }
@@ -263,7 +264,7 @@ int main(int argc, char **argv)
     dap_chain_wallet_t *l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pwd, NULL);
     if(!l_wallet) {
         dap_chain_datum_tx_delete(l_tx);
-        printf("Can't open wallet");
+        printf("Can't open wallet\n\r");
         DAP_DELETE(l_input_data);
         return -1;
     }
@@ -271,7 +272,7 @@ int main(int argc, char **argv)
     if(!l_owner_key || dap_chain_datum_tx_add_sign_item(&l_tx, l_owner_key) != 1) {
         dap_chain_datum_tx_delete(l_tx);
         dap_enc_key_delete(l_owner_key);
-        printf("Can't add sign output");
+        printf("Can't add sign output\n\r");
         DAP_DELETE(l_input_data);
         return -1;
     }
@@ -293,7 +294,7 @@ int main(int argc, char **argv)
     } else {
         l_output_file = fopen(l_out_file_path, "w");
         if (!l_output_file){
-            printf("Can't open %s", l_out_file_path);
+            printf("Can't open %s\n\r", l_out_file_path);
             DAP_DELETE(l_out);
             DAP_DELETE(l_input_data);
             return -1;
@@ -433,13 +434,13 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
     struct json_object *l_json_items = json_object_object_get(a_json_in, "items");
     size_t l_items_count = json_object_array_length(l_json_items);
     if(!l_json_items || !json_object_is_type(l_json_items, json_type_array) || !(l_items_count = json_object_array_length(l_json_items))) {
-        printf("%s", "Wrong json format: not found array 'items' or array is empty");
+        printf("%s", "Wrong json format: not found array 'items' or array is empty\n\r");
         return NULL;
     }
 
     dap_chain_datum_tx_t *l_tx = DAP_NEW_Z_SIZE(dap_chain_datum_tx_t, sizeof(dap_chain_datum_tx_t));
     if(!l_tx) {
-        printf("%s", c_error_memory_alloc);
+        printf("%s\n\r", c_error_memory_alloc);
         return NULL;
     }
 
@@ -471,14 +472,14 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                     // Create IN item
                     dap_chain_tx_in_t *l_in_item = dap_chain_datum_tx_item_in_create(&l_tx_prev_hash, (uint32_t) l_out_prev_idx);
                     if (!l_in_item) {
-                        printf("Unable to create in for transaction.");
+                        printf("Unable to create in for transaction.\n\r");
                         DAP_DEL_Z(l_tx);
                         dap_list_free_full(l_sign_list, NULL);
                         return NULL;
                     }
                     dap_chain_datum_tx_add_item(&l_tx, (const uint8_t*) l_in_item);
                 } else {
-                    printf("Invalid 'in' item, bad prev_hash %s", l_prev_hash_str);
+                    printf("Invalid 'in' item, bad prev_hash %s\n\r", l_prev_hash_str);
                 }
             } 
         }
@@ -497,7 +498,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                         // Create OUT item
                         dap_chain_tx_out_t *l_out_item = dap_chain_datum_tx_item_out_create(l_addr, l_value);
                         if (!l_out_item) {
-                            printf("Failed to create transaction out. There may not be enough funds in the wallet.");
+                            printf("Failed to create transaction out. There may not be enough funds in the wallet.\n\r");
                             DAP_DEL_Z(l_tx);
                             dap_list_free_full(l_sign_list, NULL);
                             return NULL;
@@ -511,7 +512,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                             // Create OUT_EXT item
                             dap_chain_tx_out_ext_t *l_out_ext_item = dap_chain_datum_tx_item_out_ext_create(l_addr, l_value, l_token);
                             if (!l_out_ext_item) {
-                                printf("Failed to create a out ext");
+                                printf("Failed to create a out ext\n\r");
                                 DAP_DEL_Z(l_tx);
                                 return NULL;
                             }
@@ -532,18 +533,18 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 uint256_t l_value = { };
                 bool l_is_value = s_json_get_uint256(l_json_item_obj, "value", &l_value);
                 if(!l_is_value || IS_ZERO_256(l_value)) {
-                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_PAY");
+                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_PAY\n\r");
                     break;
                 }
                 uint256_t l_value_max_per_unit = { };
                 l_is_value = s_json_get_uint256(l_json_item_obj, "value_max_per_unit", &l_value_max_per_unit);
                 if(!l_is_value || IS_ZERO_256(l_value_max_per_unit)) {
-                    printf("Json TX: bad value_max_per_unit in OUT_COND_SUBTYPE_SRV_PAY");
+                    printf("Json TX: bad value_max_per_unit in OUT_COND_SUBTYPE_SRV_PAY\n\r");
                     break;
                 }
                 dap_chain_net_srv_price_unit_uid_t l_price_unit;
                 if(!s_json_get_unit(l_json_item_obj, "price_unit", &l_price_unit)) {
-                    printf("Json TX: bad price_unit in OUT_COND_SUBTYPE_SRV_PAY");
+                    printf("Json TX: bad price_unit in OUT_COND_SUBTYPE_SRV_PAY\n\r");
                     break;
                 }
                 dap_chain_net_srv_uid_t l_srv_uid;
@@ -555,7 +556,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 // From "wallet" or "cert"
                 dap_pkey_t *l_pkey = s_json_get_pkey(l_json_item_obj);
                 if(!l_pkey) {
-                    printf("Json TX: bad pkey in OUT_COND_SUBTYPE_SRV_PAY");
+                    printf("Json TX: bad pkey in OUT_COND_SUBTYPE_SRV_PAY\n\r");
                     break;
                 }
                 const char *l_params_str = s_json_get_text(l_json_item_obj, "params");
@@ -580,17 +581,17 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 }
                 dap_chain_net_t *l_net = dap_chain_net_by_name(s_json_get_text(l_json_item_obj, "net"));
                 if(!l_net) {
-                    printf("Json TX: bad net in OUT_COND_SUBTYPE_SRV_XCHANGE");
+                    printf("Json TX: bad net in OUT_COND_SUBTYPE_SRV_XCHANGE\n\r");
                     break;
                 }
                 const char *l_token = s_json_get_text(l_json_item_obj, "token");
                 if(!l_token) {
-                    printf("Json TX: bad token in OUT_COND_SUBTYPE_SRV_XCHANGE");
+                    printf("Json TX: bad token in OUT_COND_SUBTYPE_SRV_XCHANGE\n\r");
                     break;
                 }
                 uint256_t l_value = { };
                 if(!s_json_get_uint256(l_json_item_obj, "value", &l_value) || IS_ZERO_256(l_value)) {
-                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_XCHANGE");
+                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_XCHANGE\n\r");
                     break;
                 }
                 //const char *l_params_str = s_json_get_text(l_json_item_obj, "params");
@@ -600,7 +601,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 // Save value for using in In item
                 if(l_item){
                     printf("Unable to create conditional out for transaction "
-                                                         "can of type %s described in item %zu.", l_subtype_str, i);
+                                                         "can of type %s described in item %zu.\n\r", l_subtype_str, i);
                 }
             }
                 break;
@@ -612,7 +613,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 }
                 uint256_t l_value = { };
                 if(!s_json_get_uint256(l_json_item_obj, "value", &l_value) || IS_ZERO_256(l_value)) {
-                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
+                    printf("Json TX: bad value in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE\n\r");
                     break;
                 }
                 uint256_t l_fee_value = { };
@@ -624,13 +625,13 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 dap_chain_addr_t *l_signing_addr = dap_chain_addr_from_str(l_signing_addr_str);
                 if(!l_signing_addr) {
                 {
-                    printf("Json TX: bad signing_addr in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
+                    printf("Json TX: bad signing_addr in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE\n\r");
                     break;
                 }
                 dap_chain_node_addr_t l_signer_node_addr;
                 const char *l_node_addr_str = s_json_get_text(l_json_item_obj, "node_addr");
                 if(!l_node_addr_str || dap_chain_node_addr_from_str(&l_signer_node_addr, l_node_addr_str)) {
-                    printf("Json TX: bad node_addr in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
+                    printf("Json TX: bad node_addr in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE\n\r");
                     break;
                 }
                 dap_chain_tx_out_cond_t *l_out_cond_item = dap_chain_datum_tx_item_out_cond_create_srv_stake(l_srv_uid, l_value, l_signing_addr,
@@ -639,7 +640,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                 // Save value for using in In item
                 if(l_item) {
                     printf("Unable to create conditional out for transaction "
-                                                        "can of type %s described in item %zu.", l_subtype_str, i);
+                                                        "can of type %s described in item %zu.\n\r", l_subtype_str, i);
                 }
                 }
             }
@@ -653,7 +654,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                     // Save value for using in In item
                     if(!l_item){
                         printf("Unable to create conditional out for transaction "
-                                                            "can of type %s described in item %zu.", l_subtype_str, i);
+                                                            "can of type %s described in item %zu.\n\r", l_subtype_str, i);
                     }
                 }
                 else
@@ -661,7 +662,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
             }
                 break;
             case DAP_CHAIN_TX_OUT_COND_SUBTYPE_UNDEFINED:
-                printf("Undefined subtype: '%s' of 'out_cond' item %zu ", l_subtype_str, i);
+                printf("Undefined subtype: '%s' of 'out_cond' item %zu \n\r", l_subtype_str, i);
                 break;
             }
         }
@@ -670,22 +671,22 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
         case TX_ITEM_TYPE_RECEIPT: {
             dap_chain_net_srv_uid_t l_srv_uid;
             if(!s_json_get_srv_uid(l_json_item_obj, "service_id", "service", &l_srv_uid.uint64)) {
-                printf("Json TX: bad service_id in TYPE_RECEIPT");
+                printf("Json TX: bad service_id in TYPE_RECEIPT\n\r");
                 break;
             }
             dap_chain_net_srv_price_unit_uid_t l_price_unit;
             if(!s_json_get_unit(l_json_item_obj, "price_unit", &l_price_unit)) {
-                printf("Json TX: bad price_unit in TYPE_RECEIPT");
+                printf("Json TX: bad price_unit in TYPE_RECEIPT\n\r");
                 break;
             }
             int64_t l_units;
             if(!s_json_get_int64(l_json_item_obj, "units", &l_units)) {
-                printf("Json TX: bad units in TYPE_RECEIPT");
+                printf("Json TX: bad units in TYPE_RECEIPT\n\r");
                 break;
             }
             uint256_t l_value = { };
             if(!s_json_get_uint256(l_json_item_obj, "value", &l_value) || IS_ZERO_256(l_value)) {
-                printf("Json TX: bad value in TYPE_RECEIPT");
+                printf("Json TX: bad value in TYPE_RECEIPT\n\r");
                 break;
             }
             const char *l_params_str = s_json_get_text(l_json_item_obj, "params");
@@ -694,19 +695,19 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
             l_item = (const uint8_t*) l_receipt;
             if (!l_item) {
                 printf("Unable to create receipt out for transaction "
-                                                    "described by item %zu.", i);
+                                                    "described by item %zu.\n\r", i);
             }
         }
             break;
         case TX_ITEM_TYPE_TSD: {
             int64_t l_tsd_type;
             if(!s_json_get_int64(l_json_item_obj, "type_tsd", &l_tsd_type)) {
-                printf("Json TX: bad type_tsd in TYPE_TSD");
+                printf("Json TX: bad type_tsd in TYPE_TSD\n\r");
                 break;
             }
             const char *l_tsd_data = s_json_get_text(l_json_item_obj, "data");
             if (!l_tsd_data) {
-                printf("Json TX: bad data in TYPE_TSD");
+                printf("Json TX: bad data in TYPE_TSD\n\r");
                 break;
             }
             size_t l_data_size = dap_strlen(l_tsd_data);
@@ -917,14 +918,14 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
     dap_chain_wallet_t *l_wallet = NULL;
 
     if ( l_sig_type.type == SIG_TYPE_NULL ) {
-      log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
+      printf("Invalid signature type '%s', you can use the following:\n\r%s",
               a_sig_type, dap_sign_get_str_recommended_types());
       exit( -2004 );
     }
 
     if (dap_sign_type_is_depricated(l_sig_type))
     {
-        log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
+        printf("Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n\r%s",
                 dap_sign_get_str_recommended_types());
         exit( -2004 );
     }
@@ -941,12 +942,12 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
             l_seed_size = (l_restore_str_size - 2) / 2;
             l_seed = DAP_NEW_Z_SIZE(uint8_t, l_seed_size + 1);
             if(!l_seed) {
-                printf("Memory allocation error.");
+                printf("Memory allocation error.\n\r");
                 exit(-100);
             }
             dap_hex2bin(l_seed, l_seed_hash_str + 2, l_restore_str_size - 2);
         } else {
-            printf("Restored hash is invalid or too short, wallet is not created. Please use -seed 0x<hex_value>");
+            printf("Restored hash is invalid or too short, wallet is not created. Please use -seed 0x<hex_value>\n\r");
             exit(-1);
         }
     }
@@ -976,7 +977,7 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
         // l_wallet = dap_chain_wallet_create_with_seed_multi(l_wallet_name, s_system_wallet_dir,
         //                                                        l_types, l_count_signs,
         //                                                        NULL, 0, NULL);
-        printf("Multisigned wallet not supported yet.");
+        printf("Multisigned wallet not supported yet.\n\r");
         return -1;
     } else {
         if (!l_seed)
@@ -987,10 +988,10 @@ static int s_wallet_create(const char *a_wallet_path, const char *a_wallet_name,
         
 
     if (l_wallet) {
-        printf("Wallet %s has been created.\n", a_wallet_name);
+        printf("Wallet %s has been created.\n\r", a_wallet_name);
         return 0;
     } else {
-        printf("Failed to create a wallet.");
+        printf("Failed to create a wallet.\n\r");
         return -1;
     }
 }
