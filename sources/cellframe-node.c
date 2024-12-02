@@ -112,6 +112,8 @@
 #include "dap_chain_net_srv_stake_lock.h"
 #include "dap_chain_net_srv_emit_delegate.h"
 
+#include "dap_chain_wallet_cache.h"
+
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -328,11 +330,6 @@ int main( int argc, const char **argv )
         return -60;
     }
 
-    if( dap_chain_wallet_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
     if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
@@ -365,6 +362,11 @@ int main( int argc, const char **argv )
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
+    }
+
+    if( dap_chain_wallet_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
     }
 
     if( dap_chain_net_srv_init() ){
@@ -420,6 +422,11 @@ int main( int argc, const char **argv )
     }
 
     dap_chain_net_load_all();
+
+    if( dap_chain_wallet_cache_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
