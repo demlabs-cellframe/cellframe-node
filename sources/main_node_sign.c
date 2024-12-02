@@ -133,16 +133,16 @@ int main(int argc, char **argv)
     while ((optc = getopt_long(argc, argv, "w:p:f:o:bcs:d:hz:ai:", options, &option_index)) != -1){
         switch(optc){
         case 'w':{
-            l_wallet_str = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_wallet_str = dap_strdup(optarg);
         }break;
         case 'p':{
-            l_pwd = DAP_DUP_SIZE(optarg, strlen(optarg));       
+            l_pwd = dap_strdup(optarg);       
         }break;
         case 'f':{
-            l_in_file_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_in_file_path = dap_strdup(optarg);
         }break;
         case 'o':{
-            l_out_file_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_out_file_path = dap_strdup(optarg);
         }break;
         case 'b':{
             l_beautification = true;
@@ -151,19 +151,19 @@ int main(int argc, char **argv)
             l_create_wallet = true;
         }break;
         case 'd':{
-            l_wallet_path = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_wallet_path = dap_strdup(optarg);
         }break;
         case 's':{
-            l_sign_type = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_sign_type = dap_strdup(optarg);
         }break;
         case 'z':{
-            l_seed = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_seed = dap_strdup(optarg);
         }break;
         case 'a':{
             l_get_wallet_addr = true;
         }break;
         case 'i':{
-            l_net_id_str = DAP_DUP_SIZE(optarg, strlen(optarg));
+            l_net_id_str = dap_strdup(optarg);
         }break;
         default:
             bad_option();
