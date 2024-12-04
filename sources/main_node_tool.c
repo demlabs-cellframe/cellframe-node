@@ -300,6 +300,12 @@ static int s_wallet_create_wp(int argc, const char **argv) {
     }
     DAP_DELETE(l_file_name);
 
+    // Checking that if a password is set, it contains only Latin characters, numbers and special characters, except for spaces.
+    if (!dap_check_valid_password(l_pass_str, dap_strlen(l_pass_str))) {
+        log_it(L_ERROR, "Invalid characters used for password.\n");
+        exit(-2008);
+    }
+
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 8) {
             log_it(L_ERROR, "For a signature with type sig_multi_chained, two more signature type parameters must be set.\n");
