@@ -31,11 +31,13 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_cert.h"
+#include "dap_stream.h"
 #include "dap_cert_file.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
 
 #define LOG_TAG "main_node_tool"
+#define NODE_NAME "cellframe-node"
 
 #undef log_it
 #ifdef DAP_OS_WINDOWS
@@ -112,76 +114,62 @@ int cellframe_node_tool_Main(int argc, const char **argv)
 int main(int argc, const char **argv)
 #endif
 {
-  dap_set_appname("cellframe-node");
-
+    dap_set_appname(NODE_NAME);
     // get relative path to config
-    int l_rel_path = 0;
-    if (argv[1] && argv[2] && !dap_strcmp("-B" , argv[1])) {
-        g_sys_dir_path = (char*)argv[2];
-        l_rel_path = 1;
+    int l_argv_start = 1, l_argvi, l_err = -2, l_ret_cmd = -1;
+    if (argc > 2 && !dap_strcmp("-B" , argv[1])) {
+        g_sys_dir_path = dap_strdup(argv[2]);
+        if (! dap_dir_test(g_sys_dir_path) )
+            return printf("Invalid path \"%s\"", g_sys_dir_path), DAP_DELETE(g_sys_dir_path), -1;
+        argc -= 2;
+        argv += 2;
+        l_argv_start += 2;
+    } else {
+        g_sys_dir_path =
+#ifdef DAP_OS_WINDOWS
+            dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif defined DAP_OS_MAC
+            dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+#elif defined DAP_OS_UNIX
+            dap_strdup_printf("/opt/%s", dap_get_appname());
+#endif
     }
+    if ( argc < 2 )
+        return s_help( ), DAP_DELETE(g_sys_dir_path), -2;
+    if ( s_init() )
+        return log_it( L_ERROR, "Can't init modules" ), DAP_DELETE(g_sys_dir_path), -3;
 
-    if (!g_sys_dir_path) {
-    #ifdef DAP_OS_WINDOWS
-        g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
-    #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
-    #elif DAP_OS_ANDROID
-        g_sys_dir_path = dap_strdup_printf("/storage/emulated/0/opt/%s",dap_get_appname());
-    #elif DAP_OS_UNIX
-        g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
-    #endif
+    size_t i, l_size = sizeof(s_opts) / sizeof(struct options);
+    for (i = 0; i < l_size; ++i) {
+        l_argvi = l_argv_start;
+        if (argc >= l_argvi && !strncmp(s_opts[i].cmd, argv[l_argvi], strlen (argv[l_argvi]) + 1)) {
+            l_err = 0;
+            for (int isub = 0; isub < s_opts[i].count_of_subcommands; isub++) {
+                if ( argc - 1 < ++l_argvi || strncmp(s_opts[i].subcmd[isub], argv[l_argvi], strlen(argv[l_argvi]) + 1) ) {
+                    l_err = -1;
+                    break;
+                }
+            }
+            if ( !l_err ) {
+                l_ret_cmd = s_opts[i].handler(argc, argv);
+                break;
+            }
+        }
     }
-
-  int ret = s_init();
-
-  if ( ret ) {
-    log_it( L_ERROR, "Can't init modules" );
-    return ret;
-  }
-
-  if ( argc < 2 ) {
-    log_it( L_INFO, "No params. Nothing to do" );
-    s_help( );
-    exit( -1000 );
-  }
-
-  size_t l_size = sizeof(s_opts) / sizeof(struct options);
-  bool l_find_cmd = false;
-  bool l_find_subcmd = true;
-  for (size_t i = 0; i < l_size; i++) {
-      int argv_index = 1 + l_rel_path*2;
-      if (argc >= argv_index && !strncmp(s_opts[i].cmd, argv[argv_index], strlen (argv[argv_index]) + 1)) {
-          l_find_cmd = true;
-          l_find_subcmd = false;
-          int match = 1;
-          for (int isub = 0; isub < s_opts[i].count_of_subcommands; isub++) {
-              if ((argc - 1) < ++argv_index) {
-                  match = 0;
-                  break;
-              }
-              if (strncmp(s_opts[i].subcmd[isub], argv[argv_index], strlen(argv[argv_index]) + 1)) {
-                  match = 0;
-                  break;
-              }
-          }
-          if (match) {
-              int l_ret = s_opts[i].handler(l_rel_path ? argc-2 : argc, l_rel_path ? argv+2 : argv);
-              return l_ret;
-          }
-      }
-  }
-  if (!l_find_cmd) {
-      printf("Command %s not found.\n", argv[1]);
-  }
-  if (!l_find_subcmd) {
-      printf("No subcommand was found for the %s command or the number of command arguments is less than the minimum.\n",
-             argv[1]);
-  }
-
-  s_help();
-  dap_config_close(g_config);
-  return -1;
+    switch ( l_err ) {
+    case -2:
+        printf("Command \"%s\" not found.\n", argv[1]);
+        s_help();
+        break;
+    case -1:
+        printf("No subcommand was found for command \"%s\".\n", argv[1]);
+        s_help();
+        break;
+    default: break;
+    }
+    dap_config_close(g_config);
+    DAP_DELETE(g_sys_dir_path);
+    return l_err ? l_err : l_ret_cmd;
 }
 
 static int s_wallet_create(int argc, const char **argv) {
@@ -537,7 +525,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     dap_cert_t *l_cert_new = dap_cert_new(l_cert_new_name);
     l_cert_new->enc_key = dap_enc_key_new(l_cert->enc_key->type);
     // Copy public key (copy only memory address of key storage)
-    l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE(l_cert->enc_key->pub_key_data,
+    l_cert_new->enc_key->pub_key_data = DAP_DUP_SIZE((byte_t*)l_cert->enc_key->pub_key_data,
                                                      l_cert->enc_key->pub_key_data_size);
     if (!l_cert_new->enc_key->pub_key_data) {
         log_it(L_CRITICAL, "%s", c_error_memory_alloc);
@@ -546,7 +534,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     l_cert_new->enc_key->pub_key_data_size = l_cert->enc_key->pub_key_data_size;
     // Copy private key for rename (copy only memory address of key storage)
     if (l_cert->enc_key->priv_key_data && l_cert->enc_key->priv_key_data_size && a_pvt_key_copy) {
-        l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE(l_cert->enc_key->priv_key_data,
+        l_cert_new->enc_key->priv_key_data = DAP_DUP_SIZE((byte_t*)l_cert->enc_key->priv_key_data,
                                                           l_cert->enc_key->priv_key_data_size);
         if (!l_cert_new->enc_key->priv_key_data) {
             log_it(L_CRITICAL, "%s", c_error_memory_alloc);
@@ -661,7 +649,7 @@ static int s_cert_get_addr(int argc, const char **argv) {
  */
 static int s_init()
 {
-    if (dap_common_init(dap_get_appname(), NULL, NULL) != 0)
+    if ( dap_common_init(dap_get_appname(), NULL) )
         return printf("Fatal Error: Can't init common functions module"), -2;
 #if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
         dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
@@ -669,25 +657,19 @@ static int s_init()
         dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
     dap_log_level_set(L_ERROR);
-    char l_config_dir[MAX_PATH] = {'\0'};
-    sprintf(l_config_dir, "%s/etc", g_sys_dir_path);
-    dap_config_init(l_config_dir);
-    g_config = dap_config_open(dap_get_appname());
-    if (g_config) {
-        uint16_t l_ca_folders_size = 0;
-        char **l_ca_folders = dap_config_get_item_str_path_array(g_config, "resources", "ca_folders", &l_ca_folders_size);
-        dap_stpcpy(s_system_ca_dir, l_ca_folders[0]);
-        dap_config_get_item_str_path_array_free(l_ca_folders, &l_ca_folders_size);
-        int t = dap_strlen(s_system_ca_dir);
-        if (s_system_ca_dir[t - 1] == '/')
-            s_system_ca_dir[t-1] = '\0';
-        char *l_wallet_folder = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", NULL);
-        dap_stpcpy(s_system_wallet_dir, l_wallet_folder);
-        DAP_DEL_Z(l_wallet_folder);
-    } else {
-        dap_stpcpy(s_system_ca_dir, "./");
-        dap_stpcpy(s_system_wallet_dir, "./");
+    {
+        char l_config_dir[MAX_PATH];
+        snprintf(l_config_dir, MAX_PATH, "%s/etc", g_sys_dir_path);
+        if ( dap_config_init(l_config_dir) || !(g_config = dap_config_open(dap_get_appname())) )
+            return printf("Can't init general config \"%s/%s.cfg\"\n", l_config_dir, dap_get_appname()), -3;
     }
+    char *l_ca_path = dap_config_get_item_str_path_default(g_config, "resources", "ca_folders", "."),
+         *l_wal_path = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", ".");
+    char *l_pos = dap_strncpy(s_system_ca_dir, l_ca_path, MAX_PATH);
+    if (*--l_pos == '/')
+        *l_pos = '\0';
+    dap_strncpy(s_system_wallet_dir, l_wal_path, MAX_PATH);
+    DAP_DEL_MULTY(l_ca_path, l_wal_path);
     return 0;
 }
 
@@ -699,10 +681,9 @@ static int s_init()
  */
 static int s_is_file_available (char *l_path, const char *name, const char *ext)
 {
-    char l_buf_path[255];
-    snprintf (l_buf_path, 255, "%s/%s%s", l_path, name, ext ? ext : 0);
-    if (access (l_buf_path, F_OK)) return -1;
-    return 0;
+    char l_buf_path[MAX_PATH + 1];
+    snprintf (l_buf_path, MAX_PATH, "%s/%s%s", l_path, name, ext ? ext : 0);
+    return access (l_buf_path, F_OK) ? -1 : 0;
 }
 
 /**
@@ -722,8 +703,7 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
         size_t l_sign_ser_size = l_sign_unserialized_size;
         uint8_t *l_sign_ser = dap_enc_key_serialize_sign(l_key->type, l_sign_unserialized, &l_sign_ser_size);
         if ( l_sign_ser ) {
-            dap_sign_t *l_ret;
-            DAP_NEW_Z_SIZE_RET(l_ret, dap_sign_t, sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size, NULL);
+            dap_sign_t *l_ret = DAP_NEW_Z_SIZE_RET_IF_FAIL(dap_sign_t, sizeof(dap_sign_hdr_t) + l_sign_ser_size + l_pub_key_size);
             // write serialized public key to dap_sign_t
             memcpy(l_ret->pkey_n_sign, l_pub_key, l_pub_key_size);
             l_ret->header.type = dap_sign_type_from_key_type(l_key->type);
