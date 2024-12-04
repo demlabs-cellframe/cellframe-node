@@ -15,10 +15,10 @@ SET (CONFTOOL_SRC ./main.cpp
         ./commands/ServiceCommand.cpp
         ./commands/FromTemplateCommand.cpp
         ./commands/NetworkListCommand.cpp
+        ./commands/PluginsCommand.cpp
         ./config/CellframeConfigFile.cpp
         ./service/service_win.cpp
         ./service/service_linux.cpp)
-
 
 if (ANDROID)
   add_library(${PROJECT_NAME} SHARED ${CONFTOOL_SRC})
