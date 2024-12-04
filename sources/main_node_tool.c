@@ -31,6 +31,7 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_cert.h"
+#include "dap_stream.h"
 #include "dap_cert_file.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
