@@ -61,7 +61,7 @@ static struct option const options[] =
   {"help", no_argument, 0, 'h'},
   {"seed", required_argument, 0, 'z'},
   {"beauty", required_argument, 0, 'b'},
-  {"get-addr", required_argument, 0, 'a'},
+  {"get-addr", no_argument, 0, 'a'},
   {"net-id", required_argument, 0, 'i'},
 };
 
