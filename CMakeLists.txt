@@ -214,6 +214,7 @@ endif()
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
 set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
+set(NODE_SIGN_TARGET "cellframe-sign-tool")
 
 set( NODE_SOURCES
         sources/cellframe-node.c
@@ -224,6 +225,9 @@ set( NODE_CLI_SOURCES
 )
 set( NODE_TOOL_SOURCES
   sources/main_node_tool.c
+)
+set( NODE_SIGN_SOURCES
+  sources/main_node_sign.c
 )
 
 if(UNIX)
@@ -239,6 +243,7 @@ if(UNIX)
     add_executable(${PROJECT_NAME} ${NODE_SOURCES})
     add_executable(${NODE_CLI_TARGET} ${NODE_CLI_SOURCES})
     add_executable(${NODE_TOOL_TARGET} ${NODE_TOOL_SOURCES})
+    add_executable(${NODE_SIGN_TARGET} ${NODE_SIGN_SOURCES})
   endif()
 endif()
 
@@ -246,6 +251,7 @@ if(WIN32)
     add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
+    add_executable(${NODE_SIGN_TARGET} "sources/main_node_sign.c")
 
     target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
 			kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
@@ -253,6 +259,8 @@ if(WIN32)
     set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    target_link_libraries(${NODE_SIGN_TARGET} cellframe-sdk )
+    set_property(TARGET ${NODE_SIGN_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
     target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
@@ -282,6 +290,8 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
 
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+
+    set(NODE_SIGN_LIBRARIES m cellframe-sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
@@ -314,12 +324,9 @@ if(UNIX AND NOT WIN32)
                 set(cpython310static_SOURCE_DIR ${cpython310static_SOURCE_DIR})
             endif()
 
-            SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
             set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
-            add_subdirectory(cellframe-sdk/3rdparty/openssl-cmake)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
-            add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
             list(APPEND CMAKE_PREFIX_PATH ${cpython310static_SOURCE_DIR})
             
@@ -327,11 +334,6 @@ if(UNIX AND NOT WIN32)
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-            if(MACOS OR IOS)
-                list(APPEND Python_LIBRARIES ssl_lib crypto_lib z util expat)
-            elseif(LINUX OR BSD)
-                list(APPEND Python_LIBRARIES ssl_lib crypto_lib crypt nsl z util expat)
-            endif()
         else()
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
                 cmake_policy(SET CMP0094 NEW)
@@ -361,13 +363,14 @@ if(UNIX AND NOT WIN32)
     endif()
 
     if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log  )
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} ${NODE_SIGN_LIBRARIES} log  )
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
         target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
+        target_link_libraries(${NODE_SIGN_TARGET} ${NODE_SIGN_LIBRARIES} pthread )
     endif()
 endif()
 
@@ -383,6 +386,7 @@ if(DARWIN)
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
+    INSTALL(TARGETS ${NODE_SIGN_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
 
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
@@ -423,6 +427,7 @@ else()
         INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        INSTALL(TARGETS ${NODE_SIGN_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
     if (BUILD_DIAGTOOL)
             INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
