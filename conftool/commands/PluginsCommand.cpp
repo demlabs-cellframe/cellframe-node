@@ -45,7 +45,7 @@ bool CPluginsCommand::execute(bool non_interactive, int flags) {
                           << std::endl;
                 return false;
             }
-            std::cout << "List transactions: " << std::endl;
+            std::cout << "List plugins: " << std::endl;
             fs::directory_iterator l_plugins_dir(l_path_plugins);
             for (const fs::directory_entry &entry : l_plugins_dir) {
                 if (entry.is_directory()) {
@@ -54,6 +54,7 @@ bool CPluginsCommand::execute(bool non_interactive, int flags) {
                     if (!fs::exists(l_manifest_file_path)) {
                         std::cout << "In directory plugin '" << l_plugin_path << "' absent manifest plugin" << std::endl;
                     }
+                    std::cout << "\t " << entry.path().filename().generic_string() << std::endl;
                 }
             }
         } break;
