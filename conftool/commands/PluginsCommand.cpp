@@ -41,12 +41,7 @@ bool CPluginsCommand::execute(bool non_interactive, int flags) {
             throw  std::invalid_argument("Not enough arguments to execute the command to remove the plugin.");
         return actionRemovePlugin(params[0]);
     } else if (this->action == "list") {
-        std::vector<std::string> listPlugins = getListPlugins(l_path_plugins);
-        std::cout << "List plugins (" << listPlugins.size() <<"):" << std::endl;
-        for (auto &entry : listPlugins){
-            std::cout << "\t" << entry << "\n";
-        }
-        return true;
+       return actionListPlugin();
     } else {
         throw std::invalid_argument("Undefined action for command plugins");
     }
@@ -71,6 +66,15 @@ std::vector<std::string> CPluginsCommand::getListPlugins(std::filesystem::path p
         }
     }
     return ret;
+}
+
+bool CPluginsCommand::actionListPlugin() {
+    std::vector<std::string> listPlugins = getListPlugins(this->pathPlugin);
+        std::cout << "List plugins (" << listPlugins.size() <<"):" << std::endl;
+        for (auto &entry : listPlugins){
+            std::cout << "\t" << entry << "\n";
+        }
+        return true;
 }
 
 bool CPluginsCommand::actionRemovePlugin(std::string a_name_plugin) {
