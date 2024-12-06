@@ -13,5 +13,5 @@ private:
     std::vector<std::string> getListPlugins();
     std::vector<std::string> getListPlugins(std::filesystem::path path);
     bool actionListPlugin();
-    bool actionRemovePlugin(std::string name_plugin);
+    bool actionRemovePlugin();
 };
