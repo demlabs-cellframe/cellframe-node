@@ -135,7 +135,9 @@ amd64:linux.rwd:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect # js link 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-hl linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect # hardlink
       
 amd64:linux.release:
     extends: .build
@@ -160,7 +162,8 @@ amd64:windows.rwd:
       - ./prod_build/build.sh --target windows rwd -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
-      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_rwd/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/  build_windows_rwd/*.exe --redirect-from windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect # js link  
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-hl windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-installer --just-redirect # hardlink
 
 
 amd64:macos.release:
@@ -174,7 +177,8 @@ amd64:macos.release:
       - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*-signed.pkg --redirect-from macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*-signed.pkg --redirect-from macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect # js link 
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-hl macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64-signed --just-redirect # hardlink
 
     artifacts:
       paths:
@@ -203,8 +207,9 @@ amd64:linux.rwd.opt:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
       - ./prod_build/pack.sh --target linux rwd
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt
-
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb  --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect # js link 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-hl linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-rwd-opt-amd64 --just-redirect # hardlink
 
 amd64:linux.tps:
     extends: .build
@@ -258,7 +263,8 @@ armhf:linux.release:
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*armhf*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect # js link 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-hl linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect # hardlink
 
 arm64:linux.release:
     extends: .build
@@ -271,7 +277,8 @@ arm64:linux.release:
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_*/*arm64*.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect # js link 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-hl linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect # hardlink
   
 
 any:android.release:
