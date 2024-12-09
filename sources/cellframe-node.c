@@ -164,7 +164,6 @@ int main( int argc, const char **argv )
         
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
-    bool bServerEnabled = false;
     int rc = 0;
 
     dap_set_appname(NODE_NAME);
@@ -269,9 +268,7 @@ int main( int argc, const char **argv )
     dap_events_init(l_thread_cnt, 0);
     dap_events_start();
 
-    bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
-
-    if ( bServerEnabled && dap_server_init() != 0 ) {
+    if ( dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
         return -4;
     }
@@ -432,7 +429,7 @@ int main( int argc, const char **argv )
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
     
     uint16_t l_listen_addrs_count = 0;
-    if ( bServerEnabled )
+    if ( dap_server_enabled() )
         l_server = dap_http_server_new("server", dap_get_appname());
 
     if ( l_server ) { // If listener server is initialized
@@ -542,7 +539,7 @@ int main( int argc, const char **argv )
     dap_http_folder_deinit();
 #endif
     dap_http_deinit();
-    if (bServerEnabled) dap_server_deinit();
+    dap_server_deinit();
     dap_enc_ks_deinit();
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
