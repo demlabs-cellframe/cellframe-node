@@ -2,8 +2,10 @@
 // Created by blus on 02.12.24.
 //
 
+#include <valarray>
 #include "PluginsCommand.h"
 #include "../config/CellframeConfigFile.h"
+#include "zip.h"
 
 namespace fs = std::filesystem;
 
@@ -32,8 +34,7 @@ bool CPluginsCommand::execute(bool non_interactive, int flags) {
 
     if (flags & F_VERBOSE) std::cout << "[VC] Path to the directory with plugins '" << this->pathPlugin << "'" << std::endl;
 
-    if (this->action == "install") {
-    }
+    if (this->action == "install") return actionInstallPlugin();
 
     if (this->action == "ensure") {
     }
@@ -95,4 +96,70 @@ bool CPluginsCommand::actionRemovePlugin() {
     }
     std::cout << "Can't find '" << a_name_plugin << "' plugin." << std::endl;
     return false;
+}
+
+bool CPluginsCommand::actionInstallPlugin() {
+    if (this->params.size() == 0)
+        throw  std::invalid_argument("Not enough arguments to execute the command to install the plugin.");
+    std::string source_plugin = this->params[0];
+    //Check git or zip
+    fs::path l_path = source_plugin;
+    bool isZip = l_path.extension() == ".zip";
+    bool isGit = l_path.extension() == ".git";
+//    if (!isGit) {
+//    }
+    if (isZip) {
+        if (!UnpackZip(l_path, this->pathPlugin, l_path.filename().generic_string())) {
+            std::cout << "Can't decompress archive '" << l_path << "'" << std::endl;
+            return false;
+        }
+    }
+    return false;
+}
+
+bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesystem::path dist_path, std::string dir) {
+    if (!fs::exists(archive_path)) return false;
+    if (!fs::exists(dist_path)) return false;
+    if (fs::exists(dist_path/dir)) return false;
+    fs::create_directories(dist_path/dir);
+    if (this->flags & F_VERBOSE)
+        std::cout << "[VC] libzip version: " << zip_libzip_version() << std::endl;
+    int err_code = 0;
+    zip_t *zip = zip_open(archive_path.c_str(), ZIP_RDONLY, &err_code);
+    if (!zip) {
+        zip_error_t error;
+        zip_error_init_with_code(&error, err_code);
+        std::cout << "Can't open zip archive " << archive_path << "Error code:" << zip_error_strerror(&error);
+        zip_error_fini(&error);
+        return false;
+    }
+    zip_int64_t countFilesInArchive = zip_get_num_entries(zip, ZIP_FL_UNCHANGED);
+    if (this->flags & F_VERBOSE)
+        std::cout << "[VC] Count files in archive: " << countFilesInArchive << std::endl;
+    for (zip_int64_t i = 0; i < countFilesInArchive;i++) {
+        zip_file_t *zip_file = zip_fopen_index(zip, i, ZIP_FL_COMPRESSED);
+        zip_stat_t fileinfo;
+        int status = zip_stat_index(zip, i, ZIP_FL_ENC_GUESS, &fileinfo);
+        if (status == 0)
+        {
+            char *buffer = (char*)malloc(fileinfo.size);
+            zip_fread(zip_file, buffer, fileinfo.size);
+            FILE *file = fopen((dist_path/dir/fileinfo.name).c_str(), "wb");
+            fwrite(buffer, fileinfo.size, 1, file);
+            fclose(file);
+            if (this->flags & F_VERBOSE)
+                std::cout << "[VC] Unpack file " << fileinfo.name << std::endl;
+        }
+        else
+        {
+            fs::remove_all(dist_path/dir);
+            std::cout << "Error decompression: " << zip_error_strerror(zip_get_error(zip)) << std::endl;
+            return false;
+        }
+    }
+    zip_close(zip);
+    return true;
+//
+//    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, (uint)file_stat.m_uncomp_size, (uint)file_stat.m_comp_size, mz_zip_reader_is_file_a_directory(&zip_archive, i));
+//
 }
