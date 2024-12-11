@@ -693,7 +693,7 @@ static int s_is_file_available (char *l_path, const char *name, const char *ext)
  */
 static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
 {
-    size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key, sizeof(dap_hash_fast_t));
+    size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key);
     if(l_sign_unserialized_size > 0) {
         size_t l_pub_key_size = 0;
         uint8_t *l_pub_key = dap_enc_key_serialize_pub_key(l_key, &l_pub_key_size);
