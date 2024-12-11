@@ -137,11 +137,15 @@ bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesys
     if (this->flags & F_VERBOSE)
         std::cout << "[VC] Count files in archive: " << countFilesInArchive << std::endl;
     for (zip_int64_t i = 0; i < countFilesInArchive;i++) {
-        zip_file_t *zip_file = zip_fopen_index(zip, i, ZIP_FL_COMPRESSED);
+        zip_file_t *zip_file = zip_fopen_index(zip, i, ZIP_FL_UNCHANGED);
         zip_stat_t fileinfo;
         int status = zip_stat_index(zip, i, ZIP_FL_ENC_GUESS, &fileinfo);
         if (status == 0)
         {
+            if (!fileinfo.size) {
+                fs::create_directory(dist_path/dir/fileinfo.name);
+                continue;
+            }
             char *buffer = (char*)malloc(fileinfo.size);
             zip_fread(zip_file, buffer, fileinfo.size);
             FILE *file = fopen((dist_path/dir/fileinfo.name).c_str(), "wb");
