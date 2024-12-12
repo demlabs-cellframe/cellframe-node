@@ -425,11 +425,11 @@ int main( int argc, const char **argv )
         return -67;
 
     if (dap_chain_node_list_clean_init()) {
-        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
+        log_it( L_CRITICAL, "Can't init node list clean" );
         return -131;
     }
 
-    if (dap_global_db_clean_init(g_config)) {
+    if (dap_global_db_clean_init()) {
         log_it( L_CRITICAL, "Can't init gdb clean and pin" );
         return -133;
     }
