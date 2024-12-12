@@ -6,8 +6,13 @@
 #include "PluginsCommand.h"
 #include "../config/CellframeConfigFile.h"
 #include "zip.h"
+#include "../rapidjson/rapidjson.h"
+#include "../rapidjson/document.h"
+#include "../rapidjson/filereadstream.h"
+#include "../rapidjson/istreamwrapper.h"
 
 namespace fs = std::filesystem;
+namespace rj = rapidjson;
 
 CAbstractScriptCommand::Registrar<CPluginsCommand> plugins_registrar("plugins");
 
@@ -113,8 +118,13 @@ bool CPluginsCommand::actionInstallPlugin() {
             std::cout << "Can't decompress archive '" << l_path << "'" << std::endl;
             return false;
         }
+        std::cout << "Archive unpacking complete." << std::endl;
     }
-    return false;
+    if (!CPluginsCommand::postInstallAction(this->pathPlugin/l_path.filename().generic_string())){
+        std::cout << "Error in post install process" << std::endl;
+        fs::remove_all(this->pathPlugin/l_path.filename().generic_string());
+        return false;
+    }
 }
 
 bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesystem::path dist_path, std::string dir) {
@@ -163,7 +173,37 @@ bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesys
     }
     zip_close(zip);
     return true;
-//
-//    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, (uint)file_stat.m_uncomp_size, (uint)file_stat.m_comp_size, mz_zip_reader_is_file_a_directory(&zip_archive, i));
-//
+}
+
+bool CPluginsCommand::postInstallAction(std::filesystem::path plugin_path) {
+    bool enabledInstallDep = true;
+    if (this->params.size() == 2 && this->params[1] == "no_dep") {
+        enabledInstallDep = false;
+    }
+    if (!fs::exists(plugin_path/"manifest.json")) {
+        std::cout << "Manifest file not found in " << plugin_path << std::endl;
+        return false;
+    }
+    std::ifstream manifestFile(plugin_path/"manifest.json");
+    rapidjson::IStreamWrapper isw {manifestFile};
+    rapidjson::Document manifest;
+    manifest.ParseStream(isw);
+    if (manifest.HasParseError()) {
+        std::cout << "Error parsed manifest.json file";
+        if (this->flags & F_VERBOSE)
+            std::cout << "Error: " << manifest.GetParseError()  << std::endl <<
+            "Offset: " << manifest.GetErrorOffset() << std::endl;
+        return false;
+    }
+    const char *namePlugin = manifest["name"].GetString();
+    const char *typePlugin = manifest["type"].GetString();
+    fs::path newPath = plugin_path;
+    newPath.remove_filename().append(namePlugin);
+    fs::rename(plugin_path, newPath);
+
+    if ((enabledInstallDep == false) || (!fs::exists(newPath/"requirements.txt") || strcmp(typePlugin, "python") != 0)) return true;
+    fs::path pathToPip = fs::path{variable_storage["CONFIGS_PATH"]}/"python"/"bin"/"pip3";
+    std::string cmd = pathPlugin.generic_string() + " -r" + newPath.generic_string();
+//    std::system(cmd.c_str());
+    return true;
 }
