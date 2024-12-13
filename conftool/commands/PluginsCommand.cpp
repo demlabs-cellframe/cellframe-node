@@ -125,6 +125,8 @@ bool CPluginsCommand::actionInstallPlugin() {
         fs::remove_all(this->pathPlugin/l_path.filename().generic_string());
         return false;
     }
+    std::cout << "Install plugin completed." << std::endl;
+    return true;
 }
 
 bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesystem::path dist_path, std::string dir) {
@@ -201,9 +203,9 @@ bool CPluginsCommand::postInstallAction(std::filesystem::path plugin_path) {
     newPath.remove_filename().append(namePlugin);
     fs::rename(plugin_path, newPath);
 
-    if ((enabledInstallDep == false) || (!fs::exists(newPath/"requirements.txt") || strcmp(typePlugin, "python") != 0)) return true;
+    if (!enabledInstallDep || (!fs::exists(newPath / "requirements.txt") || strcmp(typePlugin, "python") != 0)) return true;
     fs::path pathToPip = fs::path{variable_storage["CONFIGS_PATH"]}/"python"/"bin"/"pip3";
-    std::string cmd = pathPlugin.generic_string() + " -r" + newPath.generic_string();
-//    std::system(cmd.c_str());
+    std::string cmd = pathToPip.generic_string() + " install -r " + (newPath / "requirements.txt").generic_string();
+    std::system(cmd.c_str());
     return true;
 }
