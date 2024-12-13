@@ -110,6 +110,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_emit_delegate.h"
 
 #include "dap_chain_wallet_cache.h"
 
@@ -389,6 +390,9 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
+    if (dap_chain_net_srv_emit_delegate_init()) {
+        log_it(L_ERROR, "Can't start stake lock service");
+    }
 #ifndef _WIN32
 #   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
