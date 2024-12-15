@@ -41,8 +41,7 @@ bool CPluginsCommand::execute(bool non_interactive, int flags) {
 
     if (this->action == "install") return actionInstallPlugin();
 
-    if (this->action == "ensure") {
-    }
+    if (this->action == "ensure") return actionEnsurePlugin();
 
     if (this->action == "update") {
     }
@@ -207,5 +206,33 @@ bool CPluginsCommand::postInstallAction(std::filesystem::path plugin_path) {
     fs::path pathToPip = fs::path{variable_storage["CONFIGS_PATH"]}/"python"/"bin"/"pip3";
     std::string cmd = pathToPip.generic_string() + " install -r " + (newPath / "requirements.txt").generic_string();
     std::system(cmd.c_str());
+    return true;
+}
+
+bool CPluginsCommand::actionEnsurePlugin() {
+    if (this->params.size() == 0)
+        throw  std::invalid_argument("Not enough arguments to execute the command enabling or disabling plugins.");
+    bool activateWorkWithPlugin = false;
+    if (this->params[0] == "on") {
+        activateWorkWithPlugin = true;
+    } else if (this->params[0] == "off") {
+        activateWorkWithPlugin = false;
+    } else {
+        throw  std::invalid_argument("The activation status for working with plugins is not set, you can set it to on or off.");
+    }
+    CellframeConfigurationFile cfg(fs::path{variable_storage["CONFIGS_PATH"]}/"etc"/"cellframe-node.cfg", 0);
+    if (!cfg.exists("plugins", "enabled", nullptr))
+        throw std::invalid_argument("The configuration file does not have a plugins section or it does not have a enabled value.");
+    if (!cfg.exists("plugins", "py_load", nullptr))
+        throw std::invalid_argument("The configuration file does not have a plugins section or it does not have a py_load value.");
+    if (activateWorkWithPlugin) {
+        cfg.set("plugins", "enabled", "true");
+        cfg.set("plugins", "py_load", "true");
+    } else {
+        cfg.set("plugins", "enabled", "false");
+        cfg.set("plugins", "py_load", "false");
+    }
+    cfg.save();
+    std::cout << "Work with plugins in the " << (activateWorkWithPlugin ? "activated" : "deactivated") << " states has been established." << std::endl;
     return true;
 }

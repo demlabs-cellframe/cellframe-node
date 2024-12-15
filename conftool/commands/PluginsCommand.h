@@ -16,6 +16,7 @@ private:
     bool actionListPlugin();
     bool actionRemovePlugin();
     bool actionInstallPlugin();
+    bool actionEnsurePlugin();
     bool UnpackZip(std::filesystem::path archive_path, std::filesystem::path dist_path, std::string dir);
     bool postInstallAction(std::filesystem::path dist_path);
 };
