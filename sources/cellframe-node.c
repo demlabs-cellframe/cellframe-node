@@ -127,7 +127,6 @@
     #include "dap_plugins_python_app_context.h"
 #endif
 
-#define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 const char *dap_node_version();
 static int s_proc_running_check(const char *a_path);
@@ -442,11 +441,6 @@ int main( int argc, const char **argv )
         // Streaming URLs
         dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
         dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
-
-        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-            dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
-        }
 
         // Built in WWW server
 #if !DAP_OS_ANDROID
