@@ -207,6 +207,19 @@ void print_help()
     std::cout << "\t\t stop cellframe-node (if registred as service!)"  << std::endl;
     std::cout << "\tservice  status"  << std::endl;
     std::cout << "\t\t get service & process statuses"  << std::endl;
+    std::cout << "\tplugins ensure" << std::endl;
+    std::cout << "\t\t on - to activate work with binary plugins and python plugins."
+                 " off - to deactivate work with binary plugins and python plugins." << std::endl;
+    std::cout << "\tplugins list" << std::endl;
+    std::cout << "\t\t Prints a list of installed plugins" << std::endl;
+    std::cout << "\tplugins remove <plugin_name>" << std::endl;
+    std::cout << "\t\tset the <plugin_name> parameter. "
+                 "To indicate which plugin needs to be removed." << std::endl;
+    std::cout << "\tplugins install {<path_to_zip>|<url_to_git>} [no_dep]" << std::endl;
+    std::cout << "\t\tset the <path_to_zip> parameter - it is responsible for the full path to the ZIP archive with "
+                 "the plugin on the local machine, or set the <url_to_git> parameter - this is the path "
+                 "to the git repository that will be cloned. If you do not need to install dependencies for "
+                 "the python plugin, set no_dep." << std::endl;
 }
 
 std::unique_ptr<CAbstractScriptCommand> parse_line_to_cmd(std::string line, int line_no, int flags) {
