@@ -17,6 +17,7 @@ private:
     bool actionRemovePlugin();
     bool actionInstallPlugin();
     bool actionEnsurePlugin();
+    bool Clone(std::string gitRepo, std::filesystem::path dist_path, std::string dir);
     bool UnpackZip(std::filesystem::path archive_path, std::filesystem::path dist_path, std::string dir);
     bool postInstallAction(std::filesystem::path dist_path);
 };

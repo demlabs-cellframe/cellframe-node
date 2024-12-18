@@ -10,9 +10,30 @@
 #include "../rapidjson/document.h"
 #include "../rapidjson/filereadstream.h"
 #include "../rapidjson/istreamwrapper.h"
+#include "../libgit2/include/git2.h"
 
 namespace fs = std::filesystem;
 namespace rj = rapidjson;
+
+static int credentials_cb(git_credential **out, const char *url, const char *username_from_url,
+                          unsigned int allowed_types, void *payload)
+{
+    /*int err;
+    char *username = NULL, *password = NULL, *privkey = NULL, *pubkey = NULL;
+    username = strdup("git");
+    password = strdup("PASSWORD");
+    pubkey = strdup("/home/user/.ssh/id_rsa.pub");
+    privkey = strdup("/home/user/.ssh/id_rsa");
+
+    err = git_credential_ssh_key_new(out, username, pubkey, privkey, password);
+
+    free(username);
+    free(password);
+    free(privkey);
+    free(pubkey);
+
+    return err;*/
+}
 
 CAbstractScriptCommand::Registrar<CPluginsCommand> plugins_registrar("plugins");
 
@@ -110,8 +131,13 @@ bool CPluginsCommand::actionInstallPlugin() {
     fs::path l_path = source_plugin;
     bool isZip = l_path.extension() == ".zip";
     bool isGit = l_path.extension() == ".git";
-//    if (!isGit) {
-//    }
+    if (isGit) {
+        if (!Clone(l_path, this->pathPlugin, l_path.filename().generic_string())) {
+            std::cout << "Can't clone repository '" << l_path << "'" << std::endl;
+            return false;
+        }
+        std::cout << "Repository '" << l_path << "' cloning" << std::endl;
+    }
     if (isZip) {
         if (!UnpackZip(l_path, this->pathPlugin, l_path.filename().generic_string())) {
             std::cout << "Can't decompress archive '" << l_path << "'" << std::endl;
@@ -173,6 +199,36 @@ bool CPluginsCommand::UnpackZip(std::filesystem::path archive_path, std::filesys
         }
     }
     zip_close(zip);
+    return true;
+}
+
+bool CPluginsCommand::Clone(std::string gitRepo, std::filesystem::path dist_path, std::string dir) {
+    if (fs::exists(dist_path/dir)) return false;
+    fs::create_directories(dist_path/dir);
+    git_libgit2_init();
+    git_repository *repo = NULL;
+    git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
+
+    git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
+    fetch_opts.proxy_opts = GIT_PROXY_OPTIONS_INIT;
+    fetch_opts.callbacks.credentials = credentials_cb;
+    clone_opts.fetch_opts = fetch_opts;
+	int error;
+
+    const char *l_url_path = gitRepo.c_str();
+    fs::path l_fs_local_path = dist_path/dir;
+    const char *l_local_path = l_fs_local_path.c_str();
+    error = git_clone(&repo, l_url_path, l_local_path, &clone_opts);
+    if (error != 0) {
+        const git_error *err = git_error_last();
+        if (err)
+            std::cout << "ERROR " << err->klass << ": " << err->message << std::endl;
+        else
+            std::cout << "ERROR " << error << std::endl;
+        git_libgit2_shutdown();
+        return false;
+    } else if (repo) git_repository_free(repo);
+    git_libgit2_shutdown();
     return true;
 }
 
