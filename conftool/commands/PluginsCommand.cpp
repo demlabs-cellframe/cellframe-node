@@ -196,6 +196,18 @@ bool CPluginsCommand::postInstallAction(std::filesystem::path plugin_path) {
             "Offset: " << manifest.GetErrorOffset() << std::endl;
         return false;
     }
+    if (!manifest.HasMember("name") || !manifest.HasMember("type")){
+        std::cout << "The downloaded manifest is missing either the 'name' field or the 'type' field, possibly both." << std::endl;
+        return false;
+    }
+    if (!manifest["name"].IsString()) {
+        std::cout << "In the downloaded manifest, the 'name' field is not of string type." << std::endl;
+        return false;
+    }
+    if (!manifest["type"].IsString()) {
+        std::cout << "In the downloaded manifest, the 'type' field is not of string type." << std::endl;
+        return false;
+    }
     const char *namePlugin = manifest["name"].GetString();
     const char *typePlugin = manifest["type"].GetString();
     fs::path newPath = plugin_path;
