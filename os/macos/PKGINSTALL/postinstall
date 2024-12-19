@@ -1,24 +1,25 @@
 #!/bin/sh
 #set -x
 
-APP_NAME=CellframeNode
-DAP_PREFIX=/Applications/CellframeNode.app/Contents/Resources
-NODE=com.demlabs.cellframe-node
+INSTALL_BINS="/Applications/CellframeNode.app/Contents/MacOS/"
+INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
+USER_RES="/Library/Application Support/CellframeNode" 
 
-mkdir -p $DAP_PREFIX
-mkdir -p $DAP_PREFIX/etc
-mkdir -p $DAP_PREFIX/share 
-mkdir -p $DAP_PREFIX/var/run/ 
-mkdir -p $DAP_PREFIX/var/lib/ 
+mkdir -p "${USER_RES}/"
+cp -r "${INSTALL_RES}/etc" "${USER_RES}/"
+cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 
-/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -i /Applications/CellframeNode.app/Contents/Resources/share/default.setup
+mkdir "${USER_RES}/var/run/"
+
+${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 
 echo "[!] Set cfg permissions"
 #set rwo permissions to configs
-chmod 666 $(find ${DAP_PREFIX}/ -type f)
+chmod 666 $(find "${USER_RES}/" -type f)
 #set rwx permissions to dirs
-chmod 777 $(find ${DAP_PREFIX}/ -type d)
+chmod 777 $(find "${USER_RES}/" -type d)
 
 echo "[!] Copy daemon plist"
-cp /Applications/CellframeNode.app/Contents/Resources/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
-/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service enable
+cp ${INSTALL_RES}/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
+
+${INSTALL_BINS}/cellframe-node-config -e service enable
