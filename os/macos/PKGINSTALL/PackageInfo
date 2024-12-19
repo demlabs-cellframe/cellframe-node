@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<pkg-info overwrite-permissions="true" relocatable="false" identifier="com.demlabs.CellframeNode" postinstall-action="none" version="" format-version="2" generator-version="InstallCmds-860 (24B83)" install-location="/Applications" auth="root">
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="com.demlabs.CellframeNode" postinstall-action="none" format-version="2" generator-version="InstallCmds-860 (24B83)" install-location="/Applications/" auth="root" version="" >
     <payload numberOfFiles="" installKBytes=""/>
+    <domains enable_localSystem="false" enable_anywhere="true" enable_currentUserHome="true"/>
+
     <bundle id="com.demlabs.CellframeNode" path="./CellframeNode.app"/>
     <bundle-version>
         <bundle id="com.demlabs.CellframeNode"/>
