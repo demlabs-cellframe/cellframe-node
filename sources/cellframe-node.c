@@ -182,7 +182,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+        g_sys_dir_path = dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
