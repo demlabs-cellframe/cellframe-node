@@ -14,10 +14,8 @@ mkdir "${USER_RES}/var/run/"
 ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 
 echo "[!] Set cfg permissions"
-#set rwo permissions to configs
-chmod 666 $(find "${USER_RES}/" -type f)
-#set rwx permissions to dirs
-chmod 777 $(find "${USER_RES}/" -type d)
+find "${USER_RES}/" -type d -exec chmod 777 {} \;
+find "${USER_RES}/" -type f -exec chmod 666 {} \;
 
 echo "[!] Copy daemon plist"
 cp ${INSTALL_RES}/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
