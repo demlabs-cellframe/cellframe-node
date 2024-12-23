@@ -132,7 +132,7 @@ int main(int argc, const char **argv)
 #ifdef DAP_OS_WINDOWS
             dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif defined DAP_OS_MAC
-            dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+            dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif defined DAP_OS_UNIX
             dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -304,6 +304,12 @@ static int s_wallet_create_wp(int argc, const char **argv) {
         exit(-2007);
     }
     DAP_DELETE(l_file_name);
+
+    // Checking that if a password is set, it contains only Latin characters, numbers and special characters, except for spaces.
+    if (!dap_check_valid_password(l_pass_str, dap_strlen(l_pass_str))) {
+        log_it(L_ERROR, "Invalid characters used for password.\n");
+        exit(-2008);
+    }
 
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 8) {
