@@ -110,6 +110,9 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_emit_delegate.h"
+
+#include "dap_chain_wallet_cache.h"
 
 #include "dap_events_socket.h"
 #include "dap_client.h"
@@ -179,7 +182,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+        g_sys_dir_path = dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -327,11 +330,6 @@ int main( int argc, const char **argv )
         return -60;
     }
 
-    if( dap_chain_wallet_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
     if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
@@ -366,6 +364,11 @@ int main( int argc, const char **argv )
         return -65;
     }
 
+    if( dap_chain_wallet_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
+
     if( dap_chain_net_srv_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
@@ -390,6 +393,9 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
+    if (dap_chain_net_srv_emit_delegate_init()) {
+        log_it(L_ERROR, "Can't start stake lock service");
+    }
 #ifndef _WIN32
 #   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
@@ -413,6 +419,12 @@ int main( int argc, const char **argv )
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
+    }
+
+    
+    if( dap_chain_wallet_cache_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
     }
 
     dap_chain_net_load_all();
