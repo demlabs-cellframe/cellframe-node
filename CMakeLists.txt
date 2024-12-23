@@ -82,7 +82,7 @@ if(LINUX)
 endif()
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -108,6 +108,7 @@ if(UNIX)
         set(BUNDLE_NAME "CellframeNode.app")
         set(BUNDLE_PATH "${CMAKE_INSTALL_PREFIX}")
         set(BINDIR ${BUNDLE_PATH}/Contents/MacOS)
+        set(CONTENTSDIR ${BUNDLE_PATH}/Contents/)
         set(LIBDIR ${BUNDLE_PATH})
         set(RLIBDIR ${BUNDLE_PATH}/Contents/Frameworks)
         set(SHAREDIR ${BUNDLE_PATH}/Contents/Resources)
@@ -312,12 +313,9 @@ if(UNIX AND NOT WIN32)
                 set(cpython310static_SOURCE_DIR ${cpython310static_SOURCE_DIR})
             endif()
 
-            SET(OPENSSL_ARCHIVE_URL https://pub.cellframe.net/3rdparty/python/openssl-1.1.1o.tar.gz)
             set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
-            add_subdirectory(cellframe-sdk/3rdparty/openssl-cmake)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
-            add_dependencies(${NODE_TARGET} ssl_lib crypto_lib)
 
             list(APPEND CMAKE_PREFIX_PATH ${cpython310static_SOURCE_DIR})
             
@@ -325,11 +323,6 @@ if(UNIX AND NOT WIN32)
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-            if(MACOS OR IOS)
-                list(APPEND Python_LIBRARIES ssl_lib crypto_lib z util expat)
-            elseif(LINUX OR BSD)
-                list(APPEND Python_LIBRARIES ssl_lib crypto_lib crypt nsl z util expat)
-            endif()
         else()
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
                 cmake_policy(SET CMP0094 NEW)
@@ -384,6 +377,8 @@ if(DARWIN)
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
 
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
+
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
