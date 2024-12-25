@@ -28,7 +28,7 @@
 #ifndef WIN32
 #include <getopt.h>
 #else
-#include <postgresql/getopt_long.h>
+#include <postgresql/pg_getopt.h>
 #endif
 #include <string.h>
 
