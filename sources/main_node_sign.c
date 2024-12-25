@@ -25,9 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#ifndef HAVE_GETOPT_LONG
 #include <getopt.h>
-#endif
 #include <string.h>
 
 #include "dap_common.h"
