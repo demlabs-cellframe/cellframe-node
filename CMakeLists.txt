@@ -244,8 +244,6 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    set(CMAKE_C_COMPILER clang)
-    set(CMAKE_CXX_COMPILER clang++)
     add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
