@@ -25,7 +25,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#ifndef WIN32
+#ifdef WIN32
+#include <pgport.h>
+#else
 #include <getopt.h>
 #endif
 #include <string.h>

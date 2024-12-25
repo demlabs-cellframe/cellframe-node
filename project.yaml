@@ -27,6 +27,7 @@ build_dependencies:
     - 'jq'
     - 'xsltproc'
     - 'libpq-dev'
+    - 'clang'
 
 deploy_dependencies:
   deb:
