@@ -103,6 +103,7 @@ amd64:linux.rwd.bld:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/sign-tool/$CI_COMMIT_REF_NAME/ build_linux_rwd/dist/opt/cellframe-node/bin/cellframe-sign-tool 
 
       
 autotests:
