@@ -108,6 +108,7 @@ if(UNIX)
         set(BUNDLE_NAME "CellframeNode.app")
         set(BUNDLE_PATH "${CMAKE_INSTALL_PREFIX}")
         set(BINDIR ${BUNDLE_PATH}/Contents/MacOS)
+        set(CONTENTSDIR ${BUNDLE_PATH}/Contents/)
         set(LIBDIR ${BUNDLE_PATH})
         set(RLIBDIR ${BUNDLE_PATH}/Contents/Frameworks)
         set(SHAREDIR ${BUNDLE_PATH}/Contents/Resources)
@@ -373,6 +374,8 @@ if(DARWIN)
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
 
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
+
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
