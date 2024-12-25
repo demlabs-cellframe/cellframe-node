@@ -12,6 +12,7 @@ test_build_dependencies:
     - 'jq'
     - 'xsltproc'
     - 'libpq-dev'
+    - 'clang'
     
 build_dependencies:
   deb:
