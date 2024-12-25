@@ -25,11 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#ifndef WIN32
 #include <getopt.h>
-#else
-#include <pg_getopt.h>
-#endif
 #include <string.h>
 
 #include "dap_common.h"
