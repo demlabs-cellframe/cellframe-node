@@ -297,22 +297,14 @@ if(UNIX AND NOT WIN32)
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
                 cmake_policy(SET CMP0135 NEW)
             endif()
-            if(CMAKE_BUILD_TYPE MATCHES Debug)
-                FetchContent_Declare(
-                    CPython310StaticDebug
-                    URL https://pub.cellframe.net/3rdparty/python/cpython310d.tar.xz
-                )
-                FetchContent_MakeAvailable(CPython310StaticDebug)
-                set(cpython310static_SOURCE_DIR ${cpython310staticdebug_SOURCE_DIR})
-            else()
-                FetchContent_Declare(
-                    CPython310Static
-                    URL https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz
-                )
-                FetchContent_MakeAvailable(CPython310Static)
-                set(cpython310static_SOURCE_DIR ${cpython310static_SOURCE_DIR})
-            endif()
-
+            
+            FetchContent_Declare(
+                CPython310Static
+                URL https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz
+            )
+            FetchContent_MakeAvailable(CPython310Static)
+            set(cpython310static_SOURCE_DIR ${cpython310static_SOURCE_DIR})
+        
             set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
@@ -429,13 +421,8 @@ else()
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
             INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/pip3 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-            if(CMAKE_BUILD_TYPE MATCHES Debug)
-                INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10d DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-                INSTALL(FILES ${cpython310static_SOURCE_DIR}/lib/libpython3.10d.so.1.0 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
-            else()
-                INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-                INSTALL(FILES ${cpython310static_SOURCE_DIR}/lib/libpython3.10.so.1.0 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
-            endif()
+            INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+            INSTALL(FILES ${cpython310static_SOURCE_DIR}/lib/libpython3.10.so.1.0 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
             
             INSTALL(FILES ${cpython310static_SOURCE_DIR}/bin/python3.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             

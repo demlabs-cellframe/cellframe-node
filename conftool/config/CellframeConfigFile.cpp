@@ -11,6 +11,12 @@
 #include <string>
 #include <vector>
 
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+
 namespace utils {
 
 std::string escape(const std::string &str);
@@ -300,6 +306,30 @@ std::string CellframeConfigurationFile::set(const std::string & group, const std
     return lines[line_set_to];
 }
 
+
+struct FILE_closer {
+    void operator()(std::FILE* fp) const { std::fclose(fp); }
+};
+
+// you may want overloads for `std::filesystem::path`, `std::string` etc too:
+std::ofstream open_exclusively(fs::path filepath) {
+    bool excl = [filepath] {
+        std::unique_ptr<std::FILE, FILE_closer> fp(std::fopen(filepath.c_str(), "wx"));
+        return !!fp;
+    }();
+    auto saveerr = errno;
+
+    std::ofstream stream;
+    
+    if (excl) {
+        stream.open(filepath);
+    } else {
+        stream.setstate(std::ios::failbit);
+        errno = saveerr;
+    } 
+    return stream;
+}
+
 bool CellframeConfigurationFile::save()
 {
     if (flags & F_VERBOSE)  std::cout << "[VC] saving " << this->lines.size() << " lines to " << this->path << std::endl;
@@ -308,10 +338,16 @@ bool CellframeConfigurationFile::save()
         return true;
     };
 
-    std::ofstream file(path);
-    for (auto l : lines) file << l << std::endl;
-    file.close();
-    return true;
+    std::ofstream file = open_exclusively(path);
+
+    if (file) {
+        for (auto l : lines) file << l << std::endl;
+        file.close();
+        return true;
+    } else {
+        std::cout << "Error: " << std::strerror(errno) << '\n';
+        return false;
+    }
 }
 
 
