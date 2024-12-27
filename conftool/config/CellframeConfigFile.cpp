@@ -314,7 +314,7 @@ struct FILE_closer {
 // you may want overloads for `std::filesystem::path`, `std::string` etc too:
 std::ofstream open_exclusively(fs::path filepath) {
     bool excl = [filepath] {
-        std::unique_ptr<std::FILE, FILE_closer> fp(std::fopen(filepath.c_str(), "wx"));
+        std::unique_ptr<std::FILE, FILE_closer> fp(std::fopen(filepath.generic_string().c_str(), "wx"));
         return !!fp;
     }();
     auto saveerr = errno;
