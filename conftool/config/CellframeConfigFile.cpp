@@ -389,9 +389,7 @@ bool CellframeConfigurationFile::save()
     std::ofstream file(path);
 
     if (file) {
-        for (auto l : lines) 
-        {file << l << std::endl;
-        sleep(1);}
+        for (auto l : lines) file << l << std::endl;
         file.close();
         return true;
     } else {
