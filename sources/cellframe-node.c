@@ -127,7 +127,6 @@
     #include "dap_plugins_python_app_context.h"
 #endif
 
-#define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 const char *dap_node_version();
 static int s_proc_running_check(const char *a_path);
@@ -374,9 +373,6 @@ int main( int argc, const char **argv )
         return -66;
     }
 
-    if( dap_chain_net_srv_order_init() )
-        return -67;
-
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
@@ -428,6 +424,19 @@ int main( int argc, const char **argv )
         return -61;
     }
 
+    if( dap_chain_net_srv_order_init() )
+        return -67;
+
+    if (dap_chain_node_list_clean_init()) {
+        log_it( L_CRITICAL, "Can't init node list clean" );
+        return -131;
+    }
+
+    if (dap_global_db_clean_init()) {
+        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
+        return -133;
+    }
+
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
     
@@ -442,11 +451,6 @@ int main( int argc, const char **argv )
         // Streaming URLs
         dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
         dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
-
-        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-            dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
-        }
 
         // Built in WWW server
 #if !DAP_OS_ANDROID
