@@ -537,16 +537,10 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
 
                 // Maybe should get pkey and tronsform to dap_pkey_t
                 dap_pkey_t *l_pkey = NULL;
-                const char *l_pkey_str = s_json_get_text(l_json_item_obj, "pkey");
-                if(l_pkey_str) {
-                    size_t l_pkey_str_len = strlen(l_pkey_str);
-                    l_pkey = DAP_NEW_Z_SIZE_RET_IF_FAIL(dap_pkey_t, DAP_ENC_BASE64_DECODE_SIZE(l_pkey_str_len) + 1);
-                    if (!l_pkey) {
-                        log_it(L_CRITICAL, "%s", c_error_memory_alloc);
-                        break;
-                    }
-                    size_t l_pkey_len = dap_enc_base64_decode(l_pkey_str, l_pkey_str_len, l_pkey, DAP_ENC_DATA_TYPE_B64);
-                    debug_if(l_pkey_len != l_pkey->header.size + sizeof(dap_pkey_t), L_ERROR, "Json TX: bad pkey in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
+                const char *l_pkey_full_str = s_json_get_text(l_json_item_obj, "pkey_full");
+                if(l_pkey_full_str) {
+                    l_pkey = dap_pkey_get_from_str(l_pkey_full_str);
+                    debug_if(!l_pkey, L_ERROR, "Json TX: bad pkey in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
                 }
                 
                 dap_chain_tx_out_cond_t *l_out_cond_item = dap_chain_datum_tx_item_out_cond_create_srv_stake(l_srv_uid, l_value, l_signing_addr,
