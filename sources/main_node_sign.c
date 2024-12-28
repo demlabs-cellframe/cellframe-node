@@ -534,8 +534,17 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
                     printf("Json TX: bad node_addr in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
                     break;
                 }
+
+                // Maybe should get pkey and tronsform to dap_pkey_t
+                dap_pkey_t *l_pkey = NULL;
+                const char *l_pkey_full_str = s_json_get_text(l_json_item_obj, "pkey_full");
+                if(l_pkey_full_str) {
+                    l_pkey = dap_pkey_get_from_str(l_pkey_full_str);
+                    debug_if(!l_pkey, L_ERROR, "Json TX: bad pkey in OUT_COND_SUBTYPE_SRV_STAKE_POS_DELEGATE");
+                }
+                
                 dap_chain_tx_out_cond_t *l_out_cond_item = dap_chain_datum_tx_item_out_cond_create_srv_stake(l_srv_uid, l_value, l_signing_addr,
-                                                                                                             &l_signer_node_addr, NULL, uint256_0);
+                                                                                                             &l_signer_node_addr, NULL, uint256_0, l_pkey);
                 l_item = (const uint8_t*) l_out_cond_item;
                 // Save value for using in In item
                 if(l_item) {
