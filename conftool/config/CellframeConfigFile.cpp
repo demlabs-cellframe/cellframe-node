@@ -307,27 +307,75 @@ std::string CellframeConfigurationFile::set(const std::string & group, const std
 }
 
 
-struct FILE_closer {
-    void operator()(std::FILE* fp) const { std::fclose(fp); }
+#include <string>
+
+class exclusive_lock_file
+{
+public:
+    // Throws if unable to acquire the lock
+    exclusive_lock_file(const std::string& filename);
+
+    virtual ~exclusive_lock_file();
+
+private:
+    exclusive_lock_file(const exclusive_lock_file&) = delete; // not construction-copyable
+    exclusive_lock_file& operator=(const exclusive_lock_file&) = delete; // not assignment-copyable
+
+    const std::string filename;
+#ifdef _WIN32
+    const void* lock;
+#else
+    int fd;
+#endif
 };
 
-// you may want overloads for `std::filesystem::path`, `std::string` etc too:
-std::ofstream open_exclusively(fs::path filepath) {
-    bool excl = [filepath] {
-        std::unique_ptr<std::FILE, FILE_closer> fp(std::fopen(filepath.generic_string().c_str(), "wx"));
-        return !!fp;
-    }();
-    auto saveerr = errno;
+#include <stdexcept>
 
-    std::ofstream stream;
-    
-    if (excl) {
-        stream.open(filepath);
-    } else {
-        stream.setstate(std::ios::failbit);
-        errno = saveerr;
-    } 
-    return stream;
+#ifdef _WIN32
+#include <Windows.h>
+#else // _WIN32
+#include <sys/file.h>
+#include <unistd.h>
+#endif // _WIN32
+
+exclusive_lock_file::exclusive_lock_file(const std::string& filename)
+    : filename(filename)
+#ifdef _WIN32
+    , lock(CreateFileA(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL))
+#endif
+{
+#ifdef _WIN32
+    const bool success = (lock != INVALID_HANDLE_VALUE);
+#else // _WIN32
+    fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
+    if (fd < 0) {
+        throw std::runtime_error("Cannot open file " + filename + ".");
+    }
+    const bool success = flock(fd, LOCK_EX | LOCK_NB) == 0;
+    if (!success) {
+        close(fd);
+        fd = -1;
+    }
+#endif // _WIN32
+    if (!success) {
+        throw std::runtime_error("Cannot open file " + filename + " for exclusive access.");
+    }
+}
+
+exclusive_lock_file::~exclusive_lock_file()
+{
+#ifdef _WIN32
+    if (lock != INVALID_HANDLE_VALUE) {
+        CloseHandle((HANDLE) lock);
+        std::remove(filename.c_str());
+    }
+#else
+    if (fd >= 0) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        std::remove(filename.c_str());
+    }
+#endif
 }
 
 bool CellframeConfigurationFile::save()
@@ -337,11 +385,13 @@ bool CellframeConfigurationFile::save()
         for (auto l : lines) std::cout << l << std::endl;
         return true;
     };
-
-    std::ofstream file = open_exclusively(path);
+    exclusive_lock_file lock("write.lock"); //RAII, will unlock at exit
+    std::ofstream file(path);
 
     if (file) {
-        for (auto l : lines) file << l << std::endl;
+        for (auto l : lines) 
+        {file << l << std::endl;
+        sleep(1);}
         file.close();
         return true;
     } else {
