@@ -332,7 +332,7 @@ private:
 #include <stdexcept>
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #else // _WIN32
 #include <sys/file.h>
 #include <unistd.h>
