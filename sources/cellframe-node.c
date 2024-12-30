@@ -417,12 +417,12 @@ int main( int argc, const char **argv )
         return -11;
     }
 
-    dap_chain_net_load_all();
-
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
+
+    dap_chain_net_load_all();
 
     if( dap_chain_net_srv_order_init() )
         return -67;
