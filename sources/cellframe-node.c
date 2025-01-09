@@ -182,7 +182,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+        g_sys_dir_path = dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -421,12 +421,13 @@ int main( int argc, const char **argv )
         return -11;
     }
 
-    dap_chain_net_load_all();
-
+    
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
+    
+    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
