@@ -426,7 +426,7 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
-
+    
     dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
