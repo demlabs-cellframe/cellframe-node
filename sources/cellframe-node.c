@@ -101,6 +101,7 @@
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
+#include "dap_json_rpc.h"
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -458,6 +459,12 @@ int main( int argc, const char **argv )
         if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
             dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
         }
+
+        if (dap_json_rpc_init(l_server, g_config)) {
+            log_it( L_CRITICAL, "Can't init json-rpc" );
+            return -12;
+        } 
+
 
         // Built in WWW server
 #if !DAP_OS_ANDROID
