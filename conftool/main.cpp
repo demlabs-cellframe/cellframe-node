@@ -118,7 +118,7 @@ std::string getNodeConfigPath(std::string basepath){
     #endif
     
     #ifdef __APPLE__ 
-        return  "/Applications/CellframeNode.app/Contents/Resources/";
+        return  "/Library/Application Support/CellframeNode/";
     #endif
 
 

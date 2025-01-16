@@ -101,6 +101,7 @@
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
+#include "dap_json_rpc.h"
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -110,6 +111,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_emit_delegate.h"
 
 #include "dap_chain_wallet_cache.h"
 
@@ -181,7 +183,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif DAP_OS_MAC
-        g_sys_dir_path = dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+        g_sys_dir_path = dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -392,6 +394,9 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
+    if (dap_chain_net_srv_emit_delegate_init()) {
+        log_it(L_ERROR, "Can't start stake lock service");
+    }
 #ifndef _WIN32
 #   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
@@ -417,12 +422,13 @@ int main( int argc, const char **argv )
         return -11;
     }
 
-    dap_chain_net_load_all();
-
+    
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
+    
+    dap_chain_net_load_all();
 
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
@@ -443,6 +449,12 @@ int main( int argc, const char **argv )
         if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
             dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
         }
+
+        if (dap_json_rpc_init(l_server, g_config)) {
+            log_it( L_CRITICAL, "Can't init json-rpc" );
+            return -12;
+        } 
+
 
         // Built in WWW server
 #if !DAP_OS_ANDROID
