@@ -64,7 +64,7 @@ int main(int argc, const char *argv[])
 #ifdef DAP_OS_WINDOWS
             dap_strdup_printf("%s/%s", regGetUsrPath(), NODE_NAME);
 #elif defined DAP_OS_MAC
-            dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+            dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif defined DAP_OS_UNIX
             dap_strdup_printf("/opt/%s", NODE_NAME);
 #endif
