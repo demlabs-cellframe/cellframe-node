@@ -606,14 +606,32 @@ static int s_cert_pkey_show(int argc, const char **argv)
 
 static int s_wallet_pkey_show(int argc, const char **argv)
 {
-    if (argc != 5) {
-        log_it( L_ERROR, "Wrong 'wallet pkey show' command params\n");
+    if (argc != 5 && argc != 6) {
+        printf("Wrong 'wallet pkey show' command params\n");
         exit(-800);
     }
     dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[4], s_system_wallet_dir, NULL);
     if (!l_wallet) {
-        printf("Not found wallet %s\n", argv[4]);
-        exit(-134);
+        char l_wallet_path[MAX_PATH] = {0};
+        snprintf(l_wallet_path, sizeof(l_wallet_path), "%s/%s.dwallet", s_system_wallet_dir, argv[4]);
+
+        if (access(l_wallet_path, F_OK) == 0) {
+            const char * l_pass_str = argv[5];
+            if (!l_pass_str) {
+                printf("Password required for wallet %s .\n", argv[4]);
+                exit(-134);
+            }
+            unsigned int res = 0;
+            dap_log_level_set(L_CRITICAL);
+            l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pass_str, &res);
+            if (!l_wallet) {
+                printf("Wrong password for wallet %s .\n", argv[4]);
+                exit(-134);
+            }
+        } else {
+            printf("Wallet %s not found in the directory %s.\n", argv[4], s_system_wallet_dir);
+            exit(-136);
+        }
     }
 
     dap_hash_fast_t l_hash;
@@ -750,7 +768,7 @@ static void s_help()
 #endif
 
     printf(" * Print hash of public key for wallet <wallet name>\n");
-    printf("\t%s wallet pkey show <wallet name>\n\n", l_tool_appname);
+    printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
     printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
