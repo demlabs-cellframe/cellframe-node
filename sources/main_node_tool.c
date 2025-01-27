@@ -618,18 +618,18 @@ static int s_wallet_pkey_show(int argc, const char **argv)
         if (access(l_wallet_path, F_OK) == 0) {
             const char * l_pass_str = argv[5];
             if (!l_pass_str) {
-                printf("Password required for wallet %s .\n", argv[4]);
+                printf("Password required for wallet %s\n", argv[4]);
                 exit(-134);
             }
             unsigned int res = 0;
             dap_log_level_set(L_CRITICAL);
             l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pass_str, &res);
             if (!l_wallet) {
-                printf("Wrong password for wallet %s .\n", argv[4]);
+                printf("Wrong password for wallet %s\n", argv[4]);
                 exit(-134);
             }
         } else {
-            printf("Wallet %s not found in the directory %s.\n", argv[4], s_system_wallet_dir);
+            printf("Wallet %s not found in the directory %s\n", argv[4], s_system_wallet_dir);
             exit(-136);
         }
     }
