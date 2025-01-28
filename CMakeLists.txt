@@ -46,7 +46,7 @@ add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_
 add_definitions("-DBUILD_TS=\"${BUILD_TIMESTAMP}\"")
 add_definitions("-DBUILD_HASH=\"${GIT_COMMIT_HASH}\"")
 set(SUBMODULES_NO_BUILD ON)
-option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." OFF)
+option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
 if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
