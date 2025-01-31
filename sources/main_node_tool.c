@@ -53,7 +53,7 @@ static int s_is_file_available (char *l_path, const char *name, const char *ext)
 static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 
 static char s_system_ca_dir[MAX_PATH];
-static char s_system_wallet_dir[MAX_PATH];
+static char s_system_wallet_dir[MAX_PATH - sizeof(".dwallet")];
 
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
@@ -97,7 +97,7 @@ struct options {
 } s_opts[] = {
 { "wallet", {"create"}, 1, s_wallet_create },
 { "wallet", {"create_from"}, 1, s_wallet_create_from },
-{"wallet", {"create_wp"}, 1, s_wallet_create_wp},
+{ "wallet", {"create_wp"}, 1, s_wallet_create_wp},
 { "wallet", {"pkey", "show"}, 2, s_wallet_pkey_show },
 { "wallet", {"pkey", "show_full"}, 2, s_wallet_pkey_show_full },
 { "cert", {"create"}, 1, s_cert_create },
@@ -109,7 +109,7 @@ struct options {
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
 { "cert", {"pkey", "show_full"}, 2, s_cert_pkey_show_full },
-{"cert", {"addr", "show"}, 2, s_cert_get_addr }
+{ "cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
 #ifdef __ANDROID__
