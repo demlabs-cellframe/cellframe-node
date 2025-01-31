@@ -113,6 +113,7 @@
 #include "dap_chain_net_srv_emit_delegate.h"
 
 #include "dap_chain_wallet_cache.h"
+#include "dap_chain_policy.h"
 
 #include "dap_events_socket.h"
 #include "dap_client.h"
@@ -361,6 +362,11 @@ int main( int argc, const char **argv )
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
+    }
+
+    if( dap_chain_policy_init() ){
+        log_it(L_CRITICAL,"Can't init dap chain policy module");
+        return -66;
     }
 
     if( dap_chain_wallet_init() ) {
