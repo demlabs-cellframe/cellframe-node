@@ -196,6 +196,7 @@ Section "${APP_NAME}" CORE
 
 	SetOutPath "$INSTDIR"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
+	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diagtool.exe'
 
 	File /oname=cellframe-node.tmp "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
@@ -220,7 +221,6 @@ Section "${APP_NAME}" CORE
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
 	
-	WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${NODE_NAME}.exe" 		"RUNASADMIN"
 	
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	
