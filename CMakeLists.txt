@@ -77,7 +77,7 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX)
+if(NOT WIN32 AND NOT ANDROID)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
@@ -304,6 +304,12 @@ if(UNIX AND NOT WIN32)
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/python-3.11.11-jammy-aarch64.tar.xz")
                 add_definitions("-DPYTHON_VERSION=\"python3.11\"")
             else()
+                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+            endif()
+
+            #spechial case for macos override all
+            if (DARWIN)
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/Python3.10.10-osx-portable.zip")
                 add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
