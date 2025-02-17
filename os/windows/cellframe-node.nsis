@@ -221,7 +221,10 @@ Section "${APP_NAME}" CORE
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
 	
-	
+	; Remove "RUNASADMIN" flag for node if it was present
+	DetailPrint "Try remove runasadmin HKCU"
+
+	DeleteRegValue HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\" "$INSTDIR\${NODE_NAME}.exe"
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	
 	;${DisableX64FSRedirection}
@@ -365,7 +368,7 @@ Section "Uninstall"
 	Delete "$INSTDIR\${NODE_NAME}-config.exe"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
 	DeleteRegKey HKLM "Software\${APP_NAME}"
-	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
+	DeleteRegValue HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\" "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"
-	;RMDir "$INSTDIR"
+	RMDir /R "$INSTDIR"
 SectionEnd
