@@ -203,7 +203,7 @@ if(UNIX)
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
-	    message("[*] Darwin kernel (MacOS/iOS) ")
+        message("[*] Darwin kernel (MacOS/iOS) ")
     else()
         message("[!] Unknown UNIX")
     endif()
@@ -255,8 +255,8 @@ if(WIN32)
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
     target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
-			kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
-			oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
+            kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
+            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
     set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
@@ -390,15 +390,18 @@ if(DARWIN)
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
-
+    if(BUILD_DIAGTOOL)
+        INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
+    endif()
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
-	    
+        
         #install all from dist.linux/share except updater files and node-serivice
         if(NOT ADD_UPDATER)
             INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
@@ -418,7 +421,7 @@ else()
         endif()
         
     elseif(BSD)
-	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
+        INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
     if(WIN32)
@@ -440,7 +443,7 @@ else()
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
     if(NOT ANDROID)
-	    #install all python-specific files back to its original location
+        #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
             set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
