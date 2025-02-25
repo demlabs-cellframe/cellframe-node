@@ -19,5 +19,7 @@ find "${USER_RES}/" -type f -exec chmod 666 {} \;
 
 echo "[!] Copy daemon plist"
 cp ${INSTALL_RES}/com.demlabs.cellframe-node.plist /Library/LaunchDaemons/
+cp ${INSTALL_RES}/com.demlabs.cellframe-diagtool.plist /Library/LaunchDaemons/
 
 ${INSTALL_BINS}/cellframe-node-config -e service enable
+launchctl load -w /Library/LaunchDaemons/com.demlabs.cellframe-diagtool.plist
