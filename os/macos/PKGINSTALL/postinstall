@@ -10,6 +10,8 @@ cp -r "${INSTALL_RES}/etc" "${USER_RES}/"
 cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 
 mkdir "${USER_RES}/var/run/"
+mkdir -p "${USER_RES}/var/lib/plugins"
+
 
 ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 
