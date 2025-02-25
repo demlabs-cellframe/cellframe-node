@@ -86,11 +86,7 @@ if ${HOST_OS} != Linux
     config cellframe-node  cli-server    listen-address          ensure    [127.0.0.1:12345]
 endif
 
-if Linux != ${HOST_OS}
-    config cellframe-node  plugins       enabled          ensure     false
-endif
-
-config cellframe-node  plugins       py_path          ensure      ${CONFIGS_PATH}/var/lib/plugins
+config cellframe-node  plugins       py_path          ensure     ../var/lib/plugins
 
 config  Backbone     general     node-role   default     full
 config  KelVPN       general     node-role   default     full
