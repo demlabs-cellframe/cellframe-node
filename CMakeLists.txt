@@ -336,9 +336,9 @@ if(UNIX AND NOT WIN32)
             list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
             
             if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
             else()
-                find_package(Python EXACT 3.10 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
 
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
