@@ -333,12 +333,18 @@ if(UNIX AND NOT WIN32)
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
 
-            list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR}/)
             
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
+            if (DEFINED OSXCROSS_SDK) #special hack for osxcross env
+                SET(Python_INCLUDE_DIRS ${cpythonstatic_SOURCE_DIR}/include/python3.10)
+                SET(Python_LIBRARIES ${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib)
             else()
-                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
+                
+                if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
+                    find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
+                else()
+                    find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
+                endif()
             endif()
 
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
