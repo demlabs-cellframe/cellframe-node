@@ -14,6 +14,8 @@
 !include LogicLib.nsh
 !include MUI2.nsh
 !include "WordFunc.nsh"
+!include "FileFunc.nsh"
+
 
 !define StrTrimNewLines "!insertmacro StrTrimNewLines Init ''"
 !define UnStrTrimNewLines "!insertmacro StrTrimNewLines Init Un"
@@ -77,6 +79,9 @@ BrandingText "${APP_NAME} by ${PUBLISHER}"
 
 Var CommonDocuments
 Var ConfigPath
+Var ArchiveFile
+Var BackupDir
+
 
 VIAddVersionKey "ProductName"		"${APP_NAME}"
 VIAddVersionKey "CompanyName"		"${PUBLISHER}"
@@ -122,6 +127,124 @@ Function createRuntimePaths
 	CreateDirectory "$ConfigPath\var\lib\ca"
 FunctionEnd
 
+### TimeStamp
+!ifndef TimeStamp
+    !define TimeStamp "!insertmacro _TimeStamp"
+    !macro _TimeStamp FormatedString
+        !ifdef __UNINSTALL__
+            Call un.__TimeStamp
+        !else
+            Call __TimeStamp
+        !endif
+        Pop ${FormatedString}
+    !macroend
+ 
+!macro __TimeStamp UN
+Function ${UN}__TimeStamp
+    ClearErrors
+    ## Store the needed Registers on the stack
+        Push $0
+        Push $1
+        Push $2
+        Push $3
+
+    ## Call System API to get the current system Time
+        System::Alloc 16
+        Pop $0
+        System::Call 'kernel32::GetLocalTime(i) i(r0)'
+        System::Call '*$0(&i2, &i2, &i2, &i2, &i2, &i2, &i2, &i2)i (.r1, .r2, n, .r3, .r4, .r5, .r6, .r7)'
+        System::Free $0
+
+        ## Форматируем день, месяц и год
+        IntFmt $1 "%02i" $3  ; День
+        IntFmt $2 "%02i" $2  ; Месяц
+        IntFmt $3 "%04i" $1  ; Год
+
+    ## Генерируем строку в формате DD_MM_YYYY
+        StrCpy $0 "$1_$2_$3"
+
+    ## Восстанавливаем регистры и добавляем Timestamp в стек
+        Pop $3
+        Pop $2
+        Pop $1
+        Exch $0 ; Stack ${TimeStamp}
+
+FunctionEnd
+!macroend
+!insertmacro __TimeStamp ""
+!insertmacro __TimeStamp "un."
+!endif
+
+
+####################################################################################
+Function BackupConfigs
+    DetailPrint "Checking if configuration files already exist"
+    IfFileExists "$ConfigPath\etc\*.*" backupExists noBackup
+
+    backupExists:
+        DetailPrint "Old configuration files detected. Creating a backup..."
+
+        IfFileExists "$ConfigPath\backup\*.*" 0 CreateBackupRoot
+        CreateBackupRoot:
+            CreateDirectory "$ConfigPath\backup"
+
+        ${TimeStamp} $0
+        DetailPrint "TimeStamp = $0"
+
+        StrCpy $BackupDir "$ConfigPath\backup\config_backup_$0"
+        CreateDirectory "$BackupDir"
+
+        DetailPrint "Copying etc folder..."
+        nsExec::Exec 'xcopy "$ConfigPath\etc" "$BackupDir\etc" /E /I /Y'
+        Pop $R0
+        ${If} $R0 <> 0
+            DetailPrint "Error copying etc folder. Exit code: $R0"
+            Goto BackupFailed
+        ${EndIf}
+
+        IfFileExists "$ConfigPath\share\*.*" backupShare afterBackupShare
+        backupShare:
+            DetailPrint "Copying share folder..."
+            nsExec::Exec 'xcopy "$ConfigPath\share" "$BackupDir\share" /E /I /Y'
+            Pop $R1
+            ${If} $R1 <> 0
+                DetailPrint "Error copying share folder. Exit code: $R1"
+                Goto BackupFailed
+            ${EndIf}
+        afterBackupShare:
+
+        DetailPrint "Files copied successfully to: $BackupDir"
+
+        StrCpy $ArchiveFile "$ConfigPath\backup\config_backup_$0.zip"
+        StrCpy $cmdLine 'powershell.exe -NoProfile -Command "& {try {Compress-Archive -Path \"$BackupDir\\*\" -DestinationPath \"$ArchiveFile\" -Force; exit 0} catch {exit 1}} "'
+        
+        DetailPrint "Archiving backup..."
+        nsExec::ExecToStack $cmdLine
+        Pop $R2
+        ${If} $R2 <> 0
+            DetailPrint "Error creating archive. Exit code: $R2"
+            Goto BackupFailed
+        ${EndIf}
+
+        DetailPrint "Backup successful: $ArchiveFile"
+
+        RMDir /r "$BackupDir"
+        DetailPrint "Temporary backup folder deleted: $BackupDir"
+
+        Goto BackupDone
+
+    BackupFailed:
+        DetailPrint "Backup process failed. Cleaning up..."
+        RMDir /r "$BackupDir"
+        Goto BackupDone
+
+    noBackup:
+        DetailPrint "No existing configuration files found. Skipping backup."
+
+    BackupDone:
+FunctionEnd
+
+#################################################################################################
 InstallDir "$PROGRAMFILES64\${APP_NAME}"
 
 !define PRODUCT_NAME "${APP_NAME}"
@@ -205,7 +328,8 @@ Section "${APP_NAME}" CORE
 	File "opt/cellframe-node/bin/cellframe-diagtool.exe"
 
 	Call createRuntimePaths
-
+; --- Вызываем функцию бэкапа перед установкой новых конфигурационных файлов ---
+	Call BackupConfigs
 	InitPluginsDir
 	SetOutPath "$PLUGINSDIR"
 

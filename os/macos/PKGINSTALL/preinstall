@@ -1,12 +1,37 @@
 #!/bin/sh
 echo "preinstall!"
 
-USER_RES="/Library/Application Support/CellframeNode" 
-INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
+USER_RES="/Library/Application Support/CellframeNode"
+INSTALL_RES="/Applications/CellframeNode.app/Contents/Resources"
 
-/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service disable || true
+# Disconnect the service and terminate running processes (if any)
+"/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config" -e service disable || true
 killall cellframe-node cellframe-diagtool
 
+# Function for backing up configuration files
+backup_config() {
+    if [ -d "$USER_RES/etc" ]; then
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        BACKUP_FILE="${USER_RES}/config_backup_${TIMESTAMP}.tar.gz"
+        echo "Existing configuration files are found. Create a backup: ${BACKUP_FILE}"
+        tar -czf "${BACKUP_FILE}" -C "$USER_RES/etc" .
+        if [ $? -eq 0 ]; then
+            echo "The backup was successfully created."
+        else
+            echo "Error when creating a backup."
+            exit 1
+        fi
+    else
+        echo "No configuration files found, no backup required."
+    fi
+}
+
+# Call the backup function before starting the installation
+backup_config
+
+
+
+# Function for moving files with duplicate checking
 mv_safe() {
     local SOURCE_DIR="$1"
     local TARGET_DIR="$2"
@@ -33,7 +58,6 @@ mv_safe() {
             while [[ -e "$TARGET_DIR/${name}_$counter.${ext}" ]]; do
                 ((counter++))
             done
-            
             target_file="$TARGET_DIR/${name}_$counter.${ext}"
         fi
 
@@ -44,11 +68,13 @@ mv_safe() {
     echo "Files moved successfully from $SOURCE_DIR to $TARGET_DIR."
 }
 
-mkdir "${USER_RES}/"
+# Create the necessary directories
+mkdir -p "${USER_RES}/"
 mkdir -p "${USER_RES}/var/lib/ca/"
 mkdir -p "${USER_RES}/var/lib/wallet/"
 
-mv_safe ${INSTALL_RES}/var/lib/wallet/ "${USER_RES}/var/lib/wallet/"
-mv_safe ${INSTALL_RES}/var/lib/ca/ "${USER_RES}/var/lib/ca/" 
-mv_safe $HOME/Applications/Cellframe.app/Contents/Resources/var/lib/wallet/ "${USER_RES}/var/lib/wallet/"
-mv_safe $HOME/Applications/Cellframe.app/Contents/Resources/var/lib/ca/ "${USER_RES}/var/lib/ca/"
+# Moving files from the installation sources to the user directory
+mv_safe "${INSTALL_RES}/var/lib/wallet/" "${USER_RES}/var/lib/wallet/"
+mv_safe "${INSTALL_RES}/var/lib/ca/" "${USER_RES}/var/lib/ca/"
+mv_safe "$HOME/Applications/Cellframe.app/Contents/Resources/var/lib/wallet/" "${USER_RES}/var/lib/wallet/"
+mv_safe "$HOME/Applications/Cellframe.app/Contents/Resources/var/lib/ca/" "${USER_RES}/var/lib/ca/"
