@@ -1,22 +1,26 @@
 #!/bin/bash
 set -e
 
-# name of app and path of insalletion files after dpcg
+# Name of the app and path of installation files after deployment
 DAP_APP_NAME="cellframe-node"
 DAP_PREFIX="/opt/$DAP_APP_NAME"
 
 # Path for configuration files
 CONFIG_DIR="$DAP_PREFIX/etc"
 
-# Path of backuped files
+# Path for backup files
 BACKUP_DIR="/var/backups/$DAP_APP_NAME"
 
-echo "[*] Cheking does folder with configiration files allready exist: $CONFIG_DIR"
+# Define timestamp for backup filename
+TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+
+echo "[*] Checking if the folder with configuration files already exists: $CONFIG_DIR"
+
 if [ -d "$CONFIG_DIR" ]; then
     echo "[*] Found installed configs, creating a backup"
     mkdir -p "$BACKUP_DIR"
     tar -czf "$BACKUP_DIR/config_backup_$TIMESTAMP.tar.gz" -C "$DAP_PREFIX" etc
-    echo "[*] Backup created : $BACKUP_DIR/config_backup_$TIMESTAMP.tar.gz"
+    echo "[*] Backup created: $BACKUP_DIR/config_backup_$TIMESTAMP.tar.gz"
 else
-    echo "[*] Didn't find previos config files. No backup needed."
+    echo "[*] Didn't find previous config files. No backup needed."
 fi
