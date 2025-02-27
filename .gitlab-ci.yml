@@ -1,6 +1,7 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
+    
 
 workflow:
   rules:
