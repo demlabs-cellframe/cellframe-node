@@ -125,7 +125,6 @@ asan_build:
   extends: .build
   stage: diagnostic_builds
   variables:
-#    GIT_STRATEGY: none
     DAP_ASAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
@@ -134,8 +133,6 @@ asan_build:
     when: manual
     allow_failure: true
   script:
-#    - echo "Running build with ASan..." 
-#    - /opt/tests-in-docker/artifacts.sh --asan build_*/*.deb
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
 
