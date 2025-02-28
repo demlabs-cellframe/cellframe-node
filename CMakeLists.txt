@@ -181,6 +181,16 @@ if(UNIX)
         endif()
     endif()
 
+    if (DEFINED ENV{DAP_ASAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-asan" )
+    endif()
+    if (DEFINED ENV{DAP_UBSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-ubsan" )
+    endif()
+    if (DEFINED ENV{DAP_TSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tsan" )
+    endif()
+
 
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
