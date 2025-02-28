@@ -1,28 +1,33 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
+
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
     - if: $CI_COMMIT_BRANCH
+
 stages:
     - test_build
-    - test_proceed
+    - diagnostic_builds
     - build
     - post_build
     - publish
     - deploy
+
 .ci-polygon:
   tags:
      - ci-polygon
 .ci-ansible:
   tags:
      - ci-ansible
+
 .ci-test:
   tags:
      - ci-test
+
 .build:  
   extends: .ci-polygon
   stage: build
@@ -30,7 +35,9 @@ stages:
   dependencies: []
   interruptible: true
   variables:
+    
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
+
   rules:
     - if: $ENABLE_ASAN == "true" || $CI_COMMIT_REF_NAME =~ /-asan$/
       variables:                                   
@@ -47,11 +54,14 @@ stages:
   artifacts:
     paths:
       - build_*/*.deb
+
 .publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
   stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
+  
+
 .deploy:
   extends: .ci-ansible
   stage: deploy
@@ -59,7 +69,9 @@ stages:
     - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
       allow_failure: true
+
   allow_failure: true
+
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
@@ -68,16 +80,21 @@ stages:
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
+ 
+    #re-create version.mk based on current data
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
   - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
   - cat ./version.mk
+     #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
+
 amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
+
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -86,10 +103,11 @@ amd64:linux.rwd.bld:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux rwd
+      
 autotests:
   extends: .ci-test
   interruptible: true
-  stage: test_proceed
+  stage: diagnostic_builds
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
@@ -103,10 +121,9 @@ autotests:
   script:
     - /opt/tests-in-docker/artifacts.sh build_*/*.deb
 
-# --- Добавлены отдельные job-ы для запуска тестов с разными sanitizer'ами ---
-asan_test:
+asan_build:
   extends: .ci-test
-  stage: test_proceed
+  stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
     DAP_ASAN: "1"
@@ -119,12 +136,12 @@ asan_test:
       when: manual
       allow_failure: true
   script:
-    - echo "Запуск тестов с ASan..."
+    - echo "Running build with ASan..." 
     - /opt/tests-in-docker/artifacts.sh --asan build_*/*.deb
 
-ubsan_test:
+ubsan_build:
   extends: .ci-test
-  stage: test_proceed
+  stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
     DAP_UBSAN: "1"
@@ -137,12 +154,12 @@ ubsan_test:
       when: manual
       allow_failure: true
   script:
-    - echo "Запуск тестов с UBSan..."
+    - echo "Running build with UBSan..."
     - /opt/tests-in-docker/artifacts.sh --ubsan build_*/*.deb
 
-tsan_test:
+tsan_build:
   extends: .ci-test
-  stage: test_proceed
+  stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
     DAP_TSAN: "1"
@@ -155,15 +172,14 @@ tsan_test:
       when: manual
       allow_failure: true
   script:
-    - echo "Запуск тестов с TSan..."
+    - echo "Running build with TSan..."   
     - /opt/tests-in-docker/artifacts.sh --tsan build_*/*.deb
-# --- Конец добавленных job-ов ---
-
 amd64:linux.rwd:
     extends: .build
     stage: build
     dependencies:
       - amd64:linux.rwd.bld
+
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -173,6 +189,7 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
       
+
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -184,6 +201,7 @@ amd64:linux.release:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+
 amd64:windows.rwd:
     extends: .build
     image: demlabs/windows/amd64:qt5
@@ -245,6 +263,7 @@ amd64:linux.tps:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
 .amd64:linux.updtr:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -256,6 +275,7 @@ amd64:linux.tps:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON -DADD_UPDATER=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
 .amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -270,13 +290,14 @@ amd64:linux.tps:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
       - anybadge -l "node version" -v "$(source version.mk; echo "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH")" -f node-version-badge.svg -c blue
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ ./node-version-badge.svg || true
+
 armhf:linux.release:
     extends: .build
     image: demlabs/debian/arm32:qt5
     before_script:
       - /opt/buildtools/prepare_environment.sh armhf-linux
       - *fill_version_mk
-    script: 
+    script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
@@ -303,9 +324,11 @@ any:android.release:
       - 'apt install -y openjdk-17-jdk'
       - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
       - *fill_version_mk
-    script:
+    script: 
       - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
+
+
 version:up:
   stage: post_build
   tags:
@@ -314,6 +337,7 @@ version:up:
     GIT_STRATEGY: none
   rules:
     - when: on_success
+  
   script:
     - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
     - echo ${PATCH_NUM_VAR_NAME}
@@ -321,3 +345,5 @@ version:up:
     - PATCH_NUM=$((PATCH_NUM + 1))
     - 'echo "New patch version: ${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+    
+
