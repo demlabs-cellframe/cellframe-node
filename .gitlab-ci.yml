@@ -138,9 +138,9 @@ asan_build:
   script:
 #    - echo "Running build with ASan..." 
 #    - /opt/tests-in-docker/artifacts.sh --asan build_*/*.deb
-    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-    - ./prod_build/pack.sh --target linux debug
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+    - ./prod_build/pack.sh --target linux rwd
+
 
 
 ubsan_build:
