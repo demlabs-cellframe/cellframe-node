@@ -129,6 +129,7 @@ asan_build:
     DAP_ASAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
+  image: demlabs/debian/amd64:qt5
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
