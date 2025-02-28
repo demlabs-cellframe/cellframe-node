@@ -130,8 +130,8 @@ asan_build:
     - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
-    when: manual
-    allow_failure: true
+   - when: manual
+     allow_failure: true
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
