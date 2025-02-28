@@ -280,7 +280,7 @@ amd64:linux.tps:
       - *fill_version_mk
     script: 
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
