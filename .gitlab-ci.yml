@@ -132,53 +132,51 @@ asan_build:
   rules:
    - when: manual
      allow_failure: true
+  before_script:
+   - /opt/buildtools/prepare_environment.sh arm64-linux
+   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
-
-
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 ubsan_build:
   extends: .build
   stage: diagnostic_builds
   variables:
-    GIT_STRATEGY: none
     DAP_UBSAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
+  image: demlabs/debian/amd64:qt5
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
+   - when: manual
+     allow_failure: true
+  before_script:
+   - /opt/buildtools/prepare_environment.sh arm64-linux
+   - *fill_version_mk
   script:
-#    - echo "Running build with UBSan..."
-#    - /opt/tests-in-docker/artifacts.sh --ubsan build_*/*.deb
-    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-    - ./prod_build/pack.sh --target linux debug
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+    - ./prod_build/build.sh --target linux rwd 
+    - ./prod_build/pack.sh --target linux rwd
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb     
 
 tsan_build:
   extends: .build
   stage: diagnostic_builds
   variables:
-    GIT_STRATEGY: none
     DAP_TSAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
+  image: demlabs/debian/amd64:qt5
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
+   - when: manual
+     allow_failure: true
+  before_script:
+   - /opt/buildtools/prepare_environment.sh arm64-linux
+   - *fill_version_mk
   script:
-#    - echo "Running build with TSan..."   
-#    - /opt/tests-in-docker/artifacts.sh --tsan build_*/*.deb
-    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
-    - ./prod_build/pack.sh --target linux debug
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+    - ./prod_build/build.sh --target linux rwd 
+    - ./prod_build/pack.sh --target linux rwd
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 
 amd64:linux.rwd:
