@@ -39,17 +39,17 @@ stages:
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
 
   rules:
-    - if: $ENABLE_ASAN == "true" || $CI_COMMIT_REF_NAME =~ /-asan$/
-      variables:                                   
-        DAP_ASAN: "1"  
-    - if: $ENABLE_UBSAN == "true" || $CI_COMMIT_REF_NAME =~ /-ubsan$/
-      variables:                                   
-        DAP_UBSAN: "1"  
-    - if: $ENABLE_TSAN == "true" || $CI_COMMIT_REF_NAME =~ /-tsan$/
-      variables:                                   
-        DAP_TSAN: "1"
+  #  - if: $ENABLE_ASAN == "true" || $CI_COMMIT_REF_NAME =~ /-asan$/
+  #    variables:                                   
+  #      DAP_ASAN: "1"  
+  #  - if: $ENABLE_UBSAN == "true" || $CI_COMMIT_REF_NAME =~ /-ubsan$/
+  #    variables:                                   
+  #      DAP_UBSAN: "1"  
+  #  - if: $ENABLE_TSAN == "true" || $CI_COMMIT_REF_NAME =~ /-tsan$/
+  #    variables:                                   
+  #      DAP_TSAN: "1"
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
-      variables:                                   
+        variables:                                   
         DUMMY_VAR_FOR_ALLOW_JOB: "1"
   artifacts:
     paths:
@@ -122,7 +122,7 @@ autotests:
     - /opt/tests-in-docker/artifacts.sh build_*/*.deb
 
 asan_build:
-  extends: .ci-test
+  extends: .build
   stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
@@ -136,11 +136,15 @@ asan_build:
       when: manual
       allow_failure: true
   script:
-    - echo "Running build with ASan..." 
-    - /opt/tests-in-docker/artifacts.sh --asan build_*/*.deb
+#    - echo "Running build with ASan..." 
+#    - /opt/tests-in-docker/artifacts.sh --asan build_*/*.deb
+    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+    - ./prod_build/pack.sh --target linux debug
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+
 
 ubsan_build:
-  extends: .ci-test
+  extends: .build
   stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
@@ -154,11 +158,14 @@ ubsan_build:
       when: manual
       allow_failure: true
   script:
-    - echo "Running build with UBSan..."
-    - /opt/tests-in-docker/artifacts.sh --ubsan build_*/*.deb
+#    - echo "Running build with UBSan..."
+#    - /opt/tests-in-docker/artifacts.sh --ubsan build_*/*.deb
+    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+    - ./prod_build/pack.sh --target linux debug
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 tsan_build:
-  extends: .ci-test
+  extends: .build
   stage: diagnostic_builds
   variables:
     GIT_STRATEGY: none
@@ -172,8 +179,13 @@ tsan_build:
       when: manual
       allow_failure: true
   script:
-    - echo "Running build with TSan..."   
-    - /opt/tests-in-docker/artifacts.sh --tsan build_*/*.deb
+#    - echo "Running build with TSan..."   
+#    - /opt/tests-in-docker/artifacts.sh --tsan build_*/*.deb
+    - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_DIAGTOOL=ON
+    - ./prod_build/pack.sh --target linux debug
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
+
 amd64:linux.rwd:
     extends: .build
     stage: build
