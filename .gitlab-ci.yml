@@ -39,15 +39,6 @@ stages:
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
 
   rules:
-  #  - if: $ENABLE_ASAN == "true" || $CI_COMMIT_REF_NAME =~ /-asan$/
-  #    variables:                                   
-  #      DAP_ASAN: "1"  
-  #  - if: $ENABLE_UBSAN == "true" || $CI_COMMIT_REF_NAME =~ /-ubsan$/
-  #    variables:                                   
-  #      DAP_UBSAN: "1"  
-  #  - if: $ENABLE_TSAN == "true" || $CI_COMMIT_REF_NAME =~ /-tsan$/
-  #    variables:                                   
-  #      DAP_TSAN: "1"
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
       variables:                                   
         DUMMY_VAR_FOR_ALLOW_JOB: "1"
