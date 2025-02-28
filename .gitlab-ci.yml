@@ -39,13 +39,13 @@ stages:
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
 
   rules:
-    - if: $CI_COMMIT_REF_NAME =~ /-asan$/
+    - if: $ENABLE_ASAN == "true" || $CI_COMMIT_REF_NAME =~ /-asan$/
       variables:                                   
         DAP_ASAN: "1"  
-    - if: $CI_COMMIT_REF_NAME =~ /-ubsan$/
+    - if: $ENABLE_UBSAN == "true" || $CI_COMMIT_REF_NAME =~ /-ubsan$/
       variables:                                   
         DAP_UBSAN: "1"  
-    - if: $CI_COMMIT_REF_NAME =~ /-tsan$/
+    - if: $ENABLE_TSAN == "true" || $CI_COMMIT_REF_NAME =~ /-tsan$/
       variables:                                   
         DAP_TSAN: "1"
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
@@ -138,6 +138,7 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
       
+
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -172,7 +173,7 @@ amd64:macos.release:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target osx release #-DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect # symlink
