@@ -140,7 +140,6 @@ FunctionEnd
 !macro __TimeStamp UN
 Function ${UN}__TimeStamp
     ClearErrors
-
     Push $0
     Push $1
     Push $2
@@ -148,35 +147,32 @@ Function ${UN}__TimeStamp
     Push $4
     Push $5
     Push $6
-    Push $7
 
     System::Alloc 16
     Pop $0
-    System::Call 'kernel32::GetLocalTime(i r0)'
-    System::Call '*$0(i .r1, i .r2, i .r3, i .r4, i .r5, i .r6, i .r7, i .r8)'
+    System::Call 'kernel32::GetLocalTime(i) i(r0)'
+    System::Call '*$0(&i2, &i2, &i2, &i2, &i2, &i2, &i2, &i2)i (.r1, .r2, n, .r3, .r4, .r5, .r6, .r7)'
     System::Free $0
 
-    IntFmt $2 "%02i" $2    
-    IntFmt $4 "%02i" $4    
-    IntFmt $5 "%02i" $5    
-    IntFmt $6 "%02i" $6    
-    IntFmt $7 "%02i" $7    
-    IntFmt $1 "%04i" $1    
+    IntFmt $1 "%02i" $3  ; День
+    IntFmt $2 "%02i" $2  ; Месяц
+    IntFmt $3 "%04i" $1  ; Год
+    IntFmt $4 "%02i" $4  ; Часы
+    IntFmt $5 "%02i" $5  ; Минуты
+    IntFmt $6 "%02i" $6  ; Секунды
 
-    StrCpy $0 "$1-$2-$4 $5:$6:$7"
+    StrCpy $0 "$1_$2_$3-$4_$5_$6"
 
-    Pop $7
     Pop $6
     Pop $5
     Pop $4
     Pop $3
     Pop $2
     Pop $1
-    Exch $0 ; Stack ${TimeStamp}
+    Exch $0
 
 FunctionEnd
 !macroend
-
 !insertmacro __TimeStamp ""
 !insertmacro __TimeStamp "un."
 !endif
@@ -474,3 +470,4 @@ Section "Uninstall"
 	Delete "$INSTDIR\Uninstall.exe"
 	RMDir /R "$INSTDIR"
 SectionEnd
+
