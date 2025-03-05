@@ -427,7 +427,10 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> ba906239 ([*] port)
     dap_chain_net_load_all();
 
     if( dap_chain_net_srv_order_init() )
@@ -534,7 +537,6 @@ int main( int argc, const char **argv )
         }
     }
     dap_chain_net_try_online_all();
-    dap_chain_net_announce_addr_all();
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
