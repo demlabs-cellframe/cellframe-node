@@ -1,7 +1,7 @@
 #! /bin/bash
 set -e
-#STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master/updates
-STORAGE_URL=https://internal-pub.cellframe.net/linux/cellframe-node/bugfix-13205
+STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master
+
 
 MACHINE=$(uname -m)
 
