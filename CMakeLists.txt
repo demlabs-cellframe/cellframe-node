@@ -8,7 +8,7 @@ set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
-
+        
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
@@ -304,6 +304,15 @@ if(UNIX AND NOT WIN32)
                 add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
+            if (DARWIN)
+                if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+                else ()
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+                endif()
+                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+            endif()
+
             message("[+] Build with python environment")
             message("    Downloading static prebuild cpython  ${PYTHON_URL}")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
@@ -327,9 +336,9 @@ if(UNIX AND NOT WIN32)
             list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
             
             if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
             else()
-                find_package(Python EXACT 3.10 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
 
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
@@ -359,8 +368,15 @@ if(UNIX AND NOT WIN32)
 
         include_directories(${Python_INCLUDE_DIRS} include/)
         add_subdirectory(python-cellframe)
-
+        #this helps
+        #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+        if (DARWIN)
+        add_custom_command(TARGET ${NODE_TARGET} 
+            POST_BUILD COMMAND 
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
+            ${NODE_TARGET})
+        endif()
     endif()
 
     if(ANDROID )
@@ -393,6 +409,24 @@ if(DARWIN)
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
+
+    set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
+    set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
+    set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
+    set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+    set(PYTHON_LIB_DIR_PRFX "python3.10")
+    
+    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
+    
+    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    
+    #install python-modules
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+
 
 else()
 
