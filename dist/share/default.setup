@@ -7,7 +7,7 @@
 # Predefined variables:
 #   ${HOST_OS} -> Linux | Windows | Macos
 #   ${HOSTNAME} -> hostname of a machine
-#   ${CONFIGS_PATH} -> /opt/cellframe-node/ for linux, 
+#   ${CONFIGS_PATH} -> /opt/cellframe-node for linux, 
 #                      Common Documents (usually C:\Users\Public\Documents\cellframe-node\) for Windows
 #
 # fromtemplate: create and populate config from "share/configs" templates  
