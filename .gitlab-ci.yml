@@ -220,7 +220,6 @@ amd64:macos.release:
       - echo "Do hard work"
       - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
     artifacts:
       paths:
