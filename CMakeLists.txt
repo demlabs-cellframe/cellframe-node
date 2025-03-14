@@ -181,13 +181,22 @@ if(UNIX)
         endif()
     endif()
 
+    if (DEFINED ENV{DAP_ASAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-asan" )
+    endif()
+    if (DEFINED ENV{DAP_UBSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-ubsan" )
+    endif()
+    if (DEFINED ENV{DAP_TSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tsan" )
+    endif()
+
 
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")
-
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")        
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
