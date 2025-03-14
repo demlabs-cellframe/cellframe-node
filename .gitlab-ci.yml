@@ -206,7 +206,7 @@ amd64:windows.rwd:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows rwd
+      - ./prod_build/build.sh --target windows rwd -DBUILD_DIAGTOOL=ON
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
