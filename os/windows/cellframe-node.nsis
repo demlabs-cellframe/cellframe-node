@@ -138,15 +138,13 @@ Var NetBackboneCb
 Var NetKelVPNCb
 Var NetRiemannCb
 Var NetRaidenCb
-Var NetMileenaCb
-Var NetSubzeroCb
+
 
 Var NetBackboneState
 Var NetKelVPNState
 Var NetRiemannState
 Var NetRaidenState
-Var NetMileenaState
-Var NetSubzeroState
+
 
 ${StrTrimNewLines}
 
@@ -176,18 +174,6 @@ Function getNetworksStates
 	${WordFind} $1 " " "-01" $NetRaidenState
 	${StrTrimNewLines} $NetRaidenState $NetRaidenState
 
-	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network mileena check" 
-	Pop $0 ; Exit code / error
-	Pop $1 ; stdout output
-	${WordFind} $1 " " "-01" $NetMileenaState
-	${StrTrimNewLines} $NetMileenaState $NetMileenaState
-
-	nsExec::ExecToStack /OEM "$INSTDIR\${NODE_NAME}-config.exe -e network subzero check" 
-	Pop $0 ; Exit code / error
-	Pop $1 ; stdout output
-	${WordFind} $1 " " "-01" $NetSubzeroState
-	${StrTrimNewLines} $NetSubzeroState $NetSubzeroState
-
 FunctionEnd
 ${UnStrTrimNewLines}
 
@@ -196,6 +182,7 @@ Section "${APP_NAME}" CORE
 
 	SetOutPath "$INSTDIR"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
+	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diagtool.exe'
 
 	File /oname=cellframe-node.tmp "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
@@ -220,8 +207,10 @@ Section "${APP_NAME}" CORE
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
 	
-	WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" "$INSTDIR\${NODE_NAME}.exe" 		"RUNASADMIN"
-	
+	; Remove "RUNASADMIN" flag for node if it was present
+	DetailPrint "Try remove runasadmin HKCU"
+
+	DeleteRegValue HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\" "$INSTDIR\${NODE_NAME}.exe"
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	
 	;${DisableX64FSRedirection}
@@ -269,14 +258,6 @@ Function checkEnabledNets
 		${NSD_Check} $NetRaidenCb
 	${EndIf}
 
-	${If} $NetMileenaState == "on"
-		${NSD_Check} $NetMileenaCb
-	${EndIf}
-
-	${If} $NetSubzeroState == "on"
-		${NSD_Check} $NetSubzeroCb
-	${EndIf}
-
 FunctionEnd
 
 Function pgNetSelectCreate
@@ -308,12 +289,6 @@ Function pgNetSelectCreate
 		${NSD_CreateCheckbox} 20% 68u 20% 10u "Raiden"
 		Pop $NetRaidenCb
 
-		${NSD_CreateCheckbox} 20% 82u 20% 10u "Mileena"
-		Pop $NetMileenaCb
-
-		${NSD_CreateCheckbox} 20% 96u 20% 10u "Subzero"
-		Pop $NetSubzeroCb
-
 	Call checkEnabledNets
 
     nsDialogs::Show
@@ -333,16 +308,11 @@ Function pgNetSelectLeave
 	${NSD_GetState} $NetKelVPNCb $NetKelVPNState
 	${NSD_GetState} $NetRiemannCb $NetRiemannState
 	${NSD_GetState} $NetRaidenCb $NetRaidenState
-	${NSD_GetState} $NetMileenaCb $NetMileenaState
-	${NSD_GetState} $NetSubzeroCb $NetSubzeroState
-	
-	
+
 	!insertmacro ensureNetworkState "Backbone" $NetBackboneState
 	!insertmacro ensureNetworkState "KelVPN" $NetKelVPNState
 	!insertmacro ensureNetworkState "riemann" $NetRiemannState
 	!insertmacro ensureNetworkState "raiden" $NetRaidenState
-	!insertmacro ensureNetworkState "mileena" $NetMileenaState
-	!insertmacro ensureNetworkState "subzero" $NetSubzeroState
 
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Rename 	"$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
@@ -365,7 +335,7 @@ Section "Uninstall"
 	Delete "$INSTDIR\${NODE_NAME}-config.exe"
 	DeleteRegKey HKLM "${UNINSTALL_PATH}"
 	DeleteRegKey HKLM "Software\${APP_NAME}"
-	DeleteRegKey HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\$INSTDIR\${NODE_NAME}.exe"
+	DeleteRegValue HKCU "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\" "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\Uninstall.exe"
-	;RMDir "$INSTDIR"
+	RMDir /R "$INSTDIR"
 SectionEnd

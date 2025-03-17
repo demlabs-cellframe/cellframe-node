@@ -58,6 +58,7 @@ static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
 static int s_wallet_create_wp(int argc, const char **argv);
 static int s_wallet_pkey_show(int argc, const char **argv);
+static int s_wallet_pkey_show_full(int argc, const char **argv);
 static int s_wallet_sign_file(int argc, const char **argv);
 static int s_cert_create(int argc, const char **argv);
 static int s_cert_dump(int argc, const char **argv);
@@ -84,6 +85,7 @@ static inline int s_cert_rename(int argc, const char **argv) {
 static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
+static int s_cert_pkey_show_full(int argc, const char **argv);
 static int s_cert_get_addr(int argc, const char **argv);
 
 struct options {
@@ -96,6 +98,7 @@ struct options {
 { "wallet", {"create_from"}, 1, s_wallet_create_from },
 {"wallet", {"create_wp"}, 1, s_wallet_create_wp},
 { "wallet", {"pkey", "show"}, 2, s_wallet_pkey_show },
+{ "wallet", {"pkey", "show_full"}, 2, s_wallet_pkey_show_full },
 { "cert", {"create"}, 1, s_cert_create },
 { "cert", {"dump"}, 1, s_cert_dump },
 { "cert", {"create_pkey"}, 1, s_cert_create_pkey },
@@ -104,6 +107,7 @@ struct options {
 { "cert", {"add_metadata"}, 1, s_cert_add_metadata },
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
+{ "cert", {"pkey", "show_full"}, 2, s_cert_pkey_show_full },
 {"cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
@@ -128,7 +132,7 @@ int main(int argc, const char **argv)
 #ifdef DAP_OS_WINDOWS
             dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
 #elif defined DAP_OS_MAC
-            dap_strdup_printf("/Applications/CellframeNode.app/Contents/Resources");
+            dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif defined DAP_OS_UNIX
             dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
@@ -300,6 +304,12 @@ static int s_wallet_create_wp(int argc, const char **argv) {
         exit(-2007);
     }
     DAP_DELETE(l_file_name);
+
+    // Checking that if a password is set, it contains only Latin characters, numbers and special characters, except for spaces.
+    if (!dap_check_valid_password(l_pass_str, dap_strlen(l_pass_str))) {
+        log_it(L_ERROR, "Invalid characters used for password.\n");
+        exit(-2008);
+    }
 
     if (l_sig_type.type == SIG_TYPE_MULTI_CHAINED){
         if (argc < 8) {
@@ -594,7 +604,31 @@ static int s_cert_pkey_show(int argc, const char **argv)
         printf("Can't serialize cert %s", argv[4]);
         exit(-135);
     }
+
     printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    return 0;
+}
+static int s_cert_pkey_show_full(int argc, const char **argv)
+{
+    if (argc != 5) {
+        log_it( L_ERROR, "Wrong 'cert pkey show' command params\n");
+        exit(-800);
+    }
+    dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+    if (!l_cert) {
+        printf("Not found cert %s\n", argv[4]);
+        exit(-134);
+    }
+
+    dap_hash_fast_t l_hash;
+    if (dap_cert_get_pkey_hash(l_cert, &l_hash)) {
+        printf("Can't serialize cert %s", argv[4]);
+        exit(-135);
+    }
+
+    char *l_pkey_str = dap_cert_get_pkey_str(l_cert, "hex");
+    printf("hash: %s\npkey: %s\n", dap_chain_hash_fast_to_str_static(&l_hash), l_pkey_str);
+    DAP_DELETE(l_pkey_str);
     return 0;
 }
 
@@ -616,6 +650,29 @@ static int s_wallet_pkey_show(int argc, const char **argv)
         exit(-135);
     }
     printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    return 0;
+}
+
+static int s_wallet_pkey_show_full(int argc, const char **argv)
+{
+    if (argc != 5) {
+        log_it( L_ERROR, "Wrong 'wallet pkey show' command params\n");
+        exit(-800);
+    }
+    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[4], s_system_wallet_dir, NULL);
+    if (!l_wallet) {
+        printf("Not found wallet %s\n", argv[4]);
+        exit(-134);
+    }
+
+    dap_hash_fast_t l_hash;
+    if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
+        printf("Can't serialize wallet %s", argv[4]);
+        exit(-135);
+    }
+    char *l_pkey_str = dap_chain_wallet_get_pkey_str(l_wallet, "hex");
+    printf("hash: %s\npkey: %s\n", dap_chain_hash_fast_to_str_static(&l_hash), l_pkey_str);
+    DAP_DELETE(l_pkey_str);
     return 0;
 }
 
@@ -686,7 +743,7 @@ static int s_is_file_available (char *l_path, const char *name, const char *ext)
  */
 static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
 {
-    size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key, sizeof(dap_hash_fast_t));
+    size_t l_sign_unserialized_size = dap_sign_create_output_unserialized_calc_size(l_key);
     if(l_sign_unserialized_size > 0) {
         size_t l_pub_key_size = 0;
         uint8_t *l_pub_key = dap_enc_key_serialize_pub_key(l_key, &l_pub_key_size);

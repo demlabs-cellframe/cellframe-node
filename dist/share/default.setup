@@ -76,17 +76,16 @@ config  cellframe-node  bootstrap_balancer      http_server         ensure      
 config cellframe-node  global_db        driver           default     ${DB_DRIVER}
 config cellframe-node  plugins          enabled          default     false
 
-# all os except win uses unix socket for cli
-if ${HOST_OS} != Windows
+# only linux use socket for cli
+if ${HOST_OS} == Linux
     config cellframe-node  cli-server    listen-path          ensure    [../var/run/node_cli]
 endif
 
-# windows use tcp/ip for conserver
-if ${HOST_OS} == Windows
+# windows and macos use tcp/ip for conserver
+if ${HOST_OS} != Linux 
     config cellframe-node  cli-server    listen-address          ensure    [127.0.0.1:12345]
 endif
 
- 
 if Linux != ${HOST_OS}
     config cellframe-node  plugins       enabled          ensure     false
 endif

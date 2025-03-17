@@ -1,4 +1,18 @@
-
+test_build_dependencies:
+  deb:
+    - 'build-essential'
+    - 'cmake'
+    - 'libmagic-dev'
+    - 'libsqlite3-dev'
+    - 'libjson-c-dev' 
+    - 'libffi-dev'
+    - 'file'
+    - 'python3-dev'
+    - 'curl'
+    - 'jq'
+    - 'xsltproc'
+    - 'libpq-dev'
+    
 build_dependencies:
   deb:
     - 'build-essential'
@@ -12,6 +26,7 @@ build_dependencies:
     - 'curl'
     - 'jq'
     - 'xsltproc'
+    - 'libpq-dev'
 
 deploy_dependencies:
   deb:

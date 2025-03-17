@@ -2,27 +2,33 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleExecutable</key>
-	<string>cellframe-node</string>
     <key>CFBundleExecutable</key>
-	<string>cellframe-node-cli</string>
-    <key>CFBundleExecutable</key>
-	<string>cellframe-node-tool</string>
-    <key>CFBundleExecutable</key>
-	<string>cellframe-node-config</string>
-	<key>CFBundleGetInfoString</key>
-	<string>Cellframe Project</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.demlabs.CellframeNode</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>10.15</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>NSSupportsAutomaticGraphicsSwitching</key>
-	<true/>
+    <string>cellframe-node</string>
+
+    <key>CFBundleAdditionalExecutables</key>
+    <array>
+        <string>cellframe-node-cli</string>
+        <string>cellframe-node-tool</string>
+        <string>cellframe-node-config</string>
+        <string>cellframe-diagtool</string>
+    </array>
+
+    <key>CFBundleGetInfoString</key>
+    <string>Cellframe Project</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.demlabs.CellframeNode</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
 </dict>
 </plist>
