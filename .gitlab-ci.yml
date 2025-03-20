@@ -1,6 +1,7 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
+    
 
 workflow:
   rules:
@@ -64,7 +65,7 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+  - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
   - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
@@ -220,8 +221,7 @@ amd64:macos.release:
       - echo "Do hard work"
       - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 
     artifacts:
       paths:
         - build_*/*.pkg
@@ -260,9 +260,14 @@ amd64:linux.tps:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
-.amd64:linux.updtr:
+amd64:linux.updtr:
     extends: .build
+    stage: build
     image: demlabs/debian/amd64:qt5
+    rules:
+      - when: manual
+        allow_failure: true
+
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
