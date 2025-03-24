@@ -1,2 +1,54 @@
 #!/bin/sh
 echo "preinstall!"
+
+USER_RES="/Library/Application Support/CellframeNode" 
+INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
+
+/Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service disable || true
+killall cellframe-node cellframe-diagtool
+
+mv_safe() {
+    local SOURCE_DIR="$1"
+    local TARGET_DIR="$2"
+
+    # Ensure the target directory exists
+    mkdir -p "$TARGET_DIR"
+
+    # Loop through each file in the source directory
+    for file in "$SOURCE_DIR"/*; do
+        # Get the base name of the file
+        base_name=$(basename "$file")
+
+        # Set the new file path in the target directory
+        target_file="$TARGET_DIR/$base_name"
+
+        # If the file already exists, rename the file
+        if [[ -e "$target_file" ]]; then
+            # Get the file extension (if any)
+            ext="${base_name##*.}"
+            name="${base_name%.*}"
+
+            # Append a number to the file name to make it unique
+            counter=1
+            while [[ -e "$TARGET_DIR/${name}_$counter.${ext}" ]]; do
+                ((counter++))
+            done
+            
+            target_file="$TARGET_DIR/${name}_$counter.${ext}"
+        fi
+
+        # Move the file to the target directory
+        mv "$file" "$target_file"
+    done
+
+    echo "Files moved successfully from $SOURCE_DIR to $TARGET_DIR."
+}
+
+mkdir "${USER_RES}/"
+mkdir -p "${USER_RES}/var/lib/ca/"
+mkdir -p "${USER_RES}/var/lib/wallet/"
+
+mv_safe ${INSTALL_RES}/var/lib/wallet/ "${USER_RES}/var/lib/wallet/"
+mv_safe ${INSTALL_RES}/var/lib/ca/ "${USER_RES}/var/lib/ca/" 
+mv_safe $HOME/Applications/Cellframe.app/Contents/Resources/var/lib/wallet/ "${USER_RES}/var/lib/wallet/"
+mv_safe $HOME/Applications/Cellframe.app/Contents/Resources/var/lib/ca/ "${USER_RES}/var/lib/ca/"

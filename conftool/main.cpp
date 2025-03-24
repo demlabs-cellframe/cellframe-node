@@ -114,11 +114,11 @@ std::string getNodeConfigPath(std::string basepath){
     #endif
 
     #ifdef __linux__
-        return "/opt/cellframe-node/";
+        return "/opt/cellframe-node";
     #endif
     
     #ifdef __APPLE__ 
-        return  "/Applications/CellframeNode.app/Contents/Resources/";
+        return  "/Library/Application Support/CellframeNode";
     #endif
 
 
@@ -130,7 +130,7 @@ std::string getNodeConfigPath(std::string basepath){
         std::wstring path;
         GetStringRegKey(hKey, L"Common Documents", path, L"");
         std::string stdpath(path.begin(),path.end());
-        return (std::filesystem::path{stdpath}/"cellframe-node/").string();
+        return (std::filesystem::path{stdpath}/"cellframe-node").string();
     #endif
 }
 
