@@ -84,7 +84,7 @@ if(LINUX)
 endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
-                       srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate")
+                       srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate compose")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
