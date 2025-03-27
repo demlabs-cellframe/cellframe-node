@@ -222,7 +222,8 @@ amd64:macos.release:
       - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
-      - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then /opt/buildtools/home_brew/brew_node.sh; fi
+      #- if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then /opt/buildtools/home_brew/brew_node.sh; fi
+      - /opt/buildtools/home_brew/brew_node.sh
     artifacts:
       paths:
         - build_*/*.pkg
