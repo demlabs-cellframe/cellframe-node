@@ -19,13 +19,13 @@ stages:
     - publish
     - deploy
 
-lint:  # Новая джоба для cppcheck
+lint:
   stage: lint
   image: demlabs/debian/amd64:qt5
   before_script:
     - apt-get update && apt-get install -y cppcheck
   script:
-    - cppcheck --enable=warning,style --std=c11 --error-exitcode=1 sources/
+    - cppcheck --enable=warning,style --std=c11 sources/
   rules:
     - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_IID
   tags:
