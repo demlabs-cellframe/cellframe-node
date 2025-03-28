@@ -16,6 +16,22 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
+
+# Cpp check
+find_program(CPPCHECK cppcheck)
+if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    add_custom_target(lint
+        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on source files"
+    )
+else()
+    message(WARNING "cppcheck not found, lint target unavailable")
+endif()
+
+
+
 #enable for diagtool 
 #set(BUILD_DIAGTOOL OFF)
 
