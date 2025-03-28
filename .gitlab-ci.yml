@@ -11,12 +11,25 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
+    - lint  # Добавлен новый этап
     - test_build
     - diagnostic_builds
     - build
     - post_build
     - publish
     - deploy
+
+lint:  # Новая джоба для cppcheck
+  stage: lint
+  image: demlabs/debian/amd64:qt5
+  before_script:
+    - apt-get update && apt-get install -y cppcheck
+  script:
+    - cppcheck --enable=warning,style --std=c11 --error-exitcode=1 sources/
+  rules:
+    - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_IID
+  tags:
+    - ci-polygon
 
 .ci-polygon:
   tags:
@@ -36,9 +49,7 @@ stages:
   dependencies: []
   interruptible: true
   variables:
-    
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
-
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
       variables:                                   
@@ -61,7 +72,6 @@ stages:
     - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
       allow_failure: true
-
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
@@ -72,7 +82,6 @@ stages:
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
- 
     #re-create version.mk based on current data
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
@@ -86,7 +95,6 @@ stages:
 amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
-
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -176,7 +184,6 @@ amd64:linux.rwd:
     stage: build
     dependencies:
       - amd64:linux.rwd.bld
-
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -267,7 +274,6 @@ amd64:linux.updtr:
     rules:
       - when: manual
         allow_failure: true
-
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -338,7 +344,6 @@ version:up:
     GIT_STRATEGY: none
   rules:
     - when: on_success
-  
   script:
     - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
     - echo ${PATCH_NUM_VAR_NAME}
@@ -346,5 +351,3 @@ version:up:
     - PATCH_NUM=$((PATCH_NUM + 1))
     - 'echo "New patch version: ${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-    
-
