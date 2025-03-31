@@ -36,7 +36,9 @@ cppcheck_full_analysis:
   image: demlabs/debian/amd64:qt5
   before_script:
     # Устанавливаем зависимости для сборки
-    - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev
+    - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
+    # Устанавливаем pygments для cppcheck-htmlreport
+    - pip3 install pygments
     # Скачиваем исходный код cppcheck 2.17.1
     - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
     # Распаковываем и переименовываем
@@ -45,8 +47,16 @@ cppcheck_full_analysis:
     - cd cppcheck-2.17.1-src
     # Собираем cppcheck
     - make SRCDIR=build CFGDIR=/usr/local/share/cppcheck HAVE_RULES=yes -j$(nproc)
-    # Устанавливаем, указав FILESDIR
+    # Устанавливаем, указав FILESDIR и CFGDIR
     - make install CFGDIR=/usr/local/share/cppcheck FILESDIR=/usr/local/bin
+    # Проверяем, что конфигурационные файлы установлены в правильное место
+    - ls -l /usr/local/share/cppcheck/cfg/std.cfg || (echo "std.cfg not found in /usr/local/share/cppcheck/cfg" && exit 1)
+    # Если файлы всё же установлены в /usr/local/bin/cfg, перемещаем их
+    - if [ -d /usr/local/bin/cfg ]; then mv /usr/local/bin/cfg /usr/local/share/cppcheck/; fi
+    - if [ -d /usr/local/bin/addons ]; then mv /usr/local/bin/addons /usr/local/share/cppcheck/; fi
+    - if [ -d /usr/local/bin/platforms ]; then mv /usr/local/bin/platforms /usr/local/share/cppcheck/; fi
+    # Проверяем, что std.cfg теперь на месте
+    - ls -l /usr/local/share/cppcheck/cfg/std.cfg || (echo "std.cfg still not found after moving" && exit 1)
   script:
     # Проверяем версии утилит
     - cppcheck --version
@@ -66,7 +76,6 @@ cppcheck_full_analysis:
       allow_failure: true
   tags:
     - ci-polygon
-
 
 .ci-polygon:
   tags:
