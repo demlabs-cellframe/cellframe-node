@@ -39,32 +39,19 @@ cppcheck_full_analysis:
     - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
     # Устанавливаем pygments для cppcheck-htmlreport
     - pip3 install pygments
-    # Скачиваем исходный код cppcheck 2.17.1
+    # Скачиваем, распаковываем и собираем cppcheck
     - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
-    # Распаковываем и переименовываем
-    - tar -xzf 2.17.1.tar.gz
-    - mv cppcheck-2.17.1 cppcheck-2.17.1-src
-    - cd cppcheck-2.17.1-src
-    # Собираем cppcheck, указав CFGDIR и FILESDIR
+    - tar -xzf 2.17.1.tar.gz && mv cppcheck-2.17.1 cppcheck-2.17.1-src && cd cppcheck-2.17.1-src
     - make SRCDIR=build CFGDIR=/usr/bin FILESDIR=/usr/bin HAVE_RULES=yes -j$(nproc)
-    # Устанавливаем, указав FILESDIR
     - make install CFGDIR=/usr/bin FILESDIR=/usr/bin
-    # Ищем std.cfg в системе до перемещения
-    - echo "Searching for std.cfg before moving..."
-    - find / -type f -name "std.cfg" 2>/dev/null || echo "std.cfg not found anywhere"
-    # Перемещаем конфигурационные файлы в /usr/bin (где cppcheck их ожидает)
-    - mkdir -p /usr/bin/cfg
-    - if [ -d /usr/local/bin/cfg ]; then mv /usr/local/bin/cfg/* /usr/bin/cfg/; rm -rf /usr/local/bin/cfg; fi
-    - mkdir -p /usr/bin/addons
-    - if [ -d /usr/local/bin/addons ]; then mv /usr/local/bin/addons/* /usr/bin/addons/; rm -rf /usr/local/bin/addons; fi
-    - mkdir -p /usr/bin/platforms
-    - if [ -d /usr/local/bin/platforms ]; then mv /usr/local/bin/platforms/* /usr/bin/platforms/; rm -rf /usr/local/bin/platforms; fi
-    # Ищем std.cfg в системе после перемещения
-    - echo "Searching for std.cfg after moving..."
-    - find / -type f -name "std.cfg" 2>/dev/null || echo "std.cfg not found anywhere after moving"
-    # Проверяем, что std.cfg теперь на месте
-    - ls -l /usr/bin/cfg/std.cfg || (echo "std.cfg not found in /usr/bin/cfg after moving" && exit 1)
-    # Проверяем, что cppcheck может загрузить std.cfg
+    # Перемещаем конфигурационные файлы в /usr/bin
+    - mkdir -p /usr/bin/{cfg,addons,platforms}
+    - mv /usr/local/bin/cfg/* /usr/bin/cfg/ 2>/dev/null || true
+    - mv /usr/local/bin/addons/* /usr/bin/addons/ 2>/dev/null || true
+    - mv /usr/local/bin/platforms/* /usr/bin/platforms/ 2>/dev/null || true
+    - rm -rf /usr/local/bin/{cfg,addons,platforms} 2>/dev/null || true
+    # Проверяем наличие std.cfg и работоспособность cppcheck
+    - test -f /usr/bin/cfg/std.cfg || (echo "std.cfg not found in /usr/bin/cfg" && exit 1)
     - /usr/bin/cppcheck --version
     - /usr/bin/cppcheck --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck cannot load std.cfg" && exit 1)
   script:
