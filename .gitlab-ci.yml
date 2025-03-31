@@ -45,26 +45,28 @@ cppcheck_full_analysis:
     - tar -xzf 2.17.1.tar.gz
     - mv cppcheck-2.17.1 cppcheck-2.17.1-src
     - cd cppcheck-2.17.1-src
-    # Собираем cppcheck, указав CFGDIR
-    - make SRCDIR=build CFGDIR=/usr/local/share/cppcheck HAVE_RULES=yes -j$(nproc)
-    # Устанавливаем, указав FILESDIR и CFGDIR
-    - make install CFGDIR=/usr/local/share/cppcheck FILESDIR=/usr/local/bin
+    # Собираем cppcheck, указав CFGDIR и FILESDIR
+    - make SRCDIR=build CFGDIR=/usr/bin FILESDIR=/usr/bin HAVE_RULES=yes -j$(nproc)
+    # Устанавливаем, указав FILESDIR
+    - make install CFGDIR=/usr/bin FILESDIR=/usr/bin
     # Ищем std.cfg в системе до перемещения
     - echo "Searching for std.cfg before moving..."
     - find / -type f -name "std.cfg" 2>/dev/null || echo "std.cfg not found anywhere"
-    # Перемещаем конфигурационные файлы в правильное место
-    - mkdir -p /usr/local/share/cppcheck
-    - if [ -d /usr/local/bin/cfg ]; then mv /usr/local/bin/cfg /usr/local/share/cppcheck/; fi
-    - if [ -d /usr/local/bin/addons ]; then mv /usr/local/bin/addons /usr/local/share/cppcheck/; fi
-    - if [ -d /usr/local/bin/platforms ]; then mv /usr/local/bin/platforms /usr/local/share/cppcheck/; fi
+    # Перемещаем конфигурационные файлы в /usr/bin (где cppcheck их ожидает)
+    - mkdir -p /usr/bin/cfg
+    - if [ -d /usr/local/bin/cfg ]; then mv /usr/local/bin/cfg/* /usr/bin/cfg/; rm -rf /usr/local/bin/cfg; fi
+    - mkdir -p /usr/bin/addons
+    - if [ -d /usr/local/bin/addons ]; then mv /usr/local/bin/addons/* /usr/bin/addons/; rm -rf /usr/local/bin/addons; fi
+    - mkdir -p /usr/bin/platforms
+    - if [ -d /usr/local/bin/platforms ]; then mv /usr/local/bin/platforms/* /usr/bin/platforms/; rm -rf /usr/local/bin/platforms; fi
     # Ищем std.cfg в системе после перемещения
     - echo "Searching for std.cfg after moving..."
     - find / -type f -name "std.cfg" 2>/dev/null || echo "std.cfg not found anywhere after moving"
     # Проверяем, что std.cfg теперь на месте
-    - ls -l /usr/local/share/cppcheck/cfg/std.cfg || (echo "std.cfg not found in /usr/local/share/cppcheck/cfg after moving" && exit 1)
+    - ls -l /usr/bin/cfg/std.cfg || (echo "std.cfg not found in /usr/bin/cfg after moving" && exit 1)
     # Проверяем, что cppcheck может загрузить std.cfg
     - /usr/bin/cppcheck --version
-    - /usr/bin/cppcheck --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck cannot load std.cfg; trying with explicit config-dir" && /usr/bin/cppcheck --config-dir=/usr/local/share/cppcheck/cfg --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck still cannot load std.cfg even with explicit config-dir" && exit 1))
+    - /usr/bin/cppcheck --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck cannot load std.cfg" && exit 1)
   script:
     # Проверяем версии утилит
     - cppcheck --version
