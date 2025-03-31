@@ -34,6 +34,7 @@ lint:
 cppcheck_full_analysis:
   stage: lint
   image: demlabs/debian/amd64:qt5
+  timeout: 12h
   before_script:
     # Устанавливаем зависимости для сборки
     - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
