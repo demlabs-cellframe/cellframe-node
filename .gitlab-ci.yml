@@ -45,7 +45,8 @@ cppcheck_full_analysis:
     - cd cppcheck-2.17.1-src
     # Собираем cppcheck
     - make SRCDIR=build CFGDIR=/usr/local/share/cppcheck HAVE_RULES=yes -j$(nproc)
-    - make install CFGDIR=/usr/local/share/cppcheck
+    # Устанавливаем, указав FILESDIR
+    - make install CFGDIR=/usr/local/share/cppcheck FILESDIR=/usr/local/bin
   script:
     # Проверяем версии утилит
     - cppcheck --version
