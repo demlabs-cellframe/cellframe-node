@@ -35,12 +35,14 @@ cppcheck_full_analysis:
   stage: lint
   image: demlabs/debian/amd64:qt5
   before_script:
-    # Устанавливаем зависимости и обновляем cppcheck до версии 2.14.0 (или другой актуальной)
+    # Устанавливаем зависимости
     - apt-get update && apt-get install -y wget python3
-    - wget https://github.com/danmar/cppcheck/releases/download/2.14.0/cppcheck_2.14.0-1_amd64.deb
-    - dpkg -i cppcheck_2.14.0-1_amd64.deb || apt-get install -f -y
+    # Скачиваем правильный deb-пакет для версии 2.14.0
+    - wget https://github.com/danmar/cppcheck/releases/download/2.14.0/cppcheck_2.14.0_amd64.deb
+    # Устанавливаем пакет, исправляем зависимости при необходимости
+    - dpkg -i cppcheck_2.14.0_amd64.deb || apt-get install -f -y
   script:
-    # Проверяем, что cppcheck и cppcheck-htmlreport установлены
+    # Проверяем версии утилит
     - cppcheck --version
     - cppcheck-htmlreport --version || echo "cppcheck-htmlreport is part of cppcheck"
     # Запускаем анализ
