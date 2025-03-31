@@ -16,6 +16,11 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
+set(CMAKE_C_CPPCHECK "cppcheck;--std=c11;--enable=warning,style")
+message(STATUS "CMAKE_C_CPPCHECK installed in : ${CMAKE_C_CPPCHECK}")
+
+# Опция для включения полного анализа cppcheck
+option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Cpp check
 find_program(CPPCHECK cppcheck)
@@ -26,11 +31,33 @@ if(CPPCHECK)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck on source files"
     )
+    # Новая цель cppcheck_analysis, активируется только если ENABLE_CPPCHECK_ANALYSIS включен
+    if(ENABLE_CPPCHECK_ANALYSIS)
+        add_custom_target(cppcheck_analysis
+            COMMAND ${CPPCHECK}
+                --std=c11
+                --enable=warning,style,performance,portability
+                --quiet
+                --xml
+                -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
+                -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
+                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
+                ${CMAKE_SOURCE_DIR}/sources
+                ${CMAKE_SOURCE_DIR}/dap-sdk
+                ${CMAKE_SOURCE_DIR}/cellframe-sdk
+                ${CMAKE_SOURCE_DIR}/python-cellframe
+                2> ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+            COMMAND cppcheck-htmlreport
+                --file ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+                --report-dir ${CMAKE_BINARY_DIR}/cppcheck_html_report
+                --source-dir ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Running full cppcheck static analysis and generating HTML report in ${CMAKE_BINARY_DIR}/cppcheck_html_report"
+        )
+    endif()
 else()
     message(WARNING "cppcheck not found, lint target unavailable")
 endif()
-
-
 
 #enable for diagtool 
 #set(BUILD_DIAGTOOL OFF)

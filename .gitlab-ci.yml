@@ -29,7 +29,28 @@ lint:
   rules:
     - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_IID
   tags:
-    - ci-polygon
+    - ci-polygon 
+
+cppcheck_full_analysis:
+  stage: lint
+  image: demlabs/debian/amd64:qt5
+  before_script:
+    - apt-get update && apt-get install -y cppcheck python3 python3-pip
+    - pip3 install cppcheck-htmlreport  # Устанавливаем утилиту для HTML-отчета
+  script:
+    - mkdir -p build && cd build
+    - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
+    - make cppcheck_analysis
+    - echo "HTML report generated at build/cppcheck_html_report/index.html"
+  artifacts:
+    paths:
+      - build/cppcheck_html_report/  # Сохраняем HTML-отчет как артефакт
+    expire_in: 1 week
+  rules:
+    - when: manual  # Только ручной запуск
+      allow_failure: true  # Не блокирует пайплайн при ошибке
+  tags:
+    - ci-polygon 
 
 .ci-polygon:
   tags:
