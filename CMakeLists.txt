@@ -16,7 +16,7 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
-set(CMAKE_C_CPPCHECK "cppcheck;--std=c11;--enable=warning,style")
+#Sset(CMAKE_C_CPPCHECK "cppcheck;--std=c11;--enable=warning,style")
 message(STATUS "CMAKE_C_CPPCHECK installed in : ${CMAKE_C_CPPCHECK}")
 
 # Опция для включения полного анализа cppcheck
