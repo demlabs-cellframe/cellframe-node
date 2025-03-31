@@ -1,7 +1,6 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
-    
 
 workflow:
   rules:
@@ -11,13 +10,31 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - lint  # Добавлен новый этап
+    - lint
     - test_build
     - diagnostic_builds
     - build
     - post_build
     - publish
     - deploy
+
+# Общие шаги для установки и сборки cppcheck
+.setup_cppcheck: &setup_cppcheck
+  - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
+  - pip3 install pygments
+  - pip3 install cppcheck-to-codeclimate  # Устанавливаем инструмент для конвертации
+  - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
+  - tar -xzf 2.17.1.tar.gz && mv cppcheck-2.17.1 cppcheck-2.17.1-src && cd cppcheck-2.17.1-src
+  - make SRCDIR=build CFGDIR=/usr/bin FILESDIR=/usr/bin HAVE_RULES=yes -j$(nproc)
+  - make install CFGDIR=/usr/bin FILESDIR=/usr/bin
+  - mkdir -p /usr/bin/{cfg,addons,platforms}
+  - mv /usr/local/bin/cfg/* /usr/bin/cfg/ 2>/dev/null || true
+  - mv /usr/local/bin/addons/* /usr/bin/addons/ 2>/dev/null || true
+  - mv /usr/local/bin/platforms/* /usr/bin/platforms/ 2>/dev/null || true
+  - rm -rf /usr/local/bin/{cfg,addons,platforms} 2>/dev/null || true
+  - test -f /usr/bin/cfg/std.cfg || (echo "std.cfg not found in /usr/bin/cfg" && exit 1)
+  - /usr/bin/cppcheck --version
+  - /usr/bin/cppcheck --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck cannot load std.cfg" && exit 1)
 
 lint:
   stage: lint
@@ -36,30 +53,10 @@ cppcheck_full_analysis:
   image: demlabs/debian/amd64:qt5
   timeout: 12h
   before_script:
-    # Устанавливаем зависимости для сборки
-    - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
-    # Устанавливаем pygments для cppcheck-htmlreport
-    - pip3 install pygments
-    # Скачиваем, распаковываем и собираем cppcheck
-    - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
-    - tar -xzf 2.17.1.tar.gz && mv cppcheck-2.17.1 cppcheck-2.17.1-src && cd cppcheck-2.17.1-src
-    - make SRCDIR=build CFGDIR=/usr/bin FILESDIR=/usr/bin HAVE_RULES=yes -j$(nproc)
-    - make install CFGDIR=/usr/bin FILESDIR=/usr/bin
-    # Перемещаем конфигурационные файлы в /usr/bin
-    - mkdir -p /usr/bin/{cfg,addons,platforms}
-    - mv /usr/local/bin/cfg/* /usr/bin/cfg/ 2>/dev/null || true
-    - mv /usr/local/bin/addons/* /usr/bin/addons/ 2>/dev/null || true
-    - mv /usr/local/bin/platforms/* /usr/bin/platforms/ 2>/dev/null || true
-    - rm -rf /usr/local/bin/{cfg,addons,platforms} 2>/dev/null || true
-    # Проверяем наличие std.cfg и работоспособность cppcheck
-    - test -f /usr/bin/cfg/std.cfg || (echo "std.cfg not found in /usr/bin/cfg" && exit 1)
-    - /usr/bin/cppcheck --version
-    - /usr/bin/cppcheck --library=std --suppress=missingIncludeSystem -q . || (echo "cppcheck cannot load std.cfg" && exit 1)
+    - *setup_cppcheck
   script:
-    # Проверяем версии утилит
     - cppcheck --version
     - cppcheck-htmlreport --version || echo "cppcheck-htmlreport is part of cppcheck"
-    # Запускаем анализ
     - cd /builds/cellframe/cellframe-node
     - mkdir -p build && cd build
     - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
@@ -70,6 +67,31 @@ cppcheck_full_analysis:
       - build/cppcheck_html_report/
     expire_in: 1 week
   rules:
+    - when: manual
+      allow_failure: true
+  tags:
+    - ci-polygon
+
+cppcheck_code_quality:
+  stage: lint
+  image: demlabs/debian/amd64:qt5
+  timeout: 12h
+  before_script:
+    - *setup_cppcheck
+  script:
+    - cppcheck --version
+    - cd /builds/cellframe/cellframe-node
+    # Генерируем XML-отчёт от cppcheck
+    - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem -j$(nproc) -q . 2> cppcheck-report.xml
+    # Конвертируем XML в JSON с помощью cppcheck-to-codeclimate
+    - cppcheck-to-codeclimate cppcheck-report.xml > gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json  # Указываем отчёт для GitLab Code Quality
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"  # Запускаем для merge request'ов
+      when: always
     - when: manual
       allow_failure: true
   tags:
@@ -107,7 +129,6 @@ cppcheck_full_analysis:
   image: demlabs/amd64/debian-buster:linuxbuilder
   stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
-  
 
 .deploy:
   extends: .ci-ansible
@@ -222,7 +243,6 @@ tsan_build:
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-
 amd64:linux.rwd:
     extends: .build
     stage: build
@@ -237,7 +257,6 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
       
-
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -262,6 +281,7 @@ amd64:windows.rwd:
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+
 amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
@@ -276,6 +296,7 @@ amd64:macos.release:
     artifacts:
       paths:
         - build_*/*.pkg
+
 amd64:linux.debug:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -286,7 +307,8 @@ amd64:linux.debug:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux debug
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -299,6 +321,7 @@ amd64:linux.rwd.opt:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
+
 amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -354,6 +377,7 @@ armhf:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
 arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
@@ -378,7 +402,6 @@ any:android.release:
     script: 
       - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
-
 
 version:up:
   stage: post_build
