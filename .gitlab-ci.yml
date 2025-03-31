@@ -38,10 +38,12 @@ cppcheck_full_analysis:
     # Устанавливаем зависимости для сборки
     - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev
     # Скачиваем исходный код cppcheck 2.17.1
-    - wget https://github.com/danmar/cppcheck/releases/download/2.17.1/cppcheck-2.17.1.tar.gz
-    # Распаковываем и собираем
-    - tar -xzf cppcheck-2.17.1.tar.gz
-    - cd cppcheck-2.17.1
+    - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
+    # Распаковываем и переименовываем
+    - tar -xzf 2.17.1.tar.gz
+    - mv cppcheck-2.17.1 cppcheck-2.17.1-src
+    - cd cppcheck-2.17.1-src
+    # Собираем cppcheck
     - make SRCDIR=build CFGDIR=/usr/local/share/cppcheck HAVE_RULES=yes -j$(nproc)
     - make install CFGDIR=/usr/local/share/cppcheck
   script:
