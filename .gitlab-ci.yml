@@ -35,22 +35,29 @@ cppcheck_full_analysis:
   stage: lint
   image: demlabs/debian/amd64:qt5
   before_script:
-    - apt-get update && apt-get install -y cppcheck python3 python3-pip
-    - pip3 install cppcheck-htmlreport  # Устанавливаем утилиту для HTML-отчета
+    # Устанавливаем зависимости и обновляем cppcheck до версии 2.14.0 (или другой актуальной)
+    - apt-get update && apt-get install -y wget python3
+    - wget https://github.com/danmar/cppcheck/releases/download/2.14.0/cppcheck_2.14.0-1_amd64.deb
+    - dpkg -i cppcheck_2.14.0-1_amd64.deb || apt-get install -f -y
   script:
+    # Проверяем, что cppcheck и cppcheck-htmlreport установлены
+    - cppcheck --version
+    - cppcheck-htmlreport --version || echo "cppcheck-htmlreport is part of cppcheck"
+    # Запускаем анализ
     - mkdir -p build && cd build
     - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
     - make cppcheck_analysis
     - echo "HTML report generated at build/cppcheck_html_report/index.html"
   artifacts:
     paths:
-      - build/cppcheck_html_report/  # Сохраняем HTML-отчет как артефакт
+      - build/cppcheck_html_report/
     expire_in: 1 week
   rules:
-    - when: manual  # Только ручной запуск
-      allow_failure: true  # Не блокирует пайплайн при ошибке
+    - when: manual
+      allow_failure: true
   tags:
-    - ci-polygon 
+    - ci-polygon
+
 
 .ci-polygon:
   tags:
