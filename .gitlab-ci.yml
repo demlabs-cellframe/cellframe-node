@@ -77,18 +77,20 @@ cppcheck_code_quality:
   image: demlabs/debian/amd64:qt5
   timeout: 12h
   before_script:
-    - apt-get update && apt-get install -y cppcheck python3 python3-pip
-    - pip3 install cppcheck-codequality
+    - apt-get update && apt-get install -y cppcheck python3 python3-pip jq
+    - pip3 install --upgrade cppcheck-codequality
   script:
     - cppcheck --version
     - cd /builds/cellframe/cellframe-node
-    - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem -j$(nproc) -q . 2> cppcheck-report.xml
+    - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective -j$(nproc) -q . 2> cppcheck-report.xml
     - cppcheck-codequality --input-file cppcheck-report.xml --output-file gl-code-quality-report.json
-    - cat gl-code-quality-report.json  # Выводим содержимое в лог
+    - jq 'map(.location.positions.end = (.location.positions.begin | {line: .line, column: .column}))' gl-code-quality-report.json > temp.json && mv temp.json gl-code-quality-report.json
+    - jq 'map(.fingerprint = (.fingerprint + "-" + (.location.positions.begin.line | tostring)))' gl-code-quality-report.json > temp.json && mv temp.json gl-code-quality-report.json
+    - cat gl-code-quality-report.json
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
-    paths:  # Добавляем для скачивания
+    paths:
       - gl-code-quality-report.json
     expire_in: 1 week
   rules:
