@@ -84,8 +84,6 @@ cppcheck_code_quality:
     - cd /builds/cellframe/cellframe-node
     - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective -j$(nproc) -q . 2> cppcheck-report.xml
     - cppcheck-codequality --input-file cppcheck-report.xml --output-file gl-code-quality-report.json
-    - jq 'map(.location.positions.end = (.location.positions.begin | {line: .line, column: .column}))' gl-code-quality-report.json > temp.json && mv temp.json gl-code-quality-report.json
-    - jq 'map(.fingerprint = (.fingerprint + "-" + (.location.positions.begin.line | tostring)))' gl-code-quality-report.json > temp.json && mv temp.json gl-code-quality-report.json
     - cat gl-code-quality-report.json
   artifacts:
     reports:
