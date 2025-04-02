@@ -1,6 +1,7 @@
- #! /bin/bash
+#! /bin/bash
 set -e
-STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master/updates
+STORAGE_URL=https://pub.cellframe.net/linux/cellframe-node/master
+
 
 MACHINE=$(uname -m)
 
@@ -45,13 +46,22 @@ CURRENT_REBUILD=$(echo $INSTALLED_VERSION | grep -Po "[0-9]([0-9]+)")
 echo "Available patch: $MAX_REBUILD | Current patch: $CURRENT_REBUILD"
 
 if (( MAX_REBUILD > CURRENT_REBUILD )); then
-    echo "Need update cellframe-node to 5.2-$MAX_REBUILD..."
+    # Determine the full version (e.g. 5.3-354) from AVAILABLE_VERSIONS by the patch we found
+    for ver in "${AVAILABLE_VERSIONS[@]}"
+    do
+        patch=$(echo $ver | cut -d'-' -f2)
+        if [ "$patch" = "$MAX_REBUILD" ]; then
+            NEW_VERSION=$ver
+            break
+        fi
+    done
+    echo "Need update cellframe-node to $NEW_VERSION..."
 else
     echo "No need to update cellframe-node"
     exit 0
 fi
 
-PACKAGE_NAME="cellframe-node-5.2-$MAX_REBUILD-updtr-amd64.deb"
+PACKAGE_NAME="cellframe-node-$NEW_VERSION-updtr-${POSTFIX}.deb"
 echo "wget"
 mkdir -p /tmp/cfupd/
 wget $STORAGE_URL/$PACKAGE_NAME -O /tmp/cfupd/$PACKAGE_NAME

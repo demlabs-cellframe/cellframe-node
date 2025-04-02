@@ -7,7 +7,7 @@
 # Predefined variables:
 #   ${HOST_OS} -> Linux | Windows | Macos
 #   ${HOSTNAME} -> hostname of a machine
-#   ${CONFIGS_PATH} -> /opt/cellframe-node/ for linux, 
+#   ${CONFIGS_PATH} -> /opt/cellframe-node for linux, 
 #                      Common Documents (usually C:\Users\Public\Documents\cellframe-node\) for Windows
 #
 # fromtemplate: create and populate config from "share/configs" templates  
@@ -76,22 +76,21 @@ config  cellframe-node  bootstrap_balancer      http_server         ensure      
 config cellframe-node  global_db        driver           default     ${DB_DRIVER}
 config cellframe-node  plugins          enabled          default     false
 
-# all os except win uses unix socket for cli
-if ${HOST_OS} != Windows
+# only linux use socket for cli
+if ${HOST_OS} == Linux
     config cellframe-node  cli-server    listen-path          ensure    [../var/run/node_cli]
 endif
 
-# windows use tcp/ip for conserver
-if ${HOST_OS} == Windows
+# windows and macos use tcp/ip for conserver
+if ${HOST_OS} != Linux 
     config cellframe-node  cli-server    listen-address          ensure    [127.0.0.1:12345]
 endif
 
- 
 if Linux != ${HOST_OS}
     config cellframe-node  plugins       enabled          ensure     false
 endif
 
-config cellframe-node  plugins       py_path          ensure      ${CONFIGS_PATH}/var/lib/plugins
+config cellframe-node  plugins       py_path          ensure      ../var/lib/plugins
 
 config  Backbone     general     node-role   default     full
 config  KelVPN       general     node-role   default     full

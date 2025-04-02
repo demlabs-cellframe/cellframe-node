@@ -8,7 +8,7 @@ set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
-
+        
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
@@ -58,8 +58,8 @@ include (dap-sdk/cmake/OS_Detection.cmake)
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 if (NOT ANDROID)
     set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-endif()
     #set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
+endif()
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
@@ -156,9 +156,6 @@ if(UNIX)
 
     SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
 
-    if(BUILD_WITH_GDB_DRIVER_PGSQL)
-        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-pgsql" )
-    endif()
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-dbg" )
     endif()
@@ -184,13 +181,22 @@ if(UNIX)
         endif()
     endif()
 
+    if (DEFINED ENV{DAP_ASAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-asan" )
+    endif()
+    if (DEFINED ENV{DAP_UBSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-ubsan" )
+    endif()
+    if (DEFINED ENV{DAP_TSAN})
+        SET( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-tsan" )
+    endif()
+
 
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitriy Gerasimov <naeper@demlabs.net>" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")
-
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")        
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
@@ -203,7 +209,7 @@ if(UNIX)
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
-	    message("[*] Darwin kernel (MacOS/iOS) ")
+        message("[*] Darwin kernel (MacOS/iOS) ")
     else()
         message("[!] Unknown UNIX")
     endif()
@@ -255,8 +261,8 @@ if(WIN32)
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
     target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
-			kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
-			oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
+            kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
+            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
     set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
@@ -307,6 +313,15 @@ if(UNIX AND NOT WIN32)
                 add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
+            if (DARWIN)
+                if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+                else ()
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+                endif()
+                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+            endif()
+
             message("[+] Build with python environment")
             message("    Downloading static prebuild cpython  ${PYTHON_URL}")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
@@ -330,9 +345,9 @@ if(UNIX AND NOT WIN32)
             list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
             
             if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
             else()
-                find_package(Python EXACT 3.10 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
 
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
@@ -362,8 +377,15 @@ if(UNIX AND NOT WIN32)
 
         include_directories(${Python_INCLUDE_DIRS} include/)
         add_subdirectory(python-cellframe)
-
+        #this helps
+        #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+        if (DARWIN)
+        add_custom_command(TARGET ${NODE_TARGET} 
+            POST_BUILD COMMAND 
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
+            ${NODE_TARGET})
+        endif()
     endif()
 
     if(ANDROID )
@@ -390,15 +412,37 @@ if(DARWIN)
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
-
+    if(BUILD_DIAGTOOL)
+        INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
+    endif()
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
+
+    if (BUILD_WITH_PYTHON_ENV)
+    set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
+    set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
+    set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
+    set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+    set(PYTHON_LIB_DIR_PRFX "python3.10")
+    
+    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
+    
+    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    
+    #install python-modules
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    endif()
 
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
-	    
+        
         #install all from dist.linux/share except updater files and node-serivice
         if(NOT ADD_UPDATER)
             INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
@@ -418,7 +462,7 @@ else()
         endif()
         
     elseif(BSD)
-	    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
+        INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
     if(WIN32)
@@ -440,7 +484,7 @@ else()
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
     if(NOT ANDROID)
-	    #install all python-specific files back to its original location
+        #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
             set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
