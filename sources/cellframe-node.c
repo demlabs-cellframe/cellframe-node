@@ -539,7 +539,7 @@ int main( int argc, const char **argv )
     }
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all();
-    rc = dap_events_wait();
+    // rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
 
@@ -557,6 +557,8 @@ int main( int argc, const char **argv )
 #endif
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
+    dap_interval_timer_deinit();
+    dap_events_deinit();
     dap_enc_ks_deinit();
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
@@ -568,7 +570,6 @@ int main( int argc, const char **argv )
     dap_global_db_deinit();
     dap_chain_deinit();
     dap_config_close( g_config );
-    dap_interval_timer_deinit();
     dap_common_deinit();
 
     return rc * 10;
