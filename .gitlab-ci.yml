@@ -22,7 +22,7 @@ stages:
 .setup_cppcheck: &setup_cppcheck
   - apt-get update && apt-get install -y wget python3 build-essential libpcre3-dev python3-pip
   - pip3 install pygments
-  - pip3 install cppcheck-to-codeclimate  # Устанавливаем инструмент для конвертации
+ # - pip3 install cppcheck-to-codeclimate  # Устанавливаем инструмент для конвертации
   - wget https://github.com/danmar/cppcheck/archive/refs/tags/2.17.1.tar.gz
   - tar -xzf 2.17.1.tar.gz && mv cppcheck-2.17.1 cppcheck-2.17.1-src && cd cppcheck-2.17.1-src
   - make SRCDIR=build CFGDIR=/usr/bin FILESDIR=/usr/bin HAVE_RULES=yes -j$(nproc)
