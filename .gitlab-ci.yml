@@ -38,7 +38,7 @@ stages:
 
 lint:
   stage: lint
-  image: demlabs/debian/amd64:qt5.cpp_check
+  image: demlabs/debian/amd64:cpp_check
 #  before_script:
 #    - apt-get update && apt-get install -y cppcheck
   script:
@@ -50,7 +50,7 @@ lint:
 
 cppcheck_full_analysis:
   stage: lint
-  image: demlabs/debian/amd64:qt5.cpp_check
+  image: demlabs/debian/amd64:cpp_check
   timeout: 12h
 #  before_script:
 #    - *setup_cppcheck
@@ -74,7 +74,7 @@ cppcheck_full_analysis:
 
 cppcheck_code_quality:
   stage: lint
-  image: demlabs/debian/amd64:qt5.cpp_check
+  image: demlabs/debian/amd64:cpp_check
   timeout: 12h
   before_script:
 #    - apt-get update && apt-get install -y cppcheck python3 python3-pip jq
