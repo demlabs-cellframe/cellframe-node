@@ -19,7 +19,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 #Sset(CMAKE_C_CPPCHECK "cppcheck;--std=c11;--enable=warning,style")
 message(STATUS "CMAKE_C_CPPCHECK installed in : ${CMAKE_C_CPPCHECK}")
 
-# Опция для включения полного анализа cppcheck
+# Option to enable full cppcheck analysis
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Cpp check
@@ -31,7 +31,7 @@ if(CPPCHECK)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck on source files"
     )
-    # Новая цель cppcheck_analysis, активируется только если ENABLE_CPPCHECK_ANALYSIS включен
+        # New cppcheck_analysis target, activated only if ENABLE_CPPCHECK_ANALYSIS is enabled
     if(ENABLE_CPPCHECK_ANALYSIS)
         add_custom_target(cppcheck_analysis
             COMMAND ${CPPCHECK}
