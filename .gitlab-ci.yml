@@ -10,7 +10,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - Code_check
+    - code_check
     - test_build
     - diagnostic_builds
     - build
@@ -18,22 +18,12 @@ stages:
     - publish
     - deploy
 
-Code_check:
-  stage: Code_check
-  image: demlabs/debian/amd64:cpp_check
-  script:
-    - cppcheck --enable=warning,style --std=c11 sources/
-  rules:
-    - if: $CI_COMMIT_BRANCH || $CI_MERGE_REQUEST_IID
-  tags:
-    - ci-polygon 
-
 cppcheck_full_analysis:
-  stage: Code_check
+# Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
+  stage: code_check
   image: demlabs/debian/amd64:cpp_check
   timeout: 12h
   script:
-    - cppcheck-htmlreport --version || echo "cppcheck-htmlreport is part of cppcheck"
     - cd /builds/cellframe/cellframe-node
     - mkdir -p build && cd build
     - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
@@ -42,7 +32,7 @@ cppcheck_full_analysis:
   artifacts:
     paths:
       - build/cppcheck_html_report/
-    expire_in: 1 month
+    expire_in: 1 day
   rules:
     - when: manual
       allow_failure: true
@@ -50,7 +40,8 @@ cppcheck_full_analysis:
     - ci-polygon
 
 cppcheck_code_quality:
-  stage: Code_check
+# Generates a code quality report in JSON format for merge requests, identifying potential issues in the codebase.
+  stage: code_check
   image: demlabs/debian/amd64:cpp_check
   timeout: 3h
   script:
