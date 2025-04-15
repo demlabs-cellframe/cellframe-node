@@ -63,7 +63,7 @@ cppcheck_code_quality:
       codequality: gl-code-quality-report.json
     paths:
       - gl-code-quality-report.json
-    expire_in: 1 week
+    expire_in: 4 week
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
