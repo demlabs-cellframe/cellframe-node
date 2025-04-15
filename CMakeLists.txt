@@ -16,23 +16,14 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
-#Sset(CMAKE_C_CPPCHECK "cppcheck;--std=c11;--enable=warning,style")
-message(STATUS "CMAKE_C_CPPCHECK installed in : ${CMAKE_C_CPPCHECK}")
-
 # Option to enable full cppcheck analysis
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Cpp check
-find_program(CPPCHECK cppcheck)
-if(CPPCHECK)
-    message(STATUS "Found cppcheck: ${CPPCHECK}")
-    add_custom_target(lint
-        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running cppcheck on source files"
-    )
-        # New cppcheck_analysis target, activated only if ENABLE_CPPCHECK_ANALYSIS is enabled
-    if(ENABLE_CPPCHECK_ANALYSIS)
+if(ENABLE_CPPCHECK_ANALYSIS)
+    find_program(CPPCHECK cppcheck)
+    if(CPPCHECK)
+        message(STATUS "Found cppcheck: ${CPPCHECK}")
         add_custom_target(cppcheck_analysis
             COMMAND ${CPPCHECK}
                 --std=c11
@@ -54,7 +45,19 @@ if(CPPCHECK)
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Running full cppcheck static analysis and generating HTML report in ${CMAKE_BINARY_DIR}/cppcheck_html_report"
         )
+    else()
+        message(WARNING "cppcheck not found, cppcheck_analysis target unavailable")
     endif()
+endif()
+
+find_program(CPPCHECK cppcheck)
+if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    add_custom_target(lint
+        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on source files"
+    )
 else()
     message(WARNING "cppcheck not found, lint target unavailable")
 endif()
