@@ -10,7 +10,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - lint
+    - Code_check
     - test_build
     - diagnostic_builds
     - build
@@ -18,8 +18,8 @@ stages:
     - publish
     - deploy
 
-lint:
-  stage: lint
+Code_check:
+  stage: Code_check
   image: demlabs/debian/amd64:cpp_check
   script:
     - cppcheck --enable=warning,style --std=c11 sources/
@@ -29,7 +29,7 @@ lint:
     - ci-polygon 
 
 cppcheck_full_analysis:
-  stage: lint
+  stage: Code_check
   image: demlabs/debian/amd64:cpp_check
   timeout: 12h
   script:
@@ -50,7 +50,7 @@ cppcheck_full_analysis:
     - ci-polygon
 
 cppcheck_code_quality:
-  stage: lint
+  stage: Code_check
   image: demlabs/debian/amd64:cpp_check
   timeout: 3h
   script:
