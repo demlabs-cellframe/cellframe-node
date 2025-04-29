@@ -33,10 +33,12 @@ if(ENABLE_CPPCHECK_ANALYSIS)
                 -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
                 -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
                 -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
-                ${CMAKE_SOURCE_DIR}/sources
-                ${CMAKE_SOURCE_DIR}/dap-sdk
-                ${CMAKE_SOURCE_DIR}/cellframe-sdk
-                ${CMAKE_SOURCE_DIR}/python-cellframe
+                ${CMAKE_SOURCE_DIR}/conftool
+                ${CMAKE_SOURCE_DIR}/dist.linux
+                ${CMAKE_SOURCE_DIR}/dist
+                ${CMAKE_SOURCE_DIR}/os
+                ${CMAKE_SOURCE_DIR}/resousrses
+                ${CMAKE_SOURCE_DIR}/sourses
                 2> ${CMAKE_BINARY_DIR}/cppcheck_report.xml
             COMMAND cppcheck-htmlreport
                 --file ${CMAKE_BINARY_DIR}/cppcheck_report.xml
