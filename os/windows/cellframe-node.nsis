@@ -58,7 +58,7 @@ Unicode true
 !define NODE_NAME		"cellframe-node"
 !define EXE_NAME		"${APP_NAME}.exe"
 !define PUBLISHER		"Cellframe Network"
-!define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
+!define UNINSTALL_PATH  "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 
 
@@ -202,7 +202,7 @@ Section "${APP_NAME}" CORE
 	File /r "opt/cellframe-node/share/*"
 		
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
-	WriteRegStr HKLM "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\Uninstall.exe"
+	WriteRegStr HKLM "${UNINSTALL_PATH}" '"UninstallString" "$INSTDIR\Uninstall.exe"'
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayVersion" "${APP_VERSION}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "Publisher" "${PUBLISHER}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
