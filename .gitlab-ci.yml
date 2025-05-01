@@ -2,7 +2,6 @@ variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
     
-
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -95,7 +94,8 @@ amd64:linux.rwd.bld:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux rwd
-      
+
+# Tests and diagnostic builds      
 autotests:
   extends: .ci-test
   interruptible: true
@@ -169,8 +169,53 @@ tsan_build:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    
+# Windows
+amd64:windows.rwd:
+    extends: .build
+    image: demlabs/windows/amd64:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
+    script:
+      - echo "Do hard work"
+      - ./prod_build/build.sh --target windows rwd
+      - ./prod_build/pack.sh --target windows rwd 
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
+      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+
+# macOS
+amd64:macos.release:
+    extends: .build
+    image: demlabs/macos/amd64:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-osx
+      - *fill_version_mk
+    script:
+      - echo "Do hard work"
+      - ./prod_build/build.sh --target osx release
+      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 
+    artifacts:
+      paths:
+        - build_*/*.pkg
 
 
+
+# Android
+any:android.release:
+    extends: .build
+    image: demlabs/android/any:qt5
+    before_script:
+      - /opt/buildtools/prepare_environment.sh arm64-linux
+      - 'apt install -y openjdk-17-jdk'
+      - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
+      - *fill_version_mk
+    script: 
+      - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
+
+# Debian
 amd64:linux.rwd:
     extends: .build
     stage: build
@@ -186,7 +231,6 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
       
-
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -199,32 +243,6 @@ amd64:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-amd64:windows.rwd:
-    extends: .build
-    image: demlabs/windows/amd64:qt5
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
-    script:
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target windows rwd
-      - ./prod_build/pack.sh --target windows rwd 
-      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
-      - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
-amd64:macos.release:
-    extends: .build
-    image: demlabs/macos/amd64:qt5
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh amd64-osx
-      - *fill_version_mk
-    script:
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target osx release
-      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 
-    artifacts:
-      paths:
-        - build_*/*.pkg
 amd64:linux.debug:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -236,6 +254,7 @@ amd64:linux.debug:
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -248,6 +267,7 @@ amd64:linux.rwd.opt:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
+
 amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -267,7 +287,6 @@ amd64:linux.updtr:
     rules:
       - when: manual
         allow_failure: true
-
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -304,6 +323,7 @@ armhf:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
 arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
@@ -316,19 +336,6 @@ arm64:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
-  
-any:android.release:
-    extends: .build
-    image: demlabs/android/any:qt5
-    before_script:
-      - /opt/buildtools/prepare_environment.sh arm64-linux
-      - 'apt install -y openjdk-17-jdk'
-      - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
-      - *fill_version_mk
-    script: 
-      - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
-
 
 version:up:
   stage: post_build
