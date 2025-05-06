@@ -370,6 +370,7 @@ any:android.release:
 
 version:up:
   stage: post_build
+  dependencies: []
   tags:
     - ansible-runner
   variables:
