@@ -61,7 +61,7 @@ if(CPPCHECK)
         COMMENT "Running cppcheck on source files"
     )
 else()
-    message(WARNING "cppcheck not found, lint target unavailable")
+    message(WARNING "cppcheck not found, lint_cellframe_node target unavailable")
 endif()
 
 #enable for diagtool 
