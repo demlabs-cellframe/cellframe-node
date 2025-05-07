@@ -8,13 +8,61 @@ set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
-
+        
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
 SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+
+# Option to enable full cppcheck analysis
+option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
+
+# Cpp check
+if(ENABLE_CPPCHECK_ANALYSIS)
+    find_program(CPPCHECK cppcheck)
+    if(CPPCHECK)
+        message(STATUS "Found cppcheck: ${CPPCHECK}")
+        add_custom_target(cppcheck_analysis
+            COMMAND ${CPPCHECK}
+                --std=c11
+                --enable=warning,style,performance,portability
+                --quiet
+                --xml
+                -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
+                -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
+                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
+                ${CMAKE_SOURCE_DIR}/conftool
+                ${CMAKE_SOURCE_DIR}/dist.linux
+                ${CMAKE_SOURCE_DIR}/dist
+                ${CMAKE_SOURCE_DIR}/os
+                ${CMAKE_SOURCE_DIR}/resousrses
+                ${CMAKE_SOURCE_DIR}/sourses
+                2> ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+            COMMAND cppcheck-htmlreport
+                --file ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+                --report-dir ${CMAKE_BINARY_DIR}/cppcheck_html_report
+                --source-dir ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Running full cppcheck static analysis and generating HTML report in ${CMAKE_BINARY_DIR}/cppcheck_html_report"
+        )
+    else()
+        message(WARNING "cppcheck not found, cppcheck_analysis target unavailable")
+    endif()
+endif()
+
+find_program(CPPCHECK cppcheck)
+if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    add_custom_target(lint_cellframe_node
+        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on source files"
+    )
+else()
+    message(WARNING "cppcheck not found, lint_cellframe_node target unavailable")
+endif()
 
 #enable for diagtool 
 #set(BUILD_DIAGTOOL OFF)
@@ -43,9 +91,15 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 #SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
-add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
-add_definitions("-DBUILD_TS=\"${BUILD_TIMESTAMP}\"")
-add_definitions("-DBUILD_HASH=\"${GIT_COMMIT_HASH}\"")
+
+set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+set(BUILD_TS "${BUILD_TIMESTAMP}")
+set(BUILD_HASH "${GIT_COMMIT_HASH}")
+
+add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
+add_definitions("-DBUILD_TS=\"${BUILD_TS}\"")
+add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
+
 set(SUBMODULES_NO_BUILD ON)
 option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
@@ -196,7 +250,7 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils, libsqlite3-0, libxcb-glx0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-render-util0, libxcb-xinput0, libxext6, libgl1, libxcb-shape0, libxcb-xinerama0, libxcb-xkb1, libxkbcommon-x11-0, libegl1, libwayland-egl1, libfontconfig1, libfreetype6, libwayland-cursor0, libwayland-client0, libxkbcommon0, libxcb-randr0")        
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")        
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
