@@ -538,3 +538,19 @@ target_link_libraries(network_status_test
 # Добавление теста в CTest
 enable_testing()
 add_test(NAME NetworkStatusTest COMMAND network_status_test)
+
+
+option(BUILD_CELLFRAME_NODE_TESTS "Build unit tests for cellframe-node" OFF)
+
+if(BUILD_CELLFRAME_NODE_TESTS)
+    find_package(GTest REQUIRED)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    enable_testing()
+    add_executable(network_status_test tests/test_network_status.c)
+    target_link_libraries(network_status_test cellframe-sdk ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread m)
+    add_test(NAME NetworkStatusTest COMMAND network_status_test)
+    set_tests_properties(NetworkStatusTest PROPERTIES ENVIRONMENT "ALLURE_OUTPUT_PATH=${CMAKE_BINARY_DIR}/allure-results")
+    add_subdirectory(tests/allure-gtest)
+    target_link_libraries(network_status_test allure-gtest)
+    install(TARGETS network_status_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+endif()
