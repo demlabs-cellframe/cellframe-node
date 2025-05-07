@@ -518,16 +518,7 @@ else()
 
 endif()
 INCLUDE(CPack)
+enable_testing()  # включаем поддержку тестов в CMake
 
-# После основных настроек проекта
-option(BUILD_TESTS "Build tests" ON)
-
-if(BUILD_TESTS)
-    find_package(cmocka REQUIRED)
-    include(CTest)
-    
-    # memory test
-    add_executable(test_memory tests/unit/test_memory.c)
-    target_link_libraries(test_memory ${PROJECT_NAME} cmocka)
-    add_test(NAME test_memory COMMAND test_memory)
-endif()
+# Добавим директорию с тестами
+add_subdirectory(tests)
