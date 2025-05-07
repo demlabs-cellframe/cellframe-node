@@ -518,7 +518,23 @@ else()
 
 endif()
 INCLUDE(CPack)
-enable_testing()  # включаем поддержку тестов в CMake
 
-# Добавим директорию с тестами
-add_subdirectory(tests)
+
+# Подключение Google Test
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+# Добавление исполняемого файла для тестов
+add_executable(network_status_test tests/test_network_status.cpp)
+
+# Линковка с библиотекой Cellframe Node и GTest
+target_link_libraries(network_status_test
+    cellframe_node_lib # Замените на актуальное имя библиотеки
+    ${GTEST_LIBRARIES}
+    ${GTEST_MAIN_LIBRARIES}
+    pthread
+)
+
+# Добавление теста в CTest
+enable_testing()
+add_test(NAME NetworkStatusTest COMMAND network_status_test)
