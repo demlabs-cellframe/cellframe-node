@@ -55,7 +55,7 @@ endif()
 find_program(CPPCHECK cppcheck)
 if(CPPCHECK)
     message(STATUS "Found cppcheck: ${CPPCHECK}")
-    add_custom_target(lint
+    add_custom_target(lint_cellframe_node
         COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck on source files"
