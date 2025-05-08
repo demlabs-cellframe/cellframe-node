@@ -1,77 +1,72 @@
-cmake_minimum_required(VERSION 3.13)
-project(cellframe_tests LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.16)
 
-# ─────────────────────── GoogleTest ────────────────────────
+# --------------------------------------------------
+#  Cellframe unit-tests (GoogleTest)
+# --------------------------------------------------
+project(cellframe_unit_tests LANGUAGES CXX)
+
+# Build settings -------------------------------------------------------------
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ---------------------------------------------------------------------------
+# GoogleTest (we fetch it on-the-fly so the runner doesn’t need anything)
+# ---------------------------------------------------------------------------
 include(FetchContent)
-FetchContent_Declare(googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE) # MSVC friendly, harmless here
 FetchContent_MakeAvailable(googletest)
 
-# ─────────────────────── Исходник теста ─────────────────────
+enable_testing()
+
+# ---------------------------------------------------------------------------
+# Paths to SDK artefacts produced by the main build
+# ---------------------------------------------------------------------------
+set(DAP_CORE_INC    ${CMAKE_SOURCE_DIR}/dap-sdk/core/include)
+set(DAP_CRYPTO_INC  ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include)
+set(XKCP_BASE       ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp)
+
+# ---------------------------------------------------------------------------
+# Import the already-built static libraries (produced by the parent build)
+# ---------------------------------------------------------------------------
+# libdap
+add_library(dap STATIC IMPORTED)
+set_target_properties(dap PROPERTIES
+    IMPORTED_LOCATION         ${CMAKE_BINARY_DIR}/lib/libdap.a
+    INTERFACE_INCLUDE_DIRECTORIES "${DAP_CORE_INC}"
+)
+
+# libdap-crypto
+add_library(dap_crypto STATIC IMPORTED)
+set_target_properties(dap_crypto PROPERTIES
+    IMPORTED_LOCATION         ${CMAKE_BINARY_DIR}/lib/libdap-crypto.a
+    INTERFACE_INCLUDE_DIRECTORIES "${DAP_CRYPTO_INC}"
+)
+
+# ---------------------------------------------------------------------------
+# Unit-test target
+# ---------------------------------------------------------------------------
 add_executable(test_base58 test_base58.cpp)
 
-target_include_directories(test_base58 PRIVATE
-    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include
-    ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
-    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp/Keccak   # KeccakHash.h
+# Headers
+ target_include_directories(test_base58 PRIVATE
+    ${DAP_CORE_INC}
+    ${DAP_CRYPTO_INC}
+    ${XKCP_BASE}/Standalone              # KeccakHash.h lives here
+    ${XKCP_BASE}/Standalone/CompactFIPS202
+    ${XKCP_BASE}/Keccak
 )
 
-target_include_directories(test_base58 PRIVATE
-    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include
-    ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
-    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202   # ← здесь KeccakHash.h
+# Linkage
+ target_link_libraries(test_base58
+    PRIVATE
+        dap
+        dap_crypto
+        gtest_main
 )
 
-# ─────────────────── Библиотеки SDK (core + crypto) ────────
-# 1) Если таргеты уже экспортированы SDK-ом, просто используем их.
-# 2) Если нет — создаём IMPORTED-обёртки и указываем будущий путь
-#    (build/lib/libdap*.{a,so} появятся к моменту линковки).
-
-# --- CORE ---
-if(TARGET dap)
-    set(DAP_CORE_TGT dap)
-elseif(NOT TARGET dap_core)       # чтобы не переопределить, если уже есть
-    set(_core_path_a  ${CMAKE_BINARY_DIR}/lib/libdap.a)
-    set(_core_path_so ${CMAKE_BINARY_DIR}/lib/libdap.so)
-    add_library(dap_core UNKNOWN IMPORTED)
-    set_target_properties(dap_core PROPERTIES
-        IMPORTED_LOCATION "${_core_path_a}"
-        IMPORTED_LOCATION_RELEASE "${_core_path_a}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${_core_path_a}"
-        IMPORTED_LOCATION_MINSIZEREL "${_core_path_a}"
-        IMPORTED_LOCATION_DEBUG "${_core_path_so}"
-    )
-    set(DAP_CORE_TGT dap_core)
-endif()
-
-# --- CRYPTO ---
-if(TARGET dapcrypto)
-    set(DAP_CRYPTO_TGT dapcrypto)         # встречается без тире
-elseif(TARGET dap-crypto)
-    set(DAP_CRYPTO_TGT dap-crypto)
-elseif(NOT TARGET dap_crypto)
-    set(_crypto_path_a  ${CMAKE_BINARY_DIR}/lib/libdap-crypto.a)
-    set(_crypto_path_so ${CMAKE_BINARY_DIR}/lib/libdap-crypto.so)
-    add_library(dap_crypto UNKNOWN IMPORTED)
-    set_target_properties(dap_crypto PROPERTIES
-        IMPORTED_LOCATION "${_crypto_path_a}"
-        IMPORTED_LOCATION_RELEASE "${_crypto_path_a}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${_crypto_path_a}"
-        IMPORTED_LOCATION_MINSIZEREL "${_crypto_path_a}"
-        IMPORTED_LOCATION_DEBUG "${_crypto_path_so}"
-    )
-    set(DAP_CRYPTO_TGT dap_crypto)
-endif()
-
-# ─────────────────────── Линковка ───────────────────────────
-target_link_libraries(test_base58 PRIVATE
-    ${DAP_CORE_TGT}
-    ${DAP_CRYPTO_TGT}
-    gtest gtest_main
-)
-
-# ─────────────────────── CTest + Allure ─────────────────────
-enable_testing()
-add_test(NAME base58_roundtrip
-    COMMAND test_base58
-            --gtest_output=xml:${CMAKE_BINARY_DIR}/unit_tests.xml)
+# Register with CTest so `ctest` just works
+add_test(NAME base58 COMMAND test_base58)
