@@ -33,6 +33,7 @@ stages:
 
 unit_test:
   stage: test
+  extends: .ci-polygon 
   image: demlabs/debian/amd64:qt5
   variables:
     DEBIAN_FRONTEND: noninteractive
