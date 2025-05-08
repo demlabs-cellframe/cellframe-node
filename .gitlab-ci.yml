@@ -37,24 +37,24 @@ unit_test:
   image: demlabs/debian/amd64:qt5
 
   before_script:
-   - apt-get update -qq
-   - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev libgtest-dev
+     - apt-get update -qq
+     - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev libgtest-dev
   # собираем системный googletest в / usr/lib (один раз за job)
-   - |
-    cd /usr/src/gtest
-    cmake -DBUILD_SHARED_LIBS=ON .
-    make -j"$(nproc)"
-    cp lib/*.so /usr/lib
+     - |
+     cd /usr/src/gtest
+     cmake -DBUILD_SHARED_LIBS=ON .
+     make -j"$(nproc)"
+     cp lib/*.so /usr/lib
   # далее привычный prepare_environment.sh …
     # 1. Подключаем фирменные репы и базовые dev-пакеты
-    - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
+     - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
       # ▸ добавит sources.list, установит compilers, ninja, python, ccache и пр.
     # 2. Дополняем тем, чего ещё нет
-    - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev
+     - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev
     # 3. Allure CLI
-    - wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
-    - tar -xzf allure-2.27.0.tgz
-    - export PATH="$PWD/allure-2.27.0/bin:$PATH"
+     - wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+     - tar -xzf allure-2.27.0.tgz
+     - export PATH="$PWD/allure-2.27.0/bin:$PATH"
 
   script:
     - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
