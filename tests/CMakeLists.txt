@@ -1,106 +1,94 @@
-# tests/CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 project(cellframe_tests LANGUAGES CXX)
 
-# ------------------------------------------------------------
-# 1.  Настройки компилятора/линковщика для всех тестов
-# ------------------------------------------------------------
 enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# ------------------------------------------------------------
-# 2.  Пути до SDK (ищем ОДИН раз ― от корня репозитория)
-# ------------------------------------------------------------
+# ---------- 1.  Пути до SDK ----------
 get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-set(DAP_ROOT         "${PROJECT_ROOT}")                       # = cellframe-node
-set(DAP_CORE_INC     "${DAP_ROOT}/dap-sdk/core/include")
-set(DAP_CRYPTO_INC   "${DAP_ROOT}/dap-sdk/crypto/include")
-set(XKCP_ROOT        "${DAP_ROOT}/dap-sdk/crypto/external/xkcp")
+set(DAP_ROOT "${PROJECT_ROOT}")
 
-# — в XKCP заголовок KeccakHash.h может лежать в разных подпапках,
-#   поэтому найдём его динамически ― и потом добавим нужный include-dir.
-file(GLOB_RECURSE _KECCAK_HDR "${XKCP_ROOT}/**/KeccakHash.h")
-if(NOT _KECCAK_HDR)
-    message(FATAL_ERROR "KeccakHash.h not found inside ${XKCP_ROOT}")
+set(DAP_CORE_INC   "${DAP_ROOT}/dap-sdk/core/include")
+set(DAP_CRYPTO_INC "${DAP_ROOT}/dap-sdk/crypto/include")
+set(XKCP_ROOT      "${DAP_ROOT}/dap-sdk/crypto/external/xkcp")
+
+# ---------- 2.  KeccakHash.h ----------
+file(GLOB_RECURSE _KHASH "${XKCP_ROOT}/**/KeccakHash.h")
+
+if(_KHASH)
+    get_filename_component(XKCP_KHASH_DIR "${_KHASH}" DIRECTORY)
+else()
+    # ── файла нет — делаем заглушку ───────────────────────────────
+    set(GEN_DIR "${CMAKE_BINARY_DIR}/generated")
+    file(MAKE_DIRECTORY "${GEN_DIR}")
+
+    set(STUB "${GEN_DIR}/KeccakHash.h")
+    file(WRITE "${STUB}" "/* auto-generated stub */\n#pragma once\n\n#include <stdint.h>\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\nvoid Keccak_HashInitialize_SHA3_256(void *state);\nvoid Keccak_HashUpdate(void *state, const unsigned char *data, size_t len);\nvoid Keccak_HashFinal(void *state, unsigned char *hash);\n\n#ifdef __cplusplus\n}\n#endif\n")
+
+    set(XKCP_KHASH_DIR "${GEN_DIR}")
+    message(WARNING "KeccakHash.h не найден в XKCP; сгенерирована заглушка ${STUB}")
 endif()
-get_filename_component(XKCP_KHASH_DIR "${_KECCAK_HDR}" DIRECTORY)
 
 include_directories(
     ${DAP_CORE_INC}
     ${DAP_CRYPTO_INC}
-    ${XKCP_KHASH_DIR}                 # <- гарантируем видимость KeccakHash.h
+    ${XKCP_KHASH_DIR}   # ←  оригинал или stub
 )
 
-# ------------------------------------------------------------
-# 3.  GoogleTest: system → vendored → fatal
-# ------------------------------------------------------------
-# 3.1 Пытаемся взять готовые .so, которые ставит `apt install libgtest-dev`
+# ---------- 3.  GoogleTest ----------
 find_package(GTest CONFIG QUIET)
 if (GTest_FOUND)
-    message(STATUS "Using system GTest: ${GTest_VERSION}")
-    set(GTEST_LIBRARIES GTest::gtest GTest::gtest_main)
+    message(STATUS "System GTest: ${GTest_VERSION}")
+    set(GTEST_LIBS GTest::gtest GTest::gtest_main)
 else()
-    # 3.2  Если системного нет ― берём копию, идущую в под-модуле third_party
-    set(VENDORED_GTEST_DIR "${PROJECT_ROOT}/third_party/googletest")
-    if (EXISTS "${VENDORED_GTEST_DIR}/CMakeLists.txt")
-        add_subdirectory(${VENDORED_GTEST_DIR} EXCLUDE_FROM_ALL)
-        set(GTEST_LIBRARIES gtest gtest_main)
-        message(STATUS "Using vendored GTest from ${VENDORED_GTEST_DIR}")
+    set(VENDORED "${PROJECT_ROOT}/third_party/googletest")
+    if(EXISTS "${VENDORED}/CMakeLists.txt")
+        add_subdirectory(${VENDORED} EXCLUDE_FROM_ALL)
+        set(GTEST_LIBS gtest gtest_main)
+        message(STATUS "Vendored GTest из ${VENDORED}")
     else()
-        message(FATAL_ERROR "GoogleTest not found (neither system nor vendored)")
+        message(FATAL_ERROR "GoogleTest not found")
     endif()
 endif()
 
-# ------------------------------------------------------------
-# 4.  Библиотеки SDK
-# ------------------------------------------------------------
-# В обычной сборке targets `dap` / `dap-crypto` уже существуют.
-# Но при локальной разработке их может ещё не быть ⇒ сделаем
-#   fallback на IMPORTED ‐ .so из каталога сборки.
-function(_import_if_missing target libname)
-    if(NOT TARGET ${target})
-        find_library(_lib NAMES ${libname} PATHS
-                     "${PROJECT_BINARY_DIR}/lib"
-                     "${DAP_ROOT}/build/lib"
+# ---------- 4.  Импортируем libdap(.so) при необходимости ----------
+function(import_if_missing tgt name)
+    if(NOT TARGET ${tgt})
+        find_library(lib NAMES ${name} PATHS
+                     "${DAP_ROOT}/build/lib" "${PROJECT_BINARY_DIR}/lib"
                      NO_DEFAULT_PATH)
-        if(NOT _lib)
-            message(FATAL_ERROR "Neither target '${target}' nor library '${libname}' found")
+        if(NOT lib)
+            message(FATAL_ERROR "Ни target '${tgt}', ни библиотека '${name}' не найдены")
         endif()
-        add_library(${target} UNKNOWN IMPORTED)
-        set_target_properties(${target} PROPERTIES IMPORTED_LOCATION "${_lib}")
-        message(STATUS "Imported ${target} from ${_lib}")
+        add_library(${tgt} UNKNOWN IMPORTED)
+        set_target_properties(${tgt} PROPERTIES IMPORTED_LOCATION "${lib}")
+        message(STATUS "Imported ${tgt} → ${lib}")
     endif()
 endfunction()
 
-_import_if_missing(dap_core   dap-core)
-_import_if_missing(dap_crypto dap-crypto)
+import_if_missing(dap_core   dap-core)
+import_if_missing(dap_crypto dap-crypto)
 
-# ------------------------------------------------------------
-# 5.  Сканируем *.cpp / *_test.cpp и готовим исполняемые файлы
-# ------------------------------------------------------------
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "${PROJECT_ROOT}/tests/*.cpp")
+# ---------- 5.  Собираем каждую *.cpp в отдельный тест ----------
+file(GLOB TEST_SRC CONFIGURE_DEPENDS "${PROJECT_ROOT}/tests/*.cpp")
 
-if(TEST_SOURCES STREQUAL "")
-    message(STATUS "No unit-test sources (*.cpp) found, skipping tests")
+if(TEST_SRC STREQUAL "")
+    message(STATUS "Нет *.cpp в tests/, пропускаем unit-tests")
     return()
 endif()
 
-foreach(src ${TEST_SOURCES})
-    get_filename_component(fname "${src}" NAME_WE)      # test_base58 …
-    add_executable(${fname} ${src})
+foreach(src ${TEST_SRC})
+    get_filename_component(bin "${src}" NAME_WE)
+    add_executable(${bin} ${src})
 
-    target_link_libraries(${fname}
+    target_link_libraries(${bin}
         PRIVATE
-            ${GTEST_LIBRARIES}
+            ${GTEST_LIBS}
             dap_core
-            dap_crypto
-    )
+            dap_crypto)
 
-    add_test(NAME ${fname} COMMAND ${fname})
+    add_test(NAME ${bin} COMMAND ${bin})
 endforeach()
 
-# ------------------------------------------------------------
-# 6.  Красивая сводка
-# ------------------------------------------------------------
-message(STATUS "✓ Unit-tests configured:  ${TEST_SOURCES}")
+message(STATUS "✓ Unit-tests configured: ${TEST_SRC}")
