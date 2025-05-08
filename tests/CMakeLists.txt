@@ -16,6 +16,12 @@ target_include_directories(test_base58 PRIVATE
     ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp/Keccak   # KeccakHash.h
 )
 
+target_include_directories(test_base58 PRIVATE
+    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include
+    ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
+    ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202   # ← здесь KeccakHash.h
+)
+
 # ─────────────────── Библиотеки SDK (core + crypto) ────────
 # 1) Если таргеты уже экспортированы SDK-ом, просто используем их.
 # 2) Если нет — создаём IMPORTED-обёртки и указываем будущий путь
