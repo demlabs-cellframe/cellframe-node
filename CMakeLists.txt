@@ -520,7 +520,7 @@ endif()
 INCLUDE(CPack)
 
 # --- в конце файла ---
-option(BUILD_TESTS "Build unit tests" ON)
+option(BUILD_TESTS "Build unit tests" OFF)  # OFF по-умолчанию
 
 if(BUILD_TESTS)
     enable_testing()
