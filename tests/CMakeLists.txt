@@ -1,57 +1,93 @@
+# tests/CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
-project(cellframe_tests LANGUAGES CXX)
+project(cellframe_tests LANGUAGES C CXX)
+
 enable_testing()
 
-# ---------- googletest ----------
-include(FetchContent)
+# ──────────────────────────────────────────────────────────────
+# 🥇  Попытка №1 ― системный GoogleTest
+# ──────────────────────────────────────────────────────────────
+find_package(GTest QUIET CONFIG)     # ищет GTest::gtest и GTest::gtest_main
+set(GTEST_OK FALSE)
 
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        v1.14.0       # актуальный релиз
-)
-# при желании можно запретить автоматическое обновление тегов
-#   GIT_SHALLOW    TRUE
-FetchContent_MakeAvailable(googletest)
+if (GTest_FOUND)
+    # На Debian/Ubuntu нужно собрать библиотеку вручную,
+    # потому что пакет ставит ТОЛЬКО исходники:
+    #   sudo apt-get install --yes libgtest-dev && \
+    #   cd /usr/src/gtest && sudo cmake -DBUILD_SHARED_LIBS=ON . && \
+    #   sudo make -j$(nproc) && sudo cp *.so /usr/lib
+    #
+    # Но в Docker-образе, который вы уже используете, мы можем
+    # сделать это несколькими командами (см. .gitlab-ci.yml).
+    #
+    message(STATUS "Use system GTest found at ${GTEST_ROOT}")
+    set(GTEST_OK TRUE)
+else()
+    message(STATUS "System GTest **NOT** found — fall back to vendored copy")
+endif()
 
-# ---------- SDK include-dirs ----------
-set(DAP_ROOT ${CMAKE_SOURCE_DIR})
+# ──────────────────────────────────────────────────────────────
+# 🥈  Попытка №2 ― вендорная копия в репозитории
+# ──────────────────────────────────────────────────────────────
+if (NOT GTEST_OK)
+    # third_party/googletest               ← clone или submodule
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../third_party/googletest
+                     ${CMAKE_BINARY_DIR}/_gtest_build
+                     EXCLUDE_FROM_ALL)
+
+    # Внутри googletest уже создаётся target gtest и gtest_main
+    # Синхронизируем имена с вариантами find_package()
+    add_library(GTest::gtest       ALIAS gtest)
+    add_library(GTest::gtest_main  ALIAS gtest_main)
+endif()
+
+# ──────────────────────────────────────────────────────────────
+#  Путь к Cellframe-SDK
+# ──────────────────────────────────────────────────────────────
+set(DAP_ROOT         ${CMAKE_SOURCE_DIR})                      # корень cellframe-node
+set(DAP_CORE_INC     ${DAP_ROOT}/dap-sdk/core/include)
+set(DAP_CRYPTO_INC   ${DAP_ROOT}/dap-sdk/crypto/include)
+set(DAP_XKCP_INC
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Keccak)
+
 include_directories(
-  ${DAP_ROOT}/dap-sdk/core/include
-  ${DAP_ROOT}/dap-sdk/crypto/include
-  ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone
-  ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202
-  ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Keccak
+    ${DAP_CORE_INC}
+    ${DAP_CRYPTO_INC}
+    ${DAP_XKCP_INC}
 )
 
-# ---------- берём готовые цели, если они уже существуют ----------
-if(TARGET dap_core OR TARGET dap-core)
-  # одна из них точно есть после сборки SDK
-  set(DAP_CORE_TARGET $<IF:$<TARGET_EXISTS:dap_core>,dap_core,dap-core>)
-else()
-  # fallback: импортируем собранную .so
-  find_library(DAP_CORE_LIB NAMES dap dap-core PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH)
-  if(NOT DAP_CORE_LIB)
-    message(FATAL_ERROR "libdap(.so) не найден — убедитесь, что SDK собран до unit-тестов")
-  endif()
-  add_library(dap_core UNKNOWN IMPORTED)
-  set_target_properties(dap_core PROPERTIES IMPORTED_LOCATION "${DAP_CORE_LIB}")
-  set(DAP_CORE_TARGET dap_core)
+# ──────────────────────────────────────────────────────────────
+#  Импорт уже собранных .so из основного билда
+# ──────────────────────────────────────────────────────────────
+find_library(DAP_CORE_LIB
+             NAMES dap dap-core
+             PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH REQUIRED)
+
+find_library(DAP_CRYPTO_LIB
+             NAMES dap_crypto dap-crypto
+             PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH REQUIRED)
+
+if(NOT TARGET dap_core)
+    add_library(dap_core SHARED IMPORTED)
+    set_target_properties(dap_core PROPERTIES IMPORTED_LOCATION "${DAP_CORE_LIB}")
 endif()
 
-if(TARGET dap_crypto OR TARGET dap-crypto)
-  set(DAP_CRYPTO_TARGET $<IF:$<TARGET_EXISTS:dap_crypto>,dap_crypto,dap-crypto>)
-else()
-  find_library(DAP_CRYPTO_LIB NAMES dap-crypto dap_crypto PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH)
-  if(NOT DAP_CRYPTO_LIB)
-    message(FATAL_ERROR "libdap-crypto(.so) не найден — убедитесь, что SDK собран")
-  endif()
-  add_library(dap_crypto UNKNOWN IMPORTED)
-  set_target_properties(dap_crypto PROPERTIES IMPORTED_LOCATION "${DAP_CRYPTO_LIB}")
-  set(DAP_CRYPTO_TARGET dap_crypto)
+if(NOT TARGET dap_crypto)
+    add_library(dap_crypto SHARED IMPORTED)
+    set_target_properties(dap_crypto PROPERTIES IMPORTED_LOCATION "${DAP_CRYPTO_LIB}")
 endif()
 
-# ---------- unit-test ----------
+# ──────────────────────────────────────────────────────────────
+#  Тесты
+# ──────────────────────────────────────────────────────────────
 add_executable(test_base58 test_base58.cpp)
-target_link_libraries(test_base58 PRIVATE gtest_main ${DAP_CORE_TARGET} ${DAP_CRYPTO_TARGET})
+target_link_libraries(test_base58
+    PRIVATE
+        GTest::gtest_main          # всегда присутствует благодаря шагам выше
+        dap_core
+        dap_crypto
+)
+
 add_test(NAME base58 COMMAND test_base58)
