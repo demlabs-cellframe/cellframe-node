@@ -1,6 +1,6 @@
 #include <cstring>
 extern "C" {
-    #include "dap_enc_base58.h"
+    #include <dap_enc_base58.h>
 }
 
 #include <gtest/gtest.h>
