@@ -16,27 +16,32 @@ target_include_directories(test_base58 PRIVATE
     ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp/Keccak          # KeccakHash.h
 )
 
-# ─────────────── ищем готовые .so / .a ────
-# core
-find_library(DAP_CORE_LIB NAMES dap
-             PATHS ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/build
-             PATH_SUFFIXES lib)
-# crypto (встречаются три варианта имён)
-find_library(DAP_CRYPTO_LIB NAMES dap-crypto dapcrypto dap_crypto
-             PATHS ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/build
-             PATH_SUFFIXES lib)
+# ─────────────── объявляем будущие библиотеки ───────────────
+# Предполагаем стандартный вывод SDK: build/lib/libdap*.{a,so}
+set(_dap_core_path    ${CMAKE_BINARY_DIR}/lib/libdap.a)
+set(_dap_crypto_path  ${CMAKE_BINARY_DIR}/lib/libdap-crypto.a)
 
-if(NOT DAP_CORE_LIB OR NOT DAP_CRYPTO_LIB)
-    message(FATAL_ERROR "Не нашёлся libdap или libdap-crypto. "
-                        "Проверьте, что основной SDK собран до unit-теста.")
+# если SDK собирает .so, переключаемся на них
+if(NOT EXISTS ${_dap_core_path})
+    set(_dap_core_path    ${CMAKE_BINARY_DIR}/lib/libdap.so)
+endif()
+if(NOT EXISTS ${_dap_crypto_path})
+    set(_dap_crypto_path  ${CMAKE_BINARY_DIR}/lib/libdap-crypto.so)
 endif()
 
-# ─────────────── линковка ────────────────
+add_library(dap_core   UNKNOWN IMPORTED)
+set_target_properties(dap_core   PROPERTIES IMPORTED_LOCATION ${_dap_core_path})
+
+add_library(dap_crypto UNKNOWN IMPORTED)
+set_target_properties(dap_crypto PROPERTIES IMPORTED_LOCATION ${_dap_crypto_path})
+
+# ─────────────── линковка ───────────────────────────────────
 target_link_libraries(test_base58 PRIVATE
-    ${DAP_CORE_LIB}
-    ${DAP_CRYPTO_LIB}
+    dap_core
+    dap_crypto
     gtest gtest_main
 )
+
 
 # ─────────────── CTest + отчёт ────────────
 enable_testing()
