@@ -37,23 +37,28 @@ unit_test:
   image: demlabs/debian/amd64:qt5
 
   # ────── весь setup в ОДНОМ before_script ────────────────────
-before_script:
-  - |
-    apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
+  before_script:
+    - |
+      # 1. Базовые пакеты + GTest заголовки
+      apt-get update -qq
+      apt-get install -y --no-install-recommends \
         cmake wget unzip libssl-dev libgtest-dev jq
-    # ───── собираем GTest однажды за job ─────
-    cd /usr/src/gtest
-    cmake -DBUILD_SHARED_LIBS=ON .
-    make -j"$(nproc)"
-    # результат — libgtest*.so в текущем каталоге
-    cp libgtest*.so /usr/lib/
-    ldconfig              # обновляем кеш ld.so
-  - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
-  - |
-    wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
-    tar -xzf allure-2.27.0.tgz
-    export PATH="$PWD/allure-2.27.0/bin:$PATH"
+
+      # 2. Собираем GTest (libgtest*.so появятся в /usr/src/gtest)
+      cd /usr/src/gtest
+      cmake -DBUILD_SHARED_LIBS=ON .
+      make -j"$(nproc)"
+      cp libgtest*.so /usr/lib/
+      ldconfig                # обновляем кеш динамического линковщика
+      cd -
+
+      # 3. Готовим фирменное окружение
+      /opt/buildtools/prepare_environment.sh amd64-linux buildtests
+
+      # 4. Allure CLI
+      wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+      tar -xzf allure-2.27.0.tgz
+      export PATH="$PWD/allure-2.27.0/bin:$PATH"
 
 
 
