@@ -37,6 +37,15 @@ unit_test:
   image: demlabs/debian/amd64:qt5
 
   before_script:
+   - apt-get update -qq
+   - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev libgtest-dev
+  # собираем системный googletest в / usr/lib (один раз за job)
+   - |
+    cd /usr/src/gtest
+    cmake -DBUILD_SHARED_LIBS=ON .
+    make -j"$(nproc)"
+    cp lib/*.so /usr/lib
+  # далее привычный prepare_environment.sh …
     # 1. Подключаем фирменные репы и базовые dev-пакеты
     - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
       # ▸ добавит sources.list, установит compilers, ninja, python, ccache и пр.
