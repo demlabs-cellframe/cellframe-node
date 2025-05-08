@@ -32,36 +32,34 @@ stages:
 
 
 unit_test:
+  extends: .ci-polygon          # берём рабочие теги
   stage: test
-  extends: .ci-polygon 
   image: demlabs/debian/amd64:qt5
-  variables:
-    DEBIAN_FRONTEND: noninteractive
-    CMAKE_BUILD_PARALLEL_LEVEL: "4"
+
   before_script:
-    - apt-get update -qq
-    - apt-get install -y --no-install-recommends \
-        build-essential cmake git wget unzip libssl-dev
-    # Устанавливаем Allure CLI
+    # 1. Подключаем фирменные репы и базовые dev-пакеты
+    - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
+      # ▸ добавит sources.list, установит compilers, ninja, python, ccache и пр.
+    # 2. Дополняем тем, чего ещё нет
+    - apt-get install -y --no-install-recommends cmake wget unzip libssl-dev
+    # 3. Allure CLI
     - wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
     - tar -xzf allure-2.27.0.tgz
     - export PATH="$PWD/allure-2.27.0/bin:$PATH"
+
   script:
-    # Cборка с юнит-тестами
     - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
     - cmake --build build --target test_base58
-    - cd build
-    # Запуск и выгрузка отчёта GoogleTest в XML
-    - ctest --output-on-failure
-    # Генерация отчёта Allure из XML
+    - cd build && ctest --output-on-failure
     - allure generate . --clean -o allure-report
   artifacts:
     name: "unit-test-${CI_COMMIT_SHORT_SHA}"
     when: always
     expire_in: 1 week
     paths:
-      - build/unit_tests.xml       # «сырые» результаты
-      - build/allure-report        # готовый HTML-отчёт
+      - build/unit_tests.xml
+      - build/allure-report
+
 
 .build:  
   extends: .ci-polygon
