@@ -1,72 +1,48 @@
 cmake_minimum_required(VERSION 3.16)
-
-# --------------------------------------------------
-#  Cellframe unit-tests (GoogleTest)
-# --------------------------------------------------
-project(cellframe_unit_tests LANGUAGES CXX)
-
-# Build settings -------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# ---------------------------------------------------------------------------
-# GoogleTest (we fetch it on-the-fly so the runner doesn’t need anything)
-# ---------------------------------------------------------------------------
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE) # MSVC friendly, harmless here
-FetchContent_MakeAvailable(googletest)
+project(cellframe_tests LANGUAGES CXX)
 
 enable_testing()
 
-# ---------------------------------------------------------------------------
-# Paths to SDK artefacts produced by the main build
-# ---------------------------------------------------------------------------
-set(DAP_CORE_INC    ${CMAKE_SOURCE_DIR}/dap-sdk/core/include)
-set(DAP_CRYPTO_INC  ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include)
-set(XKCP_BASE       ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/external/xkcp)
-
-# ---------------------------------------------------------------------------
-# Import the already-built static libraries (produced by the parent build)
-# ---------------------------------------------------------------------------
-# libdap
-add_library(dap STATIC IMPORTED)
-set_target_properties(dap PROPERTIES
-    IMPORTED_LOCATION         ${CMAKE_BINARY_DIR}/lib/libdap.a
-    INTERFACE_INCLUDE_DIRECTORIES "${DAP_CORE_INC}"
+# ---------- googletest ----------
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/release-1.14.0.zip
 )
+FetchContent_MakeAvailable(googletest)
 
-# libdap-crypto
-add_library(dap_crypto STATIC IMPORTED)
-set_target_properties(dap_crypto PROPERTIES
-    IMPORTED_LOCATION         ${CMAKE_BINARY_DIR}/lib/libdap-crypto.a
-    INTERFACE_INCLUDE_DIRECTORIES "${DAP_CRYPTO_INC}"
-)
+# ---------- SDK include-dirs ----------
+set(DAP_ROOT ${CMAKE_SOURCE_DIR})        # корень cellframe-node
+set(DAP_CORE_INC    ${DAP_ROOT}/dap-sdk/core/include)
+set(DAP_CRYPTO_INC  ${DAP_ROOT}/dap-sdk/crypto/include)
+set(DAP_XKCP_INC
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone       # ← KeccakHash.h здесь
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202
+    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Keccak)
 
-# ---------------------------------------------------------------------------
-# Unit-test target
-# ---------------------------------------------------------------------------
-add_executable(test_base58 test_base58.cpp)
-
-# Headers
- target_include_directories(test_base58 PRIVATE
+include_directories(
     ${DAP_CORE_INC}
     ${DAP_CRYPTO_INC}
-    ${XKCP_BASE}/Standalone              # KeccakHash.h lives here
-    ${XKCP_BASE}/Standalone/CompactFIPS202
-    ${XKCP_BASE}/Keccak
+    ${DAP_XKCP_INC}
 )
 
-# Linkage
- target_link_libraries(test_base58
-    PRIVATE
-        dap
-        dap_crypto
-        gtest_main
-)
+# ---------- импортируем готовые libdap*.so ----------
+# основной SDK кладёт .so в ${DAP_ROOT}/build/lib
+find_library(DAP_CORE_LIB   NAMES dap dap-core   PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH)
+find_library(DAP_CRYPTO_LIB NAMES dap-crypto dac_crypto dap_crypto PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH)
 
-# Register with CTest so `ctest` just works
+if(NOT TARGET dap_core)
+    add_library(dap_core UNKNOWN IMPORTED)
+    set_target_properties(dap_core PROPERTIES IMPORTED_LOCATION "${DAP_CORE_LIB}")
+endif()
+
+if(NOT TARGET dap_crypto)
+    add_library(dap_crypto UNKNOWN IMPORTED)
+    set_target_properties(dap_crypto PROPERTIES IMPORTED_LOCATION "${DAP_CRYPTO_LIB}")
+endif()
+
+# ---------- unit-test ----------
+add_executable(test_base58 test_base58.cpp)
+target_link_libraries(test_base58 PRIVATE gtest_main dap_core dap_crypto)
+
 add_test(NAME base58 COMMAND test_base58)
