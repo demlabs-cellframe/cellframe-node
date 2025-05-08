@@ -13,8 +13,8 @@ FetchContent_MakeAvailable(googletest)
 add_executable(test_base58 test_base58.cpp)
 
 target_include_directories(test_base58 PRIVATE
-    ${PROJECT_SOURCE_DIR}/dap-sdk/crypto/include
-    ${PROJECT_SOURCE_DIR}/dap-sdk/core/include
+        ${CMAKE_SOURCE_DIR}/dap-sdk/crypto/include
+        ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
 )
 
 target_link_libraries(test_base58 PRIVATE
