@@ -1,6 +1,7 @@
 variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_UPDATE_FLAGS: --force
+    
 
 workflow:
   rules:
@@ -11,12 +12,11 @@ workflow:
 
 stages:
     - test_build
+    - test 
     - diagnostic_builds
-    - unit_tests  # Новый этап для юнит-тестов
     - build
     - post_build
     - publish
-    - report     # Новый этап для Allure-отчетов
     - deploy
 
 .ci-polygon:
@@ -25,9 +25,42 @@ stages:
 .ci-ansible:
   tags:
      - ci-ansible
+
 .ci-test:
   tags:
      - ci-test
+
+
+unit_test:
+  stage: test
+  image: demlabs/debian/amd64:qt5
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+    CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends \
+        build-essential cmake git wget unzip libssl-dev
+    # Устанавливаем Allure CLI
+    - wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+    - tar -xzf allure-2.27.0.tgz
+    - export PATH="$PWD/allure-2.27.0/bin:$PATH"
+  script:
+    # Cборка с юнит-тестами
+    - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+    - cmake --build build --target test_base58
+    - cd build
+    # Запуск и выгрузка отчёта GoogleTest в XML
+    - ctest --output-on-failure
+    # Генерация отчёта Allure из XML
+    - allure generate . --clean -o allure-report
+  artifacts:
+    name: "unit-test-${CI_COMMIT_SHORT_SHA}"
+    when: always
+    expire_in: 1 week
+    paths:
+      - build/unit_tests.xml       # «сырые» результаты
+      - build/allure-report        # готовый HTML-отчёт
 
 .build:  
   extends: .ci-polygon
@@ -36,7 +69,9 @@ stages:
   dependencies: []
   interruptible: true
   variables:
+    
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
+
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
       variables:                                   
@@ -50,6 +85,7 @@ stages:
   image: demlabs/amd64/debian-buster:linuxbuilder
   stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
+  
 
 .deploy:
   extends: .ci-ansible
@@ -58,6 +94,7 @@ stages:
     - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
       allow_failure: true
+
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
@@ -68,68 +105,21 @@ stages:
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
+ 
+    #re-create version.mk based on current data
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
   - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
   - cat ./version.mk
+     #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
-# Задача для юнит-тестов
-unit_tests:
-  extends: .ci-test
-  stage: unit_tests
-  image: demlabs/debian/amd64:qt5
-  dependencies:
-    - amd64:linux.rwd.bld
-  before_script:
-    - /opt/buildtools/prepare_environment.sh amd64-linux
-    - apt-get update && apt-get install -y libgtest-dev
-    - *fill_version_mk
-  script:
-    - ./prod_build/build.sh --target linux rwd -DBUILD_CELLFRAME_NODE_TESTS=ON
-    - cd build_linux_rwd
-    - ctest --output-on-failure
-  artifacts:
-    paths:
-      - build_linux_rwd/allure-results/
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
-
-# Задача для генерации Allure-отчетов
-allure_report:
-  stage: report
-  image: openjdk:11
-  dependencies:
-    - unit_tests
-  before_script:
-    - apt-get update && apt-get install -y wget
-    - wget https://github.com/allure-framework/allure2/releases/download/2.20.0/allure-2.20.0.tgz
-    - tar -zxvf allure-2.20.0.tgz
-    - mv allure-2.20.0/bin/allure /usr/local/bin/
-  script:
-    - allure generate build_linux_rwd/allure-results/ -o allure-report
-  artifacts:
-    paths:
-      - allure-report/
-    expire_in: 1 month
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
-
-# Существующие задачи (без изменений)
 amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
+
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -213,11 +203,13 @@ tsan_build:
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
+
 amd64:linux.rwd:
     extends: .build
     stage: build
     dependencies:
       - amd64:linux.rwd.bld
+
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -226,6 +218,7 @@ amd64:linux.rwd:
       - echo "Do hard work"
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+      
 
 amd64:linux.release:
     extends: .build
@@ -251,7 +244,6 @@ amd64:windows.rwd:
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
-
 amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
@@ -266,7 +258,6 @@ amd64:macos.release:
     artifacts:
       paths:
         - build_*/*.pkg
-
 amd64:linux.debug:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -278,7 +269,6 @@ amd64:linux.debug:
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
-
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -291,7 +281,6 @@ amd64:linux.rwd.opt:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
-
 amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -311,6 +300,7 @@ amd64:linux.updtr:
     rules:
       - when: manual
         allow_failure: true
+
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -347,7 +337,6 @@ armhf:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
-
 arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
@@ -358,7 +347,7 @@ arm64:linux.release:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release
       - ./prod_build/pack.sh --target linux release
-      - /opt/buildtools deployed_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
 any:android.release:
@@ -373,6 +362,7 @@ any:android.release:
       - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
 
+
 version:up:
   stage: post_build
   dependencies: []
@@ -382,6 +372,7 @@ version:up:
     GIT_STRATEGY: none
   rules:
     - when: on_success
+  
   script:
     - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
     - echo ${PATCH_NUM_VAR_NAME}
@@ -389,3 +380,5 @@ version:up:
     - PATCH_NUM=$((PATCH_NUM + 1))
     - 'echo "New patch version: ${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+    
+
