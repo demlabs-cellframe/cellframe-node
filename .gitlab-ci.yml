@@ -11,8 +11,8 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - test_build
     - test 
+    - test_build
     - diagnostic_builds
     - build
     - post_build
