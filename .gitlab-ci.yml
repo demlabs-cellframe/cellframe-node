@@ -38,23 +38,21 @@ unit_test:
 
   # ────── весь setup в ОДНОМ before_script ────────────────────
   before_script:
-    # 1. Базовые dev-пакеты + system-gtest
-    - |
-      apt-get update -qq && \
-      apt-get install -y --no-install-recommends \
-          cmake wget unzip libssl-dev libgtest-dev jq
-      # сборка системного GoogleTest (libgtest-dev содержит только исходники)
-      cd /usr/src/gtest
-      cmake -DBUILD_SHARED_LIBS=ON .
-      make -j"$(nproc)"
-      cp lib/*.so /usr/lib
-    # 2. Cellframe-скрипт окружения
-    - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
-    # 3. Allure CLI
-    - |
-      wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
-      tar -xzf allure-2.27.0.tgz
-      export PATH="$PWD/allure-2.27.0/bin:$PATH"
+  - |
+    apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+        cmake wget unzip libssl-dev libgtest-dev jq
+    # ───── сборка system-gtest ─────
+    cd /usr/src/gtest
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr .
+    make -j"$(nproc)"
+    make install         # ← вот это заменяет «cp …»
+  - /opt/buildtools/prepare_environment.sh amd64-linux buildtests
+  - |
+    wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+    tar -xzf allure-2.27.0.tgz
+    export PATH="$PWD/allure-2.27.0/bin:$PATH"
+
 
   # ────── сами шаги теста ─────────────────────────────────────
   script:
