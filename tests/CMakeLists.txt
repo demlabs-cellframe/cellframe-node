@@ -1,93 +1,88 @@
-# tests/CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
-project(cellframe_tests LANGUAGES C CXX)
+
+# ────────────────────────────────────────────────────────────────
+#  Cellframe unit-tests
+# ────────────────────────────────────────────────────────────────
+project(cellframe_tests LANGUAGES CXX)
 
 enable_testing()
 
-# ──────────────────────────────────────────────────────────────
-# 🥇  Попытка №1 ― системный GoogleTest
-# ──────────────────────────────────────────────────────────────
-find_package(GTest QUIET CONFIG)     # ищет GTest::gtest и GTest::gtest_main
-set(GTEST_OK FALSE)
+#-----------------------------------------------------------------
+#  1.  Include-директории SDK
+#-----------------------------------------------------------------
+set(DAP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/..)     # ← корень cellframe-node
 
-if (GTest_FOUND)
-    # На Debian/Ubuntu нужно собрать библиотеку вручную,
-    # потому что пакет ставит ТОЛЬКО исходники:
-    #   sudo apt-get install --yes libgtest-dev && \
-    #   cd /usr/src/gtest && sudo cmake -DBUILD_SHARED_LIBS=ON . && \
-    #   sudo make -j$(nproc) && sudo cp *.so /usr/lib
-    #
-    # Но в Docker-образе, который вы уже используете, мы можем
-    # сделать это несколькими командами (см. .gitlab-ci.yml).
-    #
-    message(STATUS "Use system GTest found at ${GTEST_ROOT}")
-    set(GTEST_OK TRUE)
-else()
-    message(STATUS "System GTest **NOT** found — fall back to vendored copy")
-endif()
-
-# ──────────────────────────────────────────────────────────────
-# 🥈  Попытка №2 ― вендорная копия в репозитории
-# ──────────────────────────────────────────────────────────────
-if (NOT GTEST_OK)
-    # third_party/googletest               ← clone или submodule
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../third_party/googletest
-                     ${CMAKE_BINARY_DIR}/_gtest_build
-                     EXCLUDE_FROM_ALL)
-
-    # Внутри googletest уже создаётся target gtest и gtest_main
-    # Синхронизируем имена с вариантами find_package()
-    add_library(GTest::gtest       ALIAS gtest)
-    add_library(GTest::gtest_main  ALIAS gtest_main)
-endif()
-
-# ──────────────────────────────────────────────────────────────
-#  Путь к Cellframe-SDK
-# ──────────────────────────────────────────────────────────────
-set(DAP_ROOT         ${CMAKE_SOURCE_DIR})                      # корень cellframe-node
-set(DAP_CORE_INC     ${DAP_ROOT}/dap-sdk/core/include)
-set(DAP_CRYPTO_INC   ${DAP_ROOT}/dap-sdk/crypto/include)
+set(DAP_CORE_INC   ${DAP_ROOT}/dap-sdk/core/include)
+set(DAP_CRYPTO_INC ${DAP_ROOT}/dap-sdk/crypto/include)
 set(DAP_XKCP_INC
-    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone
-    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202
-    ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Keccak)
+        ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone
+        ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Standalone/CompactFIPS202
+        ${DAP_ROOT}/dap-sdk/crypto/external/xkcp/Keccak)
 
 include_directories(
-    ${DAP_CORE_INC}
-    ${DAP_CRYPTO_INC}
-    ${DAP_XKCP_INC}
+        ${DAP_CORE_INC}
+        ${DAP_CRYPTO_INC}
+        ${DAP_XKCP_INC}
 )
 
-# ──────────────────────────────────────────────────────────────
-#  Импорт уже собранных .so из основного билда
-# ──────────────────────────────────────────────────────────────
-find_library(DAP_CORE_LIB
-             NAMES dap dap-core
-             PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH REQUIRED)
+#-----------------------------------------------------------------
+#  2.  GTest
+#      Debian-пакет libgtest-dev не содержит .so и конфиг-файла,
+#      поэтому ищем вручную то, что собрали в job-e.
+#-----------------------------------------------------------------
+find_path(GTEST_INCLUDE_DIR gtest/gtest.h
+          HINTS /usr/include /usr/local/include REQUIRED)
 
-find_library(DAP_CRYPTO_LIB
-             NAMES dap_crypto dap-crypto
-             PATHS ${DAP_ROOT}/build/lib NO_DEFAULT_PATH REQUIRED)
+find_library(GTEST_LIBRARY       NAMES gtest       HINTS /usr/lib /usr/local/lib REQUIRED)
+find_library(GTEST_MAIN_LIBRARY  NAMES gtest_main  HINTS /usr/lib /usr/local/lib REQUIRED)
 
-if(NOT TARGET dap_core)
-    add_library(dap_core SHARED IMPORTED)
-    set_target_properties(dap_core PROPERTIES IMPORTED_LOCATION "${DAP_CORE_LIB}")
+add_library(GTest::gtest       UNKNOWN IMPORTED)
+add_library(GTest::gtest_main  UNKNOWN IMPORTED)
+
+set_target_properties(GTest::gtest
+        PROPERTIES IMPORTED_LOCATION "${GTEST_LIBRARY}")
+set_target_properties(GTest::gtest_main
+        PROPERTIES IMPORTED_LOCATION "${GTEST_MAIN_LIBRARY}")
+
+include_directories(${GTEST_INCLUDE_DIR})
+
+#-----------------------------------------------------------------
+#  3.  SDK библиотеки
+#      При конфигурировании всего проекта цели «dap» и «dap-crypto»
+#      уже объявлены, просто делаем алиасы чтобы использовать их здесь.
+#-----------------------------------------------------------------
+if(NOT TARGET dap)
+    message(FATAL_ERROR
+            "Target 'dap' not found. Конфигурируйте ВСЮ репу (cmake -S . -B build -DBUILD_TESTS=ON) "
+            "— тогда dap/dap-crypto будут собраны до unit-тестов.")
 endif()
 
-if(NOT TARGET dap_crypto)
-    add_library(dap_crypto SHARED IMPORTED)
-    set_target_properties(dap_crypto PROPERTIES IMPORTED_LOCATION "${DAP_CRYPTO_LIB}")
-endif()
+add_library(dap_core   ALIAS dap)
+add_library(dap_crypto ALIAS dap-crypto)
 
-# ──────────────────────────────────────────────────────────────
-#  Тесты
-# ──────────────────────────────────────────────────────────────
-add_executable(test_base58 test_base58.cpp)
-target_link_libraries(test_base58
-    PRIVATE
-        GTest::gtest_main          # всегда присутствует благодаря шагам выше
-        dap_core
-        dap_crypto
-)
+#-----------------------------------------------------------------
+#  4.  Собираем каждый *.cpp в tests/ в отдельный исполняемый файл
+#-----------------------------------------------------------------
+file(GLOB TEST_SRC LIST_DIRECTORIES false
+     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-add_test(NAME base58 COMMAND test_base58)
+foreach(test_file IN LISTS TEST_SRC)
+    get_filename_component(test_name "${test_file}" NAME_WE)
+
+    add_executable(${test_name} "${test_file}")
+
+    target_link_libraries(${test_name}
+            PRIVATE
+                GTest::gtest_main
+                dap_core
+                dap_crypto
+    )
+
+    add_test(NAME ${test_name}
+             COMMAND ${test_name})
+endforeach()
+
+#-----------------------------------------------------------------
+#  5.  Удобный вывод
+#-----------------------------------------------------------------
+message(STATUS "➤  Unit-tests: ${TEST_SRC}")
