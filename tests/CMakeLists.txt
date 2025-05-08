@@ -4,12 +4,14 @@ enable_testing()
 
 # ---------- googletest ----------
 include(FetchContent)
+
 FetchContent_Declare(
     googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-    URL_MIRRORS
-      https://gitlab.com/api/v4/projects/4207231/packages/generic/googletest/v1.14.0/googletest.zip
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.14.0       # актуальный релиз
 )
+# при желании можно запретить автоматическое обновление тегов
+#   GIT_SHALLOW    TRUE
 FetchContent_MakeAvailable(googletest)
 
 # ---------- SDK include-dirs ----------
