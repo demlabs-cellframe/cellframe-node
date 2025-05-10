@@ -534,6 +534,9 @@ int main( int argc, const char **argv )
         }
     }
     dap_chain_net_try_online_all();
+
+    dap_chain_node_get_states_list_sort(dap_chain_net_by_name("subzero"), NULL, 0);
+
     //dap_chain_net_announce_addr_all();
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
