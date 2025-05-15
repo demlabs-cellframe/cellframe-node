@@ -16,6 +16,54 @@ SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 
+# Option to enable full cppcheck analysis
+option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
+
+# Cpp check
+if(ENABLE_CPPCHECK_ANALYSIS)
+    find_program(CPPCHECK cppcheck)
+    if(CPPCHECK)
+        message(STATUS "Found cppcheck: ${CPPCHECK}")
+        add_custom_target(cppcheck_analysis
+            COMMAND ${CPPCHECK}
+                --std=c11
+                --enable=warning,style,performance,portability
+                --quiet
+                --xml
+                -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
+                -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
+                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
+                ${CMAKE_SOURCE_DIR}/conftool
+                ${CMAKE_SOURCE_DIR}/dist.linux
+                ${CMAKE_SOURCE_DIR}/dist
+                ${CMAKE_SOURCE_DIR}/os
+                ${CMAKE_SOURCE_DIR}/resousrses
+                ${CMAKE_SOURCE_DIR}/sourses
+                2> ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+            COMMAND cppcheck-htmlreport
+                --file ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+                --report-dir ${CMAKE_BINARY_DIR}/cppcheck_html_report
+                --source-dir ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Running full cppcheck static analysis and generating HTML report in ${CMAKE_BINARY_DIR}/cppcheck_html_report"
+        )
+    else()
+        message(WARNING "cppcheck not found, cppcheck_analysis target unavailable")
+    endif()
+endif()
+
+find_program(CPPCHECK cppcheck)
+if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    add_custom_target(lint_cellframe_node
+        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on source files"
+    )
+else()
+    message(WARNING "cppcheck not found, lint_cellframe_node target unavailable")
+endif()
+
 #enable for diagtool 
 #set(BUILD_DIAGTOOL OFF)
 
@@ -43,9 +91,15 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 #SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
-add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
-add_definitions("-DBUILD_TS=\"${BUILD_TIMESTAMP}\"")
-add_definitions("-DBUILD_HASH=\"${GIT_COMMIT_HASH}\"")
+
+set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+set(BUILD_TS "${BUILD_TIMESTAMP}")
+set(BUILD_HASH "${GIT_COMMIT_HASH}")
+
+add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
+add_definitions("-DBUILD_TS=\"${BUILD_TS}\"")
+add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
+
 set(SUBMODULES_NO_BUILD ON)
 option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
@@ -84,7 +138,7 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate")
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
