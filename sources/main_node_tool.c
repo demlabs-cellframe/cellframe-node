@@ -621,7 +621,7 @@ static int s_cert_pkey_show_full(int argc, const char **argv)
     const char *l_encode_type = "base58"; // Default format
     
     // Parse optional -encode_type parameter
-    if (argc >= 7) {
+    if (argc == 7) {
         for (int i = 5; i < argc - 1; i++) {
             if (strcmp(argv[i], "-encode_type") == 0) {
                 l_encode_type = argv[i + 1];
@@ -723,23 +723,45 @@ static int s_wallet_pkey_show(int argc, const char **argv)
 
 static int s_wallet_pkey_show_full(int argc, const char **argv)
 {
-    if (argc != 5) {
-        log_it( L_ERROR, "Wrong 'wallet pkey show' command params\n");
+    if (argc < 5 || argc > 7) {
+        log_it(L_ERROR, "Wrong 'wallet pkey show_full' command params\n");
+        log_it(L_ERROR, "Usage: %s wallet pkey show_full <wallet name> [-encode_type <hex|base58>]\n", dap_get_appname());
         exit(-800);
     }
-    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[4], s_system_wallet_dir, NULL);
+    const char *l_wallet_name = argv[4];
+    const char *l_encode_type = "base58"; // Default format
+    
+    // Parse optional -encode_type parameter
+    if (argc == 7) {
+        for (int i = 5; i < argc - 1; i++) {
+            if (strcmp(argv[i], "-encode_type") == 0) {
+                l_encode_type = argv[i + 1];
+                break;
+            }
+        }
+    }
+    
+    // Validate encode type parameter
+    if (strcmp(l_encode_type, "hex") != 0 && strcmp(l_encode_type, "base58") != 0) {
+        log_it(L_ERROR, "Invalid encode_type '%s'. Valid values: hex, base58\n", l_encode_type);
+        exit(-801);
+    }
+    
+    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(l_wallet_name, s_system_wallet_dir, NULL);
     if (!l_wallet) {
-        printf("Not found wallet %s\n", argv[4]);
+        printf("Not found wallet %s\n", l_wallet_name);
         exit(-134);
     }
 
     dap_hash_fast_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
-        printf("Can't serialize wallet %s", argv[4]);
+        printf("Can't serialize wallet %s", l_wallet_name);
         exit(-135);
     }
-    char *l_pkey_str = dap_chain_wallet_get_pkey_str(l_wallet, "hex");
-    printf("hash: %s\npkey: %s\n", dap_chain_hash_fast_to_str_static(&l_hash), l_pkey_str);
+    char *l_pkey_str = dap_chain_wallet_get_pkey_str(l_wallet, l_encode_type);
+    printf("Wallet: %s\n", l_wallet_name);
+    printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
     DAP_DELETE(l_pkey_str);
     return 0;
 }
@@ -862,7 +884,6 @@ static void s_help()
     printf(" * Create a new key wallet and generate signatures with the same names plus index. The wallet will be password protected. \n" );
     printf("\t%s wallet create_wp <wallet name> <password> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
-
 #if 0
     printf(" * Create new key wallet from existent certificates in the system\n");
     printf("\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]\n\n", l_tool_appname);
@@ -870,6 +891,9 @@ static void s_help()
 
     printf(" * Print hash of public key for wallet <wallet name>\n");
     printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);
+
+    printf(" * Print full public key information for wallet <wallet name> with optional format\n");
+    printf("\t%s wallet pkey show_full <wallet name> [-encode_type <hex|base58>]\n\n", l_tool_appname); 
 
     printf(" * Create new key file with randomly produced key stored in\n");
     printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
