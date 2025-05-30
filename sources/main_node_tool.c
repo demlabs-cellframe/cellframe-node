@@ -611,25 +611,74 @@ static int s_cert_pkey_show(int argc, const char **argv)
 }
 static int s_cert_pkey_show_full(int argc, const char **argv)
 {
-    if (argc != 5) {
-        log_it( L_ERROR, "Wrong 'cert pkey show' command params\n");
+    if (argc < 5 || argc > 7) {
+        log_it(L_ERROR, "Wrong 'cert pkey show_full' command params\n");
+        log_it(L_ERROR, "Usage: %s cert pkey show_full <cert_name> [-encode_type <hex|base58>]\n", dap_get_appname());
         exit(-800);
     }
-    dap_cert_t *l_cert = dap_cert_find_by_name(argv[4]);
+    
+    const char *l_cert_name = argv[4];
+    const char *l_encode_type = "base58"; // Default format
+    
+    // Parse optional -encode_type parameter
+    if (argc >= 7) {
+        for (int i = 5; i < argc - 1; i++) {
+            if (strcmp(argv[i], "-encode_type") == 0) {
+                l_encode_type = argv[i + 1];
+                break;
+            }
+        }
+    }
+    
+    // Validate hash type parameter
+    if (strcmp(l_encode_type, "hex") != 0 && strcmp(l_encode_type, "base58") != 0) {
+        log_it(L_ERROR, "Invalid encode_type '%s'. Valid values: hex, base58\n", l_encode_type);
+        exit(-801);
+    }
+    
+    // Find certificate by name
+    dap_cert_t *l_cert = dap_cert_find_by_name(l_cert_name);
     if (!l_cert) {
-        printf("Not found cert %s\n", argv[4]);
+        printf("Certificate '%s' not found\n", l_cert_name);
         exit(-134);
     }
-
+    
+    // Check if certificate has encryption key
+    if (!l_cert->enc_key) {
+        printf("Certificate '%s' has no encryption key\n", l_cert_name);
+        exit(-802);
+    }
+    
+    // Get public key hash
     dap_hash_fast_t l_hash;
     if (dap_cert_get_pkey_hash(l_cert, &l_hash)) {
-        printf("Can't serialize cert %s", argv[4]);
+        printf("Can't get public key hash from certificate '%s'\n", l_cert_name);
         exit(-135);
     }
-
-    char *l_pkey_str = dap_cert_get_pkey_str(l_cert, "hex");
-    printf("hash: %s\npkey: %s\n", dap_chain_hash_fast_to_str_static(&l_hash), l_pkey_str);
+    
+    // Get public key string representation using dap_pkey_to_str()
+    dap_pkey_t *l_pkey = dap_cert_to_pkey(l_cert);
+    if (!l_pkey) {
+        printf("Can't extract public key from certificate '%s'\n", l_cert_name);
+        exit(-803);
+    }
+    
+    char *l_pkey_str = dap_pkey_to_str(l_pkey, l_encode_type);
+    if (!l_pkey_str) {
+        printf("Can't convert public key to string format '%s'\n", l_encode_type);
+        DAP_DELETE(l_pkey);
+        exit(-804);
+    }
+    
+    // Output results
+    printf("Certificate: %s\n", l_cert_name);
+    printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
+    
+    // Cleanup
     DAP_DELETE(l_pkey_str);
+    DAP_DELETE(l_pkey);
+    
     return 0;
 }
 
@@ -839,6 +888,9 @@ static void s_help()
 
     printf(" * Print hash of public key for cert <cert name>\n");
     printf("\t%s cert pkey show <cert name>\n\n", l_tool_appname);
+
+    printf(" * Print full public key information for cert <cert name> with optional format\n");
+    printf("\t%s cert pkey show_full <cert name> [-encode_type <hex|base58>]\n\n", l_tool_appname);
 
     printf(" * Print addr of cert <cert name>\n");
     printf("\t%s cert addr show <cert name>\n\n", l_tool_appname);
