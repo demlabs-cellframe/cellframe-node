@@ -32,7 +32,6 @@
 #include "dap_config.h"
 #include "dap_cert.h"
 #include "dap_stream.h"
-#include "dap_cert_file.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
 
@@ -792,9 +791,9 @@ static int s_init()
     if ( dap_common_init(dap_get_appname(), NULL) )
         return printf("Fatal Error: Can't init common functions module"), -2;
 #if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
-        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+    dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
 #else
-        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+    dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
     dap_log_level_set(L_ERROR);
     {
