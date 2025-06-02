@@ -8,13 +8,61 @@ set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
-
+        
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
 SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+
+# Option to enable full cppcheck analysis
+option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
+
+# Cpp check
+if(ENABLE_CPPCHECK_ANALYSIS)
+    find_program(CPPCHECK cppcheck)
+    if(CPPCHECK)
+        message(STATUS "Found cppcheck: ${CPPCHECK}")
+        add_custom_target(cppcheck_analysis
+            COMMAND ${CPPCHECK}
+                --std=c11
+                --enable=warning,style,performance,portability
+                --quiet
+                --xml
+                -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
+                -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
+                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
+                ${CMAKE_SOURCE_DIR}/conftool
+                ${CMAKE_SOURCE_DIR}/dist.linux
+                ${CMAKE_SOURCE_DIR}/dist
+                ${CMAKE_SOURCE_DIR}/os
+                ${CMAKE_SOURCE_DIR}/resousrses
+                ${CMAKE_SOURCE_DIR}/sourses
+                2> ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+            COMMAND cppcheck-htmlreport
+                --file ${CMAKE_BINARY_DIR}/cppcheck_report.xml
+                --report-dir ${CMAKE_BINARY_DIR}/cppcheck_html_report
+                --source-dir ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Running full cppcheck static analysis and generating HTML report in ${CMAKE_BINARY_DIR}/cppcheck_html_report"
+        )
+    else()
+        message(WARNING "cppcheck not found, cppcheck_analysis target unavailable")
+    endif()
+endif()
+
+find_program(CPPCHECK cppcheck)
+if(CPPCHECK)
+    message(STATUS "Found cppcheck: ${CPPCHECK}")
+    add_custom_target(lint_cellframe_node
+        COMMAND ${CPPCHECK} --enable=warning,style --std=c11 ${CMAKE_SOURCE_DIR}/sources
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on source files"
+    )
+else()
+    message(WARNING "cppcheck not found, lint_cellframe_node target unavailable")
+endif()
 
 #enable for diagtool 
 #set(BUILD_DIAGTOOL OFF)
@@ -43,9 +91,15 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 #SET( CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 
 # init CellFrame SDK
-add_definitions("-DDAP_VERSION=\"${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}\"")
-add_definitions("-DBUILD_TS=\"${BUILD_TIMESTAMP}\"")
-add_definitions("-DBUILD_HASH=\"${GIT_COMMIT_HASH}\"")
+
+set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+set(BUILD_TS "${BUILD_TIMESTAMP}")
+set(BUILD_HASH "${GIT_COMMIT_HASH}")
+
+add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
+add_definitions("-DBUILD_TS=\"${BUILD_TS}\"")
+add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
+
 set(SUBMODULES_NO_BUILD ON)
 option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
 
@@ -84,7 +138,11 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
+<<<<<<< HEAD
                       srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate compose")
+=======
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
+>>>>>>> 993d25f741dc9b37e138bb3ba2d500fff1484179
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -313,6 +371,15 @@ if(UNIX AND NOT WIN32)
                 add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
+            if (DARWIN)
+                if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+                else ()
+                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+                endif()
+                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+            endif()
+
             message("[+] Build with python environment")
             message("    Downloading static prebuild cpython  ${PYTHON_URL}")
             #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
@@ -336,9 +403,9 @@ if(UNIX AND NOT WIN32)
             list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
             
             if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
             else()
-                find_package(Python EXACT 3.10 COMPONENTS Interpreter Development REQUIRED)
+                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
 
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
@@ -368,8 +435,15 @@ if(UNIX AND NOT WIN32)
 
         include_directories(${Python_INCLUDE_DIRS} include/)
         add_subdirectory(python-cellframe)
-
+        #this helps
+        #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+        if (DARWIN)
+        add_custom_command(TARGET ${NODE_TARGET} 
+            POST_BUILD COMMAND 
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
+            ${NODE_TARGET})
+        endif()
     endif()
 
     if(ANDROID )
@@ -402,6 +476,25 @@ if(DARWIN)
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
+
+    if (BUILD_WITH_PYTHON_ENV)
+    set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
+    set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
+    set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
+    set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+    set(PYTHON_LIB_DIR_PRFX "python3.10")
+    
+    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
+    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
+    
+    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    
+    #install python-modules
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    endif()
 
 else()
 

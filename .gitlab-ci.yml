@@ -10,12 +10,57 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
+    - code_check
     - test_build
     - diagnostic_builds
     - build
     - post_build
     - publish
     - deploy
+
+cppcheck_full_analysis:
+# Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
+  stage: code_check
+  image: demlabs/debian/amd64:cpp_check
+  timeout: 12h
+  script:
+    - cd /builds/cellframe/cellframe-node
+    - mkdir -p build && cd build
+    - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
+    - make cppcheck_analysis
+    - echo "HTML report generated at build/cppcheck_html_report/index.html"
+  artifacts:
+    paths:
+      - build/cppcheck_html_report/
+    expire_in: 1 day
+  rules:
+    - when: manual
+      allow_failure: true
+  tags:
+    - ci-polygon
+
+cppcheck_code_quality:
+# Generates a code quality report in JSON format for merge requests, identifying potential issues in the codebase.
+  stage: code_check
+  image: demlabs/debian/amd64:cpp_check
+  timeout: 3h
+  script:
+    - cd /builds/cellframe/cellframe-node
+    - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective -j$(nproc) -q . 2> cppcheck-report.xml
+    - cppcheck-codequality --input-file cppcheck-report.xml --output-file gl-code-quality-report.json
+    - cat gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+    expire_in: 4 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+      allow_failure: true
+  tags:
+    - ci-polygon
 
 .ci-polygon:
   tags:
@@ -35,9 +80,7 @@ stages:
   dependencies: []
   interruptible: true
   variables:
-    
     PATCH_NUM_MAIN: "${master_PATCH_NUM}"
-
   rules:
     - if: $CI_COMMIT_REF_NAME =~ /.*$/
       variables:                                   
@@ -51,7 +94,6 @@ stages:
   image: demlabs/amd64/debian-buster:linuxbuilder
   stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
-  
 
 .deploy:
   extends: .ci-ansible
@@ -60,18 +102,16 @@ stages:
     - if: $CI_COMMIT_REF_NAME == "master"
       when: manual
       allow_failure: true
-
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+  - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
   - echo ${PATCH_NUM_VAR_NAME}
   - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
   - source ./version.mk
   - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
- 
     #re-create version.mk based on current data
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
@@ -85,7 +125,6 @@ stages:
 amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
-
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -169,13 +208,11 @@ tsan_build:
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
-
 amd64:linux.rwd:
     extends: .build
     stage: build
     dependencies:
       - amd64:linux.rwd.bld
-
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
@@ -185,7 +222,6 @@ amd64:linux.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
       
-
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -210,6 +246,7 @@ amd64:windows.rwd:
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+
 amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
@@ -220,11 +257,11 @@ amd64:macos.release:
       - echo "Do hard work"
       - ./prod_build/build.sh --target osx release
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.pkg 
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 
     artifacts:
       paths:
         - build_*/*.pkg
+
 amd64:linux.debug:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -235,7 +272,8 @@ amd64:linux.debug:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux debug
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -248,6 +286,7 @@ amd64:linux.rwd.opt:
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
+
 amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -260,9 +299,13 @@ amd64:linux.tps:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
-.amd64:linux.updtr:
+amd64:linux.updtr:
     extends: .build
+    stage: build
     image: demlabs/debian/amd64:qt5
+    rules:
+      - when: manual
+        allow_failure: true
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -299,6 +342,7 @@ armhf:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
+
 arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
@@ -324,22 +368,19 @@ any:android.release:
       - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
 
-
 version:up:
   stage: post_build
+  dependencies: []
   tags:
     - ansible-runner
   variables:
     GIT_STRATEGY: none
   rules:
     - when: on_success
-  
   script:
-    - PATCH_NUM_VAR_NAME=$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+    - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
     - echo ${PATCH_NUM_VAR_NAME}
     - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
     - PATCH_NUM=$((PATCH_NUM + 1))
     - 'echo "New patch version: ${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-    
-
