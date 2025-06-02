@@ -132,13 +132,13 @@ option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV OFF)
-    set(SUPPORT_PYTHON_PLUGINS OFF)
+    set(BUILD_WITH_PYTHON_ENV ON)
+    set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-emit-delegate compose")
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting compose")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
