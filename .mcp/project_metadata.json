@@ -1,0 +1,63 @@
+{
+  "project": {
+    "name": "cellframe-node",
+    "description": "Cellframe blockchain network node implementation",
+    "version": "5.3-178",
+    "type": "blockchain_node",
+    "languages": ["c", "python", "cmake"],
+    "architecture": "modular"
+  },
+  "modules": {
+    "dap-sdk": {
+      "path": "dap-sdk/",
+      "mcp_file": "dap-sdk/.mcp/dap-sdk.json",
+      "type": "core_library"
+    },
+    "cellframe-sdk": {
+      "path": "cellframe-sdk/",
+      "mcp_file": "cellframe-sdk/.mcp/cellframe-sdk.json", 
+      "type": "blockchain_library"
+    },
+    "python-cellframe": {
+      "path": "python-cellframe/",
+      "mcp_file": "python-cellframe/.mcp/module_context.json",
+      "type": "language_bindings"
+    },
+    "conftool": {
+      "path": "conftool/",
+      "type": "utility",
+      "description": "Configuration management tool"
+    },
+    "diagtool": {
+      "path": "diagtool/", 
+      "type": "utility",
+      "description": "Diagnostic and debugging tool"
+    }
+  },
+  "build_system": {
+    "primary": "cmake",
+    "root_file": "CMakeLists.txt",
+    "platforms": ["linux", "windows", "macos", "android"],
+    "features": ["ssl_support", "python_bindings", "cross_platform"]
+  },
+  "development": {
+    "git_repo": "cellframe-node",
+    "main_branches": ["main", "develop"],
+    "ci_system": ".gitlab-ci.yml"
+  },
+  "current_context": {
+    "last_updated": "2025-06-03T13:29:08+07:00",
+    "focus_areas": ["http_client_optimization", "redirect_handling"],
+    "recent_changes": [
+      "Optimized HTTP redirect handling for connection reuse",
+      "Added C++ compatibility to HTTP headers", 
+      "Implemented async HTTP request patterns",
+      "Restructured MCP files to module-local organization"
+    ]
+  },
+  "mcp_structure": {
+    "description": "MCP files are organized per-module for better locality",
+    "pattern": "Each major module has its own .mcp/ directory with detailed context",
+    "aggregation": "This file provides project-level overview and cross-module relationships"
+  }
+} 

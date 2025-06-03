@@ -74,3 +74,28 @@ cmake_install.cmake
 *~
 cmake-build-*
 .idea
+
+# Cursor IDE
+.cursor/
+
+# MCP context system
+.mcp/cache/
+.mcp/*.tmp
+.mcp/*.bak
+
+# But keep the MCP cache directory structure
+!.mcp/cache/.gitkeep
+
+# Keep all JSON context files in MCP
+!.mcp/*.json
+
+# Keep MCP scripts
+!.mcp/scripts/
+
+# Keep Cursor integration files
+!.mcp/README_cursor_integration.md
+!.mcp/CURSOR_SETUP.md
+
+# Exclude MCP runtime files
+.mcp/cache/file_watcher.pid
+.mcp/cache/last_update.log
