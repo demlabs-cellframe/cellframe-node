@@ -74,3 +74,5 @@ cmake_install.cmake
 *~
 cmake-build-*
 .idea
+.mcp
+.cache
