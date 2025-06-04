@@ -22,6 +22,59 @@
         "Handle cleanup in error paths"
       ]
     },
+    "efficient_c_programming": {
+      "parameter_handling": {
+        "input_parameter_modification": {
+          "when_acceptable": [
+            "Parameter passed by value (not affecting caller)",
+            "Parameter not used for further calculations",
+            "Saves memory allocation on stack",
+            "Standard pattern in system programming (like read/write syscalls)"
+          ],
+          "example": "Modify a_data_size to return actual processed count",
+          "rationale": "Efficiency over academic purity in system code"
+        }
+      },
+      "defensive_programming": {
+        "targeted_validation": {
+          "principle": "Check only where problems can actually occur",
+          "rules": [
+            "Validate in functions that INCREASE buffer sizes",
+            "Skip redundant checks in functions that only DECREASE sizes",
+            "Avoid performance penalty of excessive validation",
+            "Focus checks on mutation points, not read-only operations"
+          ],
+          "anti_pattern": "Buffer corruption checks in pop/consume functions"
+        }
+      },
+      "memory_optimization": {
+        "variable_reuse": [
+          "Reuse input parameters as return values when semantically clear",
+          "Minimize local variables in hot paths",
+          "Prefer stack allocation over heap when possible"
+        ],
+        "stack_efficiency": [
+          "Use existing variables instead of creating new ones",
+          "Consider memory layout and alignment",
+          "Minimize function call overhead"
+        ]
+      },
+      "context_awareness": {
+        "system_vs_application": {
+          "system_code": [
+            "Performance and memory efficiency are primary",
+            "Input parameter modification is acceptable pattern",
+            "Minimal defensive programming overhead",
+            "Follow kernel/embedded conventions"
+          ],
+          "application_code": [
+            "Readability and maintainability prioritized", 
+            "More defensive programming acceptable",
+            "Clearer separation of concerns"
+          ]
+        }
+      }
+    },
     "error_handling": {
       "return_codes": {
         "success": 0,
@@ -30,7 +83,8 @@
         "boolean_false": "false"
       },
       "logging": "log_it(L_ERROR, ...)",
-      "validation": "Check all input parameters for NULL at function start"
+      "validation": "Check all input parameters for NULL at function start",
+      "efficiency_first": "In system code, validate only where corruption can occur"
     },
     "platform_support": {
       "targets": ["linux", "windows", "macos", "android"],
@@ -50,13 +104,35 @@
     "Incorrect cleanup order",
     "Memory leaks in error paths",
     "Platform-specific code in common files",
-    "Missing doxygen documentation"
+    "Missing doxygen documentation",
+    "Over-defensive programming in performance-critical paths",
+    "Creating unnecessary variables when parameter reuse is cleaner",
+    "Buffer validation in wrong places (read-only vs write operations)"
   ],
   "performance_considerations": [
     "Minimize memory allocations in hot paths",
     "Pass large structs by pointer",
     "Use const qualifiers appropriately",
     "Avoid redundant operations",
-    "Consider cache locality"
-  ]
+    "Consider cache locality",
+    "Reuse input parameters as return values when appropriate",
+    "Target defensive programming to mutation points only",
+    "Prefer stack efficiency over academic code purity in system programming"
+  ],
+  "design_principles": {
+    "efficiency_over_purity": {
+      "context": "System programming (kernel, embedded, network stack)",
+      "examples": [
+        "Input parameter modification for return values",
+        "Minimal defensive checks in non-mutating functions",
+        "Stack memory optimization over readability",
+        "Performance-first approach to validation"
+      ]
+    },
+    "contextual_best_practices": {
+      "rule": "Best practices depend on code context and constraints",
+      "system_code_priorities": ["Performance", "Memory efficiency", "Minimal overhead"],
+      "application_code_priorities": ["Readability", "Maintainability", "Safety"]
+    }
+  }
 } 
