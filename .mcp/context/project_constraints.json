@@ -20,7 +20,13 @@
         "Use DAP_DEL_Z to null pointers after free",
         "Match every allocation with deallocation",
         "Handle cleanup in error paths"
-      ]
+      ],
+      "realloc_safety": {
+        "rule": "ALWAYS use temporary variable with realloc to prevent memory leaks",
+        "wrong": "ptr = DAP_REALLOC(ptr, new_size); // LEAK if realloc fails!",
+        "correct": "byte_t *l_new = DAP_REALLOC(ptr, new_size); if(!l_new) return error; ptr = l_new;",
+        "rationale": "If realloc fails and returns NULL, original pointer is lost but memory remains allocated"
+      }
     },
     "efficient_c_programming": {
       "parameter_handling": {
@@ -107,7 +113,8 @@
     "Missing doxygen documentation",
     "Over-defensive programming in performance-critical paths",
     "Creating unnecessary variables when parameter reuse is cleaner",
-    "Buffer validation in wrong places (read-only vs write operations)"
+    "Buffer validation in wrong places (read-only vs write operations)",
+    "Direct assignment to pointer during realloc (causes memory leaks on failure)"
   ],
   "performance_considerations": [
     "Minimize memory allocations in hot paths",
