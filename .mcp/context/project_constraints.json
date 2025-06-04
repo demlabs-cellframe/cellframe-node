@@ -26,6 +26,25 @@
         "wrong": "ptr = DAP_REALLOC(ptr, new_size); // LEAK if realloc fails!",
         "correct": "byte_t *l_new = DAP_REALLOC(ptr, new_size); if(!l_new) return error; ptr = l_new;",
         "rationale": "If realloc fails and returns NULL, original pointer is lost but memory remains allocated"
+      },
+      "realloc_macros": {
+        "critical_rule": "Use correct realloc macro based on function return type",
+        "for_value_returning_functions": {
+          "macro": "DAP_REALLOC_RET_VAL_IF_FAIL(ptr, size, return_value, cleanup_args...)",
+          "examples": [
+            "DAP_REALLOC_RET_VAL_IF_FAIL(l_buf, new_size, false, l_buf) // returns false on failure",
+            "DAP_REALLOC_RET_VAL_IF_FAIL(l_buf, new_size, NULL, l_buf)  // returns NULL on failure"
+          ]
+        },
+        "for_void_functions": {
+          "macro": "DAP_REALLOC_RET_IF_FAIL(ptr, size, cleanup_args...)",
+          "note": "Only for functions that return void"
+        },
+        "common_mistake": {
+          "wrong": "DAP_REALLOC_RET_IF_FAIL(ptr, size, ptr) in non-void function",
+          "consequence": "Will generate 'return;' instead of 'return value;'",
+          "correct": "DAP_REALLOC_RET_VAL_IF_FAIL(ptr, size, false, ptr)"
+        }
       }
     },
     "efficient_c_programming": {
@@ -114,7 +133,8 @@
     "Over-defensive programming in performance-critical paths",
     "Creating unnecessary variables when parameter reuse is cleaner",
     "Buffer validation in wrong places (read-only vs write operations)",
-    "Direct assignment to pointer during realloc (causes memory leaks on failure)"
+    "Direct assignment to pointer during realloc (causes memory leaks on failure)",
+    "Using DAP_REALLOC_RET_IF_FAIL in non-void functions (wrong return type)"
   ],
   "performance_considerations": [
     "Minimize memory allocations in hot paths",
