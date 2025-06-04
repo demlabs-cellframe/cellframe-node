@@ -1,0 +1,62 @@
+{
+  "project_constraints": {
+    "threading_model": {
+      "type": "worker_pool",
+      "critical_rules": [
+        "Never access objects after passing to worker thread",
+        "Set all callbacks before thread handoff",
+        "Cleanup resources in same thread where created"
+      ],
+      "unsafe_patterns": [
+        "Accessing client object after dap_worker_add_work_unsafe",
+        "Shared state without synchronization",
+        "Cross-thread memory management"
+      ]
+    },
+    "memory_management": {
+      "allocation_macros": ["DAP_NEW", "DAP_DELETE", "DAP_FREE", "DAP_DEL_Z"],
+      "rules": [
+        "Always check allocation results",
+        "Use DAP_DEL_Z to null pointers after free",
+        "Match every allocation with deallocation",
+        "Handle cleanup in error paths"
+      ]
+    },
+    "error_handling": {
+      "return_codes": {
+        "success": 0,
+        "error": -1,
+        "null_pointer": "NULL",
+        "boolean_false": "false"
+      },
+      "logging": "log_it(L_ERROR, ...)",
+      "validation": "Check all input parameters for NULL at function start"
+    },
+    "platform_support": {
+      "targets": ["linux", "windows", "macos", "android"],
+      "conditional_compilation": "#ifdef DAP_OS_WINDOWS",
+      "platform_dirs": ["win32/", "unix/", "darwin/"]
+    },
+    "module_structure": {
+      "naming_convention": "dap_module_function",
+      "log_tag_required": true,
+      "public_api": "in .h files only",
+      "internal_implementation": "static functions in .c files"
+    }
+  },
+  "common_mistakes": [
+    "Using objects after thread handoff",
+    "Missing NULL checks",
+    "Incorrect cleanup order",
+    "Memory leaks in error paths",
+    "Platform-specific code in common files",
+    "Missing doxygen documentation"
+  ],
+  "performance_considerations": [
+    "Minimize memory allocations in hot paths",
+    "Pass large structs by pointer",
+    "Use const qualifiers appropriately",
+    "Avoid redundant operations",
+    "Consider cache locality"
+  ]
+} 
