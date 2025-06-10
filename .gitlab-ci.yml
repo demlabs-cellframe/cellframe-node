@@ -89,24 +89,6 @@ cppcheck_code_quality:
     paths:
       - build_*/*.deb
 
-.diagnostic-build:
-  extends: .ci-polygon
-  stage: diagnostic_builds
-  timeout: 3 hours 30 minutes
-  dependencies: []
-  interruptible: true
-  variables:
-    PATCH_NUM_MAIN: "${master_PATCH_NUM}"
-  rules:
-    - if: $CI_COMMIT_REF_NAME =~ /.*$/
-      variables:                                   
-        DUMMY_VAR_FOR_ALLOW_JOB: "1"
-  artifacts:
-    paths:
-      - build_*/*.deb
-  dependencies:
-    - amd64:linux.rwd.bld
-
 .publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
@@ -138,7 +120,21 @@ cppcheck_code_quality:
      #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
   - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
-  - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
+  - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata'
+
+.fill_version_mk_diagnostic: &fill_version_mk_diagnostic
+  - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+  - echo ${PATCH_NUM_VAR_NAME}
+  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
+  - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
+  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
+  - source ./version.mk
+  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
+    #re-create version.mk based on current data
+  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
+  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
+  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
+  - cat ./version.mk
 
 amd64:linux.rwd.bld:
     extends: .build
@@ -170,48 +166,57 @@ autotests:
     - /opt/tests-in-docker/artifacts.sh build_*/*.deb
 
 asan_build:
-  extends: .diagnostic-build
+  extends: .build
+  stage: diagnostic_builds
   variables:
     DAP_ASAN: "1"
+  dependencies:
+    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - cat ./version.mk
+   - *fill_version_mk_diagnostic
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 ubsan_build:
-  extends: .diagnostic-build
+  extends: .build
+  stage: diagnostic_builds
   variables:
     DAP_UBSAN: "1"
+  dependencies:
+    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - cat ./version.mk
+   - *fill_version_mk_diagnostic
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb     
 
 tsan_build:
-  extends: .diagnostic-build
+  extends: .build
+  stage: diagnostic_builds
   variables:
     DAP_TSAN: "1"
+  dependencies:
+    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - cat ./version.mk
+   - *fill_version_mk_diagnostic
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
