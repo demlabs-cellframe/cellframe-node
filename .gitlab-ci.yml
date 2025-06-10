@@ -104,6 +104,8 @@ cppcheck_code_quality:
   artifacts:
     paths:
       - build_*/*.deb
+  dependencies:
+    - amd64:linux.rwd.bld
 
 .publish:
   extends: .ci-polygon
@@ -171,14 +173,13 @@ asan_build:
   extends: .diagnostic-build
   variables:
     DAP_ASAN: "1"
-  dependencies:
-    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
+   - cat ./version.mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
@@ -188,14 +189,13 @@ ubsan_build:
   extends: .diagnostic-build
   variables:
     DAP_UBSAN: "1"
-  dependencies:
-    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
+   - cat ./version.mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
@@ -205,14 +205,13 @@ tsan_build:
   extends: .diagnostic-build
   variables:
     DAP_TSAN: "1"
-  dependencies:
-    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt5
   rules:
    - when: manual
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
+   - cat ./version.mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
