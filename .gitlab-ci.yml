@@ -89,6 +89,22 @@ cppcheck_code_quality:
     paths:
       - build_*/*.deb
 
+.diagnostic-build:
+  extends: .ci-polygon
+  stage: diagnostic_builds
+  timeout: 3 hours 30 minutes
+  dependencies: []
+  interruptible: true
+  variables:
+    PATCH_NUM_MAIN: "${master_PATCH_NUM}"
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /.*$/
+      variables:                                   
+        DUMMY_VAR_FOR_ALLOW_JOB: "1"
+  artifacts:
+    paths:
+      - build_*/*.deb
+
 .publish:
   extends: .ci-polygon
   image: demlabs/amd64/debian-buster:linuxbuilder
@@ -152,8 +168,7 @@ autotests:
     - /opt/tests-in-docker/artifacts.sh build_*/*.deb
 
 asan_build:
-  extends: .build
-  stage: diagnostic_builds
+  extends: .diagnostic-build
   variables:
     DAP_ASAN: "1"
   dependencies:
@@ -164,15 +179,13 @@ asan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 ubsan_build:
-  extends: .build
-  stage: diagnostic_builds
+  extends: .diagnostic-build
   variables:
     DAP_UBSAN: "1"
   dependencies:
@@ -183,15 +196,13 @@ ubsan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb     
 
 tsan_build:
-  extends: .build
-  stage: diagnostic_builds
+  extends: .diagnostic-build
   variables:
     DAP_TSAN: "1"
   dependencies:
@@ -202,11 +213,10 @@ tsan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.rwd:
     extends: .build
