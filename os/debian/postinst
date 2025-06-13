@@ -24,6 +24,24 @@ fi
 echo "[!] Set exec permissions"
 chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
 
+# Install pycfhelpers wheel if present
+for wheel_file in "$DAP_PREFIX/share/"*.whl; do
+    if [ -f "$wheel_file" ]; then
+        echo "[!] Installing wheel: $(basename "$wheel_file")"
+        if $DAP_PREFIX/python/bin/pip3 install "$wheel_file" --force-reinstall; then
+            echo "[+] Wheel installed successfully"
+            # Test basic import
+            if $DAP_PREFIX/python/bin/python3.10 -c "import pycfhelpers; print('[+] pycfhelpers import verified')" 2>/dev/null; then
+                echo "[+] pycfhelpers verification passed"
+            else
+                echo "[!] Warning: pycfhelpers import failed, but installation continued"
+            fi
+        else
+            echo "[!] Warning: wheel installation failed, continuing anyway"
+        fi
+    fi
+done
+
 echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
 

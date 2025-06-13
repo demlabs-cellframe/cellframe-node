@@ -487,6 +487,7 @@ if(DARWIN)
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
     #install python-modules
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
@@ -559,6 +560,20 @@ else()
             INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+            
+            # Download pycfhelpers wheel file
+            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+                cmake_policy(SET CMP0135 NEW)
+            endif()
+            FetchContent_Declare(
+                pycfhelpers_wheel
+                URL https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842/pycfhelpers-1.0.0-py3-none-any.whl
+                DOWNLOAD_NO_EXTRACT TRUE
+            )
+            FetchContent_MakeAvailable(pycfhelpers_wheel)
+            
+            # Install pycfhelpers wheel file to share directory
+            INSTALL(FILES ${pycfhelpers_wheel_SOURCE_DIR}/pycfhelpers-1.0.0-py3-none-any.whl DESTINATION ${CMAKE_INSTALL_PREFIX}/share/)
             
             #install python-modules
             INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
