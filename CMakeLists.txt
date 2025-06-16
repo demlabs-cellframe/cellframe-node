@@ -572,8 +572,21 @@ else()
             )
             FetchContent_MakeAvailable(pycfhelpers_wheel)
             
+            # Find the downloaded wheel file dynamically
+            file(GLOB PYCFHELPERS_WHEEL_FILE "${pycfhelpers_wheel_SOURCE_DIR}/*.whl")
+            if(NOT PYCFHELPERS_WHEEL_FILE)
+                # If no .whl found, look for any file that might be the wheel
+                file(GLOB PYCFHELPERS_WHEEL_FILE "${pycfhelpers_wheel_SOURCE_DIR}/*")
+                list(FILTER PYCFHELPERS_WHEEL_FILE EXCLUDE REGEX ".*\\.(cmake|txt)$")
+            endif()
+            
             # Install pycfhelpers wheel file to share directory
-            INSTALL(FILES ${pycfhelpers_wheel_SOURCE_DIR}/pycfhelpers-1.0.0-py3-none-any.whl DESTINATION ${CMAKE_INSTALL_PREFIX}/share/)
+            if(PYCFHELPERS_WHEEL_FILE)
+                INSTALL(FILES ${PYCFHELPERS_WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/)
+                message(STATUS "Found pycfhelpers wheel file: ${PYCFHELPERS_WHEEL_FILE}")
+            else()
+                message(WARNING "No pycfhelpers wheel file found in ${pycfhelpers_wheel_SOURCE_DIR}")
+            endif()
             
             #install python-modules
             INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
