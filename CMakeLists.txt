@@ -492,6 +492,8 @@ if(DARWIN)
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
 
+
+
 else()
 
     INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
@@ -565,27 +567,91 @@ else()
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
                 cmake_policy(SET CMP0135 NEW)
             endif()
-            FetchContent_Declare(
-                pycfhelpers_wheel
-                URL https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal
-                DOWNLOAD_NO_EXTRACT TRUE
+            
+            # Create a custom download script to get the real filename from redirect
+            set(DOWNLOAD_SCRIPT "${CMAKE_BINARY_DIR}/download_pycfhelpers.cmake")
+            file(WRITE ${DOWNLOAD_SCRIPT} "
+                # First, get the redirect URL to extract real filename
+                execute_process(
+                    COMMAND curl -s -I \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
+                    OUTPUT_VARIABLE CURL_HEADERS
+                    RESULT_VARIABLE CURL_RESULT
+                )
+                
+                if(CURL_RESULT EQUAL 0)
+                    # Extract the Location header to get real filename
+                    string(REGEX MATCH \"Location: ([^\\r\\n]+)\" LOCATION_MATCH \"\${CURL_HEADERS}\")
+                    if(LOCATION_MATCH)
+                        string(REGEX REPLACE \"Location: \" \"\" REAL_URL \"\${LOCATION_MATCH}\")
+                        string(STRIP \"\${REAL_URL}\" REAL_URL)
+                        
+                        # Extract filename from URL
+                        string(REGEX MATCH \"[^/]+\\\\.whl\" REAL_FILENAME \"\${REAL_URL}\")
+                        if(NOT REAL_FILENAME)
+                            set(REAL_FILENAME \"pycfhelpers-unknown-py3-none-any.whl\")
+                        endif()
+                        
+                        message(STATUS \"Real pycfhelpers URL: \${REAL_URL}\")
+                        message(STATUS \"Real pycfhelpers filename: \${REAL_FILENAME}\")
+                        
+                        # Download the actual file
+                        file(DOWNLOAD 
+                            \"\${REAL_URL}\"
+                            \"${CMAKE_BINARY_DIR}/\${REAL_FILENAME}\"
+                            SHOW_PROGRESS
+                            INACTIVITY_TIMEOUT 30
+                            TIMEOUT 300
+                        )
+                        
+                        message(STATUS \"Downloaded pycfhelpers as: \${REAL_FILENAME}\")
+                    else()
+                        message(WARNING \"Could not extract real filename from redirect, using fallback\")
+                        file(DOWNLOAD 
+                            \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
+                            \"${CMAKE_BINARY_DIR}/pycfhelpers-fallback.whl\"
+                            SHOW_PROGRESS
+                            INACTIVITY_TIMEOUT 30
+                            TIMEOUT 300
+                        )
+                        set(REAL_FILENAME \"pycfhelpers-fallback.whl\")
+                    endif()
+                else()
+                    message(WARNING \"curl failed, using direct download\")
+                    file(DOWNLOAD 
+                        \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
+                        \"${CMAKE_BINARY_DIR}/pycfhelpers-direct.whl\"
+                        SHOW_PROGRESS
+                        INACTIVITY_TIMEOUT 30
+                        TIMEOUT 300
+                    )
+                    set(REAL_FILENAME \"pycfhelpers-direct.whl\")
+                endif()
+            ")
+            
+            # Execute the download script
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -P ${DOWNLOAD_SCRIPT}
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                RESULT_VARIABLE DOWNLOAD_RESULT
             )
-            FetchContent_MakeAvailable(pycfhelpers_wheel)
             
-            # Find the downloaded wheel file dynamically
-            file(GLOB PYCFHELPERS_WHEEL_FILE "${pycfhelpers_wheel_SOURCE_DIR}/*.whl")
-            if(NOT PYCFHELPERS_WHEEL_FILE)
-                # If no .whl found, look for any file that might be the wheel
-                file(GLOB PYCFHELPERS_WHEEL_FILE "${pycfhelpers_wheel_SOURCE_DIR}/*")
-                list(FILTER PYCFHELPERS_WHEEL_FILE EXCLUDE REGEX ".*\\.(cmake|txt)$")
-            endif()
-            
-            # Install pycfhelpers wheel file to share directory
-            if(PYCFHELPERS_WHEEL_FILE)
-                INSTALL(FILES ${PYCFHELPERS_WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/)
-                message(STATUS "Found pycfhelpers wheel file: ${PYCFHELPERS_WHEEL_FILE}")
+            if(DOWNLOAD_RESULT EQUAL 0)
+                # Find the downloaded file (now with real version in filename)
+                file(GLOB PYCFHELPERS_WHEEL_FILE "${CMAKE_BINARY_DIR}/pycfhelpers-*.whl")
+                
+                if(PYCFHELPERS_WHEEL_FILE)
+                    # Extract just the filename for logging
+                    get_filename_component(WHEEL_FILENAME "${PYCFHELPERS_WHEEL_FILE}" NAME)
+                    
+                    # Install pycfhelpers wheel file to wheels directory
+                    INSTALL(FILES ${PYCFHELPERS_WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
+                    message(STATUS "Found pycfhelpers wheel file: ${WHEEL_FILENAME}")
+                    message(STATUS "Real pycfhelpers version will be installed: ${WHEEL_FILENAME}")
+                else()
+                    message(WARNING "No pycfhelpers wheel file found after download")
+                endif()
             else()
-                message(WARNING "No pycfhelpers wheel file found in ${pycfhelpers_wheel_SOURCE_DIR}")
+                message(WARNING "Failed to download pycfhelpers wheel file")
             endif()
             
             #install python-modules
