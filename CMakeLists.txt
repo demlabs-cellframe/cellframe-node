@@ -567,7 +567,7 @@ else()
             endif()
             FetchContent_Declare(
                 pycfhelpers_wheel
-                URL https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842/pycfhelpers-1.0.0-py3-none-any.whl
+                URL https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal
                 DOWNLOAD_NO_EXTRACT TRUE
             )
             FetchContent_MakeAvailable(pycfhelpers_wheel)
