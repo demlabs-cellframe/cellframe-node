@@ -640,7 +640,7 @@ static int s_wallet_pkey_show(int argc, const char **argv)
     }
     dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[4], s_system_wallet_dir, NULL);
     if (!l_wallet) {
-        char l_wallet_path[MAX_PATH] = {0};
+        char l_wallet_path[MAX_PATH + 10] = {0};
         snprintf(l_wallet_path, sizeof(l_wallet_path), "%s/%s.dwallet", s_system_wallet_dir, argv[4]);
 
         if (access(l_wallet_path, F_OK) == 0) {
