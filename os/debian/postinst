@@ -32,12 +32,18 @@ for wheel_dir in "$DAP_PREFIX/share/wheels" "$DAP_PREFIX/share"; do
                 echo "[!] Installing wheel: $(basename "$wheel_file")"
                 if $DAP_PREFIX/python/bin/pip3 install "$wheel_file" --force-reinstall; then
                     echo "[+] Wheel installed successfully"
-                    # Test basic import for pycfhelpers
+                    # Test basic import for Python packages
                     if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
                         if $DAP_PREFIX/python/bin/python3.10 -c "import pycfhelpers; print('[+] pycfhelpers import verified')" 2>/dev/null; then
                             echo "[+] pycfhelpers verification passed"
                         else
                             echo "[!] Warning: pycfhelpers import failed, but installation continued"
+                        fi
+                    elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
+                        if $DAP_PREFIX/python/bin/python3.10 -c "import pycftools; print('[+] pycftools import verified')" 2>/dev/null; then
+                            echo "[+] pycftools verification passed"
+                        else
+                            echo "[!] Warning: pycftools import failed, but installation continued"
                         fi
                     fi
                 else

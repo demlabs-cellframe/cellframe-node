@@ -486,9 +486,8 @@ if(DARWIN)
     
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
-    #install python-modules
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    # Note: pycfhelpers and pycftools are installed as wheel packages on Linux
+    # For macOS, they are still installed as source code for now
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
 
@@ -563,99 +562,104 @@ else()
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
-            # Download pycfhelpers wheel file
+            # Download Python wheel files
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
                 cmake_policy(SET CMP0135 NEW)
             endif()
             
-            # Create a custom download script to get the real filename from redirect
-            set(DOWNLOAD_SCRIPT "${CMAKE_BINARY_DIR}/download_pycfhelpers.cmake")
-            file(WRITE ${DOWNLOAD_SCRIPT} "
-                # First, get the redirect URL to extract real filename
+            # Function to download and install wheel packages
+            function(download_wheel_package PACKAGE_NAME PACKAGE_URL)
+                set(DOWNLOAD_SCRIPT "${CMAKE_BINARY_DIR}/download_${PACKAGE_NAME}.cmake")
+                file(WRITE ${DOWNLOAD_SCRIPT} "
+                    # First, get the redirect URL to extract real filename
+                    execute_process(
+                        COMMAND curl -s -I \"${PACKAGE_URL}\"
+                        OUTPUT_VARIABLE CURL_HEADERS
+                        RESULT_VARIABLE CURL_RESULT
+                    )
+                    
+                    if(CURL_RESULT EQUAL 0)
+                        # Extract the Location header to get real filename
+                        string(REGEX MATCH \"Location: ([^\\r\\n]+)\" LOCATION_MATCH \"\${CURL_HEADERS}\")
+                        if(LOCATION_MATCH)
+                            string(REGEX REPLACE \"Location: \" \"\" REAL_URL \"\${LOCATION_MATCH}\")
+                            string(STRIP \"\${REAL_URL}\" REAL_URL)
+                            
+                            # Extract filename from URL
+                            string(REGEX MATCH \"[^/]+\\\\.whl\" REAL_FILENAME \"\${REAL_URL}\")
+                            if(NOT REAL_FILENAME)
+                                set(REAL_FILENAME \"${PACKAGE_NAME}-unknown-py3-none-any.whl\")
+                            endif()
+                            
+                            message(STATUS \"Real ${PACKAGE_NAME} URL: \${REAL_URL}\")
+                            message(STATUS \"Real ${PACKAGE_NAME} filename: \${REAL_FILENAME}\")
+                            
+                            # Download the actual file
+                            file(DOWNLOAD 
+                                \"\${REAL_URL}\"
+                                \"${CMAKE_BINARY_DIR}/\${REAL_FILENAME}\"
+                                SHOW_PROGRESS
+                                INACTIVITY_TIMEOUT 30
+                                TIMEOUT 300
+                            )
+                            
+                            message(STATUS \"Downloaded ${PACKAGE_NAME} as: \${REAL_FILENAME}\")
+                        else()
+                            message(WARNING \"Could not extract real filename from redirect, using fallback\")
+                            file(DOWNLOAD 
+                                \"${PACKAGE_URL}\"
+                                \"${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-fallback.whl\"
+                                SHOW_PROGRESS
+                                INACTIVITY_TIMEOUT 30
+                                TIMEOUT 300
+                            )
+                            set(REAL_FILENAME \"${PACKAGE_NAME}-fallback.whl\")
+                        endif()
+                    else()
+                        message(WARNING \"curl failed, using direct download\")
+                        file(DOWNLOAD 
+                            \"${PACKAGE_URL}\"
+                            \"${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-direct.whl\"
+                            SHOW_PROGRESS
+                            INACTIVITY_TIMEOUT 30
+                            TIMEOUT 300
+                        )
+                        set(REAL_FILENAME \"${PACKAGE_NAME}-direct.whl\")
+                    endif()
+                ")
+                
+                # Execute the download script
                 execute_process(
-                    COMMAND curl -s -I \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
-                    OUTPUT_VARIABLE CURL_HEADERS
-                    RESULT_VARIABLE CURL_RESULT
+                    COMMAND ${CMAKE_COMMAND} -P ${DOWNLOAD_SCRIPT}
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RESULT_VARIABLE DOWNLOAD_RESULT
                 )
                 
-                if(CURL_RESULT EQUAL 0)
-                    # Extract the Location header to get real filename
-                    string(REGEX MATCH \"Location: ([^\\r\\n]+)\" LOCATION_MATCH \"\${CURL_HEADERS}\")
-                    if(LOCATION_MATCH)
-                        string(REGEX REPLACE \"Location: \" \"\" REAL_URL \"\${LOCATION_MATCH}\")
-                        string(STRIP \"\${REAL_URL}\" REAL_URL)
+                if(DOWNLOAD_RESULT EQUAL 0)
+                    # Find the downloaded file (now with real version in filename)
+                    file(GLOB WHEEL_FILE "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-*.whl")
+                    
+                    if(WHEEL_FILE)
+                        # Extract just the filename for logging
+                        get_filename_component(WHEEL_FILENAME "${WHEEL_FILE}" NAME)
                         
-                        # Extract filename from URL
-                        string(REGEX MATCH \"[^/]+\\\\.whl\" REAL_FILENAME \"\${REAL_URL}\")
-                        if(NOT REAL_FILENAME)
-                            set(REAL_FILENAME \"pycfhelpers-unknown-py3-none-any.whl\")
-                        endif()
-                        
-                        message(STATUS \"Real pycfhelpers URL: \${REAL_URL}\")
-                        message(STATUS \"Real pycfhelpers filename: \${REAL_FILENAME}\")
-                        
-                        # Download the actual file
-                        file(DOWNLOAD 
-                            \"\${REAL_URL}\"
-                            \"${CMAKE_BINARY_DIR}/\${REAL_FILENAME}\"
-                            SHOW_PROGRESS
-                            INACTIVITY_TIMEOUT 30
-                            TIMEOUT 300
-                        )
-                        
-                        message(STATUS \"Downloaded pycfhelpers as: \${REAL_FILENAME}\")
+                        # Install wheel file to wheels directory
+                        INSTALL(FILES ${WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
+                        message(STATUS "Found ${PACKAGE_NAME} wheel file: ${WHEEL_FILENAME}")
+                        message(STATUS "Real ${PACKAGE_NAME} version will be installed: ${WHEEL_FILENAME}")
                     else()
-                        message(WARNING \"Could not extract real filename from redirect, using fallback\")
-                        file(DOWNLOAD 
-                            \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
-                            \"${CMAKE_BINARY_DIR}/pycfhelpers-fallback.whl\"
-                            SHOW_PROGRESS
-                            INACTIVITY_TIMEOUT 30
-                            TIMEOUT 300
-                        )
-                        set(REAL_FILENAME \"pycfhelpers-fallback.whl\")
+                        message(WARNING "No ${PACKAGE_NAME} wheel file found after download")
                     endif()
                 else()
-                    message(WARNING \"curl failed, using direct download\")
-                    file(DOWNLOAD 
-                        \"https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal\"
-                        \"${CMAKE_BINARY_DIR}/pycfhelpers-direct.whl\"
-                        SHOW_PROGRESS
-                        INACTIVITY_TIMEOUT 30
-                        TIMEOUT 300
-                    )
-                    set(REAL_FILENAME \"pycfhelpers-direct.whl\")
+                    message(WARNING "Failed to download ${PACKAGE_NAME} wheel file")
                 endif()
-            ")
+            endfunction()
             
-            # Execute the download script
-            execute_process(
-                COMMAND ${CMAKE_COMMAND} -P ${DOWNLOAD_SCRIPT}
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                RESULT_VARIABLE DOWNLOAD_RESULT
-            )
+            # Download pycfhelpers wheel file
+            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal")
             
-            if(DOWNLOAD_RESULT EQUAL 0)
-                # Find the downloaded file (now with real version in filename)
-                file(GLOB PYCFHELPERS_WHEEL_FILE "${CMAKE_BINARY_DIR}/pycfhelpers-*.whl")
-                
-                if(PYCFHELPERS_WHEEL_FILE)
-                    # Extract just the filename for logging
-                    get_filename_component(WHEEL_FILENAME "${PYCFHELPERS_WHEEL_FILE}" NAME)
-                    
-                    # Install pycfhelpers wheel file to wheels directory
-                    INSTALL(FILES ${PYCFHELPERS_WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
-                    message(STATUS "Found pycfhelpers wheel file: ${WHEEL_FILENAME}")
-                    message(STATUS "Real pycfhelpers version will be installed: ${WHEEL_FILENAME}")
-                else()
-                    message(WARNING "No pycfhelpers wheel file found after download")
-                endif()
-            else()
-                message(WARNING "Failed to download pycfhelpers wheel file")
-            endif()
-            
-            #install python-modules
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+            # Download pycftools wheel file
+            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/feature-17296-master//latest.universal")
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
@@ -664,3 +668,5 @@ else()
 
 endif()
 INCLUDE(CPack)
+
+
