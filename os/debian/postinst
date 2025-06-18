@@ -24,35 +24,71 @@ fi
 echo "[!] Set exec permissions"
 chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
 
-# Install wheel files if present
-for wheel_dir in "$DAP_PREFIX/share/wheels" "$DAP_PREFIX/share"; do
-    if [ -d "$wheel_dir" ]; then
-        for wheel_file in "$wheel_dir"/*.whl "$wheel_dir"/*.zip; do
-            if [ -f "$wheel_file" ]; then
-                echo "[!] Installing wheel: $(basename "$wheel_file")"
-                if $DAP_PREFIX/python/bin/pip3 install "$wheel_file" --force-reinstall; then
-                    echo "[+] Wheel installed successfully"
-                    # Test basic import for Python packages
-                    if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
-                        if $DAP_PREFIX/python/bin/python3.10 -c "import pycfhelpers; print('[+] pycfhelpers import verified')" 2>/dev/null; then
-                            echo "[+] pycfhelpers verification passed"
-                        else
-                            echo "[!] Warning: pycfhelpers import failed, but installation continued"
-                        fi
-                    elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
-                        if $DAP_PREFIX/python/bin/python3.10 -c "import pycftools; print('[+] pycftools import verified')" 2>/dev/null; then
-                            echo "[+] pycftools verification passed"
-                        else
-                            echo "[!] Warning: pycftools import failed, but installation continued"
-                        fi
-                    fi
-                else
-                    echo "[!] Warning: wheel installation failed, continuing anyway"
-                fi
-            fi
-        done
+# Function to find working pip and python executables
+find_python_executables() {
+    # Find working pip executable
+    for pip_cmd in "$DAP_PREFIX/python/bin/pip3" "$DAP_PREFIX/python/bin/pip"; do
+        if [ -x "$pip_cmd" ]; then
+            PYTHON_PIP="$pip_cmd"
+            echo "[+] Found pip: $PYTHON_PIP"
+            break
+        fi
+    done
+    
+    # Find working python executable
+    for python_cmd in "$DAP_PREFIX/python/bin/python3.10" "$DAP_PREFIX/python/bin/python3.11" "$DAP_PREFIX/python/bin/python3" "$DAP_PREFIX/python/bin/python"; do
+        if [ -x "$python_cmd" ]; then
+            PYTHON_BIN="$python_cmd"
+            echo "[+] Found python: $PYTHON_BIN"
+            break
+        fi
+    done
+    
+    # Check if both found
+    if [ -z "$PYTHON_PIP" ]; then
+        echo "[!] Warning: No working pip found"
+        return 1
     fi
-done
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "[!] Warning: No working python found"
+        return 1
+    fi
+    return 0
+}
+
+# Install wheel files if present
+if find_python_executables; then
+    for wheel_dir in "$DAP_PREFIX/share/wheels" "$DAP_PREFIX/share"; do
+        if [ -d "$wheel_dir" ]; then
+            for wheel_file in "$wheel_dir"/*.whl "$wheel_dir"/*.zip; do
+                if [ -f "$wheel_file" ]; then
+                    echo "[!] Installing wheel: $(basename "$wheel_file")"
+                    if "$PYTHON_PIP" install "$wheel_file" --force-reinstall; then
+                        echo "[+] Wheel installed successfully"
+                        # Test basic import for Python packages
+                        if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
+                            if "$PYTHON_BIN" -c "import pycfhelpers; print('[+] pycfhelpers import verified')" 2>/dev/null; then
+                                echo "[+] pycfhelpers verification passed"
+                            else
+                                echo "[!] Warning: pycfhelpers import failed, but installation continued"
+                            fi
+                        elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
+                            if "$PYTHON_BIN" -c "import pycftools; print('[+] pycftools import verified')" 2>/dev/null; then
+                                echo "[+] pycftools verification passed"
+                            else
+                                echo "[!] Warning: pycftools import failed, but installation continued"
+                            fi
+                        fi
+                    else
+                        echo "[!] Warning: wheel installation failed, continuing anyway"
+                    fi
+                fi
+            done
+        fi
+    done
+else
+    echo "[!] Warning: Could not find working Python/pip executables, skipping wheel installation"
+fi
 
 echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
