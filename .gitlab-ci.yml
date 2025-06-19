@@ -153,7 +153,11 @@ autotests:
   dependencies:
     - amd64:linux.rwd.bld
   script:
-    - /opt/tests-in-docker/artifacts.sh build_*/*.deb
+    - source version.mk
+    - echo "Testing version: ${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}"
+    - DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
+    - echo "Using package: $DEB_FILE"
+    - /opt/tests-in-docker/artifacts.sh "$DEB_FILE"
 
 asan_build:
   extends: .build
