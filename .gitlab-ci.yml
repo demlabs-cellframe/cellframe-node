@@ -133,7 +133,11 @@ amd64:linux.rwd.bld:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux rwd
-      
+    artifacts:
+      paths:
+        - version.mk
+        - build_*/*.deb
+
 autotests:
   extends: .ci-test
   interruptible: true
@@ -164,7 +168,6 @@ asan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
@@ -183,7 +186,6 @@ ubsan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
@@ -202,7 +204,6 @@ tsan_build:
      allow_failure: true
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
-   - *fill_version_mk
   script:
     - ./prod_build/build.sh --target linux rwd 
     - ./prod_build/pack.sh --target linux rwd
@@ -216,7 +217,6 @@ amd64:linux.rwd:
     image: demlabs/debian/amd64:qt5
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
@@ -225,9 +225,10 @@ amd64:linux.rwd:
 amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON 
@@ -237,9 +238,10 @@ amd64:linux.release:
 amd64:windows.rwd:
     extends: .build
     image: demlabs/windows/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target windows rwd
@@ -250,9 +252,10 @@ amd64:windows.rwd:
 amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-osx
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target osx release
@@ -265,9 +268,10 @@ amd64:macos.release:
 amd64:linux.debug:
     extends: .build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
@@ -277,9 +281,10 @@ amd64:linux.debug:
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
@@ -290,9 +295,10 @@ amd64:linux.rwd.opt:
 amd64:linux.tps:
     extends: .build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     when: manual
     script:
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
@@ -303,12 +309,13 @@ amd64:linux.updtr:
     extends: .build
     stage: build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     rules:
       - when: manual
         allow_failure: true
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DADD_UPDATER=ON
@@ -318,9 +325,10 @@ amd64:linux.updtr:
 .amd64:linux.release:
     extends: .build
     image: demlabs/debian/amd64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
-      - *fill_version_mk
     script: 
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
@@ -333,9 +341,10 @@ amd64:linux.updtr:
 armhf:linux.release:
     extends: .build
     image: demlabs/debian/arm32:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script:
       - /opt/buildtools/prepare_environment.sh armhf-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release
@@ -346,9 +355,10 @@ armhf:linux.release:
 arm64:linux.release:
     extends: .build
     image: demlabs/debian/arm64:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script:
       - /opt/buildtools/prepare_environment.sh arm64-linux
-      - *fill_version_mk
     script:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux release
@@ -359,11 +369,12 @@ arm64:linux.release:
 any:android.release:
     extends: .build
     image: demlabs/android/any:qt5
+    dependencies:
+      - amd64:linux.rwd.bld
     before_script:
       - /opt/buildtools/prepare_environment.sh arm64-linux
       - 'apt install -y openjdk-17-jdk'
       - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
-      - *fill_version_mk
     script: 
       - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
