@@ -691,7 +691,7 @@ else()
             message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
             
             # Download pycfhelpers wheel file
-            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal" PYCFHELPERS_SUCCESS)
+            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/master//latest.universal" PYCFHELPERS_SUCCESS)
             
             # Download pycftools wheel file
             download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/feature-17296-master//latest.universal" PYCFTOOLS_SUCCESS)
