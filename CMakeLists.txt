@@ -486,8 +486,10 @@ if(DARWIN)
     
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
-    # Note: pycfhelpers and pycftools are installed as wheel packages on Linux
-    # For macOS, they are still installed as source code for now
+    # Note: pycfhelpers and pycftools are installed as source packages on macOS
+    # Wheel packages are not yet supported on macOS
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
 
@@ -567,8 +569,11 @@ else()
                 cmake_policy(SET CMP0135 NEW)
             endif()
             
+            # Variable to track installation method
+            set(PYTHON_PACKAGES_INSTALL_METHOD "unknown")
+            
             # Function to download and install wheel packages
-            function(download_wheel_package PACKAGE_NAME PACKAGE_URL)
+            function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
                 set(DOWNLOAD_SCRIPT "${CMAKE_BINARY_DIR}/download_${PACKAGE_NAME}.cmake")
                 file(WRITE ${DOWNLOAD_SCRIPT} "
                     # First, get the redirect URL to extract real filename
@@ -601,9 +606,17 @@ else()
                                 SHOW_PROGRESS
                                 INACTIVITY_TIMEOUT 30
                                 TIMEOUT 300
+                                STATUS DOWNLOAD_STATUS
                             )
                             
-                            message(STATUS \"Downloaded ${PACKAGE_NAME} as: \${REAL_FILENAME}\")
+                            list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                            if(DOWNLOAD_RESULT EQUAL 0)
+                                message(STATUS \"Downloaded ${PACKAGE_NAME} as: \${REAL_FILENAME}\")
+                                set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                            else()
+                                message(WARNING \"Failed to download ${PACKAGE_NAME} wheel from real URL\")
+                                set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                            endif()
                         else()
                             message(WARNING \"Could not extract real filename from redirect, using fallback\")
                             file(DOWNLOAD 
@@ -612,8 +625,16 @@ else()
                                 SHOW_PROGRESS
                                 INACTIVITY_TIMEOUT 30
                                 TIMEOUT 300
+                                STATUS DOWNLOAD_STATUS
                             )
-                            set(REAL_FILENAME \"${PACKAGE_NAME}-fallback.whl\")
+                            list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                            if(DOWNLOAD_RESULT EQUAL 0)
+                                set(REAL_FILENAME \"${PACKAGE_NAME}-fallback.whl\")
+                                set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                            else()
+                                message(WARNING \"Fallback download failed for ${PACKAGE_NAME}\")
+                                set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                            endif()
                         endif()
                     else()
                         message(WARNING \"curl failed, using direct download\")
@@ -623,8 +644,16 @@ else()
                             SHOW_PROGRESS
                             INACTIVITY_TIMEOUT 30
                             TIMEOUT 300
+                            STATUS DOWNLOAD_STATUS
                         )
-                        set(REAL_FILENAME \"${PACKAGE_NAME}-direct.whl\")
+                        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                        if(DOWNLOAD_RESULT EQUAL 0)
+                            set(REAL_FILENAME \"${PACKAGE_NAME}-direct.whl\")
+                            set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                        else()
+                            message(WARNING \"Direct download failed for ${PACKAGE_NAME}\")
+                            set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                        endif()
                     endif()
                 ")
                 
@@ -647,19 +676,51 @@ else()
                         INSTALL(FILES ${WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
                         message(STATUS "Found ${PACKAGE_NAME} wheel file: ${WHEEL_FILENAME}")
                         message(STATUS "Real ${PACKAGE_NAME} version will be installed: ${WHEEL_FILENAME}")
+                        set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
                     else()
                         message(WARNING "No ${PACKAGE_NAME} wheel file found after download")
+                        set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
                     endif()
                 else()
                     message(WARNING "Failed to download ${PACKAGE_NAME} wheel file")
+                    set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
                 endif()
             endfunction()
             
+            # Try to download wheel packages
+            message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
+            
             # Download pycfhelpers wheel file
-            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal")
+            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-17842//latest.universal" PYCFHELPERS_SUCCESS)
             
             # Download pycftools wheel file
-            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/feature-17296-master//latest.universal")
+            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/feature-17296-master//latest.universal" PYCFTOOLS_SUCCESS)
+            
+            # Check if both packages downloaded successfully
+            if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
+                message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+                set(PYTHON_PACKAGES_INSTALL_METHOD "wheel")
+                # Create install method flag file
+                INSTALL(CODE "
+                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"wheel\")
+                    message(STATUS \"[WHEEL] Installation method: wheel packages\")
+                ")
+            else()
+                message(WARNING "[FALLBACK] Some wheel packages failed to download, falling back to source installation")
+                set(PYTHON_PACKAGES_INSTALL_METHOD "source")
+                
+                # Install python modules from source (old method)
+                message(STATUS "[FALLBACK] Installing Python modules from source code")
+                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+                
+                # Create install method flag file
+                INSTALL(CODE "
+                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"source\")
+                    message(STATUS \"[FALLBACK] Installation method: source packages\")
+                ")
+            endif()
+            
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
