@@ -694,7 +694,7 @@ else()
             download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/master//latest.universal" PYCFHELPERS_SUCCESS)
             
             # Download pycftools wheel file
-            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/feature-17296-master//latest.universal" PYCFTOOLS_SUCCESS)
+            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/master//latest.universal" PYCFTOOLS_SUCCESS)
             
             # Check if both packages downloaded successfully
             if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
