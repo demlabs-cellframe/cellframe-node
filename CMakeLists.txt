@@ -133,8 +133,8 @@ option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+    set(BUILD_WITH_PYTHON_ENV OFF)
+    set(SUPPORT_PYTHON_PLUGINS OFF)
 endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
