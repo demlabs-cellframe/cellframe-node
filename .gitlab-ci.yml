@@ -19,7 +19,7 @@ stages:
     - deploy
 
 cppcheck_full_analysis:
-# Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection
+# Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
   stage: code_check
   image: demlabs/debian/amd64:cpp_check
   timeout: 12h
