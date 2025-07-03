@@ -17,18 +17,50 @@
     <string>Cellframe Project</string>
 
     <key>CFBundleIdentifier</key>
-    <string>com.demlabs.CellframeNode</string>
+    <string>net.cellframe.cellframe-node</string>
+
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <key>CFBundleName</key>
+    <string>CellframeNode</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Cellframe Node</string>
 
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+
     <key>LSMinimumSystemVersion</key>
-    <string>10.15</string>
+    <string>10.13</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <!-- Python Framework Declaration -->
+    <key>NSBundleInitializer</key>
+    <string>Python</string>
 
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
+
+    <!-- Security and Hardening -->
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
 </dict>
 </plist>

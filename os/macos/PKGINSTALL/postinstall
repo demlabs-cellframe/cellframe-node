@@ -3,13 +3,141 @@
 
 INSTALL_BINS="/Applications/CellframeNode.app/Contents/MacOS/"
 INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
-USER_RES="/Library/Application Support/CellframeNode" 
+USER_RES="/Library/Application Support/CellframeNode"
+PYTHON_FRAMEWORK="/Applications/CellframeNode.app/Contents/Frameworks/Python.framework"
 
 mkdir -p "${USER_RES}/"
 cp -r "${INSTALL_RES}/etc" "${USER_RES}/"
 cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 
 mkdir "${USER_RES}/var/run/"
+
+echo "[!] Creating Python.framework symbolic links"
+echo "[DEBUG] Python framework path: ${PYTHON_FRAMEWORK}"
+
+# Check if Python.framework directory exists
+if [ ! -d "${PYTHON_FRAMEWORK}" ]; then
+    echo "[ERROR] Python.framework directory does not exist: ${PYTHON_FRAMEWORK}"
+    exit 1
+fi
+
+# Check if Versions/3.10 exists
+if [ ! -d "${PYTHON_FRAMEWORK}/Versions/3.10" ]; then
+    echo "[ERROR] Python.framework/Versions/3.10 directory does not exist"
+    ls -la "${PYTHON_FRAMEWORK}/Versions/"
+    exit 1
+fi
+
+# Create symlinks with error checking
+cd "${PYTHON_FRAMEWORK}" || exit 1
+echo "[DEBUG] Working directory: $(pwd)"
+
+# Remove existing symlinks if they exist
+if [ -L "Versions/Current" ]; then
+    echo "[DEBUG] Removing existing Versions/Current symlink"
+    rm "Versions/Current"
+fi
+if [ -L "Python" ]; then
+    echo "[DEBUG] Removing existing Python symlink"
+    rm "Python"
+fi
+
+# Create Versions/Current symlink
+echo "[DEBUG] Creating Versions/Current -> 3.10"
+ln -sf "3.10" "Versions/Current"
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Created symlink: Versions/Current -> 3.10"
+else
+    echo "[ERROR] Failed to create Versions/Current symlink"
+    exit 1
+fi
+
+# Create Python symlink
+echo "[DEBUG] Creating Python -> Versions/Current/Python"
+ln -sf "Versions/Current/Python" "Python"
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Created symlink: Python -> Versions/Current/Python"
+else
+    echo "[ERROR] Failed to create Python symlink"
+    exit 1
+fi
+
+# Set execute permissions on Python executables
+echo "[DEBUG] Setting execute permissions on Python executables"
+chmod +x "${PYTHON_FRAMEWORK}/Versions/Current/bin/python3.10"
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Set execute permissions on python3.10"
+else
+    echo "[ERROR] Failed to set execute permissions on python3.10"
+    exit 1
+fi
+
+chmod +x "${PYTHON_FRAMEWORK}/Versions/Current/bin/pip3"
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Set execute permissions on pip3"
+else
+    echo "[ERROR] Failed to set execute permissions on pip3"
+    exit 1
+fi
+
+# Create critical libpython3.10.dylib symlink
+echo "[DEBUG] Creating libpython3.10.dylib symlink"
+ln -sf "../Python" "${PYTHON_FRAMEWORK}/Versions/3.10/lib/libpython3.10.dylib"
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Created libpython3.10.dylib symlink"
+else
+    echo "[ERROR] Failed to create libpython3.10.dylib symlink"
+    exit 1
+fi
+
+# Create pip configuration file
+echo "[DEBUG] Creating pip configuration file"
+cat > "${PYTHON_FRAMEWORK}/Versions/3.10/pip.conf" << 'EOF'
+[install]
+target = /Applications/CellframeNode.app/Contents/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages
+user = false
+
+[global]
+# Disable user installs by default for embedded Python
+no-input = true
+EOF
+
+if [ $? -eq 0 ]; then
+    echo "[SUCCESS] Created pip configuration file"
+else
+    echo "[ERROR] Failed to create pip configuration file"
+    exit 1
+fi
+
+# Test Python environment
+echo "[DEBUG] Testing Python environment"
+if "${PYTHON_FRAMEWORK}/Versions/Current/bin/python3.10" --version >/dev/null 2>&1; then
+    echo "[SUCCESS] Python executable works"
+else
+    echo "[ERROR] Python executable failed"
+    exit 1
+fi
+
+if "${PYTHON_FRAMEWORK}/Versions/Current/bin/pip3" --version >/dev/null 2>&1; then
+    echo "[SUCCESS] pip3 executable works"
+else
+    echo "[ERROR] pip3 executable failed"
+    exit 1
+fi
+
+# Test pip configuration
+echo "[DEBUG] Testing pip configuration"
+if "${PYTHON_FRAMEWORK}/Versions/Current/bin/pip3" config list | grep -q "install.target"; then
+    echo "[SUCCESS] pip configuration loaded correctly"
+else
+    echo "[WARNING] pip configuration may not be loaded correctly"
+fi
+
+# Verify symlinks
+echo "[DEBUG] Verifying symlinks:"
+ls -la "${PYTHON_FRAMEWORK}/"
+ls -la "${PYTHON_FRAMEWORK}/Versions/"
+ls -la "${PYTHON_FRAMEWORK}/Versions/3.10/lib/libpython3.10.dylib"
 
 ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 

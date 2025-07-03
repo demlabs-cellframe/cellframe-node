@@ -122,13 +122,13 @@ if (BUILD_WITH_TPS_TEST)
 endif()
 
 set(BUILD_WITH_ZIP OFF)
-option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
+option(SUPPORT_PYTHON_PLUGINS DEFAULT ON)
 option(ADD_UPDATER OFF)
-#if(MACOS)
-#    if(SUPPORT_PYTHON_PLUGINS)
-#        set(BUILD_WITH_PYTHON_ENV ON)
-#    endif()
-#endif()
+if(MACOS)
+    if(SUPPORT_PYTHON_PLUGINS)
+        set(BUILD_WITH_PYTHON_ENV ON)
+    endif()
+endif()
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
@@ -404,7 +404,7 @@ if(UNIX AND NOT WIN32)
                 find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
 
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Versions/Current/lib/")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
@@ -437,7 +437,7 @@ if(UNIX AND NOT WIN32)
         if (DARWIN)
         add_custom_command(TARGET ${NODE_TARGET} 
             POST_BUILD COMMAND 
-            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/Python.framework/Python 
             ${NODE_TARGET})
         endif()
     endif()
@@ -480,16 +480,35 @@ if(DARWIN)
     set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
     set(PYTHON_LIB_DIR_PRFX "python3.10")
     
-    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
+    # Create proper Python.framework structure for Apple code signing
+    set(PYTHON_FRAMEWORK_DIR "${RLIBDIR}/Python.framework")
+    set(PYTHON_FRAMEWORK_VERSIONS_DIR "${PYTHON_FRAMEWORK_DIR}/Versions")
+    set(PYTHON_FRAMEWORK_CURRENT_DIR "${PYTHON_FRAMEWORK_VERSIONS_DIR}/3.10")
+    set(PYTHON_FRAMEWORK_RESOURCES_DIR "${PYTHON_FRAMEWORK_CURRENT_DIR}/Resources")
+    set(PYTHON_FRAMEWORK_BIN_DIR "${PYTHON_FRAMEWORK_CURRENT_DIR}/bin")
+    set(PYTHON_FRAMEWORK_LIB_DIR "${PYTHON_FRAMEWORK_CURRENT_DIR}/lib")
     
-    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    # Install Python dylib as framework library
+    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${PYTHON_FRAMEWORK_CURRENT_DIR} RENAME Python)
     
-    #install python-modules
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    # Create framework symlinks
+    INSTALL(CODE "
+        execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink 3.10 \"\${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Versions/Current\")
+        execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink Versions/Current/Python \"\${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Python\")
+        execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink Versions/Current/Resources \"\${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Resources\")
+    ")
+    
+    # Install Python executables to framework bin
+    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${PYTHON_FRAMEWORK_BIN_DIR})
+    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${PYTHON_FRAMEWORK_BIN_DIR})
+    
+    # Install Python standard library to framework
+    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR} USE_SOURCE_PERMISSIONS)
+    
+    # Install python-modules to framework site-packages
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR}/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR}/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${PYTHON_FRAMEWORK_RESOURCES_DIR} USE_SOURCE_PERMISSIONS)
     endif()
 
 else()

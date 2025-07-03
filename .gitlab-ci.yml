@@ -247,7 +247,7 @@ amd64:windows.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
 
-amd64:macos.release:
+.amd64:macos.release:
     extends: .build
     image: demlabs/macos/amd64:qt5
     before_script: 
