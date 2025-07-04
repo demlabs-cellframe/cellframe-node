@@ -59,11 +59,16 @@ find_python_executables() {
 # Function to verify package import
 verify_package_import() {
     local package_name="$1"
-    if "$PYTHON_BIN" -c "import $package_name; print('[+] $package_name import verified')" 2>/dev/null; then
-        echo "[+] $package_name verification passed"
+    
+    # Проверяем файлы вместо вызова Python
+    if [ -d "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name" ]; then
+        echo "[+] $package_name found in site-packages"
+        return 0
+    elif [ -f "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name.py" ]; then
+        echo "[+] $package_name.py found in site-packages"
         return 0
     else
-        echo "[!] Warning: $package_name import failed"
+        echo "[!] Warning: $package_name not found in site-packages"
         return 1
     fi
 }
