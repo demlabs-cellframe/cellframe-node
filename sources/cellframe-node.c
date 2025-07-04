@@ -77,6 +77,7 @@
 #include "dap_enc_http.h"
 
 #include "dap_chain.h"
+#include "dap_chain_common.h"
 #include "dap_chain_wallet.h"
 
 #include "dap_chain_cs_blocks.h"
@@ -320,6 +321,14 @@ int main( int argc, const char **argv )
     if ( dap_global_db_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init global db module" );
         return -58;
+    }
+
+    // Clear wallet shared GDB group on startup
+    int l_cleared_count = dap_chain_clear_gdb_group("local.wallet_shared");
+    if (l_cleared_count >= 0) {
+        log_it(L_INFO, "Cleared %d wallet shared records from GDB on startup", l_cleared_count);
+    } else {
+        log_it(L_WARNING, "Failed to clear wallet shared GDB group on startup, error code %d", l_cleared_count);
     }
 
     if ( dap_datum_mempool_init() ) {
