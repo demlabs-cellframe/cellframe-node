@@ -706,18 +706,12 @@ else()
                     message(STATUS \"[WHEEL] Installation method: wheel packages\")
                 ")
             else()
-                message(WARNING "[FALLBACK] Some wheel packages failed to download, falling back to source installation")
-                set(PYTHON_PACKAGES_INSTALL_METHOD "source")
-                
-                # Install python modules from source (old method)
-                message(STATUS "[FALLBACK] Installing Python modules from source code")
-                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-                
+                message(STATUS "[WHEEL] Some wheel packages failed to download, continuing build without them")
+                set(PYTHON_PACKAGES_INSTALL_METHOD "none")
                 # Create install method flag file
                 INSTALL(CODE "
-                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"source\")
-                    message(STATUS \"[FALLBACK] Installation method: source packages\")
+                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"none\")
+                    message(STATUS \"[WHEEL] Installation method: none (wheel packages not available)\")
                 ")
             endif()
             
