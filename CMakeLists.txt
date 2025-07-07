@@ -403,9 +403,12 @@ if(UNIX AND NOT WIN32)
             else()
                 find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
             endif()
-
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Versions/Current/lib/")
-
+            if (LINUX)
+                target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")        
+            else()
+                target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Python.framework/Versions/Current/lib/")
+            endif()
+        
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
             if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
