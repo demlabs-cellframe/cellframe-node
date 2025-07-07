@@ -76,3 +76,8 @@ cmake-build-*
 .idea
 .mcp
 .cache
+
+# SLC (Smart Layered Context) working directory
+.context/
+slc
+.slc/
