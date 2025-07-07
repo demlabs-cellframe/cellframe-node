@@ -362,9 +362,6 @@ if(UNIX AND NOT WIN32)
 
             if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/python-3.11.11-jammy-aarch64.tar.xz")
-                add_definitions("-DPYTHON_VERSION=\"python3.11\"")
-            else()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
             if (DARWIN)
@@ -373,7 +370,6 @@ if(UNIX AND NOT WIN32)
                 else ()
                     set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
                 endif()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
             endif()
 
             message("[+] Build with python environment")
@@ -423,7 +419,11 @@ if(UNIX AND NOT WIN32)
             endif()
         endif()
 
+        # Add dynamic PYTHON_VERSION definition based on found Python version
+        add_definitions("-DPYTHON_VERSION=\"python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}\"")
+        
         message("[*] Python version: " ${Python_VERSION})
+        message("[*] Using PYTHON_VERSION: python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
         message("[*] Python path: " ${Python_EXECUTABLE})
         message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
         message("[*] Python library path: " ${Python_LIBRARY_DIRS})

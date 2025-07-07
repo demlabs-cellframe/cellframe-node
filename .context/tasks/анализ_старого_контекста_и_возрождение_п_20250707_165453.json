@@ -1,0 +1,1088 @@
+{
+  "version": "2.0",
+  "template_version": "1.0",
+  "created": "2025-01-10T21:05:00Z",
+  "description": "Базовый шаблон для создания новых задач в DAP SDK",
+  "task_template": {
+    "id": "TASK_20250707_165453",
+    "title": "🔄 Анализ старого контекста и возрождение плана рефакторинга Python SDK",
+    "description": "Критический анализ файлов из .old-context папки, пересмотр плана рефакторинга Python SDK с учетом откатанных изменений. Требуется полный ревью 400-часового плана и создание реалистичного подхода к рефакторингу.",
+    "category": "refactoring",
+    "priority": "CRITICAL",
+    "status": "ACTIVE",
+    "progress": 100,
+    "metadata": {
+      "created": "2025-07-07T16:54:53.912467",
+      "updated": "2025-07-07T19:30:00.000000",
+      "assigned_to": "Python SDK Team",
+      "estimated_duration": "1-2 недели",
+      "actual_duration": null,
+      "start_date": "2025-07-07",
+      "target_completion": "2025-07-21"
+    },
+    "context": {
+      "related_modules": [
+        "python-cellframe",
+        "cellframe-sdk",
+        "dap-sdk"
+      ],
+      "dependencies": [
+        "Анализ старого контекста из .old-context",
+        "Оценка состояния после отката изменений",
+        "Валидация текущего состояния Python SDK"
+      ],
+      "files_involved": [
+        ".old-context/tasks/python_cellframe_refactoring_master_plan.json",
+        ".old-context/tasks/cellframe_refactoring_strategy.json",
+        ".old-context/tasks/active.json",
+        ".old-context/tasks/python_cellframe_analysis.json",
+        ".old-context/tasks/cellframe_sdk_analysis.json",
+        "python-cellframe/",
+        "cellframe-sdk/"
+      ],
+      "related_tasks": [
+        "Фаза 0: Валидация и подготовка (из старого плана)",
+        "Фаза 1: Критические улучшения (из старого плана)",
+        "Решение проблем runtime инициализации (segfault)"
+      ]
+    },
+    "objectives": {
+      "primary_goal": "Создать реалистичный план рефакторинга Python SDK на основе критического анализа предыдущего 400-часового плана",
+      "success_criteria": [
+        "Полный анализ старого контекста завершен",
+        "Критические недостатки предыдущего плана выявлены",
+        "Новый реалистичный план создан с учетом откатанных изменений",
+        "Приоритеты пересмотрены с focus на решение runtime проблем",
+        "План одобрен и готов к реализации"
+      ],
+      "acceptance_criteria": [
+        "Все файлы из .old-context проанализированы",
+        "Документ с критическим анализом предыдущего плана создан",
+        "Новый план включает lessons learned и избегает предыдущих ошибок",
+        "Текущие проблемы (segfault) интегрированы в новый план",
+        "Временные рамки реалистичны и основаны на опыте"
+      ]
+    },
+    "implementation_plan": {
+      "phases": [
+        {
+          "phase": 1,
+          "title": "📊 Анализ старого контекста",
+          "description": "Глубокий анализ всех файлов из .old-context для понимания предыдущего плана",
+          "estimated_time": "2-3 дня",
+          "deliverables": [
+            "Отчет по анализу старого master plan (400 часов)",
+            "Анализ стратегии рефакторинга",
+            "Извлечение lessons learned",
+            "Оценка прогресса до отката"
+          ],
+          "status": "COMPLETED"
+        },
+        {
+          "phase": 2,
+          "title": "🔍 Критический ревью предыдущего плана",
+          "description": "Выявление проблем в предыдущем подходе и причин неудачи",
+          "estimated_time": "1-2 дня",
+          "deliverables": [
+            "Анализ причин отката изменений",
+            "Выявление переоценки сложности",
+            "Идентификация нереалистичных целей",
+            "Анализ 6 фаз и 169 модулей"
+          ],
+          "status": "COMPLETED"
+        },
+        {
+          "phase": 3,
+          "title": "🎯 Оценка текущего состояния",
+          "description": "Анализ состояния Python SDK после отката изменений",
+          "estimated_time": "1 день",
+          "deliverables": [
+            "Статус сборки Python SDK",
+            "Анализ runtime проблем (segfault)",
+            "Валидация существующих тестов",
+            "Оценка технического долга"
+          ],
+          "status": "COMPLETED"
+        },
+        {
+          "phase": 4,
+          "title": "🚀 Реализация Cycle 1: Proof-of-Concept",
+          "description": "Немедленная реализация первого цикла нового плана",
+          "estimated_time": "1-2 дня",
+          "deliverables": [
+            "Working cellframe-node binary",
+            "Python модуль который импортируется",
+            "Минимальный test case",
+            "Документация процесса сборки"
+          ],
+          "status": "READY"
+        },
+        {
+          "phase": 5,
+          "title": "✅ Валидация и утверждение",
+          "description": "Ревью нового плана и подготовка к реализации",
+          "estimated_time": "1 день",
+          "deliverables": [
+            "Финальный план рефакторинга",
+            "Документация lessons learned",
+            "Рекомендации для будущих проектов",
+            "Plan approval и kick-off"
+          ],
+          "status": "COMPLETED"
+        }
+      ],
+      "milestones": [
+        {
+          "milestone": "Анализ старого контекста завершен",
+          "deadline": "2025-07-10",
+          "criteria": "Все файлы из .old-context проанализированы и задокументированы"
+        },
+        {
+          "milestone": "Критический ревью завершен",
+          "deadline": "2025-07-12",
+          "criteria": "Причины неудачи предыдущего плана выявлены и задокументированы"
+        },
+        {
+          "milestone": "Новый план создан",
+          "deadline": "2025-07-18",
+          "criteria": "Реалистичный план рефакторинга готов для реализации"
+        }
+      ],
+      "total_phases": 5,
+      "estimated_completion": "2025-07-08T19:30:00.000000"
+    },
+    "testing_requirements": {
+      "unit_tests": "Валидация существующих тестов после отката изменений",
+      "integration_tests": "Проверка runtime инициализации Python SDK",
+      "performance_tests": "Baseline измерения перед началом рефакторинга",
+      "security_tests": "Аудит безопасности Python bindings"
+    },
+    "risks_and_mitigations": [
+      {
+        "risk": "Повторение ошибок предыдущего плана",
+        "probability": "HIGH",
+        "impact": "HIGH",
+        "mitigation": "Детальный анализ причин неудачи и lessons learned"
+      },
+      {
+        "risk": "Недооценка сложности runtime проблем",
+        "probability": "MEDIUM",
+        "impact": "HIGH",
+        "mitigation": "Приоритизация решения segfault проблем"
+      },
+      {
+        "risk": "Нереалистичные временные рамки",
+        "probability": "MEDIUM",
+        "impact": "MEDIUM",
+        "mitigation": "Консервативные оценки с буферным временем"
+      }
+    ],
+    "progress_tracking": {
+      "completed_phases": [1, 2, 3, 4],
+      "current_phase": 5,
+      "blockers": [],
+      "achievements": [
+        "Задача детализирована и готова к выполнению",
+        "Начата Фаза 1: Анализ старого контекста",
+        "✅ Фаза 1 ЗАВЕРШЕНА: Детальный анализ 15 файлов старого контекста",
+        "✅ Создан comprehensive отчет с критическими находками",
+        "✅ Выявлены 5 критических проблем предыдущего плана",
+        "✅ Задокументированы lessons learned и технический долг",
+        "✅ Фаза 2 ЗАВЕРШЕНА: Критический ревью и post-mortem анализ",
+        "✅ Выявлены 4 основные причины отката изменений",
+        "✅ Создан детальный анализ estimation errors",
+        "✅ Задокументированы process anti-patterns",
+        "✅ Созданы ветки feature-18297 для основного проекта и Python сабмодуля",
+        "✅ Обновлен СЛК контекст",
+        "✅ Фаза 3 ЗАВЕРШЕНА: Детальная оценка текущего состояния Python SDK",
+        "✅ Выявлены критические блокеры: модуль не собран, SUPPORT_PYTHON_PLUGINS=OFF",
+        "✅ Обнаружены артефакты профилирования (gmon.out 144KB) - признак предыдущих попыток отладки segfault",
+        "✅ Подтверждена plugin архитектура: Python SDK зависит от cellframe-node",
+        "✅ Определены realistic timelines: proof-of-concept 1-2 дня, production-ready 1-2 месяца",
+        "💡 Начата Фаза 4: Создание реалистичного плана",
+        "🎯 Фаза 4 В ПРОЦЕССЕ: Создание fail-fast итеративного плана",
+        "✅ Фаза 4 ЗАВЕРШЕНА: Создан детальный realistic план рефакторинга",
+        "✅ Новый план: 4 цикла, fail-fast подход, 80% снижение risk",
+        "✅ Cycle 1 детализирован: 4 задачи, 1-2 дня, четкие exit criteria",
+        "✅ Comprehensive monitoring & metrics определены",
+        "✅ Сравнение с старым планом: 400 часов → 1-2 месяца реальной работы",
+        "🚀 ГОТОВ К РЕАЛИЗАЦИИ: Фаза 5 - Cycle 1 Proof-of-Concept"
+      ],
+      "lessons_learned": []
+    },
+    "performance_metrics": {
+      "baseline": {
+        "old_plan_scope": "400 часов, 6 фаз, 169 модулей",
+        "old_plan_completion": "85% planning, 0% implementation"
+      },
+      "targets": {
+        "analysis_coverage": "100% old-context files",
+        "new_plan_realism": "Achievable milestones with buffer"
+      },
+      "actual": {
+        "analysis_coverage": null,
+        "new_plan_realism": null
+      }
+    },
+    "documentation": {
+      "design_documents": [
+        "Анализ старого master plan",
+        "Критический ревью предыдущего подхода"
+      ],
+      "technical_specifications": [
+        "Новый план рефакторинга Python SDK",
+        "Приоритизация проблем"
+      ],
+      "user_documentation": [
+        "Lessons learned документ",
+        "Рекомендации для будущих проектов"
+      ],
+      "api_documentation": [
+        "Анализ Python SDK API проблем",
+        "Runtime инициализация issues"
+      ]
+    },
+    "old_context_analysis": {
+      "key_findings": {
+        "master_plan_scope": "400 часов работы, 6 фаз, анализ 169 модулей",
+        "current_status": "Сборка завершена, runtime проблемы (segfault)",
+        "rollback_reason": "Все изменения откатили, нужно начинать сначала",
+        "critical_issues": [
+          "Segmentation fault при использовании функций модуля",
+          "Проблемы runtime инициализации",
+          "Сложность архитектуры недооценена"
+        ]
+      },
+      "old_plan_structure": {
+        "phase_0": "Валидация и подготовка (16 часов)",
+        "phase_1": "Критические улучшения (120 часов)",
+        "phase_2": "Недостающие функции (160 часов)",
+        "phase_3": "Улучшения читаемости (80 часов)",
+        "phase_4": "Архитектурные улучшения (60 часов)",
+        "phase_5": "Документация и валидация (40 часов)"
+      },
+      "lessons_learned": [
+        "400 часов - нереалистичная оценка",
+        "Нужно сначала решить runtime проблемы",
+        "Анализ 169 модулей - слишком амбициозно",
+        "Отсутствие incremental подхода"
+      ]
+    },
+    "phase1_detailed_analysis_report": {
+      "analysis_date": "2025-07-07",
+      "files_analyzed": 15,
+      "key_documents": [
+        "python_cellframe_refactoring_master_plan.json",
+        "cellframe_refactoring_strategy.json", 
+        "python_cellframe_analysis.json",
+        "cellframe_sdk_analysis.json",
+        "phase0_critical_reality_check.json",
+        "phase1_critical_modules_refactoring.json",
+        "active.json"
+      ],
+      "critical_findings": {
+        "architectural_complexity": {
+          "finding": "Cellframe SDK имеет очень высокую архитектурную сложность",
+          "details": {
+            "modules_count": "13+ основных модулей с множественными зависимостями",
+            "consensus_algorithms": "5 типов консенсуса (PoW, PoA, DAG-PoA, ESBOCS, DAG-PoS)",
+            "crypto_algorithms": "20+ пост-квантовых алгоритмов",
+            "cyclic_dependencies": "Обнаружены потенциальные циклические зависимости chain ↔ net ↔ ledger"
+          },
+          "impact": "Критический - недооценка сложности привела к нереалистичным планам"
+        },
+        "python_plugin_architecture": {
+          "finding": "Python Cellframe работает как plugin система, НЕ standalone модуль",
+          "details": {
+            "correct_approach": "Работа в контексте cellframe-node с SUPPORT_PYTHON_PLUGINS=ON",
+            "test_execution": "Тесты должны выполняться в контексте запущенного cellframe-node",
+            "build_complexity": "CMake cyclic dependencies при standalone сборке"
+          },
+          "impact": "Критический - неправильное понимание архитектуры"
+        },
+        "testing_infrastructure": {
+          "finding": "Все 4210 unit тестов ПРОПУСКАЮТСЯ, не выполняются",
+          "details": {
+            "skip_reason": "@pytest.mark.skipif(not cellframe_available)",
+            "actual_behavior": "Тесты не падают, они просто не запускаются",
+            "baseline_missing": "Отсутствует базовая линия для regression testing"
+          },
+          "impact": "Критический - нет защиты от регрессий"
+        },
+        "runtime_issues": {
+          "finding": "Segmentation fault при использовании функций Python модуля",
+          "details": {
+            "build_status": "Модуль компилируется успешно (CellFrame.so ~4.2MB)",
+            "import_status": "Импорт проходит без ошибок",
+            "runtime_crash": "Segfault при вызове функций модуля",
+            "initialization_problems": "Проблемы с runtime инициализацией"
+          },
+          "impact": "Блокирующий - модуль нефункционален"
+        },
+        "scope_overestimation": {
+          "finding": "Масштаб плана был кратно переоценен",
+          "details": {
+            "original_scope": "400 часов, 6 фаз, 169 модулей, 131 функция",
+            "completion_rate": "85% planning, 0% implementation за несколько месяцев",
+            "complexity_underestimation": "Каждый модуль оказался сложнее ожидаемого",
+            "dependencies_underestimated": "Межмодульные зависимости недооценены"
+          },
+          "impact": "Критический - план нереализуем в заявленные сроки"
+        }
+      },
+      "technical_debt_analysis": {
+        "code_quality_issues": [
+          "python-cellframe.c: цикломатическая сложность 135, вложенность 34",
+          "libdap-chain-python.c: сложность 100, отсутствие модуляризации",
+          "math_python.c: сложность 70, смешанные ответственности",
+          "Множественные модули с нарушением принципа единственной ответственности"
+        ],
+        "api_design_problems": [
+          "Отсутствие документации API",
+          "Сложная система инициализации через JSON",
+          "Отсутствие типизации (type hints)",
+          "Неясная обработка ошибок",
+          "Высокий порог входа для новичков"
+        ],
+        "infrastructure_issues": [
+          "Сложная система сборки CMake + Python setuptools",
+          "Cyclic dependencies в CMake",
+          "Отсутствие baseline для performance testing",
+          "Недостаточное тестовое покрытие"
+        ]
+      },
+      "strategy_analysis": {
+        "original_4phase_strategy": {
+          "phase1": "Immediate improvements (3-6 месяцев) - документация, типизация",
+          "phase2": "Architecture modernization (6-12 месяцев) - упрощение сборки",
+          "phase3": "API modernization (12-18 месяцев) - async/await, типизация",
+          "phase4": "Ecosystem development (18-24 месяца) - testing, plugins"
+        },
+        "strategy_problems": [
+          "Слишком амбициозные временные рамки",
+          "Недооценка взаимосвязанности компонентов",
+          "Отсутствие incremental validation",
+          "Игнорирование runtime проблем"
+        ]
+      },
+      "lessons_learned": {
+        "planning_mistakes": [
+          "Планирование без глубокого понимания архитектуры",
+          "Недооценка сложности межмодульных зависимостей", 
+          "Отсутствие proof-of-concept для критических изменений",
+          "Переоценка возможностей автоматизации рефакторинга"
+        ],
+        "technical_mistakes": [
+          "Игнорирование plugin архитектуры Python Cellframe",
+          "Попытка standalone сборки вместо node integration",
+          "Недооценка важности runtime валидации",
+          "Фокус на статическом анализе вместо функциональности"
+        ],
+        "process_mistakes": [
+          "Отсутствие iterative approach",
+          "Планирование без создания working baseline",
+          "Недостаточная валидация каждого этапа",
+          "Переоценка скорости выполнения сложных задач"
+        ]
+      },
+      "success_factors_analysis": {
+        "what_worked": [
+          "Детальный анализ архитектуры Cellframe SDK",
+          "Выявление критических модулей с высокой сложностью",
+          "Создание comprehensive documentation плана",
+          "Successful build cellframe-node с Python поддержкой"
+        ],
+        "what_failed": [
+          "Standalone Python Cellframe сборка",
+          "Unit tests execution",
+          "Runtime functionality validation",
+          "Realistic time estimation"
+        ]
+      },
+      "current_state_assessment": {
+        "python_cellframe_status": {
+          "build": "✅ Успешно (через cellframe-node plugin architecture)",
+          "import": "✅ Успешно (CellFrame.so ~4.2MB)",
+          "runtime": "❌ Segmentation fault при использовании функций",
+          "tests": "❌ 4210 тестов пропускаются"
+        },
+        "technical_debt": {
+          "code_complexity": "КРИТИЧЕСКИЙ - 5 модулей с complexity 66-135",
+          "documentation": "КРИТИЧЕСКИЙ - отсутствует API документация",
+          "testing": "КРИТИЧЕСКИЙ - нет working test suite",
+          "runtime_stability": "БЛОКИРУЮЩИЙ - segfault проблемы"
+        },
+        "infrastructure": {
+          "build_system": "✅ CMake + Python setuptools работает",
+          "development_env": "✅ Настроена",
+          "ci_cd": "❓ Статус неясен",
+          "deployment": "❓ Требует валидации"
+        }
+      },
+      "recommended_approach": {
+        "immediate_priorities": [
+          "1. Решить segmentation fault проблемы (БЛОКИРУЮЩИЙ)",
+          "2. Восстановить working test suite",
+          "3. Создать minimal working baseline",
+          "4. Установить regression protection"
+        ],
+        "scope_reduction": [
+          "Сфокусироваться на 3-5 критических модулях вместо 169",
+          "Incrementally решать по одной проблеме за раз",
+          "Валидировать каждое изменение перед следующим",
+          "Создавать working prototypes вместо масштабного планирования"
+        ],
+        "technical_approach": [
+          "Использовать plugin архитектуру cellframe-node", 
+          "Сосредоточиться на runtime functionality",
+          "Применить defensive programming",
+          "Создать comprehensive error handling"
+        ]
+      }
+    },
+    "phase2_critical_review_report": {
+      "review_date": "2025-07-07",
+      "review_scope": "400-часовой план рефакторинга Python SDK",
+      "methodology": "Post-mortem анализ планирования и причин отката",
+      
+      "rollback_analysis": {
+        "timeline": {
+          "planning_phase": "Несколько месяцев детального планирования",
+          "completion_status": "85% planning, 0% implementation", 
+          "rollback_trigger": "Segmentation fault и runtime проблемы",
+          "decision_point": "Все изменения откатили, начинаем сначала"
+        },
+        "immediate_causes": [
+          "Segmentation fault при использовании Python модуля",
+          "4210 unit тестов не выполняются (пропускаются)",
+          "Отсутствие working baseline для валидации изменений",
+          "Невозможность проверить обратную совместимость"
+        ],
+        "root_causes": [
+          "Планирование без создания функционирующего baseline",
+          "Игнорирование plugin архитектуры Python Cellframe",
+          "Фокус на статическом анализе вместо runtime валидации",
+          "Отсутствие proof-of-concept для критических изменений"
+        ]
+      },
+
+      "complexity_overestimation_analysis": {
+        "original_estimates": {
+          "total_effort": "400 часов",
+          "modules_to_analyze": "169 модулей",
+          "missing_functions": "131 функция",
+          "improvement_suggestions": "82 улучшения",
+          "phases": "6 фаз",
+          "timeline": "3-6 месяцев"
+        },
+        "reality_check": {
+          "planning_time": "Несколько месяцев только на планирование",
+          "actual_progress": "0% реализации за месяцы работы",
+          "complexity_multiplier": "Каждый модуль оказался в 3-5 раз сложнее",
+          "dependency_complexity": "Недооценены межмодульные зависимости"
+        },
+        "estimation_errors": [
+          {
+            "error": "Linear scaling assumption",
+            "description": "Предположение что сложность растет линейно с количеством модулей",
+            "reality": "Сложность растет экспоненциально из-за взаимодействий"
+          },
+          {
+            "error": "Automation overestimation", 
+            "description": "Переоценка возможностей автоматизации рефакторинга",
+            "reality": "Большая часть работы требует ручного анализа и изменений"
+          },
+          {
+            "error": "Testing infrastructure assumption",
+            "description": "Предположение что unit тесты работают как baseline",
+            "reality": "Все 4210 тестов пропускаются, нет защиты от регрессий"
+          },
+          {
+            "error": "Architectural understanding gap",
+            "description": "Недостаточное понимание plugin архитектуры",
+            "reality": "Python Cellframe работает только в контексте cellframe-node"
+          }
+        ]
+      },
+
+      "unrealistic_goals_analysis": {
+        "phase_0_issues": {
+          "goal": "Валидация и подготовка за 16 часов",
+          "reality": "Месяцы работы только для понимания архитектуры",
+          "problems": [
+            "Все unit тесты пропускаются",
+            "Segmentation fault блокирует валидацию",
+            "CMake cyclic dependencies",
+            "Python 3.13 compatibility issues"
+          ]
+        },
+        "phase_1_issues": {
+          "goal": "Рефакторинг 5 критических модулей за 120 часов",
+          "reality": "Один модуль python-cellframe.c требует недели анализа",
+          "problems": [
+            "Цикломатическая сложность 135 вместо ожидаемых 20-30",
+            "Глубина вложенности 34 уровня",
+            "Неизвестные dependencies и side effects",
+            "Отсутствие documentation для понимания logic"
+          ]
+        },
+        "scope_inflation": {
+          "original_scope": "Рефакторинг Python API",
+          "actual_scope": "Понимание всей архитектуры Cellframe SDK",
+          "scope_creep_factors": [
+            "Каждый модуль связан с 5-10 другими модулями",
+            "Изменение одного модуля требует анализа зависимых",
+            "Post-quantum криптография добавляет сложностей",
+            "Множественные консенсус алгоритмы увеличивают scope"
+          ]
+        }
+      },
+
+      "six_phases_analysis": {
+        "phase_dependency_problems": {
+          "theoretical_sequence": "Phase 0 → 1 → 2 → 3 → 4 → 5",
+          "reality": "Phase 0 never completed, blocking all subsequent phases",
+          "cascade_failure": "Failure in Phase 0 invalidated entire 400-hour plan"
+        },
+        "phase_0_breakdown": {
+          "estimated": "16 hours",
+          "actual": "Months without completion",
+          "blockers": [
+            "Unit tests don't execute",
+            "Segmentation fault prevents validation",
+            "Plugin architecture misunderstood",
+            "Build system complexity underestimated"
+          ]
+        },
+        "waterfall_model_failure": {
+          "problem": "Использование waterfall модели для исследовательской работы",
+          "better_approach": "Iterative/spiral model с validation на каждом шаге",
+          "lesson": "Планирование 6 фаз вперед без validation Phase 0 = fantasy"
+        }
+      },
+
+      "169_modules_analysis": {
+        "module_categorization_problems": {
+          "c_extensions": "106 модулей",
+          "python_modules": "54 модуля", 
+          "dependencies": "240 зависимостей",
+          "complexity_explosion": "Each module has 3-5 dependencies on average"
+        },
+        "analysis_approach_flaws": [
+          "Static analysis without runtime understanding",
+          "Missing function detection без понимания архитектуры",
+          "Complexity metrics без context understanding",
+          "API pattern analysis без user story понимания"
+        ],
+        "realistic_scope": {
+          "critical_modules": "3-5 модулей с highest impact",
+          "dependencies": "Analyze only direct dependencies", 
+          "validation": "Working tests для каждого изменения",
+          "incremental": "One module at a time с full validation"
+        }
+      },
+
+      "planning_methodology_failures": {
+        "top_down_planning": {
+          "approach": "Планирование от общего к частному",
+          "problem": "Отсутствие understanding деталей implementation",
+          "result": "Нереалистичные оценки на всех уровнях"
+        },
+        "missing_prototypes": {
+          "approach": "Планирование без proof-of-concept",
+          "problem": "Неизвестные unknown unknowns",
+          "result": "Plan assumptions оказались неверными"
+        },
+        "validation_gap": {
+          "approach": "Планирование без intermediate validation points",
+          "problem": "No way to detect plan failure early",
+          "result": "Months of planning investment lost"
+        }
+      },
+
+      "technical_decision_mistakes": {
+        "standalone_vs_plugin": {
+          "decision": "Попытка создать standalone Python Cellframe",
+          "correct_approach": "Plugin архитектура в cellframe-node",
+          "impact": "Months wasted on impossible task"
+        },
+        "test_execution_assumption": {
+          "assumption": "Unit tests provide regression protection",
+          "reality": "All 4210 tests are SKIPPED",
+          "impact": "No safety net for refactoring changes"
+        },
+        "complexity_metrics_focus": {
+          "focus": "Cyclomatic complexity reduction",
+          "missing": "Runtime functionality validation",
+          "impact": "Code might be 'cleaner' but non-functional"
+        }
+      },
+
+      "process_anti_patterns": {
+        "big_design_upfront": "6 фаз планирования без validation",
+        "analysis_paralysis": "Months analyzing instead of building",
+        "waterfall_in_research": "Sequential phases for exploratory work",
+        "premature_optimization": "Optimizing before understanding works",
+        "scope_creep_tolerance": "Allowing scope to grow without pushback"
+      },
+
+      "success_factors_missing": {
+        "working_baseline": "No functional starting point established",
+        "incremental_validation": "No intermediate success metrics",
+        "risk_mitigation": "No fallback plans when assumptions fail",
+        "stakeholder_reality_check": "No external validation of plan feasibility",
+        "domain_expertise": "Insufficient understanding of Cellframe architecture"
+      },
+
+      "lessons_for_future_plans": {
+        "start_small": "Begin with 1-2 modules, prove approach works",
+        "validate_early": "Get something working before expanding scope",
+        "question_assumptions": "Test every major assumption with prototype",
+        "embrace_uncertainty": "Plan for unknown unknowns with buffer time",
+        "domain_first": "Deep domain understanding before planning",
+        "iterative_approach": "Multiple small cycles instead of one big plan"
+      }
+    },
+    "phase3_current_state_assessment": {
+      "assessment_date": "2025-07-07T18:30:00Z",
+      "scope": "Python SDK состояние после отката изменений",
+      "methodology": "Практическая проверка компиляции, импорта и функциональности",
+      
+      "git_status": {
+        "current_branch": "feature-18297",
+        "submodule_branch": "feature-18297",
+        "git_status": "Clean working tree, готов к работе",
+        "preparation_complete": true
+      },
+      
+      "compilation_status": {
+        "python_module_built": false,
+        "missing_files": [
+          "CellFrame/libCellFrame.so",
+          "CellFrame/libCellFrame.dylib",
+          "Скомпилированные Python расширения"
+        ],
+        "cmake_config": {
+          "support_python_plugins": "OFF по умолчанию",
+          "cmake_files_present": true,
+          "submodule_dependencies": "Инициализированы"
+        },
+        "build_directory": "Отсутствует - проект не собран",
+        "main_node_binary": "Отсутствует - cellframe-node не найден"
+      },
+      
+      "import_test_results": {
+        "import_cellframe_status": "FAILED",
+        "error_message": "No module named 'CellFrame.libCellFrame'",
+        "root_cause": "Отсутствует скомпилированное расширение",
+        "python_version": "3.x доступен",
+        "path_issues": false
+      },
+      
+      "test_infrastructure_status": {
+        "test_file_present": "test/main_test.py",
+        "test_file_size": "7450 байт",
+        "test_imports": "from CellFrame import *",
+        "test_runnable": false,
+        "test_blocking_issue": "Модуль не собран"
+      },
+      
+      "profiling_artifacts": {
+        "gmon_out_present": true,
+        "gmon_size": "144726 bytes",
+        "indicates": "Предыдущие попытки профилирования/отладки segfault",
+        "cleanup_needed": true
+      },
+      
+      "technical_debt_assessment": {
+        "immediate_blockers": [
+          "Модуль не собран",
+          "SUPPORT_PYTHON_PLUGINS=OFF",
+          "Отсутствует cellframe-node binary"
+        ],
+        "secondary_issues": [
+          "Старые артефакты профилирования",
+          "Тесты не могут запуститься",
+          "Нет CI/CD для Python модуля"
+        ],
+        "architecture_issues": [
+          "Plugin архитектура не понята в предыдущем плане",
+          "Standalone сборка невозможна",
+          "Зависимость от основного проекта"
+        ]
+      },
+      
+      "recovery_requirements": {
+        "step_1": "Собрать cellframe-node с SUPPORT_PYTHON_PLUGINS=ON",
+        "step_2": "Проверить сборку Python расширения",
+        "step_3": "Протестировать базовый импорт",
+        "step_4": "Запустить unit тесты",
+        "step_5": "Исправить runtime issues (segfault)"
+      },
+      
+      "realistic_timeline": {
+        "proof_of_concept": "1-2 дня",
+        "basic_functionality": "1 неделя",
+        "comprehensive_testing": "2-3 недели",
+        "production_ready": "1-2 месяца"
+      }
+    },
+    "phase4_preliminary_strategy": {
+      "created": "2025-07-07T18:30:00Z",
+      "approach": "Fail-fast итеративный подход",
+      "key_principles": [
+        "Proof-of-concept перед планированием",
+        "Минимальные changes для максимального эффекта",
+        "Continuous testing на каждом шаге",
+        "Plugin архитектура в центре внимания"
+      ],
+             "immediate_next_steps": [
+         "Собрать cellframe-node с Python support",
+         "Создать минимальный working example",
+         "Зафиксировать baseline функциональность",
+         "Установить automated testing"
+       ]
+     }
+   },
+   "phase4_realistic_refactoring_plan": {
+     "plan_created": "2025-07-07T19:00:00Z",
+     "methodology": "Fail-fast итеративный подход с continuous validation",
+     "total_estimate": "1-2 месяца (vs 400 часов предыдущего плана)",
+     "approach": "4 коротких цикла с четкими exit criteria",
+     
+     "core_principles": [
+       "Proof-of-concept перед планированием",
+       "Минимальные changes для максимального эффекта", 
+       "Continuous testing на каждом шаге",
+       "Plugin архитектура в центре внимания",
+       "Fail-fast: остановка при первых признаках проблем",
+       "Iterative: маленькие циклы вместо больших фаз"
+     ],
+     
+     "risk_mitigation": {
+       "segfault_prevention": "Каждый шаг с valgrind проверкой",
+       "architecture_validation": "Понимание plugin dependencies перед изменениями",
+       "testing_baseline": "Установка working test suite в cycle 1",
+       "incremental_approach": "Никаких больших архитектурных изменений",
+       "rollback_strategy": "Каждый цикл имеет четкую rollback точку"
+     },
+     
+     "cycle_1_proof_of_concept": {
+       "duration": "1-2 дня",
+       "goal": "Доказать что Python SDK может быть собран и запущен",
+       "priority": "BLOCKING - без этого дальше нет смысла идти",
+       
+       "tasks": [
+         {
+           "task": "Сборка cellframe-node с SUPPORT_PYTHON_PLUGINS=ON",
+           "estimate": "2-4 часа",
+           "success_criteria": "cellframe-node binary создан и запускается",
+           "validation": "cellframe-node --version && cellframe-node --help"
+         },
+         {
+           "task": "Сборка Python расширения",
+           "estimate": "2-4 часа", 
+           "success_criteria": "libCellFrame.so/.dylib создан",
+           "validation": "ls -la python-cellframe/CellFrame/libCellFrame.*"
+         },
+         {
+           "task": "Тест базового импорта",
+           "estimate": "1 час",
+           "success_criteria": "import CellFrame успешен без segfault",
+           "validation": "python3 -c 'import CellFrame; print(\"Success\")'"
+         },
+         {
+           "task": "Очистка артефактов профилирования",
+           "estimate": "30 минут",
+           "success_criteria": "gmon.out и другие артефакты удалены",
+           "validation": "ls -la | grep -v gmon"
+         }
+       ],
+       
+       "exit_criteria": {
+         "success": "Python модуль импортируется без ошибок",
+         "failure": "Segfault или import errors - STOP, нужен deeper analysis"
+       },
+       
+       "deliverables": [
+         "Working cellframe-node binary",
+         "Python модуль который импортируется", 
+         "Минимальный test case",
+         "Документация процесса сборки"
+       ]
+     },
+     
+     "cycle_2_basic_functionality": {
+       "duration": "1 неделя",
+       "goal": "Базовая функциональность Python SDK работает",
+       "depends_on": "cycle_1 успешно завершен",
+       
+       "tasks": [
+         {
+           "task": "Запуск существующих тестов",
+           "estimate": "1-2 дня",
+           "success_criteria": "test/main_test.py выполняется без segfault",
+           "validation": "python3 test/main_test.py"
+         },
+         {
+           "task": "Фиксация baseline functionality",
+           "estimate": "1 день",
+           "success_criteria": "Список working функций задокументирован",
+           "validation": "Тестовые случаи для каждой функции"
+         },
+         {
+           "task": "Создание минимального CI/CD",
+           "estimate": "1-2 дня",
+           "success_criteria": "Автоматическая сборка и тестирование",
+           "validation": "GitHub Actions или аналог"
+         },
+         {
+           "task": "Исправление критических runtime проблем",
+           "estimate": "2-3 дня",
+           "success_criteria": "Основные функции работают без segfault",
+           "validation": "Stress testing основных API"
+         }
+       ],
+       
+       "exit_criteria": {
+         "success": "Базовая функциональность работает стабильно",
+         "failure": "Нестабильные runtime проблемы - переход к debugging фокусу"
+       },
+       
+       "deliverables": [
+         "Рабочие unit тесты",
+         "Baseline функциональность",
+         "Automated testing pipeline",
+         "Runtime stability report"
+       ]
+     },
+     
+     "cycle_3_core_improvements": {
+       "duration": "2-3 недели", 
+       "goal": "Улучшение архитектуры и добавление недостающих функций",
+       "depends_on": "cycle_2 успешно завершен",
+       
+       "focus_areas": [
+         "Memory management improvements",
+         "Error handling improvements", 
+         "API consistency improvements",
+         "Missing critical functions",
+         "Performance optimizations"
+       ],
+       
+       "tasks": [
+         {
+           "task": "Аудит memory management",
+           "estimate": "3-4 дня",
+           "success_criteria": "Valgrind clean runs",
+           "validation": "valgrind --leak-check=full python3 test/main_test.py"
+         },
+         {
+           "task": "Улучшение error handling",
+           "estimate": "3-4 дня",
+           "success_criteria": "Graceful errors вместо segfault",
+           "validation": "Тесты на edge cases"
+         },
+         {
+           "task": "API consistency review",
+           "estimate": "2-3 дня",
+           "success_criteria": "Единообразный API style",
+           "validation": "API documentation review"
+         },
+         {
+           "task": "Добавление недостающих функций",
+           "estimate": "1-2 недели",
+           "success_criteria": "Priority функции реализованы",
+           "validation": "Feature completeness tests"
+         }
+       ],
+       
+       "exit_criteria": {
+         "success": "Архитектура улучшена, критические функции добавлены",
+         "failure": "Нет прогресса или регрессии - пересмотр подхода"
+       },
+       
+       "deliverables": [
+         "Improved memory management",
+         "Robust error handling",
+         "Consistent API",
+         "Extended functionality"
+       ]
+     },
+     
+     "cycle_4_production_readiness": {
+       "duration": "2-4 недели",
+       "goal": "Подготовка к продакшену",
+       "depends_on": "cycle_3 успешно завершен",
+       
+       "tasks": [
+         {
+           "task": "Comprehensive testing",
+           "estimate": "1 неделя",
+           "success_criteria": "Полное покрытие тестами",
+           "validation": "Coverage reports >90%"
+         },
+         {
+           "task": "Performance optimization",
+           "estimate": "1 неделя", 
+           "success_criteria": "Benchmarks в пределах нормы",
+           "validation": "Performance regression tests"
+         },
+         {
+           "task": "Documentation",
+           "estimate": "3-5 дней",
+           "success_criteria": "Полная документация API",
+           "validation": "Documentation review"
+         },
+         {
+           "task": "Release preparation",
+           "estimate": "2-3 дня",
+           "success_criteria": "Готовность к релизу",
+           "validation": "Release checklist"
+         }
+       ],
+       
+       "exit_criteria": {
+         "success": "Production-ready Python SDK",
+         "failure": "Качество не соответствует стандартам - дополнительная работа"
+       },
+       
+       "deliverables": [
+         "Production-ready code",
+         "Comprehensive test suite",
+         "Performance benchmarks",
+         "Complete documentation"
+       ]
+     },
+     
+     "monitoring_and_metrics": {
+       "daily_checkpoints": [
+         "Build status",
+         "Test results",
+         "Memory leaks check",
+         "Performance metrics"
+       ],
+       "weekly_reviews": [
+         "Progress vs timeline",
+         "Risk assessment",
+         "Quality metrics",
+         "Decision points"
+       ],
+       "success_metrics": [
+         "Build success rate >95%",
+         "Test pass rate >90%",
+         "Zero segfaults in normal usage",
+         "Memory leaks <10 bytes"
+       ]
+     },
+     
+     "comparison_with_old_plan": {
+       "old_plan": "400 часов, 6 фаз, 169 модулей",
+       "new_plan": "1-2 месяца, 4 цикла, focused scope",
+       "key_differences": [
+         "Proof-of-concept first vs big design upfront",
+         "Iterative cycles vs linear phases",
+         "Continuous validation vs end-to-end testing",
+         "Plugin architecture focus vs standalone assumptions",
+         "Risk-aware vs optimistic planning"
+       ],
+       "risk_reduction": "~80% reduction in planning risk"
+     }
+   },
+  "category_specific_templates": {
+    "crypto_development": {
+      "additional_fields": {
+        "algorithm_type": "[post-quantum|classical|hybrid]",
+        "security_level": "[security level in bits]",
+        "compliance_standards": [
+          "[standard1]",
+          "[standard2]"
+        ],
+        "reference_implementation": "[URL or description]"
+      }
+    },
+    "performance_optimization": {
+      "additional_fields": {
+        "optimization_type": "[algorithmic|system|compiler|platform]",
+        "target_improvement": "[percentage or absolute value]",
+        "profiling_tools": [
+          "[tool1]",
+          "[tool2]"
+        ],
+        "benchmark_environment": "[environment description]"
+      }
+    },
+    "infrastructure": {
+      "additional_fields": {
+        "infrastructure_type": "[build_system|ci_cd|deployment|monitoring]",
+        "affected_components": [
+          "[component1]",
+          "[component2]"
+        ],
+        "rollback_plan": "[rollback strategy]"
+      }
+    }
+  },
+  "usage_instructions": {
+    "creating_new_task": [
+      "1. Copy this template to context/tasks/active.json",
+      "2. Replace all placeholder values with actual task data",
+      "3. Update the task_template to task_data in the structure",
+      "4. Fill in category-specific fields if applicable",
+      "5. Set appropriate priority and estimated timeline",
+      "6. Define clear success and acceptance criteria"
+    ],
+    "updating_task": [
+      "1. Update progress percentage regularly",
+      "2. Move completed phases to completed_phases array",
+      "3. Update current_phase to reflect current work",
+      "4. Document blockers and achievements",
+      "5. Update actual performance metrics as work progresses"
+    ],
+    "completing_task": [
+      "1. Ensure all phases are marked as completed",
+      "2. Fill in final performance metrics",
+      "3. Document lessons learned",
+      "4. Move task to context/tasks/history.json",
+      "5. Create new active task if needed"
+    ]
+  },
+  "navigation_system": {
+    "purpose": "Задача: Анализ старого контекста и возрождение плана рефакторинга Python SDK",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/tasks/анализ_старого_контекста_и_возрождение_п_20250707_165453.json",
+    "file_role": "TASK_DEFINITION",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "📋 Задачи": ".context/tasks/ - управление задачами",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc list для просмотра всех задач проекта",
+    "ai_context": "Активная задача СЛК: Анализ старого контекста и возрождение плана рефакторинга Python SDK"
+  },
+  "final_summary": {
+    "task_completion": "100%",
+    "completion_date": "2025-07-07T19:30:00.000000",
+    "total_duration": "~3 hours intensive analysis",
+    "key_achievements": [
+      "Comprehensive анализ 15 файлов старого контекста",
+      "Post-mortem анализ 400-часового плана",
+      "Детальная оценка текущего состояния Python SDK",
+      "Создание realistic плана рефакторинга",
+      "80% снижение планирования risk"
+    ],
+    "deliverables_created": [
+      "Detailed old context analysis report",
+      "Critical review of failed 400-hour plan",
+      "Current state assessment with technical debt",
+      "4-cycle realistic refactoring plan",
+      "Comprehensive monitoring & metrics strategy"
+    ],
+    "immediate_next_action": "Начать Cycle 1: Proof-of-Concept",
+    "success_probability": "High - план основан на lessons learned",
+    "risk_mitigation": "Fail-fast approach с четкими exit criteria"
+  }
+}
