@@ -505,6 +505,9 @@ if(DARWIN)
     # Install Python standard library to framework
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR} USE_SOURCE_PERMISSIONS)
     
+    # Install Python includes to framework
+    INSTALL(DIRECTORY ${cpythonstatic_SOURCE_DIR}/include/python3.10 DESTINATION ${PYTHON_FRAMEWORK_CURRENT_DIR}/include USE_SOURCE_PERMISSIONS)
+    
     # Install python-modules to framework site-packages
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR}/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${PYTHON_FRAMEWORK_LIB_DIR}/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
