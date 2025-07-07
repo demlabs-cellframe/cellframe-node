@@ -122,17 +122,18 @@ if (BUILD_WITH_TPS_TEST)
 endif()
 
 set(BUILD_WITH_ZIP OFF)
-option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
+option(SUPPORT_PYTHON_PLUGINS "Enable Python plugins support" OFF)
 option(ADD_UPDATER OFF)
-#if(MACOS)
-#    if(SUPPORT_PYTHON_PLUGINS)
-#        set(BUILD_WITH_PYTHON_ENV ON)
-#    endif()
-#endif()
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
+# Enable Python plugins support by default on Linux and macOS
 if(LINUX)
+    set(BUILD_WITH_PYTHON_ENV ON)
+    set(SUPPORT_PYTHON_PLUGINS ON)
+endif()
+
+if(DARWIN)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
