@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(cellframe-node C)
+project(cellframe-node-plugin-python C)
 include(cellframe-sdk/cmake/ReadMKFile.cmake)
 include(FetchContent)
 
@@ -8,6 +8,7 @@ set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Predefine project
 SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
@@ -580,3 +581,222 @@ else()
 
 endif()
 INCLUDE(CPack)
+
+# Build configuration
+option(BUILD_PLUGIN_PACKAGE "Build binary plugin package" ON)
+option(BUILD_STANDALONE_PACKAGE "Build standalone Python library package" ON)
+option(BUILD_WITH_PYTHON_ENV "Build with bundled Python environment" ON)
+
+# Set build directory structure
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Find Python
+if(BUILD_WITH_PYTHON_ENV)
+    # Use bundled Python from URL
+    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz")
+    
+    if(CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
+        set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/python-3.11.11-jammy-aarch64.tar.xz")
+    endif()
+    
+    if(DARWIN)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+        else()
+            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-x86_64-apple-darwin-install_only.tar.gz")
+        endif()
+    endif()
+    
+    include(ExternalProject)
+    ExternalProject_Add(python_env
+        URL ${PYTHON_URL}
+        PREFIX ${CMAKE_BINARY_DIR}/python
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+    )
+    
+    set(Python_ROOT_DIR ${CMAKE_BINARY_DIR}/python/src/python_env)
+    set(Python_EXECUTABLE ${Python_ROOT_DIR}/bin/python3)
+    set(Python_INCLUDE_DIRS ${Python_ROOT_DIR}/include/python3.10)
+    set(Python_LIBRARIES ${Python_ROOT_DIR}/lib/libpython3.10.dylib)
+    
+    if(LINUX)
+        set(Python_LIBRARIES ${Python_ROOT_DIR}/lib/libpython3.10.so)
+    endif()
+else()
+    find_package(Python3 COMPONENTS Interpreter Development)
+    set(Python_EXECUTABLE ${Python3_EXECUTABLE})
+    set(Python_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    set(Python_LIBRARIES ${Python3_LIBRARIES})
+endif()
+
+# Initialize submodules
+find_package(Git REQUIRED)
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    RESULT_VARIABLE submodule_result
+)
+
+# Add submodules
+add_subdirectory(dap-sdk)
+add_subdirectory(cellframe-sdk)
+
+# Include directories
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/dap-sdk/core/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/python-cellframe
+    ${CMAKE_CURRENT_SOURCE_DIR}/python-dap
+    ${Python_INCLUDE_DIRS}
+)
+
+# Common source files
+set(PLUGIN_SOURCES
+    src/plugin_main.c
+    src/plugin_python_init.c
+)
+
+# Package 1: Binary Plugin for CellFrame Node
+if(BUILD_PLUGIN_PACKAGE)
+    add_library(cellframe-node-plugin-python SHARED ${PLUGIN_SOURCES})
+    
+    # Link with CellFrame SDK and DAP SDK
+    target_link_libraries(cellframe-node-plugin-python
+        cellframe-sdk
+        dap-sdk
+        ${Python_LIBRARIES}
+    )
+    
+    # Set plugin properties
+    set_target_properties(cellframe-node-plugin-python PROPERTIES
+        OUTPUT_NAME "cellframe-node-plugin-python"
+        PREFIX "lib"
+        SUFFIX ".so"
+    )
+    
+    # Install plugin
+    install(TARGETS cellframe-node-plugin-python
+        LIBRARY DESTINATION lib/plugins
+        RUNTIME DESTINATION bin
+    )
+    
+    # Install manifest
+    install(FILES dist/plugin-python.json
+        DESTINATION lib/plugins/manifests
+    )
+    
+    # Install documentation
+    install(FILES README.md
+        DESTINATION share/doc/cellframe-node-plugin-python
+    )
+    
+    # Create plugin package
+    set(CPACK_PACKAGE_NAME "cellframe-node-plugin-python")
+    set(CPACK_PACKAGE_VERSION "1.0.0")
+    set(CPACK_PACKAGE_DESCRIPTION "Python plugins support for CellFrame Node")
+    set(CPACK_PACKAGE_CONTACT "dmitriy.gerasimov@demlabs.net")
+    
+    if(BUILD_WITH_PYTHON_ENV)
+        # Install bundled Python environment
+        install(DIRECTORY ${CMAKE_BINARY_DIR}/python/src/python_env/
+            DESTINATION python
+            USE_SOURCE_PERMISSIONS
+        )
+    endif()
+endif()
+
+# Package 2: Standalone Python Library
+if(BUILD_STANDALONE_PACKAGE)
+    # Create dynamic library with embedded static DAP SDK
+    add_library(cellframe-standalone SHARED 
+        ${PLUGIN_SOURCES}
+        # Additional standalone sources if needed
+    )
+    
+    # Link statically with DAP SDK, dynamically with CellFrame SDK
+    target_link_libraries(cellframe-standalone
+        cellframe-sdk  # Dynamic linking
+        dap-sdk        # Will be linked statically
+        ${Python_LIBRARIES}
+    )
+    
+    # Set standalone library properties
+    set_target_properties(cellframe-standalone PROPERTIES
+        OUTPUT_NAME "cellframe"
+        PREFIX "lib"
+        SUFFIX ".so"
+    )
+    
+    # Force static linking for DAP SDK
+    set_target_properties(dap-sdk PROPERTIES
+        LINK_FLAGS "-static"
+    )
+    
+    # Install standalone library
+    install(TARGETS cellframe-standalone
+        LIBRARY DESTINATION lib/python/site-packages
+        RUNTIME DESTINATION bin
+    )
+    
+    # Install Python modules
+    install(DIRECTORY python-cellframe/cellframe
+        DESTINATION lib/python/site-packages
+        FILES_MATCHING PATTERN "*.py"
+    )
+    
+    install(DIRECTORY python-dap/dap
+        DESTINATION lib/python/site-packages
+        FILES_MATCHING PATTERN "*.py"
+    )
+    
+    # Create Python package
+    set(CPACK_PACKAGE_NAME "python-cellframe-standalone")
+    set(CPACK_PACKAGE_VERSION "1.0.0")
+    set(CPACK_PACKAGE_DESCRIPTION "Standalone Python library for CellFrame SDK")
+    set(CPACK_PACKAGE_CONTACT "dmitriy.gerasimov@demlabs.net")
+endif()
+
+# CPack configuration
+include(CPack)
+
+# Add custom targets
+add_custom_target(plugin-package
+    COMMAND ${CMAKE_COMMAND} --build . --target cellframe-node-plugin-python
+    COMMENT "Building plugin package"
+)
+
+add_custom_target(standalone-package
+    COMMAND ${CMAKE_COMMAND} --build . --target cellframe-standalone
+    COMMENT "Building standalone package"
+)
+
+add_custom_target(all-packages
+    DEPENDS plugin-package standalone-package
+    COMMENT "Building all packages"
+)
+
+# Development targets
+add_custom_target(test-plugin
+    COMMAND ${CMAKE_COMMAND} -E echo "Testing plugin..."
+    COMMENT "Running plugin tests"
+)
+
+add_custom_target(install-plugin
+    COMMAND ${CMAKE_COMMAND} --build . --target install
+    COMMENT "Installing plugin"
+)
+
+# Print configuration
+message(STATUS "=== CellFrame Node Plugin Python Configuration ===")
+message(STATUS "BUILD_PLUGIN_PACKAGE: ${BUILD_PLUGIN_PACKAGE}")
+message(STATUS "BUILD_STANDALONE_PACKAGE: ${BUILD_STANDALONE_PACKAGE}")
+message(STATUS "BUILD_WITH_PYTHON_ENV: ${BUILD_WITH_PYTHON_ENV}")
+message(STATUS "Python_EXECUTABLE: ${Python_EXECUTABLE}")
+message(STATUS "Python_INCLUDE_DIRS: ${Python_INCLUDE_DIRS}")
+message(STATUS "Python_LIBRARIES: ${Python_LIBRARIES}")
+message(STATUS "==================================================")

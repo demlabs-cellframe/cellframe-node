@@ -1,0 +1,23 @@
+# Core dependencies
+typing-extensions>=4.0.0  # For Python 3.8 compatibility
+
+# Async support
+aiohttp>=3.8.0
+asyncio>=3.4.0
+
+# Cryptography
+pycryptodome>=3.17.0
+
+# Network
+requests>=2.28.0
+websockets>=10.0
+
+# Utils
+python-dateutil>=2.8.0
+pathlib2>=2.3.7; python_version<"3.9"
+
+# Optional dependencies (installed with extras)
+# pip install cellframe[dev]
+# pip install cellframe[async]
+# pip install cellframe[performance]
+# pip install cellframe[testing] 

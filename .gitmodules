@@ -1,17 +1,16 @@
+[submodule "python-cellframe"]
+	path = python-cellframe
+	url = git@gitlab.demlabs.net:cellframe/python-cellframe.git
+	branch = feature-18297
+[submodule "python-dap"]
+	path = python-dap
+	url = git@gitlab.demlabs.net:dap/python-dap.git
+	branch = feature-18297
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
-	url = ../cellframe-sdk.git
-	branch = develop
-[submodule "prod_build"]
-	path = prod_build
-	url = ../prod_build_cellframe-node.git
+	url = git@gitlab.demlabs.net:cellframe/cellframe-sdk.git
+	branch = release-6.0
 [submodule "dap-sdk"]
 	path = dap-sdk
-	url = ../../dap/dap-sdk.git
-	branch = develop
-[submodule "diagtool"]
-	path = diagtool
-	url = https://gitlab.demlabs.net/cellframe/cellframe-node-diagtool.git
-[submodule "plugin/plugin-python"]
-	path = plugin/plugin-python
-	url = git@gitlab.demlabs.net:cellframe/cellframe-node-plugin-python.git
+	url = git@gitlab.demlabs.net:dap/dap-sdk.git
+	branch = release-6.0

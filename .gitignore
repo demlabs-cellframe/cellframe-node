@@ -81,3 +81,63 @@ cmake-build-*
 .context/
 slc
 .slc/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Backup directories
+backup/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+
+# C/C++ compiled files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+coverage.xml
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Local configuration
+local_config.json
+.env.local
