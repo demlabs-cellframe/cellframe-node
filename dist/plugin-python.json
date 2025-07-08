@@ -1,0 +1,82 @@
+{
+  "name": "cellframe-node-plugin-python",
+  "version": "1.0.0",
+  "description": "Python plugins support for CellFrame Node",
+  "author": "Dmitriy Gerasimov <dmitriy.gerasimov@demlabs.net>",
+  "homepage": "https://gitlab.demlabs.net/cellframe/cellframe-node-plugin-python",
+  "license": "GPL-3.0",
+  "type": "binary",
+  "category": "runtime",
+  "tags": ["python", "plugins", "sdk", "scripting"],
+  
+  "runtime": {
+    "entry_point": "libcellframe-node-plugin-python.so",
+    "initialization": "plugin_python_init",
+    "cleanup": "plugin_python_deinit"
+  },
+  
+  "dependencies": {
+    "cellframe-node": ">=6.0.0",
+    "python": ">=3.8.0"
+  },
+  
+  "configuration": {
+    "config_section": "python",
+    "required_options": [],
+    "optional_options": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "default": true,
+        "description": "Enable Python plugin support"
+      },
+      {
+        "name": "plugins_path",
+        "type": "string",
+        "default": "/opt/cellframe-node/var/lib/plugins",
+        "description": "Path to Python plugins directory"
+      },
+      {
+        "name": "python_path",
+        "type": "string",
+        "default": "/opt/cellframe-node/python",
+        "description": "Path to bundled Python environment"
+      }
+    ]
+  },
+  
+  "files": {
+    "binary": "libcellframe-node-plugin-python.so",
+    "manifest": "plugin-python.json",
+    "documentation": "README.md"
+  },
+  
+  "installation": {
+    "target_directory": "/opt/cellframe-node/lib/plugins",
+    "permissions": "755",
+    "create_directories": [
+      "/opt/cellframe-node/var/lib/plugins"
+    ]
+  },
+  
+  "compatibility": {
+    "platforms": ["linux", "darwin"],
+    "architectures": ["x86_64", "arm64"],
+    "cellframe_versions": ["6.0.x"]
+  },
+  
+  "features": [
+    "python_interpreter",
+    "cellframe_sdk_bindings",
+    "dap_sdk_bindings",
+    "plugin_loader",
+    "transaction_composer",
+    "wallet_integration"
+  ],
+  
+  "build_info": {
+    "build_date": "2025-01-08",
+    "commit_hash": "feature-18297",
+    "build_type": "plugin"
+  }
+} 
