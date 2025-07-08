@@ -1,0 +1,168 @@
+{
+  "version": "2.0",
+  "template_version": "1.0",
+  "created": "2025-01-10T21:05:00Z",
+  "description": "Базовый шаблон для создания новых задач в DAP SDK",
+  
+  "task_template": {
+    "id": "TASK_ID_PLACEHOLDER",
+    "title": "🎯 [TASK TITLE]",
+    "description": "[Detailed description of the task]",
+    "category": "[crypto_development|performance_optimization|infrastructure|testing|documentation]",
+    "priority": "[LOW|MEDIUM|HIGH|CRITICAL]",
+    "status": "PLANNED",
+    "progress": 0,
+    
+    "metadata": {
+      "created": "[YYYY-MM-DDTHH:mm:ssZ]",
+      "updated": "[YYYY-MM-DDTHH:mm:ssZ]",
+      "assigned_to": "[developer_name or team]",
+      "estimated_duration": "[time estimate]",
+      "actual_duration": null,
+      "start_date": null,
+      "target_completion": "[YYYY-MM-DD]"
+    },
+    
+    "context": {
+      "related_modules": ["[module1]", "[module2]"],
+      "dependencies": ["[dependency1]", "[dependency2]"],
+      "files_involved": [
+        "[path/to/file1]",
+        "[path/to/file2]"
+      ],
+      "related_tasks": ["[task_id1]", "[task_id2]"]
+    },
+    
+    "objectives": {
+      "primary_goal": "[Main objective of the task]",
+      "success_criteria": [
+        "[Criterion 1]",
+        "[Criterion 2]",
+        "[Criterion 3]"
+      ],
+      "acceptance_criteria": [
+        "[Acceptance criterion 1]",
+        "[Acceptance criterion 2]"
+      ]
+    },
+    
+    "implementation_plan": {
+      "phases": [
+        {
+          "phase": 1,
+          "title": "[Phase 1 title]",
+          "description": "[Phase 1 description]",
+          "estimated_time": "[time estimate]",
+          "deliverables": ["[deliverable1]", "[deliverable2]"],
+          "status": "PLANNED"
+        }
+      ],
+      "milestones": [
+        {
+          "milestone": "[Milestone name]",
+          "deadline": "[YYYY-MM-DD]",
+          "criteria": "[Completion criteria]"
+        }
+      ]
+    },
+    
+    "testing_requirements": {
+      "unit_tests": "[Unit testing requirements]",
+      "integration_tests": "[Integration testing requirements]",
+      "performance_tests": "[Performance testing requirements]",
+      "security_tests": "[Security testing requirements]"
+    },
+    
+    "risks_and_mitigations": [
+      {
+        "risk": "[Risk description]",
+        "probability": "[LOW|MEDIUM|HIGH]",
+        "impact": "[LOW|MEDIUM|HIGH]",
+        "mitigation": "[Mitigation strategy]"
+      }
+    ],
+    
+    "progress_tracking": {
+      "completed_phases": [],
+      "current_phase": null,
+      "blockers": [],
+      "achievements": [],
+      "lessons_learned": []
+    },
+    
+    "performance_metrics": {
+      "baseline": {
+        "metric1": "[baseline value]",
+        "metric2": "[baseline value]"
+      },
+      "targets": {
+        "metric1": "[target value]",
+        "metric2": "[target value]"
+      },
+      "actual": {
+        "metric1": null,
+        "metric2": null
+      }
+    },
+    
+    "documentation": {
+      "design_documents": [],
+      "technical_specifications": [],
+      "user_documentation": [],
+      "api_documentation": []
+    }
+  },
+  
+  "category_specific_templates": {
+    "crypto_development": {
+      "additional_fields": {
+        "algorithm_type": "[post-quantum|classical|hybrid]",
+        "security_level": "[security level in bits]",
+        "compliance_standards": ["[standard1]", "[standard2]"],
+        "reference_implementation": "[URL or description]"
+      }
+    },
+    
+    "performance_optimization": {
+      "additional_fields": {
+        "optimization_type": "[algorithmic|system|compiler|platform]",
+        "target_improvement": "[percentage or absolute value]",
+        "profiling_tools": ["[tool1]", "[tool2]"],
+        "benchmark_environment": "[environment description]"
+      }
+    },
+    
+    "infrastructure": {
+      "additional_fields": {
+        "infrastructure_type": "[build_system|ci_cd|deployment|monitoring]",
+        "affected_components": ["[component1]", "[component2]"],
+        "rollback_plan": "[rollback strategy]"
+      }
+    }
+  },
+  
+  "usage_instructions": {
+    "creating_new_task": [
+      "1. Copy this template to context/tasks/active.json",
+      "2. Replace all placeholder values with actual task data",
+      "3. Update the task_template to task_data in the structure",
+      "4. Fill in category-specific fields if applicable",
+      "5. Set appropriate priority and estimated timeline",
+      "6. Define clear success and acceptance criteria"
+    ],
+    "updating_task": [
+      "1. Update progress percentage regularly",
+      "2. Move completed phases to completed_phases array",
+      "3. Update current_phase to reflect current work",
+      "4. Document blockers and achievements",
+      "5. Update actual performance metrics as work progresses"
+    ],
+    "completing_task": [
+      "1. Ensure all phases are marked as completed",
+      "2. Fill in final performance metrics",
+      "3. Document lessons learned",
+      "4. Move task to context/tasks/history.json",
+      "5. Create new active task if needed"
+    ]
+  }
+} 

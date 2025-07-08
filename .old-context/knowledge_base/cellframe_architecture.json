@@ -1,0 +1,147 @@
+{
+  "knowledge_type": "architecture_analysis",
+  "project": "cellframe",
+  "version": "1.0.0",
+  "timestamp": "2025-01-16T17:45:00Z",
+  "source": "analysis",
+  
+  "overview": {
+    "name": "Cellframe Blockchain Platform",
+    "type": "Post-quantum blockchain platform",
+    "architecture_style": "Modular microservices",
+    "primary_language": "C/C++",
+    "secondary_language": "Python",
+    "deployment_model": "Distributed nodes"
+  },
+
+  "core_components": {
+    "dap_sdk": {
+      "description": "Base SDK providing core functionality",
+      "modules": [
+        "crypto - Cryptographic operations",
+        "core - Core system functions", 
+        "net - Network communication",
+        "global_db - Distributed database",
+        "io - Input/output operations",
+        "plugin - Plugin system"
+      ],
+      "dependencies": {
+        "internal": ["dap_core", "dap_crypto"],
+        "external": ["libzip", "monero_crypto", "libmaxminddb"]
+      }
+    },
+    
+    "blockchain_modules": {
+      "description": "13 core blockchain modules",
+      "categories": {
+        "blockchain_core": {
+          "chain": "Basic blockchain functionality",
+          "ledger": "Balance and UTXO management", 
+          "datum": "Transaction processing"
+        },
+        "consensus_systems": {
+          "block_pow": "Proof of Work consensus",
+          "dag_poa": "DAG Proof of Authority",
+          "esbocs": "ESBOCS algorithm",
+          "dag_pos": "DAG Proof of Stake",
+          "none": "No consensus"
+        },
+        "network_layer": {
+          "net": "Basic network layer",
+          "net_srv": "Network services",
+          "mempool": "Transaction pool"
+        },
+        "blockchain_services": {
+          "stake": "Staking functionality",
+          "voting": "Voting system",
+          "xchange": "Token exchange",
+          "bridge": "Cross-chain bridges",
+          "vpn": "VPN service"
+        }
+      }
+    }
+  },
+
+  "cryptographic_capabilities": {
+    "post_quantum_algorithms": {
+      "key_exchange": ["Kyber", "NewHope", "MSRLN"],
+      "digital_signatures": ["Dilithium", "Falcon", "SPHINCS+", "Picnic", "Tesla"],
+      "hybrid_schemes": ["MultiSign", "PreparedMultiSign"]
+    },
+    "classical_algorithms": {
+      "symmetric": ["AES", "Blowfish", "Salsa20/12", "GOST", "SEED"],
+      "asymmetric": ["ECDSA", "BLISS"],
+      "hash_functions": ["SHA3", "Keccak", "Fusion"]
+    }
+  },
+
+  "python_integration": {
+    "binding_type": "C API wrapper",
+    "architecture": {
+      "CellFrame": {
+        "Chain": "Blockchain functionality",
+        "Common": "Common utilities",
+        "Network": "Network functionality", 
+        "Services": "Blockchain services",
+        "Consensus": "Consensus algorithms"
+      },
+      "DAP": {
+        "Core": "Core functions",
+        "Crypto": "Cryptography",
+        "Network": "Network",
+        "GlobalDB": "Database"
+      }
+    },
+    "patterns": {
+      "initialization": "JSON-based module configuration",
+      "cli_integration": "Command registration via AppCliServer",
+      "plugin_system": "Dynamic Python plugin loading",
+      "error_handling": "Exception-based with logging"
+    }
+  },
+
+  "deployment_architecture": {
+    "platforms": ["Linux", "macOS", "Windows"],
+    "build_system": "CMake",
+    "dependencies": {
+      "static_linking": "Increases binary size",
+      "module_loading": "All modules loaded at startup",
+      "performance_impact": "Potential network performance issues"
+    }
+  },
+
+  "quality_assessment": {
+    "architecture_quality": "Medium - Good architecture but very high complexity",
+    "performance": "Medium - Potential performance issues",
+    "maintainability": "Low - Missing documentation, complex architecture", 
+    "security": "High - Powerful post-quantum cryptography"
+  },
+
+  "critical_issues": {
+    "documentation": "Missing architectural documentation",
+    "complexity": "Very high architectural complexity",
+    "dependencies": "Potential circular dependencies",
+    "performance": "Slow initialization, large binaries"
+  },
+
+  "recommendations": {
+    "immediate": [
+      "Create architectural documentation",
+      "Simplify CMake build system",
+      "Eliminate circular dependencies",
+      "Optimize performance"
+    ],
+    "strategic": [
+      "Simplify architecture",
+      "Improve developer experience", 
+      "Create comprehensive documentation",
+      "Performance optimization"
+    ]
+  },
+
+  "compatibility_requirements": {
+    "backward_compatibility": "Strict requirement for API and binary interfaces",
+    "documentation_source": "wiki.cellframe.net (partial coverage)",
+    "migration_strategy": "Gradual with compatibility layers"
+  }
+} 

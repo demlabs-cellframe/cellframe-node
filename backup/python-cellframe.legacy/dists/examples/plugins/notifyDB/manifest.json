@@ -1,0 +1,7 @@
+{ 
+        "name": "notifyDB",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2021",
+        "dependencies": [],
+        "description": "This plugin provide an example of GlobalDB notificator usage."
+}

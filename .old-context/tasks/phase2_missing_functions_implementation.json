@@ -1,0 +1,182 @@
+{
+  "task_info": {
+    "id": "phase2-missing-functions-implementation", 
+    "title": "🎯 Фаза 2: Реализация недостающих функций",
+    "priority": "ВЫСОКИЙ",
+    "status": "pending",
+    "created": "2025-06-18T17:47:00Z",
+    "category": "python-cellframe-refactoring",
+    "phase": "2",
+    "estimated_hours": 160,
+    "dependencies": ["phase1-critical-modules-refactoring"]
+  },
+  "description": {
+    "summary": "Реализация 131 недостающей функции в 61 модуле Python Cellframe",
+    "statistics": {
+      "modules_with_missing_functions": 61,
+      "total_missing_functions": 131,
+      "crud_missing": 65,
+      "utility_missing": 66
+    },
+    "categories": {
+      "delete_operations": {
+        "count": 18,
+        "priority": "ВЫСОКИЙ",
+        "description": "Модули с create но без delete функций"
+      },
+      "setter_operations": {
+        "count": 12, 
+        "priority": "СРЕДНИЙ",
+        "description": "Модули с getters но без setters"
+      },
+      "validation_functions": {
+        "count": 26,
+        "priority": "СРЕДНИЙ", 
+        "description": "Сложные модули без validation"
+      },
+      "string_representation": {
+        "count": 26,
+        "priority": "НИЗКИЙ",
+        "description": "Объекты без строкового представления"
+      }
+    }
+  },
+  "subtasks": [
+    {
+      "id": "2.1",
+      "title": "Группа DELETE операций (ВЫСОКИЙ приоритет)",
+      "description": "Добавление delete/destroy функций в 18 модулей",
+      "estimated_hours": 45,
+      "status": "pending",
+      "modules": [
+        {
+          "file": "wrapping_dap_global_db.c",
+          "missing": "dap_global_db_delete",
+          "pattern": "CRUD completion"
+        },
+        {
+          "file": "wrapping_dap_chain_ledger.c", 
+          "missing": "dap_chain_ledger_delete",
+          "pattern": "CRUD completion"
+        },
+        {
+          "file": "wrapping_dap_chain_net_srv.c",
+          "missing": "dap_chain_net_srv_delete", 
+          "pattern": "CRUD completion"
+        },
+        {
+          "file": "wrapping_dap_chain_datum.c",
+          "missing": "dap_chain_datum_delete",
+          "pattern": "CRUD completion"
+        },
+        {
+          "file": "wrapping_dap_chain_tx.c",
+          "missing": "dap_chain_tx_delete",
+          "pattern": "CRUD completion"
+        }
+      ],
+      "approach": [
+        "Анализировать существующие create функции",
+        "Создавать симметричные delete функции",
+        "Обеспечивать proper cleanup ресурсов",
+        "Добавлять reference counting где нужно"
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Группа SETTER операций (СРЕДНИЙ приоритет)",
+      "description": "Добавление setter функций в 12 модулей",
+      "estimated_hours": 30,
+      "status": "pending",
+      "modules": [
+        {
+          "file": "wrapping_dap_chain_cell.c",
+          "missing": "setter functions for cell properties"
+        },
+        {
+          "file": "wrapping_dap_chain_cs.c", 
+          "missing": "configuration setters"
+        },
+        {
+          "file": "wrapping_dap_client_http.c",
+          "missing": "parameter setters"
+        }
+      ],
+      "approach": [
+        "Создавать setters для всех readable properties",
+        "Добавлять validation в setters",
+        "Обеспечивать thread safety",
+        "Создавать property-based API"
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Группа VALIDATION функций (СРЕДНИЙ приоритет)",
+      "description": "Добавление validation функций в 26 модулей",
+      "estimated_hours": 50,
+      "status": "pending",
+      "categories": [
+        "Input validation helpers",
+        "Type checking utilities", 
+        "Boundary validation",
+        "Format validation",
+        "Business logic validation"
+      ],
+      "approach": [
+        "Создать общие validation utilities",
+        "Добавить type-specific validators",
+        "Интегрировать с существующими функциями",
+        "Создать validation error hierarchy"
+      ]
+    },
+    {
+      "id": "2.4",
+      "title": "Группа STRING REPRESENTATION функций (НИЗКИЙ приоритет)",
+      "description": "Добавление __str__ и debug функций в 26 модулей",
+      "estimated_hours": 35,
+      "status": "pending",
+      "functions": [
+        "__str__ методы для всех объектов",
+        "__repr__ методы для debugging",
+        "JSON serialization support",
+        "Pretty printing utilities",
+        "Debug information functions"
+      ],
+      "approach": [
+        "Создать unified formatting framework",
+        "Добавить configurable output formats",
+        "Поддержать JSON/XML/YAML output",
+        "Создать debug tracing utilities"
+      ]
+    }
+  ],
+  "implementation_guidelines": [
+    "Следовать существующим naming conventions",
+    "Обеспечивать thread safety где необходимо",
+    "Добавлять comprehensive error handling",
+    "Создавать unit тесты для каждой функции",
+    "Документировать все новые API",
+    "Сохранять performance characteristics"
+  ],
+  "success_criteria": [
+    "✅ Все 131 недостающая функция реализована",
+    "✅ Unit тесты покрывают новые функции",
+    "✅ API documentation обновлена",
+    "✅ Обратная совместимость сохранена",
+    "✅ Performance не ухудшилась"
+  ],
+  "deliverables": [
+    "131 новая функция в 61 модуле",
+    "Unit тесты для всех новых функций",
+    "API documentation",
+    "Migration guide",
+    "Performance benchmarks"
+  ],
+  "validation": [
+    "Automated testing всех новых функций",
+    "Integration testing с существующим кодом",
+    "Performance regression testing",
+    "Memory leak testing",
+    "Thread safety testing"
+  ]
+} 

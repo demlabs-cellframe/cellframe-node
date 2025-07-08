@@ -1,0 +1,1132 @@
+{
+  "timestamp": "2025-06-18T15:51:21.166513",
+  "analysis_categories": {
+    "error_handling": [
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c",
+        "line": 123,
+        "issue": "Missing return NULL after PyErr_SetString",
+        "code": "PyErr_SetString(PyExc_Exception, \"Can't convert invalid HTTP header.\");",
+        "severity": "HIGH",
+        "fix": "Add 'return NULL;' after error setting"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+        "line": 196,
+        "issue": "Missing return NULL after PyErr_SetString",
+        "code": "PyErr_SetString(PyExc_AttributeError, l_str);",
+        "severity": "HIGH",
+        "fix": "Add 'return NULL;' after error setting"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+        "line": 206,
+        "issue": "Missing return NULL after PyErr_SetString",
+        "code": "PyErr_SetString(PyExc_RuntimeError, l_str);",
+        "severity": "HIGH",
+        "fix": "Add 'return NULL;' after error setting"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+        "line": 258,
+        "issue": "Missing return NULL after PyErr_SetString",
+        "code": "PyErr_SetString(PyExc_AttributeError, \"The sixth argument was not correctly passed to this \"",
+        "severity": "HIGH",
+        "fix": "Add 'return NULL;' after error setting"
+      }
+    ],
+    "memory_management": [
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 224,
+        "issue": "malloc/calloc result not checked for NULL",
+        "code": "//    dap_list_t **bound_items = calloc(sizeof (dap_list_t**), (size_t)size);",
+        "severity": "HIGH",
+        "fix": "Add NULL check: if (ptr == NULL) { handle error; }"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 224,
+        "issue": "Potential memory leak: variable 'bound_items' allocated but not freed",
+        "code": "//    dap_list_t **bound_items = calloc(sizeof (dap_list_t**), (size_t)size);",
+        "severity": "MEDIUM",
+        "fix": "Add free(bound_items); before function returns"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 323,
+        "issue": "Potential memory leak: variable 'data' allocated but not freed",
+        "code": "char ***data = calloc(sizeof(char**), (size_t)size);",
+        "severity": "MEDIUM",
+        "fix": "Add free(data); before function returns"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 331,
+        "issue": "Potential memory leak: variable 'sentences' allocated but not freed",
+        "code": "char **sentences = calloc(sizeof(char**), (size_t)size_seentenses);",
+        "severity": "MEDIUM",
+        "fix": "Add free(sentences); before function returns"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 349,
+        "issue": "Potential memory leak: variable 'res_size_t' allocated but not freed",
+        "code": "size_t *res_size_t = calloc(sizeof(size_t), (size_t)size);",
+        "severity": "MEDIUM",
+        "fix": "Add free(res_size_t); before function returns"
+      }
+    ],
+    "thread_safety": [
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_crypto = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_chain = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_app_cli = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_stream = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 9,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_stream_ctl = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_http_folder = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 11,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_http = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 12,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_http_enc = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 13,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_io_core = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 14,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_mempool = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 16,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "//static bool s_init_http_client_simple = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 17,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_wallet = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 18,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_cs_dag = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 19,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_cs_dag_poa = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 20,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_cs_dag_pos = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 21,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_chain_net_srv = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 22,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_init_ks = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 28,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapPythonMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/CellFrame/python-cellframe.c",
+        "line": 38,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static char CellFramePythonModuleDoc[] = \"CellFrame SDK.Python v\"DAP_VERSION\" welcomes you!\";",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_obj.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapGlobalDBContainerGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapGlobalDBMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_role.c",
+        "line": 32,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapGlobalDBRolesGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_cluster.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapGlobalDBClusterMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/io/src/dap_server_python.c",
+        "line": 14,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapServerPythonMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/io/src/dap_events_python.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapEventsObject_methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/io/src/dap_events_socket_python.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapEventsObjectSocket_methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/core/src/libdap-python.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapCoreMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/core/src/libdap-python.c",
+        "line": 15,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapCommonMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/core/src/libdap-python.c",
+        "line": 37,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapLogitMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/core/src/math_python.c",
+        "line": 16,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapMathGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/core/src/math_python.c",
+        "line": 22,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapMathMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_http.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapClientHttp_Methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_stage.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapClientStageMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_stage_status.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapClientStageStatusMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_http_status_code.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapHttpCodeMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_http.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapHttpMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_simple.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapHttpSimpleMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_simple.c",
+        "line": 21,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapHttpSimpleGetSetDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_simple.c",
+        "line": 43,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static wrapping_dap_http_simple_proc_t *s_simple_proc = NULL;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapHttpHeaderGetSetDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c",
+        "line": 12,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapHttpHeaderMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_folder.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapHttpFolderMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/enc/src/wrapping_dap_enc_http.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapEncServerMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/enc/src/wrapping_dap_enc_http.c",
+        "line": 13,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapEncServerGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/src/wrapping_json_rpc_request.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapJSONRPCRequestMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/src/wrapping_json_rpc_response.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapJSONRPCResponseGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_ctl.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapStreamCtlMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_cluster_role.c",
+        "line": 32,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapClusterRolesGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapStreamMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/libdap-crypto-python.c",
+        "line": 32,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapCryptoMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_hash.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapHashTypeMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_hash.c",
+        "line": 28,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapHashFastMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_sign.c",
+        "line": 15,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapSignObjectGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_sign.c",
+        "line": 23,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapSignObjectMethods[]= {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/libdap_crypto_data_type.c",
+        "line": 14,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyCryptoDataTypeObjectMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_cert.c",
+        "line": 53,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyCryptoCertGetSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_pkey.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapPkeyGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_pkey.c",
+        "line": 12,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapPkeyMethodsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_crypto_key_types.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyCryptoKeyTypesObjectGetSetDef [] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_guuid.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyCryptoGUUID_Methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/services/pos_delegate/src/wrapping_dap_chain_net_srv_stake_pos_delegate.c",
+        "line": 82,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainNetSrvStakePosDelegateGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/services/pos_delegate/src/wrapping_dap_chain_net_srv_stake_pos_delegate.c",
+        "line": 88,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainNetSrvStakePosDelegateMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote_info.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainNetSrvVoteInfoGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote_info.c",
+        "line": 92,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainNetSrvVoteInfoOptionGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/app-cli/src/libdap-app-cli-python.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef AppCliMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef  DapMempoolMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/wallet/src/dap_chain_wallet_python.c",
+        "line": 12,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef ChainWalletMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_event.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainCsDagEventMethodsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_event.c",
+        "line": 9,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainCsDagEventGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainCsDagMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/type/blocks/src/wrapping_dap_chain_cs_block.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainCsBlockGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/type/blocks/src/wrapping_dap_chain_cs_block.c",
+        "line": 19,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainCsBlockMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_token.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef  PyDapChainDatumTokenGetsSetsDef[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_token.c",
+        "line": 133,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainDatumTokenEmissionGetsSetsDef[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_token.c",
+        "line": 146,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainDatumTokenEmissionMethods[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_pay.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutCondSubtypeStvPayGetsSetsDef[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_stake.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutCondSubtypeSrvStakePosDelegateGetsSetsDef[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_sig.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxSigGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_ext.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutExtGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutCondSubtypeSrvXchangeGetsSetsDef[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainTxItemTypeObjectMethods[] ={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx.c",
+        "line": 71,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDaoChainDatumTxObjectGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx.c",
+        "line": 77,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainDatumTxObjectMethods[] ={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_std.c",
+        "line": 26,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutStdGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxOutGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainTxOutObjectMethods[] ={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_pkey.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxPkeyGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_receipt.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxReceiptGetSetDefs[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_receipt.c",
+        "line": 20,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainTxReceiptMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_anchor.c",
+        "line": 95,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainDatumAnchorGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_anchor.c",
+        "line": 104,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainDatumAnchorMethods[] = {{}};",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainTxTokenGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainTxOutCondGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in_cond.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainTxInCondGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in_cond.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef  DapChainTxInCondMethodsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainHashSlowMethod[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c",
+        "line": 20,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainAddrMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c",
+        "line": 43,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetIdObjectMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c",
+        "line": 197,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainNetSrvPriceUnitUID_Methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum.c",
+        "line": 14,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainDatumMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum.c",
+        "line": 33,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef  DapChainDatumGetSet[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token_ext.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef PyDapChainTxTokenExtGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap_chain_type_python.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainTypeMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap-chain-python.c",
+        "line": 16,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_atom_ptr.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainAtomPtrMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_cs.c",
+        "line": 3,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainCSMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap_chain_atom_iter_python.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainAtomIterMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainLedgerMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_cell.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "/*static PyMethodDef PyDapChainCellObjectMethods[] ={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_app_cli_server.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNodeCliMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetNodeMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_info.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetNodeInfoMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_client.c",
+        "line": 10,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNodeClientMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/libdap_chain_net_python.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/libdap_chain_net_python.c",
+        "line": 34,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainNetGetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_state.c",
+        "line": 4,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef PyDapChainNetStateMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChaiNetSrvGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetSrvClientMethods[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_order.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetSrvOrderMethods[]={",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_order.c",
+        "line": 18,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChaiNetSrvOrderGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client_remote.c",
+        "line": 7,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetSrvClientRemoteMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client_remote.c",
+        "line": 11,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChaiNetSrvClientRemoteGetsSets[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_common.c",
+        "line": 6,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyGetSetDef DapChainNetSrvPrice_GetsSetsDef[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_common.c",
+        "line": 54,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainNetSrvOrderDirection_Methods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/cellframe-sdk/consensus/dag_poa/src/wrapping_dap_chain_cs_dag_poa.c",
+        "line": 5,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapChainCsDagPoaMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/plugins/src/dap_chain_plugins_command.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_l_restart_plugins = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/plugins/src/dap_chain_plugins.c",
+        "line": 11,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static bool s_debug_more = false;",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      },
+      {
+        "file": "python-cellframe/modules/plugins/src/dap_plugins_python_app_context.c",
+        "line": 8,
+        "issue": "Non-const static variable may cause thread safety issues",
+        "code": "static PyMethodDef DapAppContextMethods[] = {",
+        "severity": "MEDIUM",
+        "fix": "Consider thread-local storage (__thread) or proper synchronization"
+      }
+    ],
+    "api_consistency": [],
+    "performance": []
+  },
+  "summary": {
+    "total_issues": 138,
+    "severity_breakdown": {
+      "HIGH": 5,
+      "MEDIUM": 133,
+      "LOW": 0
+    },
+    "categories_breakdown": {
+      "error_handling": 4,
+      "memory_management": 5,
+      "thread_safety": 129,
+      "api_consistency": 0,
+      "performance": 0
+    }
+  }
+}

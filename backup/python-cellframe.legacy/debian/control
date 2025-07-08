@@ -1,0 +1,31 @@
+Source: python3-cellframe
+Section: blockchain
+Priority: optional
+Maintainer: Dmitriy Gerasimov <naeper@demlabs.net>
+Build-Depends: debhelper (>= 9), dh-python, python3-setuptools, python3
+Testsuite: autopkgtest-pkg-python
+X-Python3-Version: >=3.4
+Standards-Version: 3.9.8
+ CellFrame SDK: blockchain universal SDK
+ Homepage: http://demlabs.net
+
+
+Package: python3-cellframe
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}
+Suggests: python3-cellframe-doc
+Description: CellFrame SDK: general usage blockchain SDK (Python 3)
+ CellFrame SDK: blockchain universal SDK
+ .
+ This package installs the library for Python 3.
+
+
+Package: python3-cellframe-doc
+Architecture: all
+Section: doc
+Depends: ${sphinxdoc:Depends}, ${misc:Depends}
+Description: CellFrame SDK: general usage blockchain SDK (common documentation)
+ CellFrame SDK: blockchain universal SDK
+ .
+ This is the common documentation package.
+

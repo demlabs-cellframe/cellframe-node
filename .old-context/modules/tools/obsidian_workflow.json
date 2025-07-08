@@ -1,0 +1,484 @@
+{
+  "type": "universal_template_module",
+  "domain": "obsidian_workflow",
+  "version": "2.1.0",
+  "created": "2025-01-14T15:30:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на анализе marketing-vault и лучших практиках Obsidian",
+  
+  "navigation_system": {
+    "file_role": "TOOLS_TEMPLATE",
+    "description": "🗂️ Шаблон для Obsidian workflow и knowledge management",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/tools/",
+      "siblings": ["modules/methodologies/documentation_systems.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "📋 Documentation": "modules/methodologies/documentation_systems.json - системы документации",
+      "🏗️ Context systems": "modules/methodologies/context_systems_development.json - разработка контекста",
+      "🤖 AI/ML templates": "modules/ai_ml/ - шаблоны для ИИ разработки",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create tools/obsidian_workflow.json my_knowledge_vault"
+  },
+  
+  "template_info": {
+    "name": "Obsidian Workflow & Knowledge Management Template",
+    "description": "Универсальный шаблон для организации знаний, проектов и workflow в Obsidian с автоматизацией и продвинутыми возможностями",
+    "target_projects": [
+      "Personal Knowledge Management (PKM)",
+      "Проектный менеджмент и GTD",
+      "Исследования и документирование",
+      "Ведение заметок для разработки",
+      "Контент маркетинг и планирование",
+      "Учебные материалы и курсы",
+      "Team knowledge bases"
+    ],
+    "applicability": "100% пользователей Obsidian с любыми задачами"
+  },
+  
+  "obsidian_ecosystem": {
+    "core_concept": {
+      "linked_thinking": "Сетевое мышление через связи между заметками",
+      "atomic_notes": "Принцип атомарных заметок - одна идея на заметку",
+      "emergent_structure": "Органическое развитие структуры знаний",
+      "markdown_first": "Markdown как основа для future-proof заметок"
+    },
+    
+    "file_organization": {
+      "folder_structure": {
+        "my_areas/": "Долгосрочные области ответственности",
+        "my_projects/": "Конкретные проекты с дедлайнами",
+        "my_resources/": "Справочные материалы и ресурсы",
+        "my_outputs/": "Созданный контент и результаты",
+        "my_inputs/": "Входящая информация для обработки",
+        "my_greenhouse/": "Идеи и мысли в развитии",
+        "my_calendar/": "Временные события и планирование",
+        "my_meetings/": "Записи встреч и обсуждений",
+        "my_sprints/": "Спринты и итерации работы",
+        "my_social_circle/": "Контакты и сетевые связи",
+        "hidden/": "Приватные и черновые заметки"
+      },
+      
+      "naming_conventions": {
+        "projects": "🚧 Название проекта - статус",
+        "areas": "📂 Название области",
+        "resources": "📚 Тип ресурса - Название",
+        "people": "👤 Имя Фамилия",
+        "meetings": "🤝 YYYY-MM-DD - Тема встречи",
+        "daily_notes": "YYYY-MM-DD",
+        "templates": "🔧 Template - Название"
+      }
+    },
+    
+    "metadata_system": {
+      "frontmatter_standards": {
+        "universal_fields": {
+          "tags": "Система тегирования для категоризации",
+          "created": "Дата создания заметки",
+          "updated": "Дата последнего обновления",
+          "status": "Текущий статус (🟥🟧🟨🟩⬛)",
+          "type": "Тип заметки (project/area/resource/note)"
+        },
+        
+        "project_specific": {
+          "deadline": "Дедлайн проекта",
+          "goal": "Цель проекта",
+          "why": "Мотивация и обоснование",
+          "description": "Краткое описание",
+          "area": "Связанная область ответственности",
+          "stakeholders": "Заинтересованные лица"
+        },
+        
+        "content_specific": {
+          "source": "Источник информации",
+          "author": "Автор материала",
+          "rating": "Личная оценка важности (1-5)",
+          "review_date": "Дата для пересмотра",
+          "links": "Связанные заметки"
+        }
+      }
+    }
+  },
+  
+  "essential_plugins": {
+    "core_productivity": {
+      "dataview": {
+        "description": "JavaScript-based запросы для автоматических списков",
+        "use_cases": ["Проектные дашборды", "Автоматические индексы", "Отчеты по статусам"],
+        "syntax": "Dataview Query Language (DQL) и JavaScript API"
+      },
+      
+      "templater": {
+        "description": "Продвинутая система шаблонов с JavaScript",
+        "use_cases": ["Автоматизация создания заметок", "Динамические шаблоны", "Batch операции"],
+        "features": ["Template variables", "JavaScript execution", "Custom functions"]
+      },
+      
+      "quickadd": {
+        "description": "Быстрое создание заметок с автоматизацией",
+        "use_cases": ["Capture templates", "Macro automation", "Quick input forms"],
+        "integration": "Работает с Templater для сложных workflow"
+      }
+    },
+    
+    "organization_management": {
+      "obsidian_tasks": {
+        "description": "Продвинутое управление задачами",
+        "features": ["Due dates", "Recurrence", "Priorities", "Custom statuses"],
+        "query_syntax": "Мощный язык запросов для фильтрации задач"
+      },
+      
+      "kanban": {
+        "description": "Kanban доски внутри Obsidian",
+        "use_cases": ["Project management", "Sprint planning", "Personal GTD"],
+        "integration": "Sync с task management и project tracking"
+      },
+      
+      "auto_note_mover": {
+        "description": "Автоматическое перемещение заметок по правилам",
+        "rules": "Основано на тегах, шаблонах, содержимому",
+        "workflow": "Автоматизация организации файлов"
+      }
+    },
+    
+    "content_enhancement": {
+      "excalidraw": {
+        "description": "Встроенное рисование и диаграммы",
+        "use_cases": ["Mind maps", "Architecture diagrams", "Visual brainstorming"],
+        "export": "PNG, SVG export для external use"
+      },
+      
+      "charts": {
+        "description": "Создание графиков и диаграмм",
+        "types": ["Line charts", "Bar charts", "Pie charts", "Custom visualizations"],
+        "data_source": "CSV, JSON, или manual data entry"
+      },
+      
+      "buttons": {
+        "description": "Интерактивные кнопки в заметках",
+        "use_cases": ["Quick actions", "Template insertion", "External commands"],
+        "customization": "CSS styling и JavaScript actions"
+      }
+    },
+    
+    "productivity_enhancements": {
+      "smart_connections": {
+        "description": "AI-powered связи между заметками",
+        "features": ["Semantic search", "Auto-suggestions", "Content discovery"],
+        "ai_integration": "OpenAI API для intelligent linking"
+      },
+      
+      "obsidian_linter": {
+        "description": "Автоматическое форматирование заметок",
+        "rules": ["Markdown consistency", "Heading structure", "Link formatting"],
+        "automation": "Auto-fix on save"
+      },
+      
+      "metadata_menu": {
+        "description": "Визуальное управление метаданными",
+        "features": ["Form-based editing", "Bulk operations", "Field validation"],
+        "integration": "Works с Dataview и другими plugins"
+      }
+    }
+  },
+  
+  "workflow_patterns": {
+    "para_method": {
+      "description": "Projects, Areas, Resources, Archive methodology",
+      "implementation": {
+        "projects": "Specific outcomes с дедлайнами",
+        "areas": "Ongoing responsibilities без дедлайнов",
+        "resources": "Topics of ongoing interest",
+        "archive": "Items from other categories"
+      },
+      "automation": "Automated moving between categories based on status"
+    },
+    
+    "zettelkasten": {
+      "description": "Slip-box method для knowledge building",
+      "principles": [
+        "Atomic notes - одна идея на заметку",
+        "Unique identifiers для каждой заметки",
+        "Dense linking между related concepts",
+        "No hierarchy - organic structure emergence"
+      ],
+      "implementation": "Custom IDs, tag system, link-based navigation"
+    },
+    
+    "gtd_workflow": {
+      "description": "Getting Things Done methodology",
+      "components": {
+        "inbox": "Quick capture of all inputs",
+        "processing": "Convert inputs to actionable items",
+        "organizing": "Sort by context, project, priority",
+        "reviewing": "Regular review cycles",
+        "doing": "Execution based on context"
+      },
+      "obsidian_setup": "Templates, queries, automated workflows"
+    },
+    
+    "daily_weekly_review": {
+      "daily_notes": {
+        "template": "Day planning, task tracking, reflection",
+        "automation": "Auto-generation, task rollover, habit tracking",
+        "queries": "Outstanding tasks, upcoming deadlines"
+      },
+      
+      "weekly_review": {
+        "components": ["Week retrospective", "Goal progress", "Next week planning"],
+        "automation": "Automated reports из daily notes и project data",
+        "metrics": "Productivity metrics, goal completion rates"
+      }
+    }
+  },
+  
+  "automation_scripts": {
+    "python_automation": {
+      "file_organization": {
+        "script": "update_metadata.py - обновление frontmatter",
+        "features": ["Bulk metadata updates", "File sorting", "Duplicate detection"],
+        "integration": "Git hooks для автоматического запуска"
+      },
+      
+      "content_processing": {
+        "script": "update_categories.py - автоматическая категоризация",
+        "ml_integration": "NLP для автоматического тегирования",
+        "content_analysis": "Sentiment analysis, topic extraction"
+      },
+      
+      "backup_sync": {
+        "git_integration": "Автоматический commit и sync",
+        "cloud_backup": "Sync с cloud storage services",
+        "version_control": "Track changes и collaboration"
+      }
+    },
+    
+    "templater_javascript": {
+      "dynamic_templates": {
+        "project_creation": "Auto-populated project templates",
+        "meeting_notes": "Calendar integration для meeting info",
+        "daily_planning": "Task import из external systems"
+      },
+      
+      "data_integration": {
+        "api_calls": "External API integration в templates",
+        "database_queries": "Pull data из external databases",
+        "file_processing": "Batch processing of external files"
+      }
+    }
+  },
+  
+  "project_management_system": {
+    "project_lifecycle": {
+      "statuses": {
+        "🟥": "В проработке - initial planning phase",
+        "🟧": "Предстоящие - planned but not started",
+        "🟨": "Активные - currently in progress",
+        "🟩": "Завершенные - completed successfully",
+        "⬛": "Архив - cancelled or on hold"
+      },
+      
+      "automation": {
+        "status_tracking": "Dataview queries для status dashboards",
+        "deadline_alerts": "Automated reminders для approaching deadlines",
+        "progress_reports": "Weekly/monthly project progress summaries"
+      }
+    },
+    
+    "task_management": {
+      "task_structure": {
+        "syntax": "- [ ] Task description #tag @person due:YYYY-MM-DD",
+        "priorities": "High/Medium/Low или 🔴🟡🟢 indicators",
+        "contexts": "@home @work @computer @phone для GTD contexts",
+        "projects": "Link to parent project notes"
+      },
+      
+      "smart_queries": {
+        "today_tasks": "Tasks due today или overdue",
+        "next_actions": "Available next actions по contexts",
+        "waiting_for": "Tasks waiting на external dependencies",
+        "someday_maybe": "Future possibilities и ideas"
+      }
+    },
+    
+    "collaboration": {
+      "shared_vaults": {
+        "team_setup": "Git-based sharing для team vaults",
+        "permission_system": "Folder-based access control",
+        "conflict_resolution": "Merge strategies для collaborative editing"
+      },
+      
+      "publishing": {
+        "obsidian_publish": "Official publishing platform",
+        "static_sites": "Jekyll/Hugo integration для custom sites",
+        "export_formats": "PDF, Word, HTML export options"
+      }
+    }
+  },
+  
+  "content_creation_workflow": {
+    "research_process": {
+      "information_capture": {
+        "web_clipper": "Browser extension для quick capture",
+        "highlight_processing": "Import из Readwise, Kindle highlights",
+        "pdf_annotation": "PDF import с preserved annotations"
+      },
+      
+      "source_management": {
+        "citation_format": "Academic citation standards",
+        "source_tracking": "Automatic metadata extraction",
+        "bibliography": "Auto-generated bibliography pages"
+      }
+    },
+    
+    "writing_workflow": {
+      "outline_development": {
+        "mind_mapping": "Visual outline creation с Excalidraw",
+        "hierarchical_notes": "Nested note structure",
+        "argument_mapping": "Logical argument development"
+      },
+      
+      "draft_management": {
+        "version_control": "Track writing progress",
+        "feedback_integration": "Comments и suggestions workflow",
+        "publishing_pipeline": "Export to publishing platforms"
+      }
+    },
+    
+    "knowledge_synthesis": {
+      "concept_mapping": {
+        "tag_hierarchies": "Nested tag systems для concept organization",
+        "link_analysis": "Graph analysis для knowledge gaps",
+        "emergence_tracking": "Track how ideas develop over time"
+      },
+      
+      "insight_generation": {
+        "serendipitous_discovery": "Random note suggestions",
+        "pattern_recognition": "AI-assisted pattern finding",
+        "synthesis_templates": "Templates для combining disparate ideas"
+      }
+    }
+  },
+  
+  "advanced_customization": {
+    "css_styling": {
+      "custom_themes": {
+        "design_principles": "Minimal, focused, readable",
+        "dark_light_modes": "Adaptive themes для different contexts",
+        "custom_elements": "Styled callouts, tables, code blocks"
+      },
+      
+      "workspace_optimization": {
+        "layout_management": "Multi-pane layouts для different workflows",
+        "mobile_responsiveness": "Mobile-optimized views",
+        "accessibility": "High contrast, screen reader support"
+      }
+    },
+    
+    "plugin_development": {
+      "custom_plugins": {
+        "typescript_development": "Plugin development с TypeScript",
+        "api_integration": "Custom API integrations",
+        "workflow_automation": "Project-specific automation"
+      },
+      
+      "community_contributions": {
+        "plugin_sharing": "Contribution to community plugin ecosystem",
+        "theme_development": "Custom theme creation",
+        "template_libraries": "Shared template collections"
+      }
+    }
+  },
+  
+  "integration_ecosystem": {
+    "external_tools": {
+      "calendar_integration": {
+        "google_calendar": "Two-way sync с calendar events",
+        "meeting_automation": "Auto-create meeting notes",
+        "schedule_optimization": "Time blocking based on tasks"
+      },
+      
+      "task_management": {
+        "todoist_sync": "Bi-directional task sync",
+        "notion_integration": "Data exchange с Notion databases",
+        "github_integration": "Issue tracking и project management"
+      },
+      
+      "communication": {
+        "slack_integration": "Channel archives и note sharing",
+        "email_processing": "Email to note conversion",
+        "social_media": "Content research и curation"
+      }
+    },
+    
+    "data_sources": {
+      "api_integrations": {
+        "rest_apis": "Pull data из external services",
+        "webhook_processing": "Real-time data updates",
+        "database_connections": "Direct database queries"
+      },
+      
+      "file_processing": {
+        "csv_import": "Structured data import",
+        "json_processing": "API response processing",
+        "image_ocr": "Text extraction из images"
+      }
+    }
+  },
+  
+  "best_practices": {
+    "vault_maintenance": {
+      "regular_cleanup": {
+        "orphaned_files": "Find и clean orphaned attachments",
+        "broken_links": "Identify и fix broken internal links",
+        "duplicate_content": "Detect и merge duplicate notes"
+      },
+      
+      "performance_optimization": {
+        "index_management": "Optimize search performance",
+        "plugin_auditing": "Remove unused plugins",
+        "file_organization": "Prevent folder bloat"
+      }
+    },
+    
+    "workflow_evolution": {
+      "iterative_improvement": {
+        "workflow_review": "Regular assessment of productivity patterns",
+        "automation_expansion": "Gradually increase automation",
+        "template_refinement": "Continuous template improvement"
+      },
+      
+      "learning_curve": {
+        "gradual_adoption": "Start simple, add complexity over time",
+        "community_learning": "Engage с Obsidian community",
+        "experimentation": "Try different approaches и methodologies"
+      }
+    },
+    
+    "data_portability": {
+      "future_proofing": {
+        "markdown_standards": "Stick to standard Markdown",
+        "minimal_vendor_lock": "Avoid proprietary features где possible",
+        "regular_exports": "Maintain exportable backups"
+      },
+      
+      "migration_strategies": {
+        "from_other_tools": "Import strategies из Notion, Roam, etc.",
+        "to_other_tools": "Export strategies если needed",
+        "format_conversion": "Maintain compatibility с external tools"
+      }
+    }
+  },
+  
+  "success_metrics": {
+    "productivity": "Reduced time from idea to action",
+    "knowledge_retention": "Improved recall и connection of information",
+    "creative_output": "Increased quality и quantity of creative work",
+    "decision_making": "Faster access to relevant information",
+    "collaboration": "Improved team knowledge sharing"
+  }
+} 

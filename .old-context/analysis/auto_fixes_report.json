@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-06-18T16:19:59.043073",
+  "total_fixes": 3,
+  "fixes": [
+    {
+      "type": "missing_return_null",
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c",
+      "line": 123,
+      "description": "Added return NULL after PyErr_SetString",
+      "timestamp": "2025-06-18T16:19:59.040333"
+    },
+    {
+      "type": "missing_return_null",
+      "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+      "line": 196,
+      "description": "Added return NULL after PyErr_SetString",
+      "timestamp": "2025-06-18T16:19:59.041447"
+    },
+    {
+      "type": "malloc_null_check",
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+      "line": 224,
+      "description": "Added NULL check for bound_items",
+      "timestamp": "2025-06-18T16:19:59.043013"
+    }
+  ]
+}

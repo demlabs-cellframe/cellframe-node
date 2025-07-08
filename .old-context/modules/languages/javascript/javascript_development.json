@@ -1,0 +1,537 @@
+{
+  "type": "universal_template_module",
+  "domain": "javascript_development",
+  "version": "2.1.0",
+  "created": "2025-01-14T15:15:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на потребностях Cellframe Network и современной JS экосистемы",
+  
+  "navigation_system": {
+    "file_role": "LANGUAGE_TEMPLATE",
+    "description": "🌐 Шаблон для JavaScript/TypeScript разработки (blockchain, web3, frontend)",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/languages/",
+      "siblings": ["modules/languages/python/python_development.json", "modules/languages/c/c_development.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🤖 AI/ML templates": "modules/ai_ml/ - шаблоны для ИИ разработки",
+      "🐍 Python": "modules/languages/python/python_development.json - Python разработка",
+      "⚙️ C/C++": "modules/languages/c/c_development.json - системное программирование",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create languages/javascript/javascript_development.json my_web3_project"
+  },
+  
+  "template_info": {
+    "name": "JavaScript/TypeScript Development Template",
+    "description": "Универсальный шаблон для JavaScript/TypeScript разработки с акцентом на blockchain, web3, API разработку и современные фронтенд решения",
+    "target_projects": [
+      "Cellframe Network web интерфейсы",
+      "Blockchain и Web3 приложения",
+      "Криптографические библиотеки на JS",
+      "API и микросервисы на Node.js",
+      "Frontend приложения (React, Vue, Angular)",
+      "Browser extensions для крипто кошельков",
+      "DApps и деcentralized applications"
+    ],
+    "applicability": "95%+ JavaScript/TypeScript проектов"
+  },
+  
+  "javascript_ecosystem": {
+    "language_versions": {
+      "javascript": {
+        "es2023": "Современный стандарт ECMAScript",
+        "es2022": "Поддержка для legacy проектов",
+        "features": ["async/await", "modules", "optional chaining", "nullish coalescing"]
+      },
+      "typescript": {
+        "version": "TypeScript 5.x - рекомендуемая версия",
+        "strict_mode": "Включение strict режима для безопасности типов",
+        "benefits": ["Type safety", "Better IDE support", "Refactoring safety"]
+      }
+    },
+    
+    "runtime_environments": {
+      "node_js": {
+        "versions": ["Node.js 18 LTS", "Node.js 20 LTS", "Node.js 21"],
+        "package_managers": ["npm", "yarn", "pnpm", "bun"],
+        "recommendation": "Node.js 20 LTS + pnpm для новых проектов"
+      },
+      "browser": {
+        "targets": ["Chrome 90+", "Firefox 88+", "Safari 14+", "Edge 90+"],
+        "polyfills": "Поддержка legacy браузеров через Babel",
+        "web_standards": ["ES6 modules", "Web Workers", "Service Workers"]
+      },
+      "deno": {
+        "description": "Современная runtime для TypeScript",
+        "use_cases": ["Serverless functions", "Scripts", "Security-focused apps"]
+      }
+    },
+    
+    "project_structure": {
+      "modern_structure": {
+        "src/": "Исходный код проекта",
+        "src/components/": "React/Vue компоненты (если фронтенд)",
+        "src/services/": "Бизнес-логика и API слой",
+        "src/utils/": "Утилитарные функции",
+        "src/types/": "TypeScript type definitions",
+        "tests/": "Тесты (Jest/Vitest structure)",
+        "docs/": "Документация проекта",
+        "build/": "Собранные файлы (в .gitignore)",
+        "public/": "Статические файлы (для фронтенда)",
+        "package.json": "Метаданные и зависимости проекта"
+      },
+      "configuration_files": {
+        "tsconfig.json": "TypeScript конфигурация",
+        "vite.config.js": "Vite bundler config (рекомендуется)",
+        "webpack.config.js": "Webpack config (если требуется)",
+        "jest.config.js": "Jest testing configuration",
+        ".eslintrc.js": "ESLint правила",
+        ".prettierrc": "Prettier форматирование"
+      }
+    }
+  },
+  
+  "blockchain_web3_development": {
+    "core_libraries": {
+      "web3_js": {
+        "description": "Основная библиотека для Ethereum взаимодействия",
+        "use_cases": ["Smart contract interaction", "Transaction handling", "Account management"]
+      },
+      "ethers_js": {
+        "description": "Современная альтернатива Web3.js",
+        "benefits": ["Better TypeScript support", "Modular design", "Better documentation"],
+        "recommendation": "Предпочтительно для новых проектов"
+      },
+      "wagmi": {
+        "description": "React hooks для Ethereum",
+        "use_cases": ["React DApps", "Wallet connections", "Contract interactions"]
+      },
+      "viem": {
+        "description": "Type-safe Ethereum library",
+        "benefits": ["Full TypeScript support", "Tree-shakeable", "Performance focused"]
+      }
+    },
+    
+    "wallet_integration": {
+      "metamask": {
+        "installation": "@metamask/detect-provider",
+        "features": ["Account access", "Transaction signing", "Network switching"],
+        "best_practices": ["Error handling", "User experience", "Security checks"]
+      },
+      "walletconnect": {
+        "installation": "@walletconnect/web3-provider",
+        "features": ["Mobile wallet support", "QR code connection", "Multi-chain support"],
+        "use_cases": ["Mobile-first DApps", "Cross-platform wallets"]
+      },
+      "custom_wallets": {
+        "cellframe_wallet": "Интеграция с Cellframe кошельком",
+        "hardware_wallets": ["Ledger", "Trezor", "Hardware wallet support"],
+        "multi_wallet": "Поддержка множественных кошельков"
+      }
+    },
+    
+    "smart_contract_interaction": {
+      "contract_compilation": {
+        "tools": ["Hardhat", "Truffle", "Foundry"],
+        "workflow": "TypeScript bindings generation",
+        "optimization": "Gas optimization techniques"
+      },
+      "transaction_handling": {
+        "gas_estimation": "Динамическая оценка gas цен",
+        "transaction_monitoring": "Отслеживание статуса транзакций",
+        "error_handling": "Обработка failed транзакций",
+        "retry_logic": "Повторные попытки с увеличенным gas"
+      },
+      "event_listening": {
+        "real_time": "WebSocket подписки на события",
+        "historical": "Фильтрация исторических событий",
+        "indexing": "Индексация событий для быстрого поиска"
+      }
+    },
+    
+    "cryptography_js": {
+      "libraries": {
+        "crypto_js": "Классическая криптографическая библиотека",
+        "noble_curves": "Современные эллиптические кривые",
+        "noble_hashes": "Криптографические хэш функции",
+        "tweetnacl": "NaCl криптографическая библиотека"
+      },
+      "post_quantum": {
+        "pqc_js": "Post-quantum cryptography for JavaScript",
+        "kyber_js": "Kyber lattice-based encryption",
+        "integration": "Интеграция с Cellframe post-quantum схемами"
+      },
+      "security_practices": {
+        "secure_random": "crypto.getRandomValues() для генерации случайных чисел",
+        "constant_time": "Константное время для критических операций",
+        "memory_cleanup": "Очистка чувствительных данных",
+        "secure_storage": "Безопасное хранение ключей в браузере"
+      }
+    }
+  },
+  
+  "frontend_development": {
+    "frameworks": {
+      "react": {
+        "version": "React 18+ с Concurrent Features",
+        "ecosystem": {
+          "next_js": "Full-stack React framework",
+          "remix": "Web-focused React framework",
+          "react_router": "Client-side routing",
+          "react_query": "Server state management",
+          "zustand": "Simple state management"
+        },
+        "patterns": {
+          "hooks": "Functional components с hooks",
+          "context": "Context API для global state",
+          "suspense": "Suspense для loading states",
+          "error_boundaries": "Error handling в UI"
+        }
+      },
+      "vue": {
+        "version": "Vue 3 с Composition API",
+        "ecosystem": {
+          "nuxt": "Full-stack Vue framework",
+          "vue_router": "Official routing",
+          "pinia": "State management",
+          "vueuse": "Composition utilities"
+        }
+      },
+      "svelte": {
+        "description": "Compile-time optimized framework",
+        "benefits": ["Smaller bundle size", "Better performance", "Simpler syntax"],
+        "ecosystem": "SvelteKit для full-stack разработки"
+      }
+    },
+    
+    "styling_solutions": {
+      "css_in_js": {
+        "styled_components": "Popular CSS-in-JS library",
+        "emotion": "Performant CSS-in-JS",
+        "stitches": "CSS-in-JS с design tokens"
+      },
+      "utility_frameworks": {
+        "tailwind": "Utility-first CSS framework",
+        "uno_css": "Atomic CSS engine",
+        "benefits": ["Rapid development", "Consistent design", "Small bundle"]
+      },
+      "css_modules": {
+        "description": "Scoped CSS классы",
+        "benefits": ["No conflicts", "Better maintainability"]
+      }
+    },
+    
+    "build_tools": {
+      "vite": {
+        "description": "Быстрый и современный build tool",
+        "benefits": ["Fast HMR", "Native ES modules", "Plugin ecosystem"],
+        "recommendation": "Предпочтительно для новых проектов"
+      },
+      "webpack": {
+        "description": "Зрелый и конфигурируемый bundler",
+        "use_cases": ["Complex configurations", "Legacy projects"],
+        "optimization": ["Code splitting", "Tree shaking", "Bundle analysis"]
+      },
+      "esbuild": {
+        "description": "Extremely fast JavaScript bundler",
+        "use_cases": ["Build performance critical", "Simple configurations"]
+      }
+    }
+  },
+  
+  "backend_nodejs_development": {
+    "frameworks": {
+      "express": {
+        "description": "Минималистичный и гибкий web framework",
+        "ecosystem": ["middleware", "routing", "templating"],
+        "use_cases": ["REST APIs", "Web applications", "Microservices"]
+      },
+      "fastify": {
+        "description": "Высокопроизводительный web framework",
+        "benefits": ["JSON Schema validation", "Built-in logging", "TypeScript support"],
+        "use_cases": ["High-performance APIs", "Microservices"]
+      },
+      "nest_js": {
+        "description": "Enterprise-grade Node.js framework",
+        "benefits": ["Decorators", "Dependency injection", "TypeScript-first"],
+        "use_cases": ["Large applications", "Enterprise projects"]
+      },
+      "koa": {
+        "description": "Next generation web framework от Express команды",
+        "benefits": ["async/await support", "Better error handling"],
+        "use_cases": ["Modern APIs", "Middleware-heavy applications"]
+      }
+    },
+    
+    "database_integration": {
+      "orm_libraries": {
+        "prisma": {
+          "description": "Modern database toolkit",
+          "benefits": ["Type safety", "Migration system", "Great DX"],
+          "databases": ["PostgreSQL", "MySQL", "SQLite", "MongoDB"]
+        },
+        "typeorm": {
+          "description": "TypeScript ORM",
+          "benefits": ["Decorator pattern", "Active Record/Data Mapper"],
+          "databases": ["PostgreSQL", "MySQL", "MariaDB", "SQLite"]
+        },
+        "sequelize": {
+          "description": "Promise-based ORM",
+          "benefits": ["Mature ecosystem", "Migration support"],
+          "databases": ["PostgreSQL", "MySQL", "MariaDB", "SQLite"]
+        }
+      },
+      "nosql_databases": {
+        "mongodb": "mongoose ODM для MongoDB",
+        "redis": "ioredis для Redis операций",
+        "elasticsearch": "@elastic/elasticsearch client"
+      }
+    },
+    
+    "api_development": {
+      "rest_apis": {
+        "design": "RESTful principles и conventions",
+        "documentation": {
+          "swagger": "OpenAPI/Swagger спецификация",
+          "tools": ["swagger-ui-express", "@apidevtools/swagger-parser"]
+        },
+        "validation": {
+          "joi": "Schema validation library",
+          "ajv": "JSON Schema validator",
+          "yup": "Schema builder for validation"
+        }
+      },
+      "graphql": {
+        "apollo_server": "Production-ready GraphQL server",
+        "type_graphql": "TypeScript + GraphQL integration",
+        "benefits": ["Single endpoint", "Type system", "Real-time subscriptions"]
+      },
+      "real_time": {
+        "socket_io": "Real-time bidirectional communication",
+        "ws": "WebSocket library для Node.js",
+        "server_sent_events": "One-way server-to-client streaming"
+      }
+    }
+  },
+  
+  "testing_strategies": {
+    "unit_testing": {
+      "jest": {
+        "description": "Популярный testing framework",
+        "features": ["Mocking", "Snapshot testing", "Coverage reports"],
+        "configuration": "jest.config.js с TypeScript support"
+      },
+      "vitest": {
+        "description": "Vite-native testing framework", 
+        "benefits": ["Fast execution", "ESM support", "Jest compatible"],
+        "recommendation": "Для проектов с Vite"
+      },
+      "testing_library": {
+        "react": "@testing-library/react для React компонентов",
+        "vue": "@testing-library/vue для Vue компонентов",
+        "philosophy": "Testing implementation details vs behavior"
+      }
+    },
+    
+    "integration_testing": {
+      "cypress": {
+        "description": "End-to-end testing framework",
+        "features": ["Real browser testing", "Time travel debugging"],
+        "use_cases": ["User workflows", "Visual testing"]
+      },
+      "playwright": {
+        "description": "Modern end-to-end testing",
+        "benefits": ["Multi-browser support", "Auto-wait", "Fast execution"],
+        "recommendation": "Для сложных E2E сценариев"
+      },
+      "supertest": {
+        "description": "HTTP assertion library",
+        "use_cases": ["API testing", "Integration testing"]
+      }
+    },
+    
+    "blockchain_testing": {
+      "hardhat": {
+        "description": "Ethereum development environment",
+        "features": ["Local blockchain", "Contract testing", "Gas reporting"]
+      },
+      "ganache": {
+        "description": "Personal Ethereum blockchain",
+        "use_cases": ["Local development", "Testing"]
+      },
+      "test_patterns": {
+        "contract_testing": "Smart contract unit tests",
+        "integration_testing": "Frontend + contract integration",
+        "e2e_testing": "Full DApp workflow testing"
+      }
+    }
+  },
+  
+  "development_practices": {
+    "code_quality": {
+      "linting": {
+        "eslint": {
+          "configuration": "ESLint с TypeScript правилами",
+          "presets": ["@typescript-eslint", "airbnb", "prettier"],
+          "custom_rules": "Проект-специфичные правила"
+        },
+        "prettier": {
+          "description": "Code formatter",
+          "integration": "ESLint + Prettier integration",
+          "configuration": ".prettierrc с проектными настройками"
+        }
+      },
+      
+      "type_checking": {
+        "typescript": {
+          "strict_mode": "Включение strict конфигурации",
+          "incremental": "Incremental compilation для скорости",
+          "path_mapping": "Path mapping для чистых imports"
+        },
+        "type_definitions": {
+          "definitely_typed": "@types/* пакеты для type definitions",
+          "custom_types": "Собственные .d.ts файлы",
+          "declaration_files": "Генерация .d.ts для библиотек"
+        }
+      }
+    },
+    
+    "security_practices": {
+      "dependency_security": {
+        "npm_audit": "Регулярный аудит зависимостей",
+        "snyk": "Continuous security monitoring",
+        "renovate": "Автоматические обновления зависимостей"
+      },
+      
+      "web_security": {
+        "helmet": "Security headers для Express",
+        "cors": "Cross-Origin Resource Sharing configuration",
+        "rate_limiting": "Rate limiting middleware",
+        "input_validation": "Валидация всех входных данных"
+      },
+      
+      "crypto_security": {
+        "secure_random": "crypto.getRandomValues() utilization",
+        "key_management": "Безопасное управление приватными ключами",
+        "constant_time": "Timing attack prevention",
+        "secure_communication": "HTTPS only communications"
+      }
+    },
+    
+    "performance_optimization": {
+      "bundle_optimization": {
+        "tree_shaking": "Удаление неиспользуемого кода",
+        "code_splitting": "Динамические imports для code splitting",
+        "lazy_loading": "Ленивая загрузка компонентов",
+        "compression": "Gzip/Brotli compression"
+      },
+      
+      "runtime_optimization": {
+        "memoization": "React.memo, useMemo, useCallback",
+        "virtual_scrolling": "Для больших списков данных",
+        "debouncing": "Debounce для поисковых запросов",
+        "caching": "Browser caching strategies"
+      }
+    }
+  },
+  
+  "deployment_devops": {
+    "containerization": {
+      "docker": {
+        "node_images": ["node:18-alpine", "node:20-alpine"],
+        "multi_stage": "Multi-stage builds для optimization",
+        "security": "Non-root user, minimal base images",
+        "optimization": ".dockerignore, layer caching"
+      }
+    },
+    
+    "hosting_platforms": {
+      "vercel": {
+        "description": "Optimized для React/Next.js",
+        "features": ["Zero config", "Edge functions", "Preview deployments"]
+      },
+      "netlify": {
+        "description": "JAMstack focused hosting",
+        "features": ["Continuous deployment", "Form handling", "Edge functions"]
+      },
+      "aws": {
+        "lambda": "Serverless functions",
+        "s3_cloudfront": "Static site hosting",
+        "ecs": "Container deployment"
+      },
+      "cloudflare": {
+        "pages": "Static site hosting",
+        "workers": "Edge computing",
+        "benefits": ["Global CDN", "DDoS protection"]
+      }
+    },
+    
+    "ci_cd": {
+      "github_actions": {
+        "workflows": ["Build", "Test", "Deploy", "Security scan"],
+        "caching": "Node modules caching",
+        "matrix_builds": "Multi-environment testing"
+      },
+      "gitlab_ci": {
+        "pipelines": "GitLab CI/CD integration",
+        "docker_registry": "Built-in container registry"
+      }
+    }
+  },
+  
+  "project_templates": {
+    "cellframe_dapp": {
+      "structure": "React + TypeScript + Ethers.js",
+      "features": ["Wallet connection", "Smart contract interaction", "Post-quantum crypto"],
+      "dependencies": ["@ethersproject/providers", "@cellframe/crypto-js"]
+    },
+    
+    "blockchain_api": {
+      "structure": "Node.js + Express + TypeScript",
+      "features": ["REST API", "Database integration", "Blockchain monitoring"],
+      "dependencies": ["express", "ethers", "prisma", "@types/node"]
+    },
+    
+    "crypto_wallet_extension": {
+      "structure": "Browser extension with React",
+      "features": ["Key management", "Transaction signing", "Multi-chain support"],
+      "dependencies": ["web-ext", "webextension-polyfill", "crypto-js"]
+    }
+  },
+  
+  "best_practices": {
+    "project_setup": {
+      "step_1": "npm init или yarn create для инициализации",
+      "step_2": "TypeScript конфигурация",
+      "step_3": "ESLint + Prettier setup",
+      "step_4": "Jest/Vitest testing setup",
+      "step_5": "CI/CD pipeline конфигурация"
+    },
+    
+    "code_organization": {
+      "modular_architecture": "Четкое разделение по модулям",
+      "barrel_exports": "index.js файлы для чистых imports",
+      "error_handling": "Централизованная обработка ошибок",
+      "configuration": "Environment-based конфигурации"
+    },
+    
+    "documentation": {
+      "jsdoc": "JSDoc комментарии для функций",
+      "typescript_types": "Type definitions как документация",
+      "readme": "Подробные инструкции по setup и usage",
+      "api_docs": "Swagger/OpenAPI для API документации"
+    }
+  },
+  
+  "success_metrics": {
+    "code_quality": "ESLint без errors, TypeScript strict mode",
+    "test_coverage": "> 80% test coverage",
+    "performance": "Core Web Vitals в зеленой зоне",
+    "security": "Отсутствие security vulnerabilities",
+    "bundle_size": "Optimized bundle size < 1MB"
+  }
+} 

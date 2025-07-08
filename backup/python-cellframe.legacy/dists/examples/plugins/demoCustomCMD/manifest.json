@@ -1,0 +1,8 @@
+{ 
+        "name": "demoCustomCMD",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2022",
+        "dependencies": [],
+        "description": "This is a plugin example for working custom command."
+}
+

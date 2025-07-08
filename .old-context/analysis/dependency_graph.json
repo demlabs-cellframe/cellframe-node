@@ -1,0 +1,488 @@
+{
+  "CellFrame/python-cellframe.c": [
+    "python-cellframe.h"
+  ],
+  "CellFrame/python-cellframe_common.c": [
+    "python-cellframe_common.h"
+  ],
+  "modules/dap-sdk/global-db/src/wrapping_dap_global_db_obj.c": [
+    "wrapping_dap_global_db_obj.h"
+  ],
+  "modules/dap-sdk/global-db/src/wrapping_dap_global_db.c": [
+    "wrapping_dap_global_db.h",
+    "dap_proc_thread.h",
+    "dap_events.h"
+  ],
+  "modules/dap-sdk/global-db/src/wrapping_dap_global_db_instance.c": [
+    "wrapping_dap_global_db_instance.h"
+  ],
+  "modules/dap-sdk/global-db/src/wrapping_dap_global_db_role.c": [
+    "wrapping_dap_global_db_role.h"
+  ],
+  "modules/dap-sdk/global-db/src/wrapping_dap_global_db_cluster.c": [
+    "wrapping_dap_global_db_cluster.h",
+    "wrapping_dap_global_db_role.h",
+    "wrapping_dap_cluster_member.h",
+    "wrapping_dap_global_db_instance.h"
+  ],
+  "modules/dap-sdk/io/src/dap_server_python.c": [
+    "dap_events_socket_python.h",
+    "dap_server.h",
+    "dap_strfuncs.h",
+    "dap_events_python.h",
+    "dap_common.h",
+    "dap_server_python.h",
+    "dap_events.h"
+  ],
+  "modules/dap-sdk/io/src/dap_events_python.c": [
+    "dap_events_python.h"
+  ],
+  "modules/dap-sdk/io/src/dap_events_socket_python.c": [
+    "dap_events_socket_python.h"
+  ],
+  "modules/dap-sdk/core/src/libdap-python.c": [
+    "python-cellframe_common.h"
+  ],
+  "modules/dap-sdk/core/src/node_address.c": [
+    "dap_strfuncs.h"
+  ],
+  "modules/dap-sdk/core/src/math_python.c": [
+    "dap_chain_common.h"
+  ],
+  "modules/dap-sdk/net/client/src/wrapping_dap_client_http.c": [
+    "wrapping_dap_client_http.h",
+    "python-cellframe_common.h",
+    "dap_string.h"
+  ],
+  "modules/dap-sdk/net/client/src/wrapping_dap_client_stage.c": [
+    "wrapping_dap_client_stage.h"
+  ],
+  "modules/dap-sdk/net/client/src/wrapping_dap_client_stage_status.c": [
+    "wrapping_dap_client_stage_status.h"
+  ],
+  "modules/dap-sdk/net/client/src/libdap_client_python.c": [
+    "libdap_client_python.h"
+  ],
+  "modules/dap-sdk/net/server/http/src/wrapping_dap_http_simple.c": [
+    "python-cellframe_common.h",
+    "wrapping_dap_http_header.h",
+    "wrapping_dap_http_simple.h"
+  ],
+  "modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c": [
+    "wrapping_dap_http_header.h",
+    "python-cellframe_common.h"
+  ],
+  "modules/dap-sdk/net/server/http/src/wrapping_dap_http_folder.c": [
+    "wrapping_dap_http_folder.h"
+  ],
+  "modules/dap-sdk/net/server/enc/src/wrapping_dap_enc_http.c": [
+    "wrapping_dap_enc_http.h"
+  ],
+  "modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_ctl.c": [
+    "wrapping_dap_stream_ctl.h"
+  ],
+  "modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_cluster_role.c": [
+    "wrapping_dap_stream_cluster_role.h"
+  ],
+  "modules/dap-sdk/net/stream/stream/src/wrapping_dap_cluster_member.c": [
+    "wrapping_dap_cluster_member.h"
+  ],
+  "modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream.c": [
+    "wrapping_dap_stream.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_enc_iaes.c": [
+    "wrapping_dap_enc_iaes.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_hash.c": [
+    "wrapping_dap_hash.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_sign.c": [
+    "libdap_chain_net_python.h",
+    "wrapping_dap_sign.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_enc_oaes.c": [
+    "wrapping_dap_enc_oaes.h"
+  ],
+  "modules/dap-sdk/crypto/src/libdap_crypto_key_python.c": [
+    "libdap_crypto_key_python.h"
+  ],
+  "modules/dap-sdk/crypto/src/libdap_crypto_data_type.c": [
+    "libdap_crypto_data_type.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_cert.c": [
+    "dap_strfuncs.h",
+    "dap_cert.h",
+    "wrapping_dap_pkey.h",
+    "dap_common.h",
+    "libdap_crypto_key_python.h",
+    "wrapping_dap_enc_key_type.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_pkey.c": [
+    "dap_enc.h",
+    "wrapping_dap_pkey.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_enc_key.c": [
+    "wrapping_dap_enc_key.h",
+    "wrapping_dap_enc_key_type.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_crypto_key_types.c": [
+    "dap_enc_key.h",
+    "wrapping_dap_enc_key_type.h",
+    "wrapping_dap_crypto_key_types.h"
+  ],
+  "modules/dap-sdk/crypto/src/wrapping_dap_enc_key_type.c": [
+    "wrapping_dap_enc_key_type.h"
+  ],
+  "modules/cellframe-sdk/services/xchange/wrapping_dap_chain_net_srv_xchange_price.c": [
+    "dap_chain_wallet_python.h",
+    "dap_chain_srv.h",
+    "libdap_chain_net_python.h",
+    "libdap_crypto_key_python.h",
+    "wrapping_dap_chain_net_srv_xchange_price.h"
+  ],
+  "modules/cellframe-sdk/services/xchange/wrapping_dap_chain_net_srv_xchange.c": [
+    "dap_chain_wallet_python.h",
+    "dap_chain_net_srv_xchange.h",
+    "libdap_chain_net_python.h",
+    "wrapping_dap_chain_net_srv_xchange.h",
+    "wrapping_dap_chain_net_srv_xchange_price.h"
+  ],
+  "modules/cellframe-sdk/services/pos_delegate/src/wrapping_dap_chain_net_srv_stake_pos_delegate.c": [
+    "wrapping_dap_hash.h",
+    "dap_chain_net_srv_stake_pos_delegate.h",
+    "libdap_chain_net_python.h",
+    "wrapping_dap_stream_ch_chain_validator_test.h",
+    "wrapping_dap_chain_net_srv_stake_pos_delegate.h"
+  ],
+  "modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote.c": [
+    "dap_chain_wallet_python.h",
+    "libdap_chain_net_python.h",
+    "dap_chain_net.h",
+    "wrapping_dap_chain_net_srv_vote_info.h",
+    "wrapping_dap_chain_net_srv_vote.h",
+    "dap_chain_net_srv_voting.h"
+  ],
+  "modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote_info.c": [
+    "wrapping_dap_hash.h",
+    "wrapping_dap_chain_net_srv_vote_info.h"
+  ],
+  "modules/cellframe-sdk/app-cli/src/libdap-app-cli-python.c": [
+    "dap_common.h"
+  ],
+  "modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c": [
+    "dap_chain_wallet_python.h",
+    "python-cellframe_common.h",
+    "dap_chain_wallet_shared.h",
+    "dap_chain_datum_tx_items.h",
+    "dap_list.h",
+    "wrapping_dap_mempool.h"
+  ],
+  "modules/cellframe-sdk/wallet/src/dap_chain_wallet_python.c": [
+    "dap_chain_wallet_python.h"
+  ],
+  "modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_event.c": [
+    "wrapping_dap_chain_cs_dag_event.h",
+    "python-cellframe_common.h"
+  ],
+  "modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_round.c": [
+    "wrapping_dap_chain_cs_dag_round.h",
+    "wrapping_dap_chain_cs_dag_event.h"
+  ],
+  "modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag.c": [
+    "wrapping_dap_chain_cs_dag_round.h",
+    "wrapping_dap_chain_cs_dag.h",
+    "dap_chain_cell.h"
+  ],
+  "modules/cellframe-sdk/type/blocks/src/wrapping_dap_chain_cs_block.c": [
+    "wrapping_dap_chain_cs_block.h",
+    "dap_chain_cs_blocks.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_token.c": [
+    "wrapping_dap_chain_datum_token.h",
+    "python-cellframe_common.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx_voting.c": [
+    "wrapping_dap_hash.h",
+    "wrapping_dap_chain_datum_tx_voting.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_pay.c": [
+    "wrapping_dap_pkey.h",
+    "wrapping_dap_chain_common.h",
+    "wrapping_dap_chain_tx_out_cond_subtype_srv_pay.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_stake.c": [
+    "wrapping_dap_chain_tx_out_cond_subtype_srv_stake.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_sig.c": [
+    "wrapping_dap_chain_tx_sig.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_ext.c": [
+    "wrapping_dap_chain_tx_out_ext.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.c": [
+    "wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx.c": [
+    "wrapping_dap_chain_datum_tx.h",
+    "dap_chain_wallet_python.h",
+    "dap_chain_datum_tx_sig.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_std.c": [
+    "wrapping_dap_chain_tx_out_std.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out.c": [
+    "wrapping_dap_chain_tx_out.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_pkey.c": [
+    "wrapping_dap_chain_tx_pkey.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_receipt.c": [
+    "wrapping_dap_chain_tx_receipt.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_anchor.c": [
+    "wrapping_dap_sign.h",
+    "wrapping_dap_chain_datum_anchor.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in.c": [
+    "wrapping_dap_chain_tx_in.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token.c": [
+    "wrapping_dap_chain_tx_token.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond.c": [
+    "wrapping_dap_chain_tx_out_cond.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_stake_lock.c": [
+    "wrapping_dap_hash.h",
+    "python-cellframe_common.h",
+    "wrapping_dap_chain_tx_out_cond_subtype_srv_stake_lock.h",
+    "wrapping_dap_chain_tx_out_cond.h",
+    "dap_chain_net_srv_stake_lock.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_decree.c": [
+    "wrapping_dap_chain_datum_decree.h",
+    "dap_chain_net_srv_stake_pos_delegate.h",
+    "libdap_chain_net_python.h",
+    "wrapping_dap_sign.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in_cond.c": [
+    "wrapping_dap_chain_tx_in_cond.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c": [
+    "wrapping_dap_chain_common.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_datum.c": [
+    "libdap_chain_net_python.h",
+    "wrapping_dap_chain_datum.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token_ext.c": [
+    "wrapping_dap_chain_tx_token_ext.h"
+  ],
+  "modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_tsd.c": [
+    "wrapping_dap_chain_tx_tsd.h"
+  ],
+  "modules/cellframe-sdk/channel/chain-net/src/wrapping_dap_stream_ch_chain_validator_test.c": [
+    "dap_common.h",
+    "wrapping_dap_sign.h",
+    "wrapping_dap_stream_ch_chain_validator_test.h"
+  ],
+  "modules/cellframe-sdk/chain/src/libdap_chain_type_python.c": [
+    "libdap_chain_type_python.h"
+  ],
+  "modules/cellframe-sdk/chain/src/libdap-chain-python.c": [
+    "dap_chain_cs_blocks.h",
+    "libdap_chain_net_python.h",
+    "python-cellframe_common.h"
+  ],
+  "modules/cellframe-sdk/chain/src/wrapping_dap_chain_atom_ptr.c": [
+    "wrapping_dap_chain_atom_ptr.h"
+  ],
+  "modules/cellframe-sdk/chain/src/wrapping_dap_chain_cs.c": [
+    "wrapping_dap_chain_cs.h"
+  ],
+  "modules/cellframe-sdk/chain/src/libdap_chain_atom_iter_python.c": [
+    "libdap_chain_atom_iter_python.h"
+  ],
+  "modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c": [
+    "dap_proc_thread.h",
+    "wrapping_dap_chain_ledger.h",
+    "python-cellframe_common.h",
+    "dap_events.h"
+  ],
+  "modules/cellframe-sdk/chain/src/wrapping_dap_chain_cell.c": [
+    "wrapping_dap_chain_cell.h"
+  ],
+  "modules/cellframe-sdk/net/src/wrapping_dap_app_cli_server.c": [
+    "wrapping_dap_app_cli_server.h"
+  ],
+  "modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node.c": [
+    "wrapping_dap_chain_net_node.h"
+  ],
+  "modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_info.c": [
+    "wrapping_dap_chain_net_node_info.h"
+  ],
+  "modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_client.c": [
+    "wrapping_dap_chain_net_node_client.h"
+  ],
+  "modules/cellframe-sdk/net/src/libdap_chain_net_python.c": [
+    "dap_chain_mempool.h",
+    "libdap_chain_net_python.h",
+    "python-cellframe_common.h"
+  ],
+  "modules/cellframe-sdk/net/src/wrapping_dap_chain_net_state.c": [
+    "wrapping_dap_chain_net_state.h"
+  ],
+  "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv.c": [
+    "wrapping_dap_chain_net_srv.h"
+  ],
+  "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client.c": [
+    "wrapping_dap_chain_net_srv_client.h"
+  ],
+  "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_order.c": [
+    "wrapping_dap_chain_net_srv_order.h"
+  ],
+  "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client_remote.c": [
+    "wrapping_dap_chain_net_srv_client_remote.h"
+  ],
+  "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_common.c": [
+    "wrapping_dap_chain_net_srv_common.h"
+  ],
+  "modules/cellframe-sdk/consensus/dag_poa/src/wrapping_dap_chain_cs_dag_poa.c": [
+    "wrapping_dap_chain_cs_dag_poa.h"
+  ],
+  "modules/plugins/src/dap_chain_plugins_command.c": [
+    "dap_chain_node_cli_cmd.h",
+    "dap_chain_plugins_manifest.h",
+    "dap_chain_plugins.h",
+    "dap_chain_plugins_command.h",
+    "dap_chain_node_cli.h"
+  ],
+  "modules/plugins/src/dap_chain_plugins_list.c": [
+    "dap_chain_plugins_list.h"
+  ],
+  "modules/plugins/src/dap_chain_plugins.c": [
+    "dap_file_utils.h",
+    "dap_config.h",
+    "dap_chain_plugins.h",
+    "python-cellframe.h",
+    "dap_common.h",
+    "dap_plugin.h"
+  ],
+  "modules/plugins/src/dap_plugins_python_app_context.c": [
+    "dap_plugins_python_app_context.h"
+  ],
+  "modules/plugins/src/dap_chain_plugins_manifest.c": [
+    "dap_chain_plugins_manifest.h",
+    "dap_list.h",
+    "dap_common.h",
+    "dap_strfuncs.h"
+  ],
+  "test/main_test.py": [
+    "CellFrame"
+  ],
+  "CellFrame/__init__.py": [
+    "libCellFrame"
+  ],
+  "dists/unit-tests/unit-tests.py": [
+    "CellFrame.Chain",
+    "DAP.Core",
+    "DAP.Crypto",
+    "CellFrame"
+  ],
+  "dists/examples/plugins/customDatum/customDatum.py": [
+    "DAP.Core",
+    "CellFrame",
+    "CellFrame.Network",
+    "CellFrame.Common"
+  ],
+  "dists/examples/plugins/exampleCreateTx/exampleCreateTx.py": [
+    "CellFrame.Chain",
+    "DAP.Core",
+    "DAP",
+    "CellFrame.Network"
+  ],
+  "dists/examples/plugins/demoCustomCMD/demoCustomCMD.py": [
+    "DAP.Core",
+    "CellFrame"
+  ],
+  "dists/examples/plugins/demoGlobalDB/demoGlobalDB.py": [
+    "DAP.Core",
+    "DAP.Network",
+    "DAP.Crypto",
+    "DAP.GlobalDB"
+  ],
+  "dists/examples/plugins/demoServiceServer/demoServiceServer.py": [
+    "DAP.Core",
+    "CellFrame.Network"
+  ],
+  "dists/examples/plugins/dex/dex.py": [
+    "DAP.Core",
+    "DAP.Network",
+    "CellFrame.Network",
+    "CellFrame.Services",
+    "CellFrame",
+    "CellFrame.Chain"
+  ],
+  "dists/examples/plugins/demoOrder/demoOrder.py": [
+    "DAP.Core",
+    "DAP.Crypto",
+    "CellFrame.Network",
+    "CellFrame"
+  ],
+  "dists/examples/plugins/demoServiceClient/demoServiceClient.py": [
+    "DAP.Core",
+    "DAP.Crypto",
+    "CellFrame.Network",
+    "CellFrame.Common"
+  ],
+  "dists/examples/plugins/notifyDB/notifyDB.py": [
+    "DAP.Core",
+    "CellFrame.Network"
+  ],
+  "dists/examples/standalone/3.Stock/MyStockInitCA.py": [
+    "CellFrame.libCellFrame"
+  ],
+  "dists/examples/standalone/3.Stock/MyStockCmd.py": [
+    "CellFrame.libCellFrame"
+  ],
+  "dists/examples/standalone/3.Stock/MyStockCli.py": [
+    "CellFrame.libCellFrame"
+  ],
+  "dists/examples/standalone/3.Stock/MyStock.py": [
+    "CellFrame.libCellFrame"
+  ],
+  "dists/examples/standalone/1.Authority/MyAuthCmd.py": [
+    "CellFrame"
+  ],
+  "dists/examples/standalone/1.Authority/MyAuthCli.py": [
+    "CellFrame"
+  ],
+  "dists/examples/standalone/1.Authority/MyAuthCA.py": [
+    "CellFrame"
+  ],
+  "dists/examples/standalone/1.Authority/MyAuth.py": [
+    "CellFrame"
+  ],
+  "dists/examples/standalone/0.Beginning/MyChains.py": [
+    "CellFrame"
+  ],
+  "dists/examples/standalone/0.Beginning/MyChainsCli.py": [
+    "CellFrame"
+  ],
+  "dists/unit-tests/modules/demoCustomCMD.py": [
+    "DAP.Core",
+    "CellFrame"
+  ],
+  "dists/unit-tests/modules/mathTest/mathTest.py": [
+    "DAP.Core"
+  ],
+  "modules/dap-sdk/io/test/test.py": [
+    "libDapServerCore"
+  ],
+  "modules/dap-sdk/crypto/test/test.py": [
+    "libdap_crypto_python_module"
+  ],
+  "modules/dap-sdk/crypto/test/dap_enc_key_test.py": [
+    "libdap_crypto_python_module"
+  ]
+}

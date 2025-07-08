@@ -1,0 +1,293 @@
+{
+  "version": "2.1.0",
+  "created": "2025-01-14T19:45:00Z",
+  "updated": "2025-01-14T19:45:00Z",
+  "imported_from": "context-old v2.0",
+  
+  "navigation_system": {
+    "file_role": "METHODOLOGY_TEMPLATE_PERFORMANCE",
+    "description": "📊 Универсальная методология оптимизации производительности для high-performance приложений",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "siblings": ["methodologies/documentation_systems.json", "methodologies/obsidian_workflow.json"],
+      "children": ["Performance optimization project generation"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "💻 C/C++ development": "languages/c/c_development.json - системное программирование",
+      "🔐 DAP SDK project": "projects/dap_sdk_project.json - блокчейн разработка",
+      "🔬 Crypto projects": "projects/cryptography_project.json - криптографические проекты"
+    }
+  },
+  
+  "template_info": {
+    "name": "Performance Optimization Methodology",
+    "description": "Универсальная система phase-based оптимизации производительности для высоконагруженных приложений",
+    "version": "2.1.0",
+    "domain": "performance_optimization",
+    "specialization": "high_performance_systems",
+    "applicability": "Любые high-performance проекты: криптография, научные вычисления, игры, системное ПО",
+    "target_projects": [
+      "High-performance cryptographic libraries",
+      "Scientific computing applications",
+      "Game engines and real-time systems",
+      "Database systems and storage engines",
+      "Network performance optimization",
+      "Machine learning inference optimization"
+    ]
+  },
+  
+  "legacy_knowledge": {
+    "source": "context-old v2.0 - Chipmunk optimization expertise",
+    "proven_results": {
+      "baseline_improvement": "Production-tested on post-quantum cryptography",
+      "phase_1_results": "Hash function optimization: secp256k1_sha256 integration",
+      "phase_2_results": "Vectorization infrastructure: 4/8 element block processing",
+      "phase_3_target": "Aggressive SIMD optimization: 3-5x performance target",
+      "critical_finding": "Manual Barrett reduction 2.4x faster than compiler optimization"
+    }
+  },
+  
+  "optimization_methodology": {
+    "overview": "3-phase systematic approach to performance optimization",
+    "philosophy": {
+      "measurement_driven": "Профилирование BEFORE и AFTER каждой оптимизации",
+      "iterative_approach": "Небольшие измеримые улучшения вместо больших изменений",
+      "production_focus": "Isolated tests + production pipeline validation",
+      "architecture_first": "Создавать инфраструктуру для будущих оптимизаций"
+    },
+    
+    "phase_framework": {
+      "phase_1_foundation": {
+        "title": "Foundation Optimizations",
+        "description": "Low-hanging fruit и создание измерительной инфраструктуры",
+        "typical_improvements": "2-4x performance gains",
+        "focus_areas": [
+          "Profiling infrastructure setup",
+          "Algorithm-level optimizations",
+          "Data structure improvements",
+          "Memory allocation patterns",
+          "Compiler optimization flags"
+        ],
+        "deliverables": [
+          "Baseline performance measurements",
+          "Profiling infrastructure",
+          "Initial optimization wins",
+          "Performance regression testing"
+        ]
+      },
+      
+      "phase_2_vectorization": {
+        "title": "Vectorization & Infrastructure",
+        "description": "SIMD подготовка и векторизация критических путей",
+        "typical_improvements": "1.5-3x additional gains",
+        "focus_areas": [
+          "Hot path identification via profiling",
+          "SIMD infrastructure development",
+          "Block processing implementation",
+          "Cache-friendly data layouts",
+          "Platform abstraction layer"
+        ],
+        "deliverables": [
+          "SIMD-ready code architecture",
+          "Cross-platform vectorization support",
+          "Block processing optimizations",
+          "Performance measurement framework"
+        ]
+      },
+      
+      "phase_3_aggressive": {
+        "title": "Aggressive Platform-Specific Optimization",
+        "description": "Platform-specific SIMD и архитектурные оптимизации",
+        "typical_improvements": "2-5x additional gains",
+        "focus_areas": [
+          "AVX2/AVX-512 optimization (x86)",
+          "NEON optimization (ARM)",
+          "Cache optimization strategies",
+          "Memory prefetching",
+          "Parallel computation (where safe)"
+        ],
+        "deliverables": [
+          "Platform-optimized implementations",
+          "Advanced SIMD utilization",
+          "Production performance targets",
+          "Comprehensive benchmarking"
+        ]
+      }
+    }
+  },
+  
+  "profiling_strategy": {
+    "tools_by_platform": {
+      "macos": {
+        "primary": "Instruments.app",
+        "build_type": "Release builds with symbols (-O3 -g)",
+        "micro_benchmarks": "Integrated performance tests",
+        "measurement_strategy": "Multiple iterations with statistical analysis"
+      },
+      "linux": {
+        "primary": "Callgrind (Valgrind)",
+        "build_type": "RelWithDebInfo (-O2 -g)",
+        "micro_benchmarks": "Standalone benchmark executables",
+        "measurement_strategy": "Cache simulation + instruction counting"
+      },
+      "windows": {
+        "primary": "Visual Studio Profiler",
+        "build_type": "Release with debug info",
+        "micro_benchmarks": "Windows Performance Toolkit",
+        "measurement_strategy": "Sampling + ETW tracing"
+      }
+    },
+    
+    "measurement_principles": {
+      "baseline_establishment": "Always measure baseline before any changes",
+      "statistical_validation": "Multiple runs with variance analysis",
+      "isolated_vs_production": "Test both isolated functions and full pipeline",
+      "regression_detection": "Continuous performance monitoring",
+      "bottleneck_identification": "Profile-guided optimization priorities"
+    }
+  },
+  
+  "optimization_techniques": {
+    "algorithmic_optimization": {
+      "manual_implementations": "Hand-optimized critical functions vs compiler",
+      "data_structures": "Cache-friendly layouts and access patterns",
+      "algorithmic_complexity": "Big-O improvements where possible",
+      "constant_optimizations": "Compile-time vs runtime computations"
+    },
+    
+    "memory_optimization": {
+      "allocation_patterns": {
+        "stack_vs_heap": "Prefer stack allocation for temporary data",
+        "memory_pools": "Pre-allocated pools for frequent allocations",
+        "alignment": "Proper data alignment for SIMD operations",
+        "locality": "Data layout for cache efficiency"
+      },
+      "access_patterns": {
+        "sequential_access": "Prefer sequential over random access",
+        "prefetching": "Manual prefetching for predictable patterns",
+        "cache_blocking": "Block algorithms for cache-friendly access",
+        "false_sharing": "Avoid false sharing in multi-threaded code"
+      }
+    },
+    
+    "simd_optimization": {
+      "cross_platform_strategy": {
+        "abstraction_layer": "Platform-agnostic SIMD wrappers",
+        "fallback_implementations": "Scalar fallbacks for unsupported platforms",
+        "runtime_detection": "CPU capability detection and dispatch",
+        "compiler_intrinsics": "Direct SIMD intrinsics where needed"
+      },
+      "vectorization_patterns": {
+        "block_processing": "Process 4/8/16 elements per iteration",
+        "loop_unrolling": "Manual unrolling for better instruction pipeline",
+        "data_parallelism": "Parallel processing of independent data",
+        "reduction_operations": "Efficient SIMD reduction patterns"
+      }
+    }
+  },
+  
+  "performance_analysis": {
+    "bottleneck_identification": {
+      "profiling_workflow": [
+        "1. Establish baseline measurements",
+        "2. Profile with sampling profiler",
+        "3. Identify hot functions (>5% runtime)",
+        "4. Analyze instruction-level bottlenecks",
+        "5. Prioritize optimization targets"
+      ],
+      "common_bottlenecks": {
+        "cpu_bound": "Mathematical operations, tight loops",
+        "memory_bound": "Cache misses, memory bandwidth",
+        "io_bound": "Disk/network operations",
+        "synchronization": "Lock contention, false sharing"
+      }
+    },
+    
+    "measurement_framework": {
+      "micro_benchmarks": {
+        "purpose": "Isolated function performance testing",
+        "implementation": "Minimal overhead timing infrastructure",
+        "statistical_analysis": "Mean, median, variance, outlier detection",
+        "regression_testing": "Automated performance regression detection"
+      },
+      "integration_benchmarks": {
+        "purpose": "Full pipeline performance validation",
+        "real_world_scenarios": "Representative usage patterns",
+        "end_to_end_measurement": "Complete workflow timing",
+        "production_validation": "Performance in production-like conditions"
+      }
+    }
+  },
+  
+  "implementation_guidelines": {
+    "optimization_workflow": [
+      "1. Profile and identify bottlenecks",
+      "2. Implement targeted optimization",
+      "3. Measure performance impact",
+      "4. Validate correctness with tests",
+      "5. Document changes and results",
+      "6. Update performance baselines"
+    ],
+    
+    "code_quality_standards": {
+      "maintainability": "Optimized code must remain readable",
+      "testing": "All optimizations must pass existing tests",
+      "documentation": "Document optimization rationale and trade-offs",
+      "platform_support": "Maintain cross-platform compatibility"
+    },
+    
+    "risk_mitigation": {
+      "correctness_validation": "Extensive testing after each optimization",
+      "performance_regression": "Automated performance monitoring",
+      "code_complexity": "Balance optimization vs maintainability",
+      "platform_portability": "Ensure optimizations don't break other platforms"
+    }
+  },
+  
+  "case_studies": {
+    "chipmunk_optimization": {
+      "context": "Post-quantum cryptography optimization (context-old)",
+      "challenge": "55.3% runtime in NTT operations, 93x slower than Rust",
+      "approach": "3-phase optimization methodology",
+      "results": {
+        "phase_1": "Hash function optimization completed",
+        "phase_2": "Vectorization infrastructure ready",
+        "lesson_learned": "Manual Barrett reduction 2.4x faster than compiler %"
+      },
+      "universal_application": "Methodology applicable to any high-performance computation"
+    }
+  },
+  
+  "template_usage": {
+    "create_command": "slc_cli.py create methodologies/performance_optimization.json my_perf_project",
+    "generated_structure": [
+      "profiling/ - Profiling infrastructure and scripts",
+      "benchmarks/ - Micro and integration benchmarks",
+      "optimization/ - Optimization implementation tracking",
+      "docs/ - Performance analysis documentation",
+      "scripts/ - Automated performance testing"
+    ],
+    "methodology_application": [
+      "Set up baseline performance measurements",
+      "Implement profiling infrastructure",
+      "Apply phase-based optimization approach",
+      "Validate improvements with benchmarks"
+    ]
+  },
+  
+  "integration_points": {
+    "related_templates": {
+      "dap_sdk_project": "projects/dap_sdk_project.json",
+      "c_development": "languages/c/c_development.json",
+      "cryptography": "projects/cryptography_project.json"
+    },
+    "suggested_workflow": [
+      "1. Generate performance optimization project structure",
+      "2. Set up platform-specific profiling tools",
+      "3. Implement baseline measurements",
+      "4. Apply 3-phase optimization methodology",
+      "5. Document results and create reproducible benchmarks"
+    ]
+  }
+} 

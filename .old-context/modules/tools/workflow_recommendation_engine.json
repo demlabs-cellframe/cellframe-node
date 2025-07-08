@@ -1,0 +1,316 @@
+{
+  "type": "workflow_recommendation_engine",
+  "version": "2.2.0",
+  "created": "2025-01-15T12:45:00Z",
+  "description": "Интеллектуальная система рекомендаций workflow'ов на основе матрицы взаимосвязей шаблонов",
+  
+  "основные_компоненты": {
+    "context_analyzer": {
+      "описание": "Анализирует текущий контекст работы пользователя",
+      "входные_данные": [
+        "Текущий активный шаблон",
+        "Фаза работы (setup, development, optimization, documentation)",
+        "Тип проекта (C/C++, методологическая работа, исследование)",
+        "История использования шаблонов"
+      ]
+    },
+    "pattern_matcher": {
+      "описание": "Сопоставляет текущий контекст с известными успешными паттернами",
+      "алгоритм": "Fuzzy matching с весовыми коэффициентами для context relevance"
+    },
+    "recommendation_generator": {
+      "описание": "Генерирует ранжированные рекомендации следующих шаблонов",
+      "критерии_ранжирования": [
+        "Релевантность к текущему контексту",
+        "Историческая успешность комбинации",
+        "Уровень взаимосвязи между шаблонами",
+        "Пользовательские предпочтения"
+      ]
+    }
+  },
+
+  "workflow_patterns": {
+    "новый_c_проект": {
+      "trigger": {
+        "keywords": ["setup", "новый", "проект", "c++", "начать"],
+        "context": "project_initialization"
+      },
+      "рекомендуемая_последовательность": [
+        {
+          "шаблон": "C Development Enhanced",
+          "фаза": "project_setup",
+          "время": "5-10 минут",
+          "описание": "Быстрая настройка проекта с comprehensive guidance"
+        },
+        {
+          "шаблон": "Live Documentation", 
+          "фаза": "development_start",
+          "время": "постоянно",
+          "описание": "Документирование процесса разработки в реальном времени"
+        }
+      ]
+    },
+
+    "исследование_производительности": {
+      "trigger": {
+        "keywords": ["производительность", "optimization", "профилирование", "bottleneck"],
+        "context": "performance_investigation"
+      },
+      "рекомендуемая_последовательность": [
+        {
+          "шаблон": "Live Documentation",
+          "фаза": "session_start",
+          "время": "всю сессию",
+          "описание": "Захват insights и процесса исследования"
+        },
+        {
+          "шаблон": "Universal Optimization",
+          "фаза": "systematic_analysis", 
+          "время": "1-2 часа",
+          "описание": "4-фазная методология оптимизации"
+        },
+        {
+          "шаблон": "Cross-Domain Matrix",
+          "фаза": "hypothesis_generation",
+          "время": "15-30 минут",
+          "описание": "Поиск proven techniques из других доменов"
+        }
+      ]
+    },
+
+    "методологическая_работа": {
+      "trigger": {
+        "keywords": ["методология", "framework", "процесс", "система", "knowledge"],
+        "context": "methodology_development"
+      },
+      "рекомендуемая_последовательность": [
+        {
+          "шаблон": "Live Documentation",
+          "фаза": "knowledge_extraction",
+          "время": "всю сессию",
+          "описание": "Real-time capture процесса извлечения знаний"
+        },
+        {
+          "шаблон": "Universal Optimization",
+          "фаза": "systematization",
+          "время": "1-2 часа", 
+          "описание": "Применение systematic approach к методологии"
+        },
+        {
+          "шаблон": "Cross-Domain Matrix",
+          "фаза": "applicability_analysis",
+          "время": "30-60 минут",
+          "описание": "Анализ применимости к другим доменам"
+        }
+      ],
+      "показатели_успеха": [
+        "Methodology systematically extracted и documented",
+        "Cross-domain applicability analyzed",
+        "Reusable framework created"
+      ]
+    },
+
+    "улучшение_существующего_процесса": {
+      "trigger": {
+        "keywords": ["улучшение", "оптимизация", "процесс", "workflow", "efficiency"],
+        "context": "process_optimization"
+      },
+      "рекомендуемая_последовательность": [
+        {
+          "шаблон": "Universal Optimization",
+          "фаза": "baseline_measurement",
+          "время": "30-60 минут",
+          "описание": "Измерение текущего состояния и выявление bottlenecks"
+        },
+        {
+          "шаблон": "Cross-Domain Matrix", 
+          "фаза": "solution_discovery",
+          "время": "15-30 минут",
+          "описание": "Поиск proven solutions из других доменов"
+        },
+        {
+          "шаблон": "Live Documentation",
+          "фаза": "improvement_process",
+          "время": "всю сессию",
+          "описание": "Документирование процесса улучшения"
+        }
+      ]
+    }
+  },
+
+  "интеллектуальные_предложения": {
+    "context_based_suggestions": {
+      "текущий_шаблон_c_development": {
+        "при_setup_завершении": {
+          "предложение": "Live Documentation",
+          "обоснование": "Документируйте процесс разработки с самого начала",
+          "приоритет": "высокий"
+        },
+        "при_performance_issues": {
+          "предложение": "Universal Optimization", 
+          "обоснование": "Systematic approach к решению проблем производительности",
+          "приоритет": "высокий"
+        },
+        "при_выборе_алгоритмов": {
+          "предложение": "Cross-Domain Matrix",
+          "обоснование": "Найти proven optimization techniques из других областей",
+          "приоритет": "средний"
+        }
+      },
+
+      "текущий_шаблон_live_documentation": {
+        "тип_optimization_session": {
+          "предложение": "Universal Optimization",
+          "обоснование": "Структурированный подход к оптимизации + documentation",
+          "приоритет": "высокий"
+        },
+        "тип_c_development_session": {
+          "предложение": "C Development Enhanced",
+          "обоснование": "Domain-specific guidance для C/C++ разработки",
+          "приоритет": "высокий"
+        },
+        "тип_methodology_session": {
+          "предложение": "Cross-Domain Matrix",
+          "обоснование": "Анализ применимости patterns к другим доменам",
+          "приоритет": "средний"
+        }
+      },
+
+      "текущий_шаблон_universal_optimization": {
+        "phase_1_measurement": {
+          "предложение": "Live Documentation",
+          "обоснование": "Capture baseline measurements и insights",
+          "приоритет": "критический"
+        },
+        "phase_2_hypothesis": {
+          "предложение": "Cross-Domain Matrix",
+          "обоснование": "Поиск proven optimization techniques",
+          "приоритет": "высокий"
+        },
+        "phase_3_implementation": {
+          "предложение": "Domain-specific templates",
+          "обоснование": "Конкретная реализация в целевом домене",
+          "приоритет": "высокий"
+        }
+      },
+
+      "текущий_шаблон_cross_domain_matrix": {
+        "найден_pattern": {
+          "предложение": "Universal Optimization",
+          "обоснование": "Systematic application найденного pattern",
+          "приоритет": "высокий"
+        },
+        "исследование_применимости": {
+          "предложение": "Live Documentation", 
+          "обоснование": "Document процесс применения cross-domain insights",
+          "приоритет": "средний"
+        }
+      }
+    },
+
+    "keyword_based_suggestions": {
+      "performance|optimization|speed": {
+        "основной": "Universal Optimization",
+        "дополнительные": ["Live Documentation", "Cross-Domain Matrix"],
+        "обоснование": "Systematic performance optimization + documentation"
+      },
+      "setup|новый|начать|проект": {
+        "основной": "C Development Enhanced",
+        "дополнительные": ["Live Documentation"],
+        "обоснование": "Quick project setup + documentation workflow"
+      },
+      "documentation|capture|insights": {
+        "основной": "Live Documentation", 
+        "дополнительные": ["Universal Optimization", "Cross-Domain Matrix"],
+        "обоснование": "Core documentation + related methodologies"
+      },
+      "patterns|cross-domain|universal|methodology": {
+        "основной": "Cross-Domain Matrix",
+        "дополнительные": ["Universal Optimization", "Live Documentation"],
+        "обоснование": "Pattern discovery + systematic application"
+      }
+    }
+  },
+
+  "адаптивные_алгоритмы": {
+    "learning_system": {
+      "описание": "Система обучается на основе пользовательского поведения",
+      "метрики": [
+        "Частота переходов между templates",
+        "Успешность завершения workflow'ов", 
+        "Время на поиск нужного template",
+        "User satisfaction ratings"
+      ],
+      "адаптация": "Алгоритм корректирует веса рекомендаций на основе success patterns"
+    },
+
+    "personalization": {
+      "user_profiles": {
+        "novice_developer": {
+          "приоритет": "Step-by-step guidance",
+          "рекомендации": "Больше troubleshooting help, detailed explanations"
+        },
+        "experienced_developer": {
+          "приоритет": "Efficiency, quick access",
+          "рекомендации": "Shorter workflows, advanced techniques"
+        },
+        "researcher": {
+          "приоритет": "Methodology, cross-domain insights",
+          "рекомендации": "Больше cross-domain matrix, universal optimization"
+        }
+      }
+    }
+  },
+
+  "интеграция_и_реализация": {
+    "cli_integration": {
+      "команды": [
+        "slc suggest --context=current_template",
+        "slc workflow --pattern=performance_investigation", 
+        "slc recommend --keywords='optimization performance'",
+        "slc next --from=current_template"
+      ],
+      "response_format": {
+        "primary_suggestion": "Template name + brief reason",
+        "secondary_suggestions": "Alternative templates",
+        "workflow_pattern": "Complete workflow if applicable",
+        "estimated_time": "Time investment для каждого step"
+      }
+    },
+
+    "template_header_enhancement": {
+      "navigation_hints": {
+        "frequently_used_with": "List of commonly combined templates",
+        "natural_next_steps": "Logical follow-up templates",
+        "workflow_patterns": "Common workflow patterns involving this template"
+      },
+      "smart_suggestions": {
+        "based_on_phase": "Different suggestions для different phases",
+        "based_on_context": "Context-aware recommendations",
+        "based_on_history": "Personalized suggestions"
+      }
+    }
+  },
+
+  "валидация_и_метрики": {
+    "успех_рекомендаций": [
+      "Template transition rate: >40%",
+      "Workflow completion rate: >80%", 
+      "Discovery time: <30 секунд",
+      "User satisfaction: >90%"
+    ],
+    
+    "качество_workflow_patterns": [
+      "Pattern completion rate",
+      "Time to value achievement",
+      "User retention in multi-template workflows",
+      "Success rate of suggested combinations"
+    ],
+
+    "непрерывное_улучшение": {
+      "A/B_testing": "Тестирование различных recommendation algorithms",
+      "user_feedback_integration": "Сбор и анализ пользовательской обратной связи",
+      "pattern_evolution": "Эволюция workflow patterns на основе usage data"
+    }
+  }
+} 

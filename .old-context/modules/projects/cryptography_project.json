@@ -1,0 +1,296 @@
+{
+  "version": "2.1.0",
+  "created": "2025-01-14T20:00:00Z",
+  "updated": "2025-01-14T20:00:00Z",
+  "imported_from": "context-old v2.0",
+  
+  "navigation_system": {
+    "file_role": "PROJECT_TEMPLATE_CRYPTOGRAPHY",
+    "description": "🔐 Специализированный шаблон для криптографических проектов и систем безопасности",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "siblings": ["projects/dap_sdk_project.json"],
+      "children": ["Cryptographic project generation"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "💻 C/C++ development": "languages/c/c_development.json - системное программирование",
+      "📊 Performance optimization": "methodologies/performance_optimization.json - оптимизация производительности",
+      "🏗️ DAP SDK project": "projects/dap_sdk_project.json - блокчейн разработка"
+    }
+  },
+  
+  "template_info": {
+    "name": "Cryptography Project Template",
+    "description": "Специализированный шаблон для разработки криптографических библиотек и систем безопасности",
+    "version": "2.1.0",
+    "domain": "cryptography_security",
+    "specialization": "post_quantum_ready",
+    "applicability": "Криптографические библиотеки, системы безопасности, пост-квантовые алгоритмы",
+    "target_projects": [
+      "Post-quantum cryptographic libraries",
+      "Digital signature systems",
+      "Key exchange protocols",
+      "Hash-based signature schemes",
+      "Lattice-based cryptography",
+      "Security protocol implementations",
+      "Cryptographic API libraries"
+    ]
+  },
+  
+  "legacy_knowledge": {
+    "source": "context-old v2.0 - Production crypto expertise",
+    "post_quantum_algorithms": {
+      "proven_production": {
+        "chipmunk": "✅ Lattice-based multi-signature - PRODUCTION READY",
+        "kyber": "✅ Post-quantum KEM - NIST standardized",
+        "dilithium": "✅ Lattice-based signatures - NIST standardized",
+        "falcon": "✅ Compact lattice signatures - efficient",
+        "msrln": "✅ Microsoft Research lattice cryptography",
+        "sphincsplus": "✅ Hash-based signatures - quantum-safe"
+      },
+      "classical_deprecated": {
+        "ecdsa": "⚠️ DEPRECATED - compatibility only",
+        "rsa": "⚠️ DEPRECATED - legacy support only",
+        "policy": "Classical algorithms marked for phase-out"
+      }
+    },
+    "security_philosophy": {
+      "post_quantum_priority": "Пост-квантовые алгоритмы ВСЕГДА имеют приоритет",
+      "security_first": "Безопасность превыше производительности",
+      "no_openssl_policy": "Избегать OpenSSL - использовать специализированные реализации"
+    }
+  },
+  
+  "cryptographic_architecture": {
+    "algorithm_categories": {
+      "digital_signatures": {
+        "post_quantum": ["Chipmunk", "Dilithium", "Falcon", "SPHINCS+"],
+        "classical": ["ECDSA (deprecated)", "RSA (deprecated)"],
+        "recommendation": "Use post-quantum for new implementations"
+      },
+      "key_exchange": {
+        "post_quantum": ["Kyber", "MSRLN"],
+        "classical": ["ECDH (deprecated)"],
+        "hybrid_approach": "Consider classical + post-quantum hybrid"
+      },
+      "hash_functions": {
+        "primary": "SHA2-256 (secp256k1_sha256 optimized version)",
+        "alternative": "SHA3/Keccak via XKCP",
+        "specialized": "Algorithm-specific hash functions"
+      }
+    },
+    
+    "implementation_principles": {
+      "constant_time": {
+        "requirement": "All cryptographic operations must be constant-time",
+        "validation": "Use constant-time comparison functions",
+        "side_channel_resistance": "Protect against timing attacks"
+      },
+      "memory_security": {
+        "secure_allocation": "Zero sensitive memory before freeing",
+        "stack_preference": "Prefer stack allocation for temporary crypto data",
+        "memory_locking": "Lock sensitive memory pages where possible"
+      },
+      "randomness": {
+        "secure_random": "Use cryptographically secure RNG",
+        "entropy_sources": "Multiple entropy sources where available",
+        "deterministic_testing": "Deterministic RNG for testing only"
+      }
+    }
+  },
+  
+  "security_framework": {
+    "threat_model": {
+      "quantum_threat": {
+        "timeline": "Post-quantum algorithms mandatory for long-term security",
+        "migration_strategy": "Hybrid classical+post-quantum during transition",
+        "key_sizes": "Post-quantum algorithms require larger key sizes"
+      },
+      "side_channel_attacks": {
+        "timing_attacks": "Constant-time implementations required",
+        "cache_attacks": "Cache-friendly but secure memory access",
+        "power_analysis": "Consider power analysis resistance for embedded"
+      }
+    },
+    
+    "security_validation": {
+      "test_vectors": {
+        "known_answer_tests": "Validate against known test vectors",
+        "cross_reference": "Compare with reference implementations",
+        "edge_cases": "Test boundary conditions and edge cases"
+      },
+      "formal_verification": {
+        "algorithmic_correctness": "Verify mathematical correctness",
+        "implementation_correctness": "Validate implementation matches spec",
+        "side_channel_analysis": "Analyze for timing and cache leaks"
+      }
+    }
+  },
+  
+  "performance_considerations": {
+    "optimization_targets": {
+      "primary_focus": "Post-quantum algorithm optimization",
+      "classical_maintenance": "Maintain but don't optimize classical algorithms",
+      "hybrid_efficiency": "Optimize hybrid classical+post-quantum modes"
+    },
+    
+    "platform_optimization": {
+      "simd_support": {
+        "x86_64": "AVX2/AVX-512 vectorization for NTT operations",
+        "arm64": "NEON vectorization for lattice operations",
+        "portable": "Scalar fallbacks for all platforms"
+      },
+      "memory_hierarchy": {
+        "cache_optimization": "Cache-friendly data layouts",
+        "prefetching": "Predictable access patterns for prefetching",
+        "memory_bandwidth": "Optimize for memory-bound operations"
+      }
+    },
+    
+    "benchmarking_framework": {
+      "micro_benchmarks": "Individual algorithm performance",
+      "integration_benchmarks": "Full protocol performance",
+      "regression_testing": "Automated performance regression detection",
+      "cross_platform": "Consistent benchmarking across platforms"
+    }
+  },
+  
+  "implementation_guidelines": {
+    "coding_standards": {
+      "language_choice": {
+        "primary": "C/C++ for high-performance implementations",
+        "alternative": "Rust for memory safety",
+        "bindings": "Python/JavaScript bindings for API usage"
+      },
+      "code_structure": {
+        "modular_design": "Separate algorithm implementations",
+        "consistent_api": "Uniform API across algorithms",
+        "error_handling": "Comprehensive error handling and validation"
+      }
+    },
+    
+    "testing_strategy": {
+      "unit_tests": {
+        "algorithm_correctness": "Test individual algorithm implementations",
+        "edge_cases": "Test boundary conditions and error cases",
+        "performance_regression": "Automated performance testing"
+      },
+      "integration_tests": {
+        "protocol_tests": "Test complete cryptographic protocols",
+        "interoperability": "Cross-implementation compatibility",
+        "stress_testing": "High-load and long-duration testing"
+      },
+      "security_tests": {
+        "known_answer_tests": "Validate against standard test vectors",
+        "fuzzing": "Automated fuzz testing for robustness",
+        "side_channel_testing": "Timing and cache attack resistance"
+      }
+    }
+  },
+  
+  "development_environment": {
+    "build_system": {
+      "primary": "CMake for cross-platform builds",
+      "configurations": {
+        "debug": "Debug builds with full symbols",
+        "release": "Optimized release builds",
+        "testing": "Test builds with coverage",
+        "benchmark": "Performance benchmarking builds"
+      }
+    },
+    
+    "toolchain_requirements": {
+      "compilers": {
+        "gcc": "GCC 9+ for C99/C11 support",
+        "clang": "Clang 10+ for better optimization",
+        "msvc": "Visual Studio 2019+ for Windows"
+      },
+      "analysis_tools": {
+        "static_analysis": "Cppcheck, Clang Static Analyzer",
+        "dynamic_analysis": "Valgrind, AddressSanitizer",
+        "fuzzing": "AFL++, libFuzzer for security testing"
+      }
+    },
+    
+    "dependencies": {
+      "minimal_dependencies": "Prefer self-contained implementations",
+      "crypto_libraries": {
+        "avoid": "OpenSSL (use specialized implementations)",
+        "consider": "XKCP for Keccak, secp256k1 for optimized hashing"
+      },
+      "testing_frameworks": "Custom crypto testing framework"
+    }
+  },
+  
+  "project_structure": {
+    "directory_layout": {
+      "src/": "Algorithm implementations",
+      "include/": "Public API headers",
+      "test/": "Test suites and test vectors",
+      "benchmark/": "Performance benchmarks",
+      "docs/": "Algorithm specifications and usage",
+      "examples/": "Usage examples and tutorials"
+    },
+    
+    "algorithm_organization": {
+      "by_category": "Group by signature/KEM/hash",
+      "by_security_level": "Separate by security parameters",
+      "common_utilities": "Shared utilities and helpers"
+    }
+  },
+  
+  "deployment_considerations": {
+    "api_design": {
+      "consistent_interface": "Uniform API across all algorithms",
+      "version_management": "API versioning for compatibility",
+      "error_handling": "Comprehensive error codes and messages"
+    },
+    
+    "packaging": {
+      "library_formats": "Static and dynamic libraries",
+      "language_bindings": "C, Python, JavaScript bindings",
+      "documentation": "Complete API documentation"
+    },
+    
+    "security_updates": {
+      "vulnerability_response": "Process for security updates",
+      "algorithm_agility": "Easy algorithm replacement/upgrade",
+      "deprecation_policy": "Clear deprecation timeline for algorithms"
+    }
+  },
+  
+  "template_usage": {
+    "create_command": "slc_cli.py create projects/cryptography_project.json my_crypto_lib",
+    "generated_structure": [
+      "CMakeLists.txt with crypto-specific configuration",
+      "src/ with post-quantum algorithm stubs",
+      "include/ with consistent crypto API headers",
+      "test/ with crypto test framework",
+      "benchmark/ with performance testing infrastructure",
+      "docs/ with algorithm specifications"
+    ],
+    "implementation_workflow": [
+      "Choose target post-quantum algorithms",
+      "Implement constant-time core operations",
+      "Add comprehensive test vectors",
+      "Implement performance benchmarks",
+      "Validate security properties"
+    ]
+  },
+  
+  "integration_points": {
+    "related_templates": {
+      "dap_sdk_project": "projects/dap_sdk_project.json",
+      "performance_optimization": "methodologies/performance_optimization.json",
+      "c_development": "languages/c/c_development.json"
+    },
+    "suggested_workflow": [
+      "1. Generate cryptographic project structure",
+      "2. Apply performance optimization methodology",
+      "3. Implement using C/C++ best practices",
+      "4. Validate with comprehensive security testing",
+      "5. Document security properties and usage"
+    ]
+  }
+} 

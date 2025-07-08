@@ -1,0 +1,1143 @@
+{
+  "immediate_fixes": [
+    {
+      "category": "error_handling",
+      "file": "wrapping_dap_http_header.c",
+      "line": 123,
+      "description": "Missing return NULL after PyErr_SetString",
+      "fix": "Add 'return NULL;' after error setting",
+      "estimated_time": "30min"
+    },
+    {
+      "category": "error_handling",
+      "file": "wrapping_dap_mempool.c",
+      "line": 196,
+      "description": "Missing return NULL after PyErr_SetString",
+      "fix": "Add 'return NULL;' after error setting",
+      "estimated_time": "30min"
+    },
+    {
+      "category": "error_handling",
+      "file": "wrapping_dap_mempool.c",
+      "line": 206,
+      "description": "Missing return NULL after PyErr_SetString",
+      "fix": "Add 'return NULL;' after error setting",
+      "estimated_time": "30min"
+    },
+    {
+      "category": "error_handling",
+      "file": "wrapping_dap_mempool.c",
+      "line": 258,
+      "description": "Missing return NULL after PyErr_SetString",
+      "fix": "Add 'return NULL;' after error setting",
+      "estimated_time": "30min"
+    },
+    {
+      "category": "memory_management",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 224,
+      "description": "malloc/calloc result not checked for NULL",
+      "fix": "Add NULL check: if (ptr == NULL) { handle error; }",
+      "estimated_time": "30min"
+    }
+  ],
+  "short_term": [
+    {
+      "category": "memory_management",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 224,
+      "description": "Potential memory leak: variable 'bound_items' allocated but not freed",
+      "fix": "Add free(bound_items); before function returns",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "memory_management",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 323,
+      "description": "Potential memory leak: variable 'data' allocated but not freed",
+      "fix": "Add free(data); before function returns",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "memory_management",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 331,
+      "description": "Potential memory leak: variable 'sentences' allocated but not freed",
+      "fix": "Add free(sentences); before function returns",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "memory_management",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 349,
+      "description": "Potential memory leak: variable 'res_size_t' allocated but not freed",
+      "fix": "Add free(res_size_t); before function returns",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 9,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 11,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 12,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 13,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 14,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 16,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 17,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 18,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 19,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 20,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 21,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 22,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 28,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "python-cellframe.c",
+      "line": 38,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_global_db_obj.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_global_db.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_global_db_role.c",
+      "line": 32,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_global_db_cluster.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_server_python.c",
+      "line": 14,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_events_python.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_events_socket_python.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-python.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-python.c",
+      "line": 15,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-python.c",
+      "line": 37,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "math_python.c",
+      "line": 16,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "math_python.c",
+      "line": 22,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_client_http.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_client_stage.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_client_stage_status.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_http_status_code.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_http.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_simple.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_simple.c",
+      "line": 21,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_simple.c",
+      "line": 43,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_header.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_header.c",
+      "line": 12,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_http_folder.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_enc_http.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_enc_http.c",
+      "line": 13,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_json_rpc_request.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_json_rpc_response.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_stream_ctl.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_stream_cluster_role.c",
+      "line": 32,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_stream.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-crypto-python.c",
+      "line": 32,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_hash.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_hash.c",
+      "line": 28,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_sign.c",
+      "line": 15,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_sign.c",
+      "line": 23,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap_crypto_data_type.c",
+      "line": 14,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_cert.c",
+      "line": 53,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_pkey.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_pkey.c",
+      "line": 12,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_crypto_key_types.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_guuid.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_stake_pos_delegate.c",
+      "line": 82,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_stake_pos_delegate.c",
+      "line": 88,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_vote_info.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_vote_info.c",
+      "line": 92,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-app-cli-python.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_mempool.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_chain_wallet_python.c",
+      "line": 12,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_dag_event.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_dag_event.c",
+      "line": 9,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_dag.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_block.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_block.c",
+      "line": 19,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_token.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_token.c",
+      "line": 133,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_token.c",
+      "line": 146,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_cond_subtype_srv_pay.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_cond_subtype_srv_stake.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_sig.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_ext.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_tx.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_tx.c",
+      "line": 71,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_tx.c",
+      "line": 77,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_std.c",
+      "line": 26,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_pkey.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_receipt.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_receipt.c",
+      "line": 20,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_anchor.c",
+      "line": 95,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum_anchor.c",
+      "line": 104,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_in.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_token.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_out_cond.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_in_cond.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_in_cond.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_common.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_common.c",
+      "line": 20,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_common.c",
+      "line": 43,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_common.c",
+      "line": 197,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum.c",
+      "line": 14,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_datum.c",
+      "line": 33,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_tx_token_ext.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap_chain_type_python.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap-chain-python.c",
+      "line": 16,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_atom_ptr.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs.c",
+      "line": 3,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap_chain_atom_iter_python.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_ledger.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cell.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_app_cli_server.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_node.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_node_info.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_node_client.c",
+      "line": 10,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap_chain_net_python.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "libdap_chain_net_python.c",
+      "line": 34,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_state.c",
+      "line": 4,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_client.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_order.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_order.c",
+      "line": 18,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_client_remote.c",
+      "line": 7,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_client_remote.c",
+      "line": 11,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_common.c",
+      "line": 6,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_net_srv_common.c",
+      "line": 54,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "wrapping_dap_chain_cs_dag_poa.c",
+      "line": 5,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_chain_plugins_command.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_chain_plugins.c",
+      "line": 11,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    },
+    {
+      "category": "thread_safety",
+      "file": "dap_plugins_python_app_context.c",
+      "line": 8,
+      "description": "Non-const static variable may cause thread safety issues",
+      "fix": "Consider thread-local storage (__thread) or proper synchronization",
+      "estimated_time": "15min"
+    }
+  ],
+  "long_term": [],
+  "architectural_improvements": [
+    {
+      "category": "architecture",
+      "description": "Создать единую систему error handling",
+      "estimated_time": "2-3 дня",
+      "priority": "HIGH"
+    },
+    {
+      "category": "architecture",
+      "description": "Внедрить RAII паттерны для управления памятью",
+      "estimated_time": "1 неделя",
+      "priority": "MEDIUM"
+    },
+    {
+      "category": "architecture",
+      "description": "Создать thread-safe API wrapper",
+      "estimated_time": "3-5 дней",
+      "priority": "MEDIUM"
+    },
+    {
+      "category": "testing",
+      "description": "Добавить unit тесты для всех API функций",
+      "estimated_time": "2 недели",
+      "priority": "HIGH"
+    },
+    {
+      "category": "documentation",
+      "description": "Создать API документацию с примерами",
+      "estimated_time": "1 неделя",
+      "priority": "MEDIUM"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "knowledge_type": "api_patterns",
+  "project": "cellframe",
+  "version": "1.0.0",
+  "timestamp": "2025-01-16T17:55:00Z",
+  "source": "code_analysis",
+
+  "api_overview": {
+    "primary_interface": "C API with Python bindings",
+    "binding_technology": "Python C API wrapper",
+    "architecture_pattern": "Module-based with JSON configuration",
+    "integration_method": "Direct C function calls"
+  },
+
+  "initialization_patterns": {
+    "json_configuration": {
+      "description": "JSON-based module configuration for initialization",
+      "pattern": {
+        "structure": {
+          "modules": "Array of required modules",
+          "module_configs": "Individual module configurations"
+        },
+        "example": {
+          "modules": ["Core", "Crypto", "Chain"],
+          "Core": {
+            "config_dir": "/tmp",
+            "log_level": "L_DEBUG", 
+            "application_name": "MyApp"
+          }
+        }
+      },
+      "best_practices": [
+        "Validate JSON structure before initialization",
+        "Provide sensible defaults for missing configurations",
+        "Log configuration loading for debugging"
+      ]
+    },
+    
+    "module_loading": {
+      "description": "Dynamic module loading based on configuration",
+      "pattern": {
+        "process": [
+          "Parse JSON configuration",
+          "Validate required modules",
+          "Initialize modules in dependency order",
+          "Handle initialization errors"
+        ]
+      }
+    }
+  },
+
+  "cli_integration_patterns": {
+    "command_registration": {
+      "description": "Register CLI commands via AppCliServer",
+      "pattern": {
+        "method": "AppCliServer.cmdItemCreate",
+        "parameters": [
+          "command_name: str",
+          "command_function: callable", 
+          "title: str",
+          "description: str"
+        ]
+      },
+      "example": {
+        "registration": "AppCliServer.cmdItemCreate('demo', cmdDemo, 'Command demo', 'Description')",
+        "command_function": "def cmdDemo(argv, indexStrReply): ..."
+      }
+    },
+    
+    "reply_handling": {
+      "description": "Handle command replies via AppCliServer",
+      "pattern": {
+        "method": "AppCliServer.setReplyText",
+        "parameters": [
+          "reply_text: str",
+          "index_str_reply: int"
+        ]
+      },
+      "best_practices": [
+        "Always provide meaningful reply text",
+        "Handle errors gracefully with informative messages",
+        "Use consistent reply formatting"
+      ]
+    },
+    
+    "argument_processing": {
+      "description": "Process command line arguments in CLI commands",
+      "pattern": {
+        "argv_structure": "List of string arguments",
+        "processing": "Parse and validate arguments before processing"
+      }
+    }
+  },
+
+  "plugin_system_patterns": {
+    "plugin_initialization": {
+      "description": "Plugin initialization with init() function",
+      "pattern": {
+        "required_function": "def init(): return 0",
+        "responsibilities": [
+          "Register CLI commands",
+          "Initialize plugin state",
+          "Set up event handlers",
+          "Log initialization success"
+        ]
+      }
+    },
+    
+    "plugin_cleanup": {
+      "description": "Plugin cleanup with deinit() function", 
+      "pattern": {
+        "required_function": "def deinit(): return 0",
+        "responsibilities": [
+          "Clean up resources",
+          "Unregister event handlers",
+          "Log cleanup completion"
+        ]
+      }
+    },
+    
+    "dynamic_loading": {
+      "description": "Dynamic plugin loading and activation",
+      "pattern": {
+        "process": [
+          "Discover plugin modules",
+          "Load plugin code",
+          "Call init() function",
+          "Handle initialization errors"
+        ]
+      }
+    }
+  },
+
+  "error_handling_patterns": {
+    "exception_based": {
+      "description": "Exception-based error handling with logging",
+      "pattern": {
+        "structure": "try-except blocks with logging",
+        "logging": "Use logIt for Cellframe-specific logging"
+      },
+      "best_practices": [
+        "Catch specific exceptions when possible",
+        "Log errors with context information",
+        "Provide user-friendly error messages",
+        "Maintain system stability on errors"
+      ]
+    },
+    
+    "return_codes": {
+      "description": "Return code-based error handling for C API",
+      "pattern": {
+        "success": "Return 0",
+        "error": "Return non-zero error codes",
+        "documentation": "Document all possible return codes"
+      }
+    }
+  },
+
+  "configuration_patterns": {
+    "json_based": {
+      "description": "JSON-based configuration management",
+      "pattern": {
+        "file_format": "JSON configuration files",
+        "loading": "Load and parse JSON configurations",
+        "validation": "Validate configuration structure and values"
+      }
+    },
+    
+    "dataclass_config": {
+      "description": "Dataclass-based configuration objects",
+      "pattern": {
+        "structure": "@dataclass with type hints",
+        "validation": "Post-init validation",
+        "serialization": "JSON serialization/deserialization"
+      }
+    }
+  },
+
+  "network_patterns": {
+    "connection_management": {
+      "description": "Network connection management patterns",
+      "pattern": {
+        "connection_lifecycle": [
+          "Initialize network configuration",
+          "Establish connection",
+          "Handle connection events",
+          "Graceful disconnection"
+        ]
+      }
+    },
+    
+    "event_handling": {
+      "description": "Network event handling patterns",
+      "pattern": {
+        "event_types": [
+          "Connection events",
+          "Data reception events", 
+          "Error events"
+        ],
+        "handlers": "Register event handlers for different event types"
+      }
+    }
+  },
+
+  "cryptographic_patterns": {
+    "algorithm_selection": {
+      "description": "Post-quantum cryptographic algorithm selection",
+      "pattern": {
+        "selection_criteria": [
+          "Security requirements",
+          "Performance requirements",
+          "Compatibility requirements"
+        ],
+        "fallback": "Provide fallback to classical algorithms"
+      }
+    },
+    
+    "key_management": {
+      "description": "Cryptographic key management patterns",
+      "pattern": {
+        "key_generation": "Generate keys using selected algorithms",
+        "key_storage": "Secure key storage and retrieval",
+        "key_rotation": "Key rotation and renewal strategies"
+      }
+    }
+  },
+
+  "performance_patterns": {
+    "resource_management": {
+      "description": "Resource management for performance optimization",
+      "pattern": {
+        "context_managers": "Use context managers for resource cleanup",
+        "connection_pooling": "Pool network connections",
+        "memory_management": "Efficient memory allocation and deallocation"
+      }
+    },
+    
+    "async_operations": {
+      "description": "Asynchronous operation patterns",
+      "pattern": {
+        "async_await": "Use async/await for non-blocking operations",
+        "event_loops": "Manage event loops for concurrent operations",
+        "error_handling": "Handle errors in async contexts"
+      }
+    }
+  },
+
+  "testing_patterns": {
+    "unit_testing": {
+      "description": "Unit testing patterns for Cellframe components",
+      "pattern": {
+        "test_structure": "Arrange-Act-Assert pattern",
+        "mocking": "Mock external dependencies",
+        "coverage": "Aim for high test coverage"
+      }
+    },
+    
+    "integration_testing": {
+      "description": "Integration testing with Cellframe SDK",
+      "pattern": {
+        "test_environment": "Set up test environment with Cellframe",
+        "api_testing": "Test API interactions",
+        "end_to_end": "End-to-end workflow testing"
+      }
+    }
+  },
+
+  "compatibility_patterns": {
+    "backward_compatibility": {
+      "description": "Maintain backward compatibility in API changes",
+      "pattern": {
+        "versioning": "Use semantic versioning",
+        "deprecation": "Gradual deprecation with warnings",
+        "migration": "Provide migration guides and tools"
+      }
+    },
+    
+    "interface_stability": {
+      "description": "Maintain stable interfaces across versions",
+      "pattern": {
+        "api_contracts": "Define and maintain API contracts",
+        "breaking_changes": "Minimize breaking changes",
+        "documentation": "Document all interface changes"
+      }
+    }
+  }
+} 

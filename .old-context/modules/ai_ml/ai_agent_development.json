@@ -1,0 +1,626 @@
+{
+  "type": "universal_template_module",
+  "domain": "ai_agent_development",
+  "version": "2.1.0",
+  "created": "2025-01-14T17:15:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на современных практиках AI agent architecture и autonomous systems",
+  
+  "navigation_system": {
+    "file_role": "AI_ML_TEMPLATE",
+    "description": "🤖 Шаблон для разработки AI агентов и autonomous systems",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/ai_ml/",
+      "siblings": ["modules/ai_ml/prompt_engineering.json", "modules/ai_ml/fine_tuning_workflow.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🤖 Prompt engineering": "modules/ai_ml/prompt_engineering.json - разработка промптов",
+      "🧠 Fine-tuning": "modules/ai_ml/fine_tuning_workflow.json - обучение моделей",
+      "💻 Python template": "modules/languages/python/python_development.json - Python проекты",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create ai_ml/ai_agent_development.json my_agent_project"
+  },
+  
+  "template_info": {
+    "name": "AI Agent Development & Intelligent Systems Template",
+    "description": "Универсальный шаблон для создания AI агентов, автономных систем и интеллектуальных помощников с функциями планирования, выполнения задач и обучения",
+    "target_projects": [
+      "Autonomous AI assistants",
+      "Multi-agent systems",
+      "Business process automation",
+      "Research assistants",
+      "Code generation agents",
+      "Data analysis agents",
+      "Customer service bots",
+      "Task-oriented dialogue systems",
+      "Workflow orchestration systems",
+      "Intelligent monitoring systems"
+    ],
+    "applicability": "100% проектов требующих intelligent autonomous behavior"
+  },
+  
+  "agent_architecture": {
+    "core_components": {
+      "reasoning_engine": {
+        "description": "Central decision-making component",
+        "components": [
+          "Goal formulation",
+          "Task decomposition", 
+          "Plan generation",
+          "Decision making",
+          "Conflict resolution"
+        ],
+        "implementation": "LLM-based reasoning с structured prompts"
+      },
+      
+      "memory_system": {
+        "short_term_memory": {
+          "description": "Current context и conversation state",
+          "components": ["Working memory", "Conversation history", "Current goals"],
+          "implementation": "In-memory data structures",
+          "capacity": "Limited by context window"
+        },
+        
+        "long_term_memory": {
+          "description": "Persistent knowledge и learned experiences",
+          "components": ["Factual knowledge", "Procedural knowledge", "Episodic memories"],
+          "implementation": "Vector databases (Pinecone, Weaviate, ChromaDB)",
+          "retrieval": "Semantic similarity search"
+        },
+        
+        "working_memory": {
+          "description": "Active processing workspace",
+          "components": ["Current task state", "Intermediate results", "Active tools"],
+          "management": "Attention mechanisms и priority queues"
+        }
+      },
+      
+      "perception_module": {
+        "input_processing": {
+          "text_understanding": "Natural language comprehension",
+          "multimodal_inputs": "Vision, audio, document processing",
+          "structured_data": "JSON, XML, database queries",
+          "web_content": "HTML, APIs, search results"
+        },
+        
+        "context_awareness": {
+          "temporal_context": "Time-sensitive information",
+          "spatial_context": "Location-aware processing",
+          "user_context": "User preferences и history",
+          "domain_context": "Task-specific knowledge"
+        }
+      },
+      
+      "action_execution": {
+        "tool_integration": {
+          "api_calls": "REST APIs, GraphQL, webhooks",
+          "database_operations": "CRUD operations, queries",
+          "file_operations": "Read, write, search files",
+          "web_interactions": "Web scraping, form submission",
+          "code_execution": "Safe code generation и execution"
+        },
+        
+        "safety_mechanisms": {
+          "permission_system": "Action authorization",
+          "sandboxing": "Safe execution environments",
+          "rollback_capability": "Undo dangerous actions",
+          "human_approval": "Critical action confirmation"
+        }
+      }
+    },
+    
+    "agent_types": {
+      "reactive_agents": {
+        "description": "Respond to stimuli without internal state",
+        "characteristics": ["Stateless", "Fast response", "Simple logic"],
+        "use_cases": ["Chatbots", "FAQ systems", "Simple automation"],
+        "implementation": "Prompt-response patterns"
+      },
+      
+      "deliberative_agents": {
+        "description": "Plan и reason about actions",
+        "characteristics": ["Goal-oriented", "Planning capability", "State maintenance"],
+        "use_cases": ["Research assistants", "Project management", "Complex automation"],
+        "implementation": "Planning algorithms + LLM reasoning"
+      },
+      
+      "hybrid_agents": {
+        "description": "Combine reactive и deliberative approaches",
+        "characteristics": ["Flexible behavior", "Multi-mode operation", "Adaptive responses"],
+        "use_cases": ["General assistants", "Business process automation"],
+        "implementation": "Mode switching based on task complexity"
+      },
+      
+      "learning_agents": {
+        "description": "Improve performance through experience",
+        "characteristics": ["Adaptation", "Performance optimization", "Knowledge accumulation"],
+        "use_cases": ["Personalized assistants", "Continuous improvement systems"],
+        "implementation": "Reinforcement learning + memory updates"
+      }
+    }
+  },
+  
+  "planning_reasoning": {
+    "task_decomposition": {
+      "hierarchical_planning": {
+        "description": "Break complex tasks into subtasks",
+        "approach": "High-level goals → Specific actions",
+        "implementation": "Tree-based task representation",
+        "benefits": "Manage complexity, enable parallelization"
+      },
+      
+      "goal_oriented_planning": {
+        "goal_identification": "Extract clear objectives from user requests",
+        "constraint_recognition": "Identify limitations и requirements",
+        "resource_planning": "Allocate tools и capabilities",
+        "timeline_estimation": "Predict task completion times"
+      },
+      
+      "dynamic_replanning": {
+        "failure_recovery": "Handle failed actions gracefully",
+        "goal_updates": "Adapt to changing requirements",
+        "resource_reallocation": "Optimize resource usage",
+        "priority_adjustment": "Manage competing objectives"
+      }
+    },
+    
+    "reasoning_strategies": {
+      "chain_of_thought": {
+        "description": "Step-by-step logical reasoning",
+        "implementation": "Explicit reasoning chains в prompts",
+        "benefits": "Transparency, error detection, reproducibility",
+        "optimization": "Reasoning pattern templates"
+      },
+      
+      "tree_of_thoughts": {
+        "description": "Explore multiple reasoning paths",
+        "process": [
+          "Generate multiple hypotheses",
+          "Evaluate each path",
+          "Select best approach",
+          "Combine insights"
+        ],
+        "use_cases": "Complex problems, creative tasks, research"
+      },
+      
+      "causal_reasoning": {
+        "description": "Understand cause-and-effect relationships",
+        "implementation": "Causal graph representation",
+        "applications": "Root cause analysis, prediction, intervention"
+      },
+      
+      "analogical_reasoning": {
+        "description": "Apply knowledge from similar situations",
+        "implementation": "Case-based reasoning с similarity metrics",
+        "benefits": "Transfer learning, creative problem solving"
+      }
+    },
+    
+    "decision_making": {
+      "multi_criteria_evaluation": {
+        "criteria_identification": "Define evaluation dimensions",
+        "weight_assignment": "Prioritize different factors",
+        "scoring_methods": "Quantitative evaluation approaches",
+        "aggregation": "Combine scores into final decision"
+      },
+      
+      "uncertainty_handling": {
+        "probabilistic_reasoning": "Work with uncertain information",
+        "confidence_estimation": "Assess decision reliability",
+        "risk_assessment": "Evaluate potential negative outcomes",
+        "fallback_strategies": "Handle high-uncertainty situations"
+      }
+    }
+  },
+  
+  "tool_integration": {
+    "tool_discovery": {
+      "api_documentation": "Automatic API schema understanding",
+      "capability_mapping": "Match tools to agent capabilities",
+      "dynamic_loading": "Runtime tool integration",
+      "version_management": "Handle tool updates и compatibility"
+    },
+    
+    "tool_orchestration": {
+      "parallel_execution": {
+        "description": "Execute multiple tools simultaneously",
+        "coordination": "Manage dependencies between tools",
+        "resource_management": "Prevent conflicts и bottlenecks",
+        "error_handling": "Graceful failure management"
+      },
+      
+      "sequential_workflows": {
+        "description": "Chain tools в ordered sequences",
+        "data_flow": "Pass outputs between tools",
+        "state_management": "Maintain workflow state",
+        "checkpointing": "Save progress для resumption"
+      },
+      
+      "conditional_execution": {
+        "description": "Execute tools based on conditions",
+        "branching_logic": "If-then-else workflow patterns",
+        "loop_constructs": "Iterative tool execution",
+        "error_branches": "Alternative paths on failures"
+      }
+    },
+    
+    "safety_security": {
+      "input_validation": "Sanitize tool inputs",
+      "output_verification": "Validate tool outputs",
+      "access_control": "Restrict tool usage по permissions",
+      "audit_logging": "Track all tool executions",
+      "sandboxing": "Isolate potentially dangerous operations"
+    }
+  },
+  
+  "multi_agent_systems": {
+    "agent_coordination": {
+      "communication_protocols": {
+        "message_passing": "Direct agent-to-agent communication",
+        "shared_memory": "Common data structures",
+        "event_systems": "Publish-subscribe patterns",
+        "negotiation": "Conflict resolution через dialogue"
+      },
+      
+      "role_specialization": {
+        "task_specific_agents": "Agents specialized для specific functions",
+        "hierarchical_organization": "Manager-worker agent relationships",
+        "peer_networks": "Equal agents collaborating",
+        "expert_systems": "Domain-specific knowledge agents"
+      },
+      
+      "load_balancing": {
+        "task_distribution": "Distribute work across agents",
+        "capacity_monitoring": "Track agent availability",
+        "dynamic_scaling": "Add/remove agents based on demand",
+        "failure_tolerance": "Handle agent failures gracefully"
+      }
+    },
+    
+    "collaborative_patterns": {
+      "divide_and_conquer": {
+        "description": "Split large tasks across multiple agents",
+        "coordination": "Task decomposition и result aggregation",
+        "synchronization": "Coordinate agent timing",
+        "merge_strategies": "Combine partial results"
+      },
+      
+      "consensus_building": {
+        "description": "Reach agreement among agents",
+        "voting_mechanisms": "Democratic decision making",
+        "expert_weighting": "Weight opinions by expertise",
+        "conflict_resolution": "Handle disagreements"
+      },
+      
+      "market_mechanisms": {
+        "description": "Economic models для resource allocation",
+        "auction_systems": "Bid on tasks и resources",
+        "price_discovery": "Determine resource values",
+        "contract_negotiation": "Formal agreements between agents"
+      }
+    }
+  },
+  
+  "learning_adaptation": {
+    "online_learning": {
+      "experience_accumulation": {
+        "description": "Learn from interactions и outcomes",
+        "memory_integration": "Store successful patterns",
+        "failure_analysis": "Understand что went wrong",
+        "pattern_recognition": "Identify recurring situations"
+      },
+      
+      "performance_optimization": {
+        "efficiency_metrics": "Measure task completion speed",
+        "accuracy_tracking": "Monitor decision quality",
+        "user_satisfaction": "Incorporate feedback",
+        "resource_utilization": "Optimize computational usage"
+      }
+    },
+    
+    "reinforcement_learning": {
+      "reward_engineering": {
+        "reward_design": "Define appropriate incentives",
+        "sparse_rewards": "Handle infrequent feedback",
+        "multi_objective": "Balance competing goals",
+        "human_feedback": "Incorporate human preferences"
+      },
+      
+      "policy_optimization": {
+        "exploration_exploitation": "Balance trying new approaches",
+        "credit_assignment": "Attribute success to specific actions",
+        "transfer_learning": "Apply learning across domains",
+        "continual_learning": "Maintain performance across tasks"
+      }
+    },
+    
+    "meta_learning": {
+      "learning_to_learn": "Improve learning efficiency",
+      "few_shot_adaptation": "Quick adaptation to new tasks",
+      "strategy_selection": "Choose appropriate learning approaches",
+      "knowledge_transfer": "Apply knowledge across domains"
+    }
+  },
+  
+  "human_ai_interaction": {
+    "interface_design": {
+      "natural_language": {
+        "conversational_ui": "Chat-based interactions",
+        "voice_interfaces": "Speech input/output",
+        "multimodal_communication": "Text + visual + audio",
+        "context_awareness": "Understand implicit meaning"
+      },
+      
+      "transparency": {
+        "decision_explanation": "Explain reasoning behind actions",
+        "confidence_communication": "Express uncertainty levels",
+        "capability_disclosure": "Clearly state limitations",
+        "progress_reporting": "Update on task completion"
+      },
+      
+      "user_modeling": {
+        "preference_learning": "Understand user preferences",
+        "skill_assessment": "Gauge user expertise level",
+        "context_adaptation": "Adapt to user's situation",
+        "personalization": "Customize behavior по user"
+      }
+    },
+    
+    "collaboration_patterns": {
+      "human_in_the_loop": {
+        "approval_workflows": "Seek confirmation для critical actions",
+        "guidance_seeking": "Ask for direction when uncertain",
+        "feedback_incorporation": "Learn from user corrections",
+        "delegation_boundaries": "Know when to involve humans"
+      },
+      
+      "mixed_initiative": {
+        "proactive_assistance": "Anticipate user needs",
+        "suggestion_systems": "Offer helpful recommendations",
+        "interruption_management": "Know when to interrupt",
+        "handoff_protocols": "Smooth transitions between AI и human"
+      }
+    },
+    
+    "trust_safety": {
+      "reliability": {
+        "consistent_performance": "Predictable behavior patterns",
+        "error_acknowledgment": "Admit mistakes gracefully",
+        "limitation_awareness": "Know when to seek help",
+        "recovery_mechanisms": "Handle failures appropriately"
+      },
+      
+      "privacy_protection": {
+        "data_minimization": "Collect only necessary information",
+        "consent_management": "Respect user privacy choices",
+        "secure_storage": "Protect user data",
+        "deletion_rights": "Allow data removal"
+      }
+    }
+  },
+  
+  "technical_implementation": {
+    "architecture_patterns": {
+      "microservices": {
+        "description": "Decompose agent into independent services",
+        "benefits": ["Scalability", "Modularity", "Independent deployment"],
+        "challenges": ["Service coordination", "Distributed state", "Network latency"],
+        "implementation": "Docker containers + orchestration"
+      },
+      
+      "event_driven": {
+        "description": "React to events и state changes",
+        "components": ["Event bus", "Event handlers", "State machines"],
+        "benefits": ["Loose coupling", "Scalability", "Real-time responses"],
+        "implementation": "Message queues + event processing"
+      },
+      
+      "layered_architecture": {
+        "description": "Organize functionality в distinct layers",
+        "layers": ["Interface", "Application", "Domain", "Infrastructure"],
+        "benefits": ["Separation of concerns", "Testability", "Maintainability"],
+        "implementation": "Clean architecture principles"
+      }
+    },
+    
+    "infrastructure_requirements": {
+      "compute_resources": {
+        "cpu_requirements": "Multi-core processing для parallel tasks",
+        "memory_requirements": "RAM для large context и models",
+        "gpu_acceleration": "Optional для intensive AI tasks",
+        "storage_requirements": "Persistent storage для memory systems"
+      },
+      
+      "networking": {
+        "api_connectivity": "Reliable internet для tool integration",
+        "load_balancing": "Distribute requests across instances",
+        "security": "Encrypted communication channels",
+        "monitoring": "Network performance tracking"
+      },
+      
+      "data_management": {
+        "databases": "Vector DB + relational DB combinations",
+        "caching": "Redis/Memcached для performance",
+        "backup_recovery": "Data protection strategies",
+        "versioning": "Track data changes over time"
+      }
+    },
+    
+    "development_frameworks": {
+      "langchain": {
+        "description": "Framework для LLM application development",
+        "components": ["Chains", "Agents", "Memory", "Tools"],
+        "strengths": "Rapid prototyping, extensive tool ecosystem",
+        "use_cases": "Document processing, question answering, chatbots"
+      },
+      
+      "autogen": {
+        "description": "Multi-agent conversation framework",
+        "components": ["ConversableAgent", "GroupChat", "UserProxyAgent"],
+        "strengths": "Multi-agent orchestration, conversation management",
+        "use_cases": "Collaborative problem solving, code generation"
+      },
+      
+      "crewai": {
+        "description": "Framework для autonomous agent teams",
+        "components": ["Agents", "Tasks", "Crews", "Tools"],
+        "strengths": "Role-based agents, task orchestration",
+        "use_cases": "Business process automation, research tasks"
+      },
+      
+      "custom_frameworks": {
+        "description": "Build domain-specific agent frameworks",
+        "considerations": ["Specific requirements", "Performance optimization", "Integration needs"],
+        "implementation": "Python/TypeScript + LLM APIs"
+      }
+    }
+  },
+  
+  "domain_applications": {
+    "business_automation": {
+      "workflow_agents": {
+        "description": "Automate business processes",
+        "capabilities": ["Document processing", "Data entry", "Report generation"],
+        "integration": "CRM, ERP, email systems",
+        "roi_measurement": "Process efficiency improvements"
+      },
+      
+      "customer_service": {
+        "description": "Automated customer support",
+        "capabilities": ["Query resolution", "Ticket routing", "Knowledge base search"],
+        "escalation": "Human handoff protocols",
+        "metrics": "Resolution rate, customer satisfaction"
+      }
+    },
+    
+    "research_development": {
+      "research_assistants": {
+        "description": "Support research activities",
+        "capabilities": ["Literature review", "Data analysis", "Hypothesis generation"],
+        "tools": "Academic databases, analysis software",
+        "validation": "Fact-checking, citation verification"
+      },
+      
+      "code_assistants": {
+        "description": "Software development support",
+        "capabilities": ["Code generation", "Bug fixing", "Code review"],
+        "tools": "IDEs, version control, testing frameworks",
+        "quality": "Code standards, security checks"
+      }
+    },
+    
+    "content_creation": {
+      "writing_assistants": {
+        "description": "Support content creation",
+        "capabilities": ["Drafting", "Editing", "Research", "Fact-checking"],
+        "tools": "Writing platforms, research databases",
+        "quality": "Style consistency, accuracy verification"
+      },
+      
+      "creative_agents": {
+        "description": "Generate creative content",
+        "capabilities": ["Ideation", "Story generation", "Design concepts"],
+        "tools": "Creative software, inspiration databases",
+        "evaluation": "Originality, relevance, quality"
+      }
+    }
+  },
+  
+  "evaluation_testing": {
+    "performance_metrics": {
+      "task_completion": {
+        "success_rate": "Percentage of successfully completed tasks",
+        "completion_time": "Average time to task completion",
+        "accuracy": "Correctness of results",
+        "efficiency": "Resource utilization effectiveness"
+      },
+      
+      "user_experience": {
+        "satisfaction_scores": "User ratings и feedback",
+        "usability_metrics": "Ease of interaction",
+        "trust_metrics": "User confidence в agent",
+        "adoption_rates": "Usage growth over time"
+      },
+      
+      "system_performance": {
+        "response_latency": "Time to generate responses",
+        "throughput": "Requests handled per unit time",
+        "resource_usage": "CPU, memory, network utilization",
+        "error_rates": "Frequency of failures или mistakes"
+      }
+    },
+    
+    "testing_strategies": {
+      "unit_testing": {
+        "component_testing": "Test individual agent components",
+        "tool_integration": "Verify tool connectivity и functionality",
+        "reasoning_logic": "Test decision-making processes",
+        "memory_operations": "Verify storage и retrieval"
+      },
+      
+      "integration_testing": {
+        "end_to_end": "Complete workflow testing",
+        "multi_agent": "Test agent interactions",
+        "human_agent": "Test human-AI collaboration",
+        "external_systems": "Test third-party integrations"
+      },
+      
+      "stress_testing": {
+        "load_testing": "High-volume request handling",
+        "concurrency": "Multiple simultaneous users",
+        "resource_limits": "Memory и compute constraints",
+        "failure_scenarios": "Error handling и recovery"
+      }
+    },
+    
+    "continuous_improvement": {
+      "monitoring_systems": {
+        "real_time_metrics": "Live performance dashboards",
+        "error_tracking": "Automatic error detection и reporting",
+        "user_feedback": "Continuous feedback collection",
+        "A_B_testing": "Compare different agent versions"
+      },
+      
+      "optimization_cycles": {
+        "performance_analysis": "Regular performance reviews",
+        "bottleneck_identification": "Find system constraints",
+        "iterative_improvement": "Continuous enhancement cycles",
+        "version_deployment": "Safe rollout strategies"
+      }
+    }
+  },
+  
+  "ethical_considerations": {
+    "autonomous_behavior": {
+      "decision_boundaries": "Define agent authority limits",
+      "human_oversight": "Maintain human control mechanisms",
+      "accountability": "Clear responsibility assignment",
+      "transparency": "Explainable decision making"
+    },
+    
+    "bias_fairness": {
+      "bias_detection": "Monitor agent decisions для bias",
+      "fairness_metrics": "Measure equitable treatment",
+      "diverse_testing": "Test across different user groups",
+      "mitigation_strategies": "Reduce identified biases"
+    },
+    
+    "privacy_security": {
+      "data_protection": "Secure user information",
+      "consent_management": "Respect user privacy choices",
+      "access_control": "Limit data access appropriately",
+      "compliance": "Adhere to privacy regulations"
+    }
+  },
+  
+  "success_metrics": {
+    "technical_metrics": "Task success rate > 90%, response time < 3s",
+    "user_metrics": "High satisfaction scores, regular usage",
+    "business_metrics": "Process efficiency gains, cost reductions",
+    "safety_metrics": "Low error rate, appropriate escalations"
+  }
+} 

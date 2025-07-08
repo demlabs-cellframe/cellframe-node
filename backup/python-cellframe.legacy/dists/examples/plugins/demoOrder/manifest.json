@@ -1,0 +1,8 @@
+{ 
+        "name": "demoOrder",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2022",
+        "dependencies": [],
+        "description": "This is a plugin with examples for working with orders."
+}
+

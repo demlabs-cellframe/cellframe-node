@@ -1,0 +1,7 @@
+{ 
+        "name": "customDatum",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2021",
+        "dependencies": [],
+        "description": "This plugin does the work of the backend for the blockchain explorer."
+}

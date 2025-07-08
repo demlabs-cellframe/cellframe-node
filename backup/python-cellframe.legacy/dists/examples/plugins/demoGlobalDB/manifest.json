@@ -1,0 +1,8 @@
+{ 
+        "name": "demoGlobalDB",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2021",
+        "dependencies": [],
+        "description": "This plugin for demonstation using GlobalDB module from CellFrame.Chain."
+}
+

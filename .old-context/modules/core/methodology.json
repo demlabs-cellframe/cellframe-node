@@ -1,0 +1,184 @@
+{
+  "development_methodology": {
+    "last_updated": "2024-12-20",
+    "updated_based_on": "Chipmunk optimization project learnings",
+    
+    "core_principles": {
+      "measurement_driven_development": {
+        "principle": "Measure first, optimize second - no exceptions",
+        "rationale": "Prevented optimization of hash functions (7.9% time) in favor of NTT (73.9% time)",
+        "implementation": "Mandatory baseline profiling before any optimization work",
+        "enforcement": "Performance analysis checklist must be completed before optimization"
+      },
+      
+      "systematic_decomposition": {
+        "principle": "Break complex problems into measurable phases",
+        "rationale": "Phase 1→2→3→4 approach enabled iterative learning and quick pivots",
+        "implementation": "Define clear phases with success criteria and data-driven decision points",
+        "enforcement": "Each phase must have measurable outcomes before proceeding"
+      },
+      
+      "hypothesis_driven_testing": {
+        "principle": "Formulate testable hypotheses for each optimization attempt",
+        "rationale": "Clear hypotheses enabled quick abandonment of ineffective approaches",
+        "implementation": "Document expected performance impact before implementation",
+        "enforcement": "No optimization work without stated hypothesis and success criteria"
+      },
+      
+      "cross_platform_by_design": {
+        "principle": "Design for portability from day one, not as an afterthought",
+        "rationale": "SIMD optimization required significant refactoring to add cross-platform support",
+        "implementation": "All platform-specific code must have fallback implementations from first commit",
+        "enforcement": "Code review checklist includes cross-platform compatibility verification"
+      }
+    },
+    
+    "optimization_workflow": {
+      "phase_0_mandatory_profiling": {
+        "description": "Comprehensive baseline measurement before any optimization work",
+        "required_outputs": [
+          "Detailed performance profile with bottleneck identification",
+          "Baseline measurements for all critical performance paths",
+          "Statistical analysis of performance variance",
+          "Bottleneck ranking by impact (time percentage)"
+        ],
+        "tools": "Systematic profiling via platform-appropriate tools",
+        "success_criteria": "Clear identification of performance critical paths with measured impact",
+        "gate_criteria": "No optimization work proceeds without completed profiling"
+      },
+      
+      "phase_definition_framework": {
+        "phase_structure": "Each optimization phase must define hypothesis, implementation, measurement, decision",
+        "hypothesis_requirements": [
+          "Clear statement of expected performance improvement",
+          "Quantitative success criteria (e.g., '2x speedup in NTT operations')",
+          "Fallback plan if hypothesis proves incorrect"
+        ],
+        "measurement_requirements": [
+          "Before/after performance comparison with statistical significance",
+          "Impact measurement on overall system performance",
+          "Regression testing to ensure no performance degradation in other areas"
+        ],
+        "decision_criteria": [
+          "Objective data-driven decision on whether to proceed",
+          "Clear pivot criteria when optimization proves ineffective",
+          "Learning extraction for future optimization efforts"
+        ]
+      },
+      
+      "implementation_standards": {
+        "cross_platform_requirements": [
+          "All platform-specific optimizations must have fallback implementations",
+          "Conditional compilation with feature detection",
+          "Testing on multiple platforms before integration"
+        ],
+        "integration_strategy": [
+          "Prefer simple integration over complex build systems",
+          "Direct inclusion over separate compilation when linking becomes complex",
+          "Maintain clean abstraction boundaries for future modifications"
+        ],
+        "correctness_verification": [
+          "All optimizations must pass existing correctness tests",
+          "Additional testing for optimization-specific edge cases",
+          "Performance testing integrated into CI/CD pipeline"
+        ]
+      }
+    },
+    
+    "decision_making_framework": {
+      "data_driven_decisions": {
+        "requirement": "All optimization decisions must be based on measurement data",
+        "implementation": "Document data sources and analysis for each decision",
+        "examples": "Abandoning hash optimization (0.99x speedup) in favor of NTT optimization (73.9% impact)"
+      },
+      
+      "quick_pivot_methodology": {
+        "trigger_criteria": "When measured performance improvement < expected improvement threshold",
+        "process": [
+          "Immediate measurement verification",
+          "Root cause analysis of discrepancy",
+          "Decision to iterate, pivot, or abandon based on data",
+          "Learning extraction for future phases"
+        ],
+        "sunk_cost_prevention": "Willingness to abandon work when data shows ineffectiveness"
+      },
+      
+      "pragmatic_engineering": {
+        "principle": "Simple working solutions are better than elegant complex solutions",
+        "application": "Direct inclusion of SIMD code rather than complex build system modifications",
+        "criteria": "Choose approach based on maintainability, not theoretical elegance"
+      }
+    },
+    
+    "documentation_standards": {
+      "real_time_decision_logging": {
+        "requirement": "Document decision rationale at time of decision, not post-factum",
+        "template": {
+          "context": "What situation prompted this decision?",
+          "options_considered": "What alternatives were evaluated?",
+          "data_basis": "What measurement data informed the decision?",
+          "rationale": "Why was this option chosen?",
+          "success_criteria": "How will we know if this decision was correct?",
+          "fallback_plan": "What will we do if this decision proves incorrect?"
+        },
+        "enforcement": "All significant technical decisions must have documented rationale"
+      },
+      
+      "learning_extraction": {
+        "frequency": "After each phase completion and at project conclusion",
+        "content_requirements": [
+          "What worked well and why?",
+          "What could be improved and how?",
+          "What would we do differently next time?",
+          "What general principles can be extracted?"
+        ],
+        "application": "Learnings must be integrated into methodology updates"
+      }
+    },
+    
+    "quality_assurance": {
+      "performance_regression_prevention": {
+        "automated_testing": "All performance-critical paths covered by automated benchmarks",
+        "regression_detection": "CI/CD pipeline fails on performance regressions > threshold",
+        "baseline_maintenance": "Regular baseline updates with performance trend analysis"
+      },
+      
+      "correctness_verification": {
+        "optimization_testing": "All optimizations must pass extended correctness test suites",
+        "edge_case_coverage": "Additional testing for optimization-specific edge cases",
+        "formal_verification": "Consider formal verification for security-critical optimizations"
+      }
+    },
+    
+    "tools_and_environment": {
+      "required_toolchain": [
+        "Platform-appropriate profiling tools (e.g., perf, Instruments, VTune)",
+        "Cross-platform build and test environment",
+        "Automated performance regression detection",
+        "Statistical analysis tools for performance data"
+      ],
+      
+      "development_environment": [
+        "Access to multiple CPU architectures for cross-platform testing",
+        "Automated CI/CD with performance benchmarks",
+        "Real-time documentation tools integrated into workflow"
+      ]
+    },
+    
+    "success_metrics": {
+      "process_metrics": [
+        "Zero optimization projects started without baseline profiling",
+        "All optimization phases have documented hypotheses and success criteria",
+        "All significant technical decisions have documented rationale",
+        "Performance regressions caught before production deployment"
+      ],
+      
+      "outcome_metrics": [
+        "Optimization efforts focus on actual bottlenecks (>30% of execution time)",
+        "Successful optimizations show predicted performance improvements",
+        "Cross-platform optimizations work correctly on all target platforms",
+        "Learning extraction leads to measurable methodology improvements"
+      ]
+    }
+  }
+} 

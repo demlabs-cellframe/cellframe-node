@@ -1,0 +1,479 @@
+{
+  "type": "universal_template_module",
+  "domain": "context_systems_development",
+  "version": "2.1.0", 
+  "created": "2025-01-14T16:00:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на опыте разработки Smart Layered Context и современных подходах к управлению знаниями",
+  
+  "navigation_system": {
+    "file_role": "METHODOLOGY_TEMPLATE",
+    "description": "🏗️ Шаблон для разработки context systems и knowledge management",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/methodologies/",
+      "siblings": ["modules/methodologies/documentation_systems.json", "modules/tools/obsidian_workflow.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "📋 Documentation": "modules/methodologies/documentation_systems.json - системы документации",
+      "🗂️ Obsidian workflow": "modules/tools/obsidian_workflow.json - управление знаниями",
+      "🤖 AI/ML templates": "modules/ai_ml/ - шаблоны для ИИ разработки",
+      "🐍 Python": "modules/languages/python/python_development.json - Python разработка",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create methodologies/context_systems_development.json my_context_system"
+  },
+  
+  "template_info": {
+    "name": "Context Systems & Knowledge Management Development Template",
+    "description": "Универсальный шаблон для создания систем управления контекстом, знаниями и информацией для ИИ и людей",
+    "target_projects": [
+      "Системы контекста для ИИ взаимодействия",
+      "Knowledge management системы",
+      "AI context optimization platforms",
+      "Документо-ориентированные базы знаний",
+      "Intelligent content organization systems",
+      "AI training context repositories",
+      "Semantic knowledge graphs",
+      "Personal/Team knowledge systems"
+    ],
+    "applicability": "100% проектов работающих с организацией знаний и контекста"
+  },
+  
+  "system_philosophy": {
+    "core_principles": {
+      "layered_architecture": {
+        "description": "Многослойная архитектура для разных уровней абстракции",
+        "layers": [
+          "Raw data layer - исходные данные и файлы",
+          "Structured layer - организованная информация",
+          "Semantic layer - смысловые связи и отношения", 
+          "Context layer - контекстуальные метаданные",
+          "Intelligence layer - AI-готовые представления"
+        ],
+        "benefits": ["Separation of concerns", "Scalability", "Maintainability"]
+      },
+      
+      "zero_duplication": {
+        "description": "Принцип отсутствия дублирования информации",
+        "implementation": [
+          "Reference-based linking вместо копирования",
+          "Single source of truth для каждого факта",
+          "Differential storage - только изменения",
+          "Content addressable storage"
+        ],
+        "benefits": ["Consistency", "Storage efficiency", "Maintenance simplicity"]
+      },
+      
+      "semantic_intelligence": {
+        "description": "Семантическое понимание и связи между элементами",
+        "components": [
+          "Entity recognition и extraction",
+          "Relationship mapping",
+          "Concept hierarchies",
+          "Contextual embeddings",
+          "Automated tagging и categorization"
+        ],
+        "ai_integration": "LLM-powered content understanding"
+      },
+      
+      "adaptive_organization": {
+        "description": "Самоорганизующаяся структура на основе использования",
+        "mechanisms": [
+          "Usage-based content ranking",
+          "Automatic relationship discovery",
+          "Dynamic categorization",
+          "Emergent taxonomy development",
+          "Feedback-driven optimization"
+        ],
+        "learning": "Continuous improvement через user interaction"
+      }
+    },
+    
+    "design_patterns": {
+      "modular_components": {
+        "core_module": "Базовая функциональность и архитектура",
+        "storage_modules": "Различные backend storage адаптеры",
+        "processing_modules": "Content analysis и transformation",
+        "interface_modules": "API и пользовательские интерфейсы",
+        "integration_modules": "Внешние системы и tool integration"
+      },
+      
+      "plugin_architecture": {
+        "description": "Расширяемая архитектура через плагины",
+        "plugin_types": [
+          "Content processors - анализ и transformation",
+          "Storage adapters - различные backend systems",
+          "AI integrations - LLM и ML model integration",
+          "Import/export filters - data format support",
+          "Workflow automations - custom business logic"
+        ],
+        "api_design": "Consistent plugin API для easy development"
+      }
+    }
+  },
+  
+  "technical_architecture": {
+    "data_storage_layer": {
+      "content_addressable_storage": {
+        "description": "Content-based addressing для deduplication",
+        "implementation": [
+          "SHA-256 hashing для content identification",
+          "Merkle trees для hierarchical content",
+          "Delta compression для efficient updates",
+          "Garbage collection для unused content"
+        ],
+        "benefits": ["Automatic deduplication", "Integrity verification", "Efficient versioning"]
+      },
+      
+      "metadata_system": {
+        "structured_metadata": {
+          "json_schema": "Typed metadata с validation",
+          "inheritance": "Metadata inheritance в hierarchies",
+          "computed_fields": "Auto-calculated metadata properties",
+          "custom_fields": "Domain-specific metadata extensions"
+        },
+        
+        "semantic_metadata": {
+          "entity_extraction": "Automatic entity identification",
+          "relationship_mapping": "Links between entities",
+          "concept_tagging": "Hierarchical concept assignment",
+          "sentiment_analysis": "Emotional tone detection"
+        }
+      },
+      
+      "versioning_system": {
+        "git_like_versioning": {
+          "description": "Git-inspired versioning для content",
+          "features": [
+            "Branch и merge support",
+            "Diff visualization",
+            "Conflict resolution",
+            "Rollback capabilities"
+          ]
+        },
+        
+        "temporal_queries": {
+          "description": "Query content at any point in time",
+          "use_cases": [
+            "Historical analysis",
+            "Change tracking",
+            "Audit trails",
+            "Recovery scenarios"
+          ]
+        }
+      }
+    },
+    
+    "processing_intelligence": {
+      "content_analysis": {
+        "nlp_pipeline": {
+          "tokenization": "Text segmentation и normalization",
+          "named_entity_recognition": "Person, organization, location extraction",
+          "dependency_parsing": "Grammatical structure analysis",
+          "sentiment_analysis": "Emotional tone и opinion detection",
+          "topic_modeling": "Latent topic discovery"
+        },
+        
+        "semantic_understanding": {
+          "word_embeddings": "Dense vector representations",
+          "sentence_embeddings": "Semantic sentence similarity",
+          "document_embeddings": "Document-level semantic vectors",
+          "knowledge_graph_embeddings": "Entity relationship vectors"
+        },
+        
+        "multimodal_analysis": {
+          "image_analysis": "OCR, object detection, scene understanding",
+          "audio_processing": "Speech recognition, sentiment analysis",
+          "video_analysis": "Scene detection, transcript generation",
+          "document_understanding": "PDF, Word, PowerPoint processing"
+        }
+      },
+      
+      "relationship_discovery": {
+        "automatic_linking": {
+          "content_similarity": "Cosine similarity на embeddings",
+          "entity_co_occurrence": "Statistical relationship detection",
+          "temporal_relationships": "Time-based content connections",
+          "causal_inference": "Cause-and-effect relationship detection"
+        },
+        
+        "graph_algorithms": {
+          "centrality_measures": "Important content identification",
+          "community_detection": "Content cluster discovery",
+          "path_finding": "Knowledge connection paths",
+          "influence_propagation": "Information flow analysis"
+        }
+      }
+    },
+    
+    "query_retrieval": {
+      "hybrid_search": {
+        "keyword_search": {
+          "full_text_indexing": "Elasticsearch/Solr-based indexing",
+          "faceted_search": "Multi-dimensional filtering",
+          "fuzzy_matching": "Typo-tolerant search",
+          "phrase_search": "Exact phrase matching"
+        },
+        
+        "semantic_search": {
+          "vector_similarity": "Embedding-based retrieval",
+          "dense_retrieval": "BERT-like dense representations",
+          "cross_modal_search": "Search across content types",
+          "contextual_search": "Query understanding и expansion"
+        },
+        
+        "graph_search": {
+          "traversal_queries": "Graph-based content discovery",
+          "pattern_matching": "Subgraph pattern queries",
+          "recommendation": "Related content suggestions",
+          "exploratory_search": "Serendipitous discovery"
+        }
+      },
+      
+      "intelligent_ranking": {
+        "relevance_scoring": {
+          "tf_idf": "Term frequency analysis",
+          "bm25": "Best matching algorithm",
+          "learning_to_rank": "ML-based ranking optimization",
+          "personalization": "User-specific relevance"
+        },
+        
+        "context_aware_ranking": {
+          "user_context": "Current task и goal awareness",
+          "temporal_context": "Time-sensitive relevance",
+          "social_context": "Team и collaborative relevance",
+          "domain_context": "Subject matter expertise"
+        }
+      }
+    }
+  },
+  
+  "ai_integration": {
+    "llm_integration": {
+      "context_optimization": {
+        "token_budgeting": "Efficient use of context windows",
+        "context_compression": "Relevant information extraction",
+        "dynamic_context": "Real-time context assembly",
+        "multi_turn_context": "Conversation history management"
+      },
+      
+      "prompt_engineering": {
+        "template_system": "Reusable prompt templates",
+        "dynamic_prompts": "Context-aware prompt generation",
+        "chain_of_thought": "Structured reasoning prompts",
+        "few_shot_learning": "Example-based prompt enhancement"
+      },
+      
+      "fine_tuning_support": {
+        "dataset_generation": "Training data из knowledge base",
+        "domain_adaptation": "Specialized model training",
+        "continuous_learning": "Incremental model updates",
+        "evaluation_frameworks": "Model performance monitoring"
+      }
+    },
+    
+    "ml_pipeline": {
+      "automated_processing": {
+        "content_ingestion": "Automatic content processing pipeline",
+        "feature_extraction": "ML feature generation",
+        "classification": "Automatic content categorization",
+        "clustering": "Unsupervised content grouping"
+      },
+      
+      "recommendation_system": {
+        "collaborative_filtering": "User behavior-based recommendations",
+        "content_filtering": "Content similarity recommendations",
+        "hybrid_approaches": "Combined recommendation strategies",
+        "cold_start_solutions": "New user/content recommendations"
+      }
+    }
+  },
+  
+  "user_experience": {
+    "interface_design": {
+      "adaptive_ui": {
+        "role_based_views": "Customized interfaces по user roles",
+        "context_sensitive": "UI adapts to current task",
+        "progressive_disclosure": "Information revealed as needed",
+        "personalization": "User preference adaptation"
+      },
+      
+      "visualization": {
+        "knowledge_graphs": "Interactive graph visualization",
+        "content_maps": "Spatial content organization",
+        "timeline_views": "Temporal content visualization", 
+        "hierarchy_views": "Tree и nested representations"
+      },
+      
+      "interaction_paradigms": {
+        "conversational_interface": "Chat-based interaction",
+        "gesture_navigation": "Intuitive content navigation",
+        "voice_commands": "Speech-based control",
+        "collaborative_editing": "Real-time multi-user editing"
+      }
+    },
+    
+    "workflow_integration": {
+      "productivity_tools": {
+        "ide_integration": "Development environment plugins",
+        "office_integration": "Word, Excel, PowerPoint connectivity",
+        "browser_extensions": "Web-based content capture",
+        "mobile_apps": "On-the-go content access"
+      },
+      
+      "api_ecosystem": {
+        "rest_api": "HTTP-based programmatic access",
+        "graphql_api": "Flexible query interface",
+        "webhook_system": "Event-driven integrations",
+        "sdk_libraries": "Language-specific client libraries"
+      }
+    }
+  },
+  
+  "development_methodology": {
+    "agile_approach": {
+      "user_story_driven": {
+        "persona_development": "Clear user personas и needs",
+        "story_mapping": "User journey visualization",
+        "acceptance_criteria": "Clear definition of done",
+        "user_testing": "Regular validation с real users"
+      },
+      
+      "iterative_development": {
+        "mvp_approach": "Minimum viable product first",
+        "feature_flags": "Gradual feature rollout",
+        "a_b_testing": "Data-driven feature decisions",
+        "continuous_deployment": "Automated delivery pipeline"
+      }
+    },
+    
+    "quality_assurance": {
+      "testing_strategy": {
+        "unit_tests": "Component-level testing",
+        "integration_tests": "System interaction testing",
+        "performance_tests": "Scalability и speed testing",
+        "usability_tests": "User experience validation"
+      },
+      
+      "monitoring_observability": {
+        "application_monitoring": "System health tracking",
+        "user_analytics": "Usage pattern analysis",
+        "error_tracking": "Issue identification и resolution",
+        "performance_metrics": "System performance monitoring"
+      }
+    }
+  },
+  
+  "scalability_architecture": {
+    "horizontal_scaling": {
+      "microservices": {
+        "service_decomposition": "Function-based service separation",
+        "api_gateway": "Centralized request routing",
+        "service_mesh": "Inter-service communication",
+        "containerization": "Docker-based deployment"
+      },
+      
+      "data_partitioning": {
+        "content_sharding": "Horizontal data distribution",
+        "geographic_distribution": "Location-based partitioning",
+        "temporal_partitioning": "Time-based data separation",
+        "semantic_partitioning": "Topic-based data distribution"
+      }
+    },
+    
+    "performance_optimization": {
+      "caching_strategies": {
+        "content_caching": "Frequently accessed content caching",
+        "query_caching": "Search result caching",
+        "computation_caching": "Expensive operation caching",
+        "distributed_caching": "Multi-node cache coordination"
+      },
+      
+      "indexing_optimization": {
+        "inverted_indexes": "Fast text search indexes",
+        "vector_indexes": "Semantic similarity indexes",
+        "graph_indexes": "Relationship traversal indexes",
+        "composite_indexes": "Multi-field query optimization"
+      }
+    }
+  },
+  
+  "security_privacy": {
+    "access_control": {
+      "authentication": {
+        "multi_factor": "Strong authentication methods",
+        "sso_integration": "Single sign-on support",
+        "api_key_management": "Programmatic access control",
+        "oauth_integration": "Third-party authentication"
+      },
+      
+      "authorization": {
+        "role_based_access": "RBAC implementation",
+        "attribute_based_access": "ABAC fine-grained control",
+        "content_level_permissions": "Granular content access",
+        "audit_logging": "Access tracking и compliance"
+      }
+    },
+    
+    "data_protection": {
+      "encryption": {
+        "at_rest": "Database и file encryption",
+        "in_transit": "Network communication encryption",
+        "key_management": "Encryption key lifecycle",
+        "field_level": "Sensitive field encryption"
+      },
+      
+      "privacy_compliance": {
+        "gdpr_compliance": "European privacy regulation",
+        "data_anonymization": "PII protection techniques",
+        "consent_management": "User consent tracking",
+        "data_portability": "User data export capabilities"
+      }
+    }
+  },
+  
+  "business_considerations": {
+    "cost_optimization": {
+      "resource_efficiency": {
+        "compute_optimization": "Efficient algorithm implementation",
+        "storage_optimization": "Data compression и deduplication",
+        "network_optimization": "Bandwidth usage minimization",
+        "energy_efficiency": "Green computing practices"
+      },
+      
+      "operational_costs": {
+        "automation": "Reduced manual operations",
+        "self_healing": "Automatic error recovery",
+        "predictive_maintenance": "Proactive system care",
+        "capacity_planning": "Efficient resource allocation"
+      }
+    },
+    
+    "revenue_models": {
+      "subscription_tiers": {
+        "freemium": "Basic free tier с premium features",
+        "usage_based": "Pay-per-use pricing model",
+        "enterprise": "Custom enterprise solutions",
+        "api_monetization": "Programmatic access pricing"
+      },
+      
+      "value_proposition": {
+        "time_savings": "Reduced information discovery time",
+        "quality_improvement": "Better decision making",
+        "innovation_acceleration": "Faster idea development",
+        "compliance_assistance": "Regulatory requirement support"
+      }
+    }
+  },
+  
+  "success_metrics": {
+    "technical_metrics": "Query response time < 100ms, 99.9% uptime",
+    "user_metrics": "High engagement rates, low churn",
+    "business_metrics": "Cost reduction, productivity improvement", 
+    "quality_metrics": "Accuracy, relevance, completeness",
+    "innovation_metrics": "New insights generated, connections discovered"
+  }
+} 

@@ -1,0 +1,491 @@
+{
+  "type": "universal_template_module",
+  "domain": "prompt_engineering",
+  "version": "2.1.0",
+  "created": "2025-01-14T16:45:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на современных практиках prompt engineering и LLM optimization",
+  
+  "navigation_system": {
+    "file_role": "AI_ML_TEMPLATE",
+    "description": "🤖 Шаблон для prompt engineering и LLM optimization",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/ai_ml/",
+      "siblings": ["modules/ai_ml/fine_tuning_workflow.json", "modules/ai_ml/ai_agent_development.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🧠 Fine-tuning": "modules/ai_ml/fine_tuning_workflow.json - обучение моделей",
+      "🤖 AI Agents": "modules/ai_ml/ai_agent_development.json - разработка агентов",
+      "💻 Python template": "modules/languages/python/python_development.json - Python проекты",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create ai_ml/prompt_engineering.json my_prompt_project"
+  },
+  
+  "template_info": {
+    "name": "Prompt Engineering & LLM Optimization Template",
+    "description": "Универсальный шаблон для создания эффективных промптов, оптимизации взаимодействия с LLM и разработки AI-powered приложений",
+    "target_projects": [
+      "LLM-powered applications",
+      "Chatbot и conversational AI development",
+      "Content generation systems",
+      "AI writing assistants",
+      "Automated reasoning systems", 
+      "Code generation tools",
+      "Educational AI tutors",
+      "Creative AI applications",
+      "Business process automation с AI",
+      "Research и analysis tools"
+    ],
+    "applicability": "100% проектов использующих LLM и генеративный AI"
+  },
+  
+  "prompt_engineering_fundamentals": {
+    "core_principles": {
+      "clarity_and_specificity": {
+        "description": "Четкие и конкретные инструкции",
+        "techniques": [
+          "Use precise language and avoid ambiguity",
+          "Specify output format explicitly",
+          "Provide concrete examples",
+          "Define constraints and boundaries"
+        ],
+        "example": "Instead of 'write about AI' → 'Write a 500-word technical overview of transformer architecture for software engineers'"
+      },
+      
+      "context_optimization": {
+        "description": "Эффективное использование контекста",
+        "strategies": [
+          "Front-load important information",
+          "Use hierarchical information structure",
+          "Maintain conversation coherence",
+          "Reference previous interactions"
+        ],
+        "context_management": "Token budget optimization и relevance ranking"
+      },
+      
+      "iterative_refinement": {
+        "description": "Итеративное улучшение промптов",
+        "process": [
+          "Start with basic prompt",
+          "Test with representative inputs",
+          "Analyze failure modes",
+          "Refine based on results",
+          "A/B test variations"
+        ],
+        "metrics": "Response quality, consistency, relevance"
+      }
+    },
+    
+    "prompt_patterns": {
+      "instruction_patterns": {
+        "direct_instruction": {
+          "template": "You are [ROLE]. Your task is to [TASK]. [CONSTRAINTS]",
+          "use_cases": ["Simple tasks", "Clear objectives", "Beginner prompts"],
+          "example": "You are a Python expert. Your task is to review this code for bugs. Focus on security issues and performance."
+        },
+        
+        "role_based_prompting": {
+          "template": "You are a [SPECIFIC_ROLE] with [EXPERTISE]. Approach this as [PERSPECTIVE]",
+          "use_cases": ["Expert knowledge", "Specialized domains", "Perspective taking"],
+          "example": "You are a senior blockchain architect with 10 years of experience. Approach this system design as someone prioritizing security and scalability."
+        },
+        
+        "step_by_step_reasoning": {
+          "template": "Let's work through this step by step:\\n1. [STEP1]\\n2. [STEP2]\\n3. [STEP3]",
+          "use_cases": ["Complex problems", "Multi-step processes", "Error reduction"],
+          "chain_of_thought": "Explicit reasoning chain для transparency"
+        }
+      },
+      
+      "structural_patterns": {
+        "few_shot_learning": {
+          "description": "Learning from examples",
+          "structure": {
+            "instruction": "Clear task description",
+            "examples": "2-5 high-quality examples",
+            "format": "Consistent input-output format",
+            "new_input": "Novel input for generation"
+          },
+          "best_practices": [
+            "Use diverse but representative examples",
+            "Maintain consistent formatting",
+            "Show edge cases in examples",
+            "Balance simplicity and complexity"
+          ]
+        },
+        
+        "chain_of_thought": {
+          "description": "Explicit reasoning steps",
+          "implementation": [
+            "Ask for step-by-step thinking",
+            "Show reasoning in examples",
+            "Request justification for answers",
+            "Use 'Let me think through this' triggers"
+          ],
+          "benefits": ["Improved accuracy", "Transparency", "Error detection", "Complex reasoning"]
+        },
+        
+        "tree_of_thoughts": {
+          "description": "Multiple reasoning paths exploration",
+          "process": [
+            "Generate multiple approaches",
+            "Evaluate each path",
+            "Select best option",
+            "Combine insights"
+          ],
+          "use_cases": ["Creative problems", "Strategic planning", "Research synthesis"]
+        }
+      }
+    }
+  },
+  
+  "advanced_techniques": {
+    "context_engineering": {
+      "dynamic_context_assembly": {
+        "description": "Real-time context optimization",
+        "techniques": [
+          "Relevance-based context selection",
+          "Token budget management",
+          "Context compression",
+          "Hierarchical context organization"
+        ],
+        "implementation": "Vector similarity search + ranking algorithms"
+      },
+      
+      "context_injection": {
+        "methods": [
+          "System message context",
+          "In-prompt context blocks",
+          "Reference document injection",
+          "Conversation history optimization"
+        ],
+        "formats": {
+          "structured_context": "JSON/XML formatted context",
+          "narrative_context": "Natural language embedding",
+          "hybrid_approach": "Combination of structured и narrative"
+        }
+      },
+      
+      "memory_management": {
+        "short_term_memory": "Conversation history optimization",
+        "long_term_memory": "Persistent context storage",
+        "working_memory": "Active context for current task",
+        "episodic_memory": "Specific interaction recall"
+      }
+    },
+    
+    "prompt_optimization": {
+      "a_b_testing": {
+        "design": {
+          "hypothesis": "Clear improvement hypothesis",
+          "variables": "Single variable change",
+          "metrics": "Quantifiable success metrics",
+          "sample_size": "Statistical significance"
+        },
+        "metrics": [
+          "Response quality scores",
+          "Task completion rate",
+          "User satisfaction",
+          "Token efficiency",
+          "Latency measurement"
+        ]
+      },
+      
+      "automated_optimization": {
+        "genetic_algorithms": "Evolutionary prompt optimization",
+        "reinforcement_learning": "RLHF для prompt improvement",
+        "gradient_free_optimization": "Bayesian optimization для hyperparameters",
+        "prompt_compression": "Automatic prompt length reduction"
+      },
+      
+      "ensemble_methods": {
+        "multi_prompt_voting": "Multiple prompts → consensus",
+        "temperature_variation": "Different creativity levels",
+        "model_ensemble": "Different models → best response",
+        "self_consistency": "Multiple generations → agreement"
+      }
+    }
+  },
+  
+  "domain_specific_applications": {
+    "code_generation": {
+      "best_practices": [
+        "Specify programming language и version",
+        "Include coding standards и style guides",
+        "Request documentation и comments",
+        "Ask for error handling",
+        "Include test cases"
+      ],
+      "prompt_templates": {
+        "function_generation": "Write a [LANGUAGE] function that [FUNCTIONALITY]. Include type hints, error handling, and docstring.",
+        "code_review": "Review this [LANGUAGE] code for [CRITERIA]. Suggest improvements with explanations.",
+        "debugging": "Debug this [LANGUAGE] code. Identify issues и provide corrected version."
+      },
+      "quality_assurance": [
+        "Syntax validation",
+        "Logic verification", 
+        "Security check",
+        "Performance analysis"
+      ]
+    },
+    
+    "content_creation": {
+      "writing_assistance": {
+        "blog_posts": "Target audience, tone, key points, SEO keywords",
+        "technical_docs": "Accuracy, clarity, completeness, examples",
+        "marketing_copy": "Brand voice, value proposition, call-to-action",
+        "creative_writing": "Genre, style, narrative voice, constraints"
+      },
+      "content_optimization": [
+        "Readability improvement",
+        "SEO optimization",
+        "Audience adaptation",
+        "Fact checking",
+        "Tone adjustment"
+      ]
+    },
+    
+    "analysis_and_reasoning": {
+      "data_analysis": {
+        "approach": "Structured analytical framework",
+        "steps": [
+          "Data understanding",
+          "Pattern identification",
+          "Insight extraction",
+          "Recommendation generation"
+        ],
+        "output_format": "Executive summary + detailed analysis"
+      },
+      "research_synthesis": {
+        "methodology": [
+          "Source evaluation",
+          "Information extraction",
+          "Bias detection",
+          "Synthesis and integration"
+        ],
+        "quality_checks": "Fact verification, source credibility, logical consistency"
+      }
+    }
+  },
+  
+  "conversation_design": {
+    "chatbot_development": {
+      "personality_design": {
+        "characteristics": [
+          "Tone and voice",
+          "Knowledge level",
+          "Interaction style",
+          "Error handling approach"
+        ],
+        "consistency": "Personality maintenance across conversations"
+      },
+      
+      "dialogue_management": {
+        "conversation_flow": [
+          "Intent recognition",
+          "Context maintenance",
+          "Response generation",
+          "Follow-up handling"
+        ],
+        "state_tracking": "Conversation state и user goals"
+      },
+      
+      "user_experience": {
+        "onboarding": "Introduction и capability explanation",
+        "help_system": "Guidance и command reference",
+        "error_recovery": "Graceful error handling",
+        "feedback_collection": "User satisfaction tracking"
+      }
+    },
+    
+    "multi_turn_optimization": {
+      "context_carryover": "Previous conversation awareness",
+      "topic_transitions": "Smooth topic changes",
+      "clarification_requests": "Ambiguity resolution",
+      "conversation_summarization": "Key points extraction"
+    }
+  },
+  
+  "evaluation_and_testing": {
+    "quality_metrics": {
+      "relevance": {
+        "measurement": "How well response addresses the prompt",
+        "scale": "1-5 rating scale",
+        "criteria": ["Topic alignment", "Completeness", "Accuracy"]
+      },
+      
+      "coherence": {
+        "measurement": "Logical flow и consistency",
+        "indicators": ["Logical structure", "Internal consistency", "Clear reasoning"]
+      },
+      
+      "creativity": {
+        "measurement": "Novelty и originality (when appropriate)",
+        "balance": "Creativity vs accuracy trade-off"
+      },
+      
+      "safety": {
+        "measurement": "Harmful content detection",
+        "categories": ["Bias", "Toxicity", "Misinformation", "Privacy"]
+      }
+    },
+    
+    "testing_frameworks": {
+      "unit_testing": {
+        "single_prompts": "Individual prompt performance",
+        "edge_cases": "Boundary condition testing",
+        "failure_modes": "Common error patterns"
+      },
+      
+      "integration_testing": {
+        "conversation_flows": "Multi-turn dialogue testing",
+        "system_integration": "End-to-end application testing",
+        "user_scenarios": "Real-world use case validation"
+      },
+      
+      "stress_testing": {
+        "token_limits": "Maximum context testing",
+        "edge_inputs": "Unusual input handling",
+        "failure_recovery": "Error handling validation"
+      }
+    },
+    
+    "continuous_improvement": {
+      "monitoring": [
+        "Response quality tracking",
+        "User feedback analysis",
+        "Performance metrics",
+        "Error rate monitoring"
+      ],
+      "feedback_loops": [
+        "User rating collection",
+        "Expert evaluation",
+        "Automated quality checks",
+        "A/B test results"
+      ]
+    }
+  },
+  
+  "technical_implementation": {
+    "prompt_management": {
+      "version_control": {
+        "prompt_versioning": "Git-based prompt tracking",
+        "change_logs": "Modification history",
+        "rollback_capability": "Previous version restoration",
+        "branch_strategies": "Feature и experiment branches"
+      },
+      
+      "template_systems": {
+        "parameterized_prompts": "Variable substitution",
+        "inheritance": "Base prompt extension",
+        "composition": "Prompt component assembly",
+        "localization": "Multi-language support"
+      }
+    },
+    
+    "api_integration": {
+      "openai_api": {
+        "best_practices": [
+          "Rate limiting handling",
+          "Error retry logic",
+          "Cost optimization",
+          "Response caching"
+        ],
+        "parameters": {
+          "temperature": "Creativity control",
+          "max_tokens": "Response length limit",
+          "top_p": "Nucleus sampling",
+          "frequency_penalty": "Repetition reduction"
+        }
+      },
+      
+      "anthropic_claude": {
+        "specific_features": [
+          "Constitutional AI alignment",
+          "Long context handling", 
+          "Tool use capabilities",
+          "Safety considerations"
+        ]
+      },
+      
+      "local_models": {
+        "hugging_face": "Open source model deployment",
+        "ollama": "Local model serving",
+        "custom_fine_tuning": "Domain-specific optimization"
+      }
+    },
+    
+    "infrastructure": {
+      "scalability": {
+        "load_balancing": "Multiple API endpoint management",
+        "caching_strategies": "Response caching для efficiency",
+        "queue_management": "Request queuing system",
+        "monitoring": "Performance и cost tracking"
+      },
+      
+      "security": {
+        "api_key_management": "Secure credential storage",
+        "input_sanitization": "Malicious input protection",
+        "output_filtering": "Safe response validation",
+        "audit_logging": "Request/response tracking"
+      }
+    }
+  },
+  
+  "business_applications": {
+    "content_automation": {
+      "blog_generation": "SEO-optimized content creation",
+      "product_descriptions": "E-commerce content automation",
+      "email_marketing": "Personalized campaign generation",
+      "social_media": "Platform-specific content adaptation"
+    },
+    
+    "customer_support": {
+      "automated_responses": "FAQ и common issue handling",
+      "ticket_classification": "Issue categorization",
+      "escalation_detection": "When to involve humans",
+      "sentiment_analysis": "Customer emotion detection"
+    },
+    
+    "knowledge_work": {
+      "research_assistance": "Information gathering и synthesis",
+      "report_generation": "Structured document creation",
+      "data_analysis": "Insight extraction from data",
+      "decision_support": "Recommendation generation"
+    }
+  },
+  
+  "ethical_considerations": {
+    "bias_mitigation": {
+      "awareness": "Understanding model biases",
+      "testing": "Bias detection methods",
+      "mitigation": "Prompt techniques для bias reduction",
+      "monitoring": "Ongoing bias assessment"
+    },
+    
+    "transparency": {
+      "ai_disclosure": "Clear AI usage communication",
+      "limitation_awareness": "Model capability boundaries",
+      "human_oversight": "Human-in-the-loop processes",
+      "explainability": "Decision reasoning transparency"
+    },
+    
+    "privacy_protection": {
+      "data_handling": "Sensitive information protection",
+      "anonymization": "PII removal techniques",
+      "consent_management": "User permission handling",
+      "compliance": "GDPR, CCPA adherence"
+    }
+  },
+  
+  "success_metrics": {
+    "technical_metrics": "Response time < 2s, accuracy > 85%",
+    "user_metrics": "High satisfaction scores, low abandonment",
+    "business_metrics": "Cost efficiency, productivity gains",
+    "quality_metrics": "Consistency, relevance, safety compliance"
+  }
+} 

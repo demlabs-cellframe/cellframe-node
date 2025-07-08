@@ -1,0 +1,393 @@
+{
+  "type": "universal_template_module",
+  "domain": "build_deployment",
+  "version": "2.1.0",
+  "created": "2025-01-14T13:50:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "DAP SDK CMake система сборки",
+  
+  "navigation_system": {
+    "file_role": "LEGACY_TEMPLATE",
+    "description": "🔧 Legacy шаблон для build и deployment (рекомендуется использовать языковые шаблоны)",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/",
+      "siblings": ["modules/networking_communication.json", "modules/core_foundation.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "⚙️ C/C++": "modules/languages/c/c_development.json - системное программирование",
+      "🐍 Python": "modules/languages/python/python_development.json - Python разработка",
+      "🏗️ DAP SDK project": "modules/projects/dap_sdk_project.json - Cellframe проект",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "deprecation_notice": "Этот шаблон устарел. Используйте языковые шаблоны для современной разработки."
+  },
+  
+  "template_info": {
+    "name": "Build & Deployment Universal Template",
+    "description": "Система сборки и развертывания на основе анализа DAP SDK",
+    "applicability": "Устаревший - используйте языковые шаблоны"
+  },
+  
+  "cmake_build_system": {
+    "based_on_dap_sdk": {
+      "main_configuration": {
+        "file": "CMakeLists.txt",
+        "version_requirement": "cmake_minimum_required(VERSION 3.10)",
+        "project_definition": "project(PROJECT_NAME C)",
+        "version_management": {
+          "version_variable": "PROJECT_VERSION",
+          "build_timestamp": "BUILD_TS", 
+          "build_hash": "BUILD_HASH",
+          "compiler_definitions": [
+            "add_definitions(\"-DPROJECT_VERSION=\\\"${PROJECT_VERSION}\\\"\")",
+            "add_definitions(\"-DBUILD_TS=\\\"${BUILD_TS}\\\"\")",
+            "add_definitions(\"-DBUILD_HASH=\\\"${BUILD_HASH}\\\"\")"
+          ]
+        }
+      },
+      
+      "modular_architecture": {
+        "pattern": "Условная сборка модулей",
+        "module_detection": "if (MODULES MATCHES \"module_name\")",
+        "module_inclusion": "add_subdirectory(module_path)",
+        "module_dependencies": "Автоматическое разрешение зависимостей",
+        "example_modules": [
+          "core - всегда включен",
+          "crypto - криптографические функции",
+          "io - ввод/вывод",
+          "network-* - сетевые компоненты",
+          "global-db - база данных",
+          "app-cli - интерфейс командной строки"
+        ]
+      },
+      
+      "platform_detection": {
+        "detection_script": "cmake/OS_Detection.cmake",
+        "supported_platforms": [
+          "Linux (различные дистрибутивы)",
+          "macOS (Intel + Apple Silicon)",
+          "Windows",
+          "Android",
+          "iOS (если поддерживается)"
+        ],
+        "conditional_compilation": [
+          "#ifdef блоки для платформ",
+          "CMake переменные для конфигурации",
+          "Автоматическое определение архитектуры"
+        ]
+      }
+    }
+  },
+  
+  "build_configurations": {
+    "multiple_build_types": {
+      "standard_build": {
+        "directory": "build/",
+        "purpose": "Стандартная разработческая сборка",
+        "flags": ["-O2", "-g"]
+      },
+      "debug_build": {
+        "directory": "build_debug/",
+        "purpose": "Отладочная сборка с максимальной информацией",
+        "flags": ["-O0", "-g3", "-DDEBUG"],
+        "additional_features": ["Детальное логирование", "Проверки assertions"]
+      },
+      "release_build": {
+        "directory": "build.release/",
+        "purpose": "Оптимизированная производственная сборка",
+        "flags": ["-O3", "-DNDEBUG", "-march=native"],
+        "optimizations": ["LTO", "Strip symbols", "Size optimization"]
+      },
+      "profile_build": {
+        "directory": "build.profile/",
+        "purpose": "Сборка для профилирования производительности",
+        "flags": ["-O2", "-g", "-pg"],
+        "tools": ["gprof", "perf", "Instruments"]
+      },
+      "sanitizer_builds": {
+        "asan_build": {
+          "directory": "build_asan/",
+          "purpose": "Обнаружение ошибок памяти",
+          "flags": ["-fsanitize=address", "-fno-omit-frame-pointer"]
+        },
+        "ubsan_build": {
+          "purpose": "Обнаружение undefined behavior",
+          "flags": ["-fsanitize=undefined"]
+        },
+        "tsan_build": {
+          "purpose": "Обнаружение race conditions",
+          "flags": ["-fsanitize=thread"]
+        }
+      },
+      "test_build": {
+        "directory": "build_test/",
+        "purpose": "Специальная сборка для тестирования",
+        "features": ["Покрытие кода", "Моки", "Дополнительные проверки"]
+      }
+    }
+  },
+  
+  "compiler_optimization": {
+    "architecture_specific": {
+      "simd_optimizations": {
+        "x86_64": [
+          "-mavx2 для AVX2 инструкций",
+          "-msse4.2 для SSE4.2",
+          "-march=native для автоматической оптимизации"
+        ],
+        "arm64": [
+          "-mcpu=native для ARM процессоров",
+          "Apple Silicon оптимизации",
+          "NEON intrinsics поддержка"
+        ],
+        "detection_pattern": [
+          "#if defined(__AVX2__)",
+          "#elif defined(__SSE2__)", 
+          "#elif defined(__ARM_NEON)",
+          "#else // скалярный fallback"
+        ]
+      },
+      
+      "compiler_specific": {
+        "gcc": [
+          "-flto для Link Time Optimization",
+          "-ffunction-sections -fdata-sections",
+          "-Wl,--gc-sections для удаления неиспользуемого кода"
+        ],
+        "clang": [
+          "-flto=thin для быстрой LTO",
+          "-fuse-ld=lld для быстрой линковки",
+          "-fsanitize-coverage для покрытия"
+        ],
+        "msvc": [
+          "/GL для оптимизации всей программы",
+          "/LTCG для генерации кода во время линковки"
+        ]
+      }
+    },
+    
+    "performance_tuning": {
+      "memory_optimization": [
+        "Выравнивание структур данных",
+        "Пулы памяти для частых аллокаций",
+        "Stack vs heap оптимизации"
+      ],
+      "cpu_optimization": [
+        "Profile-guided optimization (PGO)",
+        "Развертывание критических циклов",
+        "Инлайнинг горячих функций"
+      ]
+    }
+  },
+  
+  "dependency_management": {
+    "third_party_libraries": {
+      "git_submodules": "3rdparty/ для внешних зависимостей",
+      "system_libraries": "Использование системных библиотек где возможно",
+      "optional_dependencies": [
+        "SSL/TLS поддержка (wolfssl)",
+        "Database drivers (SQLite, PostgreSQL)",
+        "Compression libraries"
+      ]
+    },
+    
+    "library_linking": {
+      "static_linking": {
+        "benefits": ["Самодостаточные бинарники", "Отсутствие зависимостей времени выполнения"],
+        "use_cases": ["Embedded системы", "Простое развертывание"]
+      },
+      "dynamic_linking": {
+        "benefits": ["Меньший размер бинарников", "Обновления библиотек"],
+        "use_cases": ["Системные демоны", "Модульные приложения"]
+      },
+      "hybrid_approach": "Статическая линковка внутренних модулей, динамическая для системных"
+    }
+  },
+  
+  "testing_integration": {
+    "cmake_testing": {
+      "enable_testing": "enable_testing() в корневом CMakeLists.txt",
+      "test_framework": "test-framework/ модуль",
+      "test_discovery": "Автоматическое обнаружение тестов",
+      "test_execution": "ctest для запуска всех тестов"
+    },
+    
+    "continuous_integration": {
+      "gitlab_ci": {
+        "configuration": ".gitlab-ci.yml",
+        "stages": ["build", "test", "analyze", "deploy"],
+        "matrix_builds": "Тестирование на разных платформах",
+        "artifact_management": "Сохранение бинарников и отчетов"
+      },
+      "build_matrix": [
+        "Linux x86_64 (GCC, Clang)",
+        "macOS x86_64 + Apple Silicon",
+        "Windows MSVC",
+        "Android cross-compilation",
+        "Static analysis builds"
+      ]
+    },
+    
+    "quality_assurance": {
+      "static_analysis": {
+        "cppcheck": {
+          "integration": "ENABLE_CPPCHECK_ANALYSIS option",
+          "configuration": "--std=c11 --enable=warning,style,performance",
+          "reporting": "HTML reports generation"
+        },
+        "clang_static_analyzer": "Статический анализатор Clang",
+        "pvs_studio": "Коммерческий статический анализатор"
+      },
+      "dynamic_analysis": {
+        "valgrind": "Поиск утечек памяти",
+        "sanitizers": "AddressSanitizer, UBSan, ThreadSanitizer",
+        "coverage_tools": "gcov, llvm-cov для покрытия кода"
+      }
+    }
+  },
+  
+  "cross_platform_builds": {
+    "mobile_platforms": {
+      "android": {
+        "ndk_integration": "Android NDK для нативного кода",
+        "gradle_build": "Интеграция с Android Gradle Plugin",
+        "abi_support": ["arm64-v8a", "armeabi-v7a", "x86_64"],
+        "specific_optimizations": "Android specific includes и флаги"
+      },
+      "ios": {
+        "xcode_integration": "Генерация Xcode проектов",
+        "universal_binaries": "Поддержка Intel + Apple Silicon",
+        "code_signing": "Автоматическое подписание кода"
+      }
+    },
+    
+    "embedded_systems": {
+      "cross_compilation": [
+        "ARM Cortex-M toolchain",
+        "RISC-V toolchain",
+        "Custom embedded targets"
+      ],
+      "size_optimization": [
+        "-Os для оптимизации размера",
+        "Удаление неиспользуемых функций",
+        "Компрессия firmware"
+      ]
+    }
+  },
+  
+  "deployment_strategies": {
+    "packaging": {
+      "package_formats": {
+        "deb": "Debian/Ubuntu пакеты",
+        "rpm": "Red Hat/SUSE пакеты", 
+        "pkg": "macOS installer пакеты",
+        "msi": "Windows installer",
+        "appimage": "Портабельные Linux приложения",
+        "snap": "Universal Linux пакеты"
+      },
+      "docker": {
+        "multi_stage_builds": "Минимизация размера образов",
+        "base_images": ["Alpine для минимального размера", "Ubuntu для совместимости"],
+        "build_optimization": "Кэширование слоев Docker"
+      }
+    },
+    
+    "distribution": {
+      "artifact_repositories": [
+        "Package managers (apt, yum, brew)",
+        "Container registries (Docker Hub, ECR)",
+        "Binary releases (GitHub Releases)"
+      ],
+      "version_management": {
+        "semantic_versioning": "MAJOR.MINOR.PATCH",
+        "build_numbering": "Автоматическая нумерация сборок",
+        "tag_strategy": "Git tags для релизов"
+      }
+    }
+  },
+  
+  "development_workflow": {
+    "local_development": {
+      "quick_builds": [
+        "Incremental builds для быстрой разработки",
+        "ccache для кэширования компиляции",
+        "Ninja generator для быстрой сборки"
+      ],
+      "debugging_support": [
+        "Debug symbols во всех build типах",
+        "IDE интеграция (VS Code, CLion)",
+        "GDB/LLDB поддержка"
+      ]
+    },
+    
+    "code_quality": {
+      "formatting": [
+        "clang-format для форматирования кода",
+        "Единый .clang-format конфиг",
+        "Автоматическое форматирование в CI"
+      ],
+      "linting": [
+        "clang-tidy для статических проверок",
+        "Custom правила проекта",
+        "Pre-commit hooks"
+      ]
+    }
+  },
+  
+  "performance_monitoring": {
+    "build_performance": {
+      "compilation_time": "Мониторинг времени компиляции",
+      "parallel_builds": "Использование всех CPU ядер",
+      "build_cache": "Distributed build cache"
+    },
+    
+    "runtime_performance": {
+      "profiling_builds": "Специальные сборки для профилирования",
+      "benchmark_integration": "Автоматические бенчмарки в CI",
+      "performance_regression": "Детектирование деградации производительности"
+    }
+  },
+  
+  "security_considerations": {
+    "secure_builds": {
+      "compiler_security": [
+        "-fstack-protector-strong",
+        "-D_FORTIFY_SOURCE=2", 
+        "-Wformat -Wformat-security"
+      ],
+      "linker_security": [
+        "-Wl,-z,relro,-z,now",
+        "-pie для Position Independent Executables"
+      ]
+    },
+    
+    "supply_chain": {
+      "dependency_verification": "Проверка хэшей зависимостей",
+      "vulnerability_scanning": "Сканирование известных уязвимостей",
+      "signed_artifacts": "Подписание релизных артефактов"
+    }
+  },
+  
+  "best_practices": {
+    "cmake_organization": {
+      "modular_cmakelists": "Отдельный CMakeLists.txt для каждого модуля",
+      "variable_scoping": "Корректное использование PUBLIC/PRIVATE/INTERFACE",
+      "target_based": "Использование targets вместо глобальных переменных"
+    },
+    
+    "build_reproducibility": {
+      "deterministic_builds": "Воспроизводимые сборки",
+      "build_environment": "Контролируемая среда сборки",
+      "artifact_verification": "Проверка идентичности артефактов"
+    },
+    
+    "documentation": {
+      "build_instructions": "Детальные инструкции по сборке",
+      "dependency_documentation": "Описание всех зависимостей",
+      "troubleshooting": "Решение типовых проблем сборки"
+    }
+  }
+} 

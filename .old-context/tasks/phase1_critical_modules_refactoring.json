@@ -1,0 +1,159 @@
+{
+  "task_info": {
+    "id": "phase1-critical-modules-refactoring",
+    "title": "🔥 Фаза 1: Рефакторинг критических модулей",
+    "priority": "ВЫСОКИЙ",
+    "status": "pending",
+    "created": "2025-06-18T17:47:00Z",
+    "category": "python-cellframe-refactoring",
+    "phase": "1",
+    "estimated_hours": 120,
+    "dependencies": ["phase0-unit-tests-validation"]
+  },
+  "description": {
+    "summary": "Рефакторинг 5 модулей с критически высокой цикломатической сложностью",
+    "critical_modules": [
+      {
+        "file": "CellFrame/python-cellframe.c",
+        "complexity": 135,
+        "nesting": 34,
+        "priority": "КРИТИЧНО"
+      },
+      {
+        "file": "modules/cellframe-sdk/chain/src/libdap-chain-python.c", 
+        "complexity": 100,
+        "nesting": 8,
+        "priority": "КРИТИЧНО"
+      },
+      {
+        "file": "modules/dap-sdk/core/src/math_python.c",
+        "complexity": 70,
+        "nesting": 9,
+        "priority": "ВЫСОКИЙ"
+      },
+      {
+        "file": "modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv.c",
+        "complexity": 68,
+        "nesting": 6,
+        "priority": "ВЫСОКИЙ"
+      },
+      {
+        "file": "modules/dap-sdk/net/server/http/src/wrapping_http_status_code.c",
+        "complexity": 66,
+        "nesting": 2,
+        "priority": "ВЫСОКИЙ"
+      }
+    ]
+  },
+  "subtasks": [
+    {
+      "id": "1.1",
+      "title": "Рефакторинг python-cellframe.c (КРИТИЧНО)",
+      "description": "Разделение монолитной функции python_cellframe_init",
+      "estimated_hours": 35,
+      "status": "pending",
+      "current_metrics": {
+        "complexity": 135,
+        "nesting": 34,
+        "function_length": 278,
+        "functions_count": 3
+      },
+      "target_metrics": {
+        "complexity": "20-25",
+        "nesting": "4",
+        "function_length": "50-80",
+        "functions_count": "8-10"
+      },
+      "approach": [
+        "Разделить python_cellframe_init на 4-5 подфункций",
+        "Создать helper функции для инициализации модулей",
+        "Применить early return паттерн",
+        "Вынести повторяющийся код в утилиты"
+      ],
+      "deliverables": [
+        "python-cellframe-refactored.c",
+        "python-cellframe-helpers.c",
+        "unit tests для новых функций",
+        "migration guide"
+      ]
+    },
+    {
+      "id": "1.2", 
+      "title": "Рефакторинг libdap-chain-python.c",
+      "description": "Модуляризация функций работы с блокчейном",
+      "estimated_hours": 25,
+      "status": "pending",
+      "approach": [
+        "Применить паттерн Strategy для разных типов цепей",
+        "Создать отдельный модуль для валидации",
+        "Разделить функции по ответственности",
+        "Добавить error handling helpers"
+      ]
+    },
+    {
+      "id": "1.3",
+      "title": "Рефакторинг math_python.c",
+      "description": "Категоризация математических операций",
+      "estimated_hours": 20,
+      "status": "pending",
+      "approach": [
+        "Разделить по типам операций (арифметика, криптография, хеширование)",
+        "Создать validation helpers",
+        "Добавить performance optimizations",
+        "Создать comprehensive тесты"
+      ]
+    },
+    {
+      "id": "1.4",
+      "title": "Рефакторинг wrapping_dap_chain_net_srv.c",
+      "description": "Модуляризация сетевых сервисов",
+      "estimated_hours": 25,
+      "status": "pending",
+      "approach": [
+        "Создать state machine для соединений",
+        "Разделить на client/server/protocol модули",
+        "Добавить connection pooling",
+        "Улучшить error handling"
+      ]
+    },
+    {
+      "id": "1.5",
+      "title": "Рефакторинг wrapping_http_status_code.c",
+      "description": "Оптимизация HTTP статусов",
+      "estimated_hours": 15,
+      "status": "pending",
+      "approach": [
+        "Создать lookup table для статусов",
+        "Разделить по категориям (2xx, 3xx, 4xx, 5xx)",
+        "Добавить константы",
+        "Создать helper функции"
+      ]
+    }
+  ],
+  "validation_requirements": [
+    "Все unit тесты должны проходить до и после рефакторинга",
+    "100% обратная совместимость API",
+    "Производительность не должна ухудшиться",
+    "Цикломатическая сложность < 25 для всех функций",
+    "Глубина вложенности < 5 для всех функций"
+  ],
+  "success_criteria": [
+    "✅ Цикломатическая сложность снижена в 3-5 раз",
+    "✅ Глубина вложенности < 5 уровней",
+    "✅ Длина функций < 80 строк",
+    "✅ Все unit тесты проходят",
+    "✅ Производительность сохранена или улучшена"
+  ],
+  "risks": [
+    "Возможные регрессии в API",
+    "Изменение поведения edge cases",
+    "Performance degradation",
+    "Breaking changes для пользователей"
+  ],
+  "mitigation": [
+    "Comprehensive unit testing",
+    "Gradual refactoring с валидацией",
+    "Performance benchmarking",
+    "Backward compatibility testing"
+  ]
+} 

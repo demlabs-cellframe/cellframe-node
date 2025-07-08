@@ -1,0 +1,8 @@
+{ 
+        "name": "unit-tests",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2022",
+        "dependencies": [],
+        "description": "This is a plugin for running Python-cellframe unit tests in plugin mode for a node."
+}
+

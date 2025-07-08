@@ -1,0 +1,16 @@
+build/*
+example/tmp
+example/var
+*.text
+_skbuild/
+.pybuild/
+dist/
+CellFrame.egg-info/
+debian/*.log
+debian/*.debhelper
+debian/*.substvars
+debian/python3-cellframe-doc/
+debian/python3-cellframe/
+debian/files
+*.text
+CMakeLists.txt.user*

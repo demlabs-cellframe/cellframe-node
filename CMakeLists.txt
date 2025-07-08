@@ -32,7 +32,6 @@ if(ENABLE_CPPCHECK_ANALYSIS)
                 --xml
                 -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
                 -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
-                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
                 ${CMAKE_SOURCE_DIR}/conftool
                 ${CMAKE_SOURCE_DIR}/dist.linux
                 ${CMAKE_SOURCE_DIR}/dist
@@ -116,7 +115,7 @@ if (NOT ANDROID)
 endif()
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #set(BUILD_DAP_SDK_TESTS ON)
-#set (BUILD_WITH_TPS_TEST ON)
+# set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
 endif()
@@ -127,16 +126,20 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-# Enable Python plugins support by default on Linux and macOS
-if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
-endif()
+# Python plugins support is now OFF by default
+# To enable, use: cmake -DSUPPORT_PYTHON_PLUGINS=ON
 
-if(DARWIN)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
-endif()
+# Python plugins are now disabled by default
+# Uncomment the lines below to enable Python plugins:
+# if(LINUX)
+#     set(BUILD_WITH_PYTHON_ENV ON)
+#     set(SUPPORT_PYTHON_PLUGINS ON)
+# endif()
+# 
+# if(DARWIN)
+#     set(BUILD_WITH_PYTHON_ENV ON)
+#     set(SUPPORT_PYTHON_PLUGINS ON)
+# endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
                        srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
@@ -431,10 +434,12 @@ if(UNIX AND NOT WIN32)
         message("[*] Python libraries: " "${Python_LIBRARIES}")
 
         include_directories(${Python_INCLUDE_DIRS} include/)
-        add_subdirectory(python-cellframe)
+        # Python cellframe plugin is now available as separate plugin
+        # add_subdirectory(python-cellframe)
         #this helps
         #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
-        list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+        # Python plugin libraries moved to plugin
+        # list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
         if (DARWIN)
         add_custom_command(TARGET ${NODE_TARGET} 
             POST_BUILD COMMAND 
@@ -488,9 +493,10 @@ if(DARWIN)
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
     #install python-modules
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+    # Python modules moved to plugin
+    # INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    # INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+    # INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
 
 else()
@@ -563,9 +569,10 @@ else()
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
             #install python-modules
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-            INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+            # Python modules moved to plugin
+            # INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+            # INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+            # INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
     endif()

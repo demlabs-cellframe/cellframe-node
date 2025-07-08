@@ -1,0 +1,697 @@
+{
+  "type": "universal_template_module",
+  "domain": "documentation_systems",
+  "version": "2.1.0",
+  "created": "2025-01-14T15:45:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на современных подходах к документации и анализе Cellframe Wiki",
+  
+  "navigation_system": {
+    "file_role": "METHODOLOGY_TEMPLATE",
+    "description": "📋 Шаблон для documentation systems и knowledge creation",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/methodologies/",
+      "siblings": ["modules/methodologies/context_systems_development.json", "modules/tools/obsidian_workflow.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🗂️ Obsidian workflow": "modules/tools/obsidian_workflow.json - управление знаниями",
+      "🏗️ Context systems": "modules/methodologies/context_systems_development.json - разработка контекста",
+      "🤖 AI/ML templates": "modules/ai_ml/ - шаблоны для ИИ разработки",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create methodologies/documentation_systems.json my_docs_site"
+  },
+  
+  "template_info": {
+    "name": "Documentation Systems & Knowledge Creation Template",
+    "description": "Универсальный шаблон для создания, поддержки и организации документации любого типа на основе анализа Cellframe Wiki и современных практик",
+    "target_projects": [
+      "Техническая документация ПО",
+      "API документация и спецификации",
+      "Внутренние базы знаний компаний",
+      "Образовательные материалы и курсы",
+      "Пользовательские руководства",
+      "Процессы и стандарты команды",
+      "Исследовательские документы",
+      "Архитектурная документация систем",
+      "Blockchain и криптография документация",
+      "Open source project wikis"
+    ],
+    "applicability": "100% проектов требующих документирования",
+    "real_world_example": "Cellframe Wiki - Obsidian + Quartz + GitLab CI/CD"
+  },
+  
+  "documentation_philosophy": {
+    "core_principles": {
+      "docs_as_code": {
+        "description": "Документация как часть кодовой базы",
+        "benefits": ["Version control", "Code review процесс", "Автоматическое тестирование"],
+        "implementation": ["Markdown files в repo", "CI/CD для docs", "Pull request reviews"],
+        "cellframe_example": "GitLab CI/CD с автоматической сборкой и деплоем"
+      },
+      
+      "obsidian_first_approach": {
+        "description": "Obsidian как primary editing environment",
+        "benefits": ["Linked thinking", "Visual graph", "Plugin ecosystem", "Local-first"],
+        "workflow": ["Write в Obsidian", "Commit to Git", "Auto-publish via CI/CD"],
+        "publishing": "Quartz для статической генерации сайта"
+      },
+      
+      "hierarchical_information_architecture": {
+        "description": "Четкая иерархическая структура с cross-linking",
+        "pattern": "01. EXPLORE → 02. LEARN → 03. DEVELOP progression",
+        "benefits": ["Clear learning path", "Progressive complexity", "Easy navigation"],
+        "cellframe_structure": {
+          "explore": "General information и overview",
+          "learn": "Detailed technical concepts",
+          "develop": "Practical implementation guides"
+        }
+      },
+      
+      "semantic_linking": {
+        "description": "Extensive use of [[wiki-style]] links",
+        "implementation": ["Term definitions", "Cross-references", "Concept connections"],
+        "benefits": ["Knowledge graph creation", "Serendipitous discovery", "Context building"],
+        "automation": "Auto-generated indexes и glossaries"
+      }
+    },
+    
+    "content_organization_patterns": {
+      "progressive_disclosure": {
+        "level_1_explore": {
+          "purpose": "High-level overview и orientation",
+          "content_types": ["Project introduction", "Ecosystem overview", "Resource links"],
+          "user_goal": "Understand what this project is about"
+        },
+        
+        "level_2_learn": {
+          "purpose": "Detailed conceptual understanding",
+          "content_types": ["Technology deep-dives", "Architecture explanations", "Theoretical concepts"],
+          "structure": ["Technology/", "Services/", "Software/"],
+          "user_goal": "Master the underlying concepts"
+        },
+        
+        "level_3_develop": {
+          "purpose": "Practical implementation guidance",
+          "content_types": ["SDK documentation", "Tutorials", "Code examples", "API references"],
+          "structure": ["JSON-RPC/", "Custom Networks/", "Python Plugins/", "SDK Documentation/"],
+          "user_goal": "Build and deploy solutions"
+        }
+      },
+      
+      "term_definition_system": {
+        "centralized_glossary": "Terms and Definitions.md с alphabetical organization",
+        "linked_definitions": "Each term has its own page with [[links]]",
+        "contextual_tooltips": "Hover definitions в published site",
+        "tagging_system": "#definition tag для easy filtering"
+      }
+    }
+  },
+  
+  "obsidian_quartz_workflow": {
+    "writing_environment": {
+      "obsidian_setup": {
+        "core_plugins": [
+          "file-explorer", "global-search", "switcher", "graph", 
+          "backlink", "outgoing-link", "tag-pane", "templates",
+          "page-preview", "publish"
+        ],
+        "essential_features": [
+          "Graph view для visualization", 
+          "Backlinks для connection discovery",
+          "Templates для consistent formatting",
+          "Tag system для categorization"
+        ],
+        "workflow": "Local editing → Git commit → Auto-publish"
+      },
+      
+      "content_creation": {
+        "markdown_standards": {
+          "frontmatter": {
+            "updated": "Last modification date",
+            "created": "Creation date", 
+            "tags": "Categorization tags",
+            "status": "Draft/Review/Published"
+          },
+          "linking_patterns": {
+            "concept_links": "[[Term]] для definitions",
+            "cross_references": "See [[Related Topic]]",
+            "hierarchical": "Parent → [[Child Topic]]"
+          }
+        },
+        
+        "content_templates": {
+          "concept_explanation": "Definition → Examples → Use cases → Related topics",
+          "tutorial": "Prerequisites → Steps → Verification → Next steps",
+          "reference": "Synopsis → Parameters → Examples → See also",
+          "overview": "Introduction → Components → Architecture → Links"
+        }
+      }
+    },
+    
+    "publishing_pipeline": {
+      "quartz_configuration": {
+        "static_site_generator": "Quartz 4.0 for Obsidian compatibility",
+        "features": [
+          "Obsidian-flavored Markdown support",
+          "Interactive graph view",
+          "Search functionality", 
+          "Dark/light themes",
+          "Mobile responsiveness"
+        ],
+        "customization": {
+          "typography": "Custom fonts (Schibsted Grotesk, Source Sans Pro)",
+          "color_scheme": "Brand-aligned color palette",
+          "analytics": "Plausible integration",
+          "seo": "Sitemap и RSS generation"
+        }
+      },
+      
+      "automated_deployment": {
+        "gitlab_ci_pipeline": {
+          "stages": ["build", "deploy"],
+          "build_process": [
+            "Docker container с Node.js",
+            "Quartz build process",
+            "Static files generation",
+            "Container image creation"
+          ],
+          "deployment": [
+            "Ansible playbook execution",
+            "Docker container deployment", 
+            "Nginx reverse proxy",
+            "SSL certificate management"
+          ]
+        },
+        
+        "infrastructure": {
+          "containerization": "Docker для consistent deployment",
+          "web_server": "Nginx для static file serving",
+          "domain_management": "Custom domain с SSL",
+          "cdn_integration": "Optional CDN для performance"
+        }
+      }
+    }
+  },
+  
+  "technical_documentation_patterns": {
+    "blockchain_documentation": {
+      "architecture_documentation": {
+        "system_overview": "High-level architecture diagrams",
+        "component_breakdown": "Detailed component explanations",
+        "data_flow": "Transaction и consensus flow diagrams",
+        "security_model": "Cryptographic guarantees и threat model"
+      },
+      
+      "api_documentation": {
+        "json_rpc": {
+          "method_documentation": "Request/response examples",
+          "error_codes": "Comprehensive error handling",
+          "authentication": "Security requirements",
+          "rate_limiting": "Usage guidelines"
+        },
+        
+        "sdk_documentation": {
+          "installation_guides": "Platform-specific setup",
+          "quick_start": "Minimal working examples",
+          "comprehensive_reference": "Full API coverage",
+          "troubleshooting": "Common issues и solutions"
+        }
+      },
+      
+      "developer_resources": {
+        "code_examples": {
+          "python_plugins": "Custom plugin development",
+          "network_creation": "Custom blockchain networks",
+          "transaction_types": "Different transaction patterns",
+          "integration_patterns": "Common integration scenarios"
+        }
+      }
+    },
+    
+    "knowledge_management": {
+      "conceptual_hierarchy": {
+        "foundational_concepts": "Basic blockchain concepts",
+        "platform_specifics": "Cellframe-specific features",
+        "implementation_details": "Technical implementation guides",
+        "advanced_topics": "Expert-level content"
+      },
+      
+      "cross_referencing": {
+        "bidirectional_links": "Automatic backlink generation",
+        "concept_maps": "Visual relationship display",
+        "related_content": "Suggested reading",
+        "context_preservation": "Link context maintenance"
+      }
+    }
+  },
+  
+  "documentation_formats": {
+    "markdown_ecosystem": {
+      "standard_markdown": {
+        "benefits": ["Platform agnostic", "Version control friendly", "Easy to write"],
+        "extensions": ["GitHub Flavored Markdown", "CommonMark", "MDX for React integration"],
+        "tools": ["Pandoc для conversion", "markdownlint для quality", "Prettier для formatting"]
+      },
+      
+      "enhanced_markdown": {
+        "mdx": {
+          "description": "Markdown с JSX components",
+          "use_cases": ["Interactive documentation", "Embedded demos", "Dynamic content"],
+          "tools": ["@mdx-js/mdx", "Next.js MDX support", "Docusaurus MDX"]
+        },
+        
+        "asciidoc": {
+          "description": "Rich markup для complex documentation",
+          "benefits": ["Advanced formatting", "Cross-references", "Conditional text"],
+          "tools": ["Asciidoctor", "Antora для site generation"]
+        }
+      }
+    },
+    
+    "interactive_documentation": {
+      "api_documentation": {
+        "openapi_swagger": {
+          "description": "Interactive API documentation",
+          "tools": ["Swagger UI", "Redoc", "Postman collections"],
+          "features": ["Try-it-out functionality", "Schema validation", "Code generation"]
+        },
+        
+        "graphql_docs": {
+          "description": "GraphQL schema documentation",
+          "tools": ["GraphiQL", "GraphQL Playground", "Apollo Studio"],
+          "features": ["Query builder", "Schema explorer", "Real-time testing"]
+        }
+      },
+      
+      "runnable_examples": {
+        "code_playgrounds": {
+          "web": ["CodeSandbox", "CodePen", "StackBlitz"],
+          "notebooks": ["Jupyter notebooks", "Observable notebooks", "Zeppelin"],
+          "integration": "Embedded examples в documentation"
+        },
+        
+        "live_demos": {
+          "description": "Working demonstrations встроенные в docs",
+          "implementation": ["iframe embeds", "React components", "Web components"],
+          "benefits": ["Immediate feedback", "Reduced learning curve", "Trust building"]
+        }
+      }
+    }
+  },
+  
+  "content_creation_workflow": {
+    "planning_phase": {
+      "audience_analysis": {
+        "user_personas": "Detailed profiles целевых пользователей",
+        "skill_levels": "Beginner, intermediate, advanced segments",
+        "use_cases": "Primary tasks пользователи want to accomplish",
+        "pain_points": "Current frustrations с existing documentation"
+      },
+      
+      "content_audit": {
+        "existing_content": "Inventory всей существующей документации",
+        "gap_analysis": "Identify missing или outdated content",
+        "quality_assessment": "Evaluate accuracy, clarity, completeness",
+        "usage_analytics": "Most/least accessed content"
+      },
+      
+      "information_design": {
+        "content_strategy": "High-level approach to content creation",
+        "style_guide": "Voice, tone, terminology standards",
+        "template_library": "Reusable content templates",
+        "workflow_documentation": "Process для creating и maintaining docs"
+      }
+    },
+    
+    "writing_process": {
+      "drafting_strategies": {
+        "outline_first": {
+          "method": "Create detailed outline before writing",
+          "tools": ["Mind mapping", "Hierarchical outlines", "Story boarding"],
+          "benefits": ["Clear structure", "Comprehensive coverage", "Logical flow"]
+        },
+        
+        "iterative_writing": {
+          "method": "Multiple passes: rough → detailed → polished",
+          "stages": ["Brain dump", "Structure refinement", "Language polishing"],
+          "tools": ["Draft repositories", "Version tracking", "Collaboration tools"]
+        }
+      },
+      
+      "content_quality": {
+        "clarity_principles": {
+          "simple_language": "Plain English, avoid jargon",
+          "active_voice": "Direct, actionable language",
+          "concrete_examples": "Specific scenarios и use cases",
+          "logical_flow": "Information in logical sequence"
+        },
+        
+        "accuracy_verification": {
+          "technical_review": "SME validation of technical content",
+          "code_testing": "All code examples must work",
+          "link_validation": "Regular checking of external links",
+          "version_alignment": "Sync с current product versions"
+        }
+      }
+    },
+    
+    "review_improvement": {
+      "collaborative_review": {
+        "peer_review": "Cross-team content validation",
+        "subject_matter_experts": "Technical accuracy review",
+        "user_testing": "Real user validation of content",
+        "stakeholder_approval": "Business и compliance review"
+      },
+      
+      "continuous_improvement": {
+        "feedback_collection": {
+          "in_content_feedback": "Thumbs up/down, comment forms",
+          "analytics_review": "Page views, time on page, bounce rate",
+          "support_ticket_analysis": "Common issues not covered in docs",
+          "user_interviews": "Qualitative feedback on doc experience"
+        },
+        
+        "iteration_cycle": {
+          "quarterly_review": "Regular content audit и refresh",
+          "metric_tracking": "KPIs для documentation effectiveness",
+          "update_scheduling": "Planned refresh cycles",
+          "deprecation_management": "Sunset process для outdated content"
+        }
+      }
+    }
+  },
+  
+  "technical_implementation": {
+    "static_site_generators": {
+      "docs_focused": {
+        "docusaurus": {
+          "description": "Facebook's documentation platform",
+          "benefits": ["React-based", "Versioning support", "i18n built-in"],
+          "use_cases": ["Open source projects", "Technical documentation", "Community sites"]
+        },
+        
+        "gitbook": {
+          "description": "Modern documentation platform",
+          "benefits": ["Beautiful UI", "Collaborative editing", "Integration capabilities"],
+          "use_cases": ["Internal docs", "Product documentation", "Knowledge bases"]
+        },
+        
+        "mkdocs": {
+          "description": "Python-based static site generator",
+          "benefits": ["Simple setup", "Material theme", "Plugin ecosystem"],
+          "use_cases": ["Technical docs", "Project documentation", "Personal wikis"]
+        }
+      },
+      
+      "general_purpose": {
+        "gatsby": {
+          "description": "React-based static site generator",
+          "benefits": ["GraphQL data layer", "Plugin ecosystem", "Performance optimized"],
+          "use_cases": ["Complex docs sites", "Marketing + docs combo", "Custom functionality"]
+        },
+        
+        "hugo": {
+          "description": "Fast Go-based generator",
+          "benefits": ["Extremely fast builds", "No dependencies", "Flexible templating"],
+          "use_cases": ["Large sites", "Multi-language sites", "Performance critical"]
+        },
+        
+        "jekyll": {
+          "description": "Ruby-based, GitHub Pages native",
+          "benefits": ["GitHub integration", "Liquid templating", "Large community"],
+          "use_cases": ["GitHub-hosted docs", "Blog + docs", "Academic sites"]
+        }
+      }
+    },
+    
+    "hosting_deployment": {
+      "static_hosting": {
+        "github_pages": {
+          "benefits": ["Free hosting", "Custom domains", "GitHub integration"],
+          "limitations": ["Jekyll only", "Public repos only", "Build time limits"],
+          "use_cases": ["Open source projects", "Personal sites", "Simple docs"]
+        },
+        
+        "netlify": {
+          "benefits": ["Continuous deployment", "Form handling", "Edge functions"],
+          "features": ["Branch previews", "A/B testing", "Analytics"],
+          "use_cases": ["Modern web apps", "JAMstack sites", "Team collaboration"]
+        },
+        
+        "vercel": {
+          "benefits": ["Zero config deployment", "Edge network", "Serverless functions"],
+          "features": ["Preview deployments", "Analytics", "Image optimization"],
+          "use_cases": ["Next.js sites", "React docs", "Performance critical"]
+        }
+      },
+      
+      "enterprise_solutions": {
+        "confluence": {
+          "description": "Atlassian's enterprise wiki",
+          "benefits": ["JIRA integration", "Enterprise security", "Collaboration features"],
+          "use_cases": ["Internal documentation", "Team wikis", "Process documentation"]
+        },
+        
+        "notion": {
+          "description": "All-in-one workspace",
+          "benefits": ["Database functionality", "Real-time collaboration", "Rich content"],
+          "use_cases": ["Team knowledge bases", "Project documentation", "Internal wikis"]
+        },
+        
+        "sharepoint": {
+          "description": "Microsoft's collaboration platform",
+          "benefits": ["Office 365 integration", "Enterprise security", "Workflow automation"],
+          "use_cases": ["Corporate documentation", "Compliance docs", "Department wikis"]
+        }
+      }
+    },
+    
+    "automation_tools": {
+      "content_generation": {
+        "api_docs_automation": {
+          "tools": ["Swagger Codegen", "Redoc CLI", "Spectral для linting"],
+          "process": "Auto-generate из OpenAPI specs",
+          "integration": "CI/CD pipeline для automatic updates"
+        },
+        
+        "code_documentation": {
+          "tools": ["JSDoc", "Sphinx", "Doxygen", "rustdoc"],
+          "process": "Extract documentation из code comments",
+          "integration": "Automated publishing on code changes"
+        },
+        
+        "screenshot_automation": {
+          "tools": ["Puppeteer", "Playwright", "Percy for visual testing"],
+          "process": "Automated screenshot generation и updates",
+          "benefits": ["Always current visuals", "Consistent styling", "Reduced manual work"]
+        }
+      },
+      
+      "quality_assurance": {
+        "link_checking": {
+          "tools": ["broken-link-checker", "linkchecker", "htmltest"],
+          "automation": "Regular scheduled checks",
+          "integration": "CI/CD pipeline failures on broken links"
+        },
+        
+        "content_linting": {
+          "tools": ["alex", "textlint", "write-good", "Vale"],
+          "checks": ["Grammar", "Inclusive language", "Style consistency"],
+          "automation": "Pre-commit hooks и CI checks"
+        },
+        
+        "accessibility_testing": {
+          "tools": ["axe-core", "Pa11y", "Lighthouse"],
+          "automation": "Automated accessibility audits",
+          "reporting": "Regular accessibility reports"
+        }
+      }
+    }
+  },
+  
+  "specialized_documentation": {
+    "api_documentation": {
+      "rest_apis": {
+        "openapi_specification": {
+          "structure": "Paths, operations, schemas, responses",
+          "tools": ["Swagger Editor", "Stoplight Studio", "Insomnia Designer"],
+          "best_practices": ["Comprehensive examples", "Error documentation", "Authentication guides"]
+        },
+        
+        "sdk_documentation": {
+          "components": ["Installation guides", "Quickstart tutorials", "Code examples", "API reference"],
+          "multi_language": "Examples в multiple programming languages",
+          "testing": "Runnable examples и test coverage"
+        }
+      },
+      
+      "graphql_apis": {
+        "schema_documentation": {
+          "tools": ["GraphiQL", "GraphQL Playground", "Altair"],
+          "features": ["Schema introspection", "Query validation", "Real-time testing"],
+          "best_practices": ["Field descriptions", "Deprecation notes", "Example queries"]
+        }
+      }
+    },
+    
+    "software_architecture": {
+      "system_design": {
+        "architecture_decision_records": {
+          "format": "Problem, decision, consequences",
+          "tools": ["adr-tools", "Markdown templates", "Architecture logs"],
+          "benefits": ["Decision history", "Context preservation", "Learning resource"]
+        },
+        
+        "technical_specifications": {
+          "components": ["Requirements", "Design", "Implementation", "Testing"],
+          "diagrams": ["UML", "C4 models", "Sequence diagrams", "Architecture diagrams"],
+          "tools": ["PlantUML", "Mermaid", "Lucidchart", "Draw.io"]
+        }
+      },
+      
+      "operational_documentation": {
+        "runbooks": {
+          "structure": "Problem → Diagnosis → Resolution → Prevention",
+          "automation": "Scripts embedded в documentation",
+          "maintenance": "Regular testing и updates"
+        },
+        
+        "deployment_guides": {
+          "components": ["Environment setup", "Configuration", "Deployment steps", "Verification"],
+          "automation": "Infrastructure as Code integration",
+          "versioning": "Environment-specific documentation"
+        }
+      }
+    },
+    
+    "user_documentation": {
+      "end_user_guides": {
+        "getting_started": {
+          "structure": "Goal → Steps → Verification → Next steps",
+          "principles": ["Progressive disclosure", "Success milestones", "Error prevention"],
+          "formats": ["Step-by-step guides", "Video tutorials", "Interactive tours"]
+        },
+        
+        "feature_documentation": {
+          "organization": "By user goal, not system feature",
+          "components": ["Use cases", "Prerequisites", "Step-by-step instructions", "Troubleshooting"],
+          "multimedia": ["Screenshots", "Videos", "Interactive demos"]
+        }
+      },
+      
+      "troubleshooting": {
+        "structure": {
+          "symptom_based": "Organize by user-observed problems",
+          "solution_focused": "Clear resolution steps",
+          "escalation_paths": "When to contact support"
+        },
+        
+        "self_service": {
+          "search_optimization": "SEO для internal search",
+          "categorization": "Clear problem categories",
+          "feedback_loops": "Did this solve your problem?"
+        }
+      }
+    }
+  },
+  
+  "team_collaboration": {
+    "documentation_culture": {
+      "writing_standards": {
+        "style_guide": {
+          "voice_tone": "Consistent brand voice across all documentation",
+          "terminology": "Standardized glossary и term usage",
+          "formatting": "Consistent formatting conventions",
+          "examples": "Template examples для different content types"
+        },
+        
+        "review_process": {
+          "peer_review": "Cross-functional review requirements",
+          "approval_workflow": "Stakeholder sign-off process",
+          "publication_standards": "Quality gates before publication",
+          "update_responsibility": "Clear ownership for maintenance"
+        }
+      },
+      
+      "knowledge_sharing": {
+        "documentation_training": {
+          "writing_workshops": "Internal training on effective writing",
+          "tool_training": "Platform-specific training sessions",
+          "best_practices": "Regular sharing of documentation successes",
+          "mentorship": "Pairing experienced writers с newcomers"
+        },
+        
+        "community_building": {
+          "doc_champions": "Documentation advocates in each team",
+          "feedback_culture": "Encouragement of constructive feedback",
+          "recognition": "Acknowledgment of great documentation",
+          "continuous_learning": "Regular updates on new tools и techniques"
+        }
+      }
+    },
+    
+    "workflow_integration": {
+      "development_integration": {
+        "docs_in_development": "Documentation as part of definition of done",
+        "code_review_docs": "Doc updates reviewed with code changes",
+        "release_documentation": "Automated doc updates with releases",
+        "feature_documentation": "New feature docs planned with development"
+      },
+      
+      "cross_functional_collaboration": {
+        "product_management": "Requirement documentation coordination",
+        "design_integration": "UX writing и documentation alignment",
+        "support_integration": "Feedback loop с customer support",
+        "marketing_alignment": "Consistent messaging across touchpoints"
+      }
+    }
+  },
+  
+  "measurement_analytics": {
+    "documentation_metrics": {
+      "usage_analytics": {
+        "page_views": "Most и least accessed content",
+        "time_on_page": "Content engagement levels",
+        "bounce_rate": "Content effectiveness indicators",
+        "search_queries": "What users are looking for",
+        "user_flows": "How users navigate documentation"
+      },
+      
+      "quality_metrics": {
+        "feedback_scores": "User satisfaction ratings",
+        "completion_rates": "Tutorial и guide completion",
+        "support_ticket_reduction": "Documentation effectiveness indicator",
+        "time_to_information": "How quickly users find answers",
+        "contributor_metrics": "Team engagement с documentation"
+      }
+    },
+    
+    "improvement_insights": {
+      "content_optimization": {
+        "high_exit_pages": "Content that needs improvement",
+        "search_failures": "Gaps in content coverage",
+        "user_feedback": "Direct input on content quality",
+        "performance_bottlenecks": "Technical improvements needed"
+      },
+      
+      "strategic_insights": {
+        "roi_measurement": "Documentation investment returns",
+        "resource_allocation": "Where to focus writing efforts",
+        "tool_effectiveness": "Platform и tool performance",
+        "team_productivity": "Documentation creation efficiency"
+      }
+    }
+  },
+  
+  "success_metrics": {
+    "user_success": "Reduced time to complete tasks",
+    "content_quality": "High user satisfaction scores",
+    "maintenance_efficiency": "Low cost of keeping docs current",
+    "team_adoption": "High contribution rate from all teams",
+    "business_impact": "Measurable reduction in support costs"
+  }
+} 

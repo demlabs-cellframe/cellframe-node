@@ -1,0 +1,161 @@
+{
+  "task_id": "phase1_enable_unit_tests",
+  "title": "Phase 1: Исправление Skipped Тестов - Полное Честное Прохождение Unit Tests",
+  "description": "Критическая задача по превращению 89 SKIPPED тестов в полноценно выполняющиеся unit tests. Цель: достичь честного прохождения всех тестов для создания надежного защитного слоя перед интеллектуальным рефакторингом.",
+  "priority": "CRITICAL",
+  "phase": "Phase 1",
+  "status": "TODO",
+  "created": "2025-06-18T19:45:00Z",
+  
+  "problem_analysis": {
+    "current_situation": "89 тестов SKIPPED из-за недоступности CellFrame модуля",
+    "root_cause": "Тесты проверяют cellframe_available = False и пропускаются через @pytest.mark.skipif",
+    "impact": "Отсутствие реальной валидации кода перед рефакторингом - критический риск",
+    "target": "Все 89 тестов должны ВЫПОЛНЯТЬСЯ и ПРОХОДИТЬ (PASSED), а не пропускаться"
+  },
+
+  "technical_investigation": {
+    "skip_mechanism": {
+      "pattern": "@pytest.mark.skipif(not cellframe_available)",
+      "condition": "cellframe_available проверяет доступность import CellFrame",
+      "files_affected": "Все test_*.py файлы в tests/core/, tests/services/, tests/integration/"
+    },
+    "cellframe_module_issue": {
+      "problem": "CellFrame модуль не доступен для прямого Python import",
+      "reason": "Собирается как статическая библиотека для plugin архитектуры",
+      "current_build": "build_with_python/python-cellframe/libCellFrame.a (статическая библиотека)",
+      "needed": "Динамическая библиотека .so/.dylib для Python import"
+    }
+  },
+
+  "solution_strategies": [
+    {
+      "strategy": "1. Plugin Context Test Runner",
+      "description": "Создать test runner, который запускает тесты в контексте работающего cellframe-node",
+      "complexity": "HIGH",
+      "timeline": "2-3 дня",
+      "pros": ["Тесты в реальном runtime окружении", "Полная интеграция с plugin системой"],
+      "cons": ["Сложность настройки", "Зависимость от cellframe-node процесса"],
+      "implementation": "Создать wrapper который стартует cellframe-node, подключается к Python API, выполняет тесты"
+    },
+    {
+      "strategy": "2. Standalone Python Extension Build",
+      "description": "Исправить build процесс для создания CellFrame.so extension модуля",
+      "complexity": "MEDIUM",
+      "timeline": "1-2 дня", 
+      "pros": ["Быстрые тесты", "Простота отладки", "Стандартный Python workflow"],
+      "cons": ["Может не отражать реальную plugin среду", "Дублирование build логики"],
+      "implementation": "Модифицировать CMakeLists.txt для создания MODULE вместо STATIC библиотеки"
+    },
+    {
+      "strategy": "3. Mock/Stub Based Testing",
+      "description": "Создать mock объекты для CellFrame API для unit тестирования",
+      "complexity": "MEDIUM",
+      "timeline": "1-2 дня",
+      "pros": ["Быстрые тесты", "Изолированное тестирование", "Независимость от сборки"],
+      "cons": ["Не тестирует реальную интеграцию", "Требует поддержки mock объектов"],
+      "implementation": "Создать CellFrame mock модуль с теми же API сигнатурами"
+    },
+    {
+      "strategy": "4. Hybrid Approach",
+      "description": "Комбинация: standalone extension для unit tests + plugin context для integration tests",
+      "complexity": "HIGH",
+      "timeline": "3-4 дня",
+      "pros": ["Лучшее из всех миров", "Полное покрытие тестирования"],
+      "cons": ["Сложность поддержки", "Два build pipeline"],
+      "implementation": "Создать отдельные build targets для unit и integration тестирования"
+    }
+  ],
+
+  "recommended_approach": {
+    "primary": "Strategy 2: Standalone Python Extension Build",
+    "reasoning": "Наиболее практичный подход для быстрого получения работающих unit tests",
+    "fallback": "Strategy 4: Hybrid Approach если Strategy 2 не даст полного покрытия"
+  },
+
+  "implementation_plan": {
+    "phase_1a": {
+      "title": "Исследование и Диагностика",
+      "duration": "4-6 часов",
+      "tasks": [
+        "Анализ всех skipped тестов и их зависимостей",
+        "Исследование текущего CMake build процесса",
+        "Определение минимальных требований для CellFrame module",
+        "Создание диагностического скрипта для проверки доступности API"
+      ]
+    },
+    "phase_1b": {
+      "title": "Build System Modification", 
+      "duration": "8-12 часов",
+      "tasks": [
+        "Модификация python-cellframe/CMakeLists.txt для создания .so extension",
+        "Исправление циклических зависимостей для standalone сборки",
+        "Создание отдельного build target для unit testing",
+        "Настройка PYTHONPATH и LD_LIBRARY_PATH для тестов"
+      ]
+    },
+    "phase_1c": {
+      "title": "Test Enablement and Validation",
+      "duration": "6-8 часов", 
+      "tasks": [
+        "Удаление/модификация @pytest.mark.skipif условий",
+        "Создание test runner скрипта с правильным окружением",
+        "Запуск и отладка всех 89 тестов",
+        "Исправление failing тестов до PASSED состояния"
+      ]
+    }
+  },
+
+  "success_criteria": {
+    "primary_goals": [
+      "Все 89 тестов выполняются (не SKIPPED)",
+      "Минимум 85% тестов проходят (PASSED)",
+      "Максимум 10% тестов временно FAILED (с планом исправления)",
+      "0% тестов ERROR (критические ошибки)"
+    ],
+    "validation_commands": [
+      "python3 -m pytest tests/ -v --tb=short",
+      "python3 -c 'import CellFrame; print(\"CellFrame available:\", bool(CellFrame))'",
+      "python3 -m pytest tests/core/ --count=89"
+    ]
+  },
+
+  "risk_mitigation": {
+    "build_failures": "Создать backup текущей working сборки перед модификациями",
+    "test_dependencies": "Изолировать тесты в отдельном virtual environment",
+    "plugin_compatibility": "Убедиться что изменения не ломают plugin архитектуру",
+    "performance": "Мониторить время выполнения тестов (target: <2 минуты для всех)"
+  },
+
+  "expected_outcomes": {
+    "immediate": [
+      "Работающая test suite с реальным выполнением тестов",
+      "Надежный защитный слой для последующего рефакторинга",
+      "Быстрая обратная связь при изменениях кода"
+    ],
+    "long_term": [
+      "Основа для TDD подхода в Phase 2+",
+      "Автоматическая валидация при CI/CD",
+      "Повышение качества и стабильности кода"
+    ]
+  },
+
+  "next_phase_preparation": {
+    "phase_2_readiness": "После успешного завершения Phase 1 можно безопасно начинать интеллектуальный рефакторинг",
+    "test_coverage_target": "Достичь >90% покрытия критических модулей тестами",
+    "automation_setup": "Настроить автоматический запуск тестов при каждом изменении"
+  },
+
+  "files_to_modify": [
+    "python-cellframe/CMakeLists.txt",
+    "python-cellframe/setup.py", 
+    "tests/conftest.py",
+    "tests/core/test_*.py (89 файлов)",
+    "tests/services/test_*.py",
+    "tests/integration/test_*.py"
+  ],
+
+  "estimated_timeline": "2-3 рабочих дня",
+  "complexity_level": "MEDIUM-HIGH",
+  "success_probability": "85%"
+} 

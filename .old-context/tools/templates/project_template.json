@@ -1,0 +1,54 @@
+{
+  "template_type": "project_template",
+  "version": "2.0",
+  "created": "2025-01-10T21:45:00Z",
+  "description": "Template for new project context customization",
+  
+  "project_template": {
+    "name": "{{PROJECT_NAME}}",
+    "full_name": "{{PROJECT_FULL_NAME}}",
+    "description": "{{PROJECT_DESCRIPTION}}",
+    "version": "latest",
+    "status": "active_development",
+    "primary_languages": ["{{PRIMARY_LANGUAGE}}"],
+    "architecture": "modular"
+  },
+  
+  "customization_fields": {
+    "PROJECT_NAME": {
+      "description": "Short project name",
+      "example": "My SDK",
+      "required": true
+    },
+    "PROJECT_FULL_NAME": {
+      "description": "Full project name", 
+      "example": "My Software Development Kit",
+      "required": true
+    },
+    "PROJECT_DESCRIPTION": {
+      "description": "Project description",
+      "example": "A comprehensive SDK for...",
+      "required": true
+    },
+    "PRIMARY_LANGUAGE": {
+      "description": "Primary programming language",
+      "example": "C",
+      "options": ["C", "C++", "Rust", "Python", "JavaScript"],
+      "required": true
+    }
+  },
+  
+  "optional_modules": {
+    "crypto": "Include cryptographic components module",
+    "build": "Include build system module", 
+    "core": "Include core framework module",
+    "net": "Include networking module"
+  },
+  
+  "deployment_options": {
+    "create_docs": true,
+    "create_tools": true,
+    "create_templates": true,
+    "customize_manifest": true
+  }
+} 

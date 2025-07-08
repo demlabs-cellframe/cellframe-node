@@ -1,0 +1,2628 @@
+{
+  "timestamp": "2025-06-18T15:49:44.355361",
+  "project_stats": {
+    "total_files": 341,
+    "total_lines": 21410,
+    "c_files": 213,
+    "python_files": 62,
+    "total_issues": 100
+  },
+  "files": [
+    {
+      "file": "python-cellframe/include/python-cellframe.h",
+      "lines": 138,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/include/python-cellframe_common.h",
+      "lines": 26,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/CellFrame/python-cellframe.c",
+      "lines": 836,
+      "functions": 11,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 30 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 30
+    },
+    {
+      "file": "python-cellframe/CellFrame/python-cellframe_common.c",
+      "lines": 92,
+      "functions": 3,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/include/dap_plugins_python_app_context.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/include/dap_chain_plugins_manifest.h",
+      "lines": 74,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/include/dap_chain_plugins_command.h",
+      "lines": 38,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/include/dap_chain_plugins.h",
+      "lines": 45,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/include/dap_chain_plugins_list.h",
+      "lines": 61,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/src/dap_chain_plugins_command.c",
+      "lines": 108,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/plugins/src/dap_chain_plugins_list.c",
+      "lines": 77,
+      "functions": 7,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/plugins/src/dap_chain_plugins.c",
+      "lines": 442,
+      "functions": 9,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/plugins/src/dap_plugins_python_app_context.c",
+      "lines": 52,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/plugins/src/dap_chain_plugins_manifest.c",
+      "lines": 174,
+      "functions": 12,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/consensus/dag_poa/include/wrapping_dap_chain_cs_dag_poa.h",
+      "lines": 13,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/consensus/dag_poa/src/wrapping_dap_chain_cs_dag_poa.c",
+      "lines": 81,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/wrapping_dap_chain_net_node.h",
+      "lines": 22,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/wrapping_dap_chain_net_node_client.h",
+      "lines": 36,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/libdap_chain_net_python.h",
+      "lines": 111,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/wrapping_dap_chain_net_node_info.h",
+      "lines": 27,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/wrapping_dap_chain_net_state.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/include/wrapping_dap_app_cli_server.h",
+      "lines": 63,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/include/wrapping_dap_chain_net_srv_order.h",
+      "lines": 52,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/include/wrapping_dap_chain_net_srv_common.h",
+      "lines": 37,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/include/wrapping_dap_chain_net_srv_client_remote.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/include/wrapping_dap_chain_net_srv.h",
+      "lines": 36,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/include/wrapping_dap_chain_net_srv_client.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv.c",
+      "lines": 271,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client.c",
+      "lines": 330,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_order.c",
+      "lines": 391,
+      "functions": 21,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 21 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_client_remote.c",
+      "lines": 72,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/srv/src/wrapping_dap_chain_net_srv_common.c",
+      "lines": 110,
+      "functions": 11,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_app_cli_server.c",
+      "lines": 258,
+      "functions": 19,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node.c",
+      "lines": 54,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_info.c",
+      "lines": 33,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_node_client.c",
+      "lines": 87,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/libdap_chain_net_python.c",
+      "lines": 432,
+      "functions": 40,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 40 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/net/src/wrapping_dap_chain_net_state.c",
+      "lines": 48,
+      "functions": 6,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/libdap_chain_atom_iter_python.h",
+      "lines": 24,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/wrapping_dap_chain_ledger.h",
+      "lines": 68,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/wrapping_dap_chain_cell.h",
+      "lines": 37,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/libdap-chain-python.h",
+      "lines": 72,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/libdap_chain_type_python.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/wrapping_dap_chain_cs.h",
+      "lines": 37,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/include/wrapping_dap_chain_atom_ptr.h",
+      "lines": 23,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap_chain_type_python.c",
+      "lines": 60,
+      "functions": 9,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap-chain-python.c",
+      "lines": 697,
+      "functions": 29,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 29 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 3,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_atom_ptr.c",
+      "lines": 12,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_cs.c",
+      "lines": 104,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/libdap_chain_atom_iter_python.c",
+      "lines": 16,
+      "functions": 1,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_ledger.c",
+      "lines": 552,
+      "functions": 30,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 30 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 4,
+      "free_calls": 5,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/chain/src/wrapping_dap_chain_cell.c",
+      "lines": 49,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/channel/chain-net/include/wrapping_dap_stream_ch_chain_validator_test.h",
+      "lines": 19,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/channel/chain-net/src/wrapping_dap_stream_ch_chain_validator_test.c",
+      "lines": 125,
+      "functions": 7,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_in.h",
+      "lines": 55,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_token.h",
+      "lines": 53,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_receipt.h",
+      "lines": 69,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_pkey.h",
+      "lines": 52,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_anchor.h",
+      "lines": 19,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_in_cond.h",
+      "lines": 53,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_decree.h",
+      "lines": 30,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_cond_subtype_srv_stake_lock.h",
+      "lines": 48,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_cond.h",
+      "lines": 70,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_token_ext.h",
+      "lines": 54,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_hashtree_roots.h",
+      "lines": 99,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum.h",
+      "lines": 98,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_common.h",
+      "lines": 164,
+      "functions": 3,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_tsd.h",
+      "lines": 24,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_tx_voting.h",
+      "lines": 52,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_token.h",
+      "lines": 99,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.h",
+      "lines": 47,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_ext.h",
+      "lines": 56,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_sig.h",
+      "lines": 53,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_cond_subtype_srv_stake.h",
+      "lines": 46,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_cond_subtype_srv_pay.h",
+      "lines": 47,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out.h",
+      "lines": 57,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_tx_out_std.h",
+      "lines": 55,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/include/wrapping_dap_chain_datum_tx.h",
+      "lines": 120,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_token.c",
+      "lines": 453,
+      "functions": 20,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 3 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 3
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx_voting.c",
+      "lines": 95,
+      "functions": 8,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_pay.c",
+      "lines": 110,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_stake.c",
+      "lines": 106,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 6 vs 0",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        },
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_sig.c",
+      "lines": 24,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_ext.c",
+      "lines": 65,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_xchange.c",
+      "lines": 99,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_tx.c",
+      "lines": 415,
+      "functions": 26,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 3 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 26 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 3
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_std.c",
+      "lines": 82,
+      "functions": 6,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out.c",
+      "lines": 53,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_pkey.c",
+      "lines": 35,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_receipt.c",
+      "lines": 199,
+      "functions": 10,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 4 vs 0",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        },
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_anchor.c",
+      "lines": 226,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in.c",
+      "lines": 46,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token.c",
+      "lines": 60,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 2 vs 0",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        },
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond.c",
+      "lines": 105,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_out_cond_subtype_srv_stake_lock.c",
+      "lines": 176,
+      "functions": 9,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 4 vs 1",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum_decree.c",
+      "lines": 514,
+      "functions": 15,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_in_cond.c",
+      "lines": 59,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_common.c",
+      "lines": 261,
+      "functions": 19,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 4 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 4
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_datum.c",
+      "lines": 321,
+      "functions": 23,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 23 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_token_ext.c",
+      "lines": 49,
+      "functions": 6,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/common/src/wrapping_dap_chain_tx_tsd.c",
+      "lines": 34,
+      "functions": 2,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/blocks/include/wrapping_dap_chain_cs_block.h",
+      "lines": 34,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/blocks/src/wrapping_dap_chain_cs_block.c",
+      "lines": 330,
+      "functions": 12,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/include/wrapping_dap_chain_cs_dag_event.h",
+      "lines": 31,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/include/wrapping_dap_chain_cs_dag_round.h",
+      "lines": 20,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/include/wrapping_dap_chain_cs_dag.h",
+      "lines": 27,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_event.c",
+      "lines": 143,
+      "functions": 12,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag_round.c",
+      "lines": 89,
+      "functions": 7,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/type/dag/src/wrapping_dap_chain_cs_dag.c",
+      "lines": 66,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/wallet/include/dap_chain_wallet_python.h",
+      "lines": 58,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/wallet/src/dap_chain_wallet_python.c",
+      "lines": 183,
+      "functions": 14,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/mempool/include/wrapping_dap_mempool.h",
+      "lines": 45,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/mempool/src/wrapping_dap_mempool.c",
+      "lines": 820,
+      "functions": 18,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/app-cli/include/libdap-app-cli-python.h",
+      "lines": 18,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/app-cli/src/libdap-app-cli-python.c",
+      "lines": 51,
+      "functions": 1,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/vote/include/wrapping_dap_chain_net_srv_vote.h",
+      "lines": 15,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/vote/include/wrapping_dap_chain_net_srv_vote_info.h",
+      "lines": 30,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote.c",
+      "lines": 343,
+      "functions": 3,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/vote/src/wrapping_dap_chain_net_srv_vote_info.c",
+      "lines": 141,
+      "functions": 11,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/xchange/wrapping_dap_chain_net_srv_xchange_price.c",
+      "lines": 258,
+      "functions": 15,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/xchange/wrapping_dap_chain_net_srv_xchange.c",
+      "lines": 172,
+      "functions": 2,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/xchange/include/wrapping_dap_chain_net_srv_xchange.h",
+      "lines": 36,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/xchange/include/wrapping_dap_chain_net_srv_xchange_price.h",
+      "lines": 53,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/pos_delegate/include/wrapping_dap_chain_net_srv_stake_pos_delegate.h",
+      "lines": 15,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/cellframe-sdk/services/pos_delegate/src/wrapping_dap_chain_net_srv_stake_pos_delegate.c",
+      "lines": 112,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/test/include/tpo.h",
+      "lines": 51,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/test/src/tpo.c",
+      "lines": 27,
+      "functions": 3,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/libdap_crypto_data_type.h",
+      "lines": 47,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/libdap_crypto_key_python.h",
+      "lines": 25,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_base64.h",
+      "lines": 42,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_pkey.h",
+      "lines": 54,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_base58.h",
+      "lines": 41,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_cert.h",
+      "lines": 69,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_enc_key_type.h",
+      "lines": 48,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_guuid.h",
+      "lines": 13,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_enc_key.h",
+      "lines": 65,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_crypto_key_types.h",
+      "lines": 56,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_hash.h",
+      "lines": 79,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_sign.h",
+      "lines": 77,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_enc_iaes.h",
+      "lines": 56,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/libdap-crypto-python.h",
+      "lines": 58,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/include/wrapping_dap_enc_oaes.h",
+      "lines": 59,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/libdap-crypto-python.c",
+      "lines": 82,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_enc_iaes.c",
+      "lines": 142,
+      "functions": 9,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_hash.c",
+      "lines": 210,
+      "functions": 13,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_sign.c",
+      "lines": 251,
+      "functions": 14,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_enc_oaes.c",
+      "lines": 94,
+      "functions": 9,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/libdap_crypto_key_python.c",
+      "lines": 21,
+      "functions": 2,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 3,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/libdap_crypto_data_type.c",
+      "lines": 25,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_base64.c",
+      "lines": 33,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_base58.c",
+      "lines": 25,
+      "functions": 2,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_cert.c",
+      "lines": 252,
+      "functions": 17,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_pkey.c",
+      "lines": 114,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 2,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_enc_key.c",
+      "lines": 175,
+      "functions": 8,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_crypto_key_types.c",
+      "lines": 264,
+      "functions": 30,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        },
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 30 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_guuid.c",
+      "lines": 81,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/crypto/src/wrapping_dap_enc_key_type.c",
+      "lines": 36,
+      "functions": 2,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/include/wrapping_dap_stream.h",
+      "lines": 19,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/include/wrapping_dap_cluster_member.h",
+      "lines": 10,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/include/wrapping_dap_stream_ctl.h",
+      "lines": 20,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/include/wrapping_dap_stream_cluster_role.h",
+      "lines": 22,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_ctl.c",
+      "lines": 36,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream_cluster_role.c",
+      "lines": 69,
+      "functions": 6,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_cluster_member.c",
+      "lines": 5,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/stream/stream/src/wrapping_dap_stream.c",
+      "lines": 28,
+      "functions": 1,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/include/wrapping_json_rpc_response.h",
+      "lines": 17,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/include/wrapping_json_rpc_request.h",
+      "lines": 36,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/src/wrapping_json_rpc_request.c",
+      "lines": 106,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/json_rpc/src/wrapping_json_rpc_response.c",
+      "lines": 117,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/enc/include/wrapping_dap_enc_http.h",
+      "lines": 29,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/enc/src/wrapping_dap_enc_http.c",
+      "lines": 114,
+      "functions": 10,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/include/wrapping_dap_http_folder.h",
+      "lines": 20,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/include/wrapping_http_status_code.h",
+      "lines": 27,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/include/wrapping_http.h",
+      "lines": 26,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/include/wrapping_dap_http_header.h",
+      "lines": 22,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/include/wrapping_dap_http_simple.h",
+      "lines": 44,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_http_status_code.c",
+      "lines": 118,
+      "functions": 4,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_http.c",
+      "lines": 18,
+      "functions": 1,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_simple.c",
+      "lines": 243,
+      "functions": 18,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 3 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 3
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_header.c",
+      "lines": 130,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/server/http/src/wrapping_dap_http_folder.c",
+      "lines": 29,
+      "functions": 1,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/include/libdap_client_python.h",
+      "lines": 54,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/include/wrapping_dap_client_http.h",
+      "lines": 18,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/include/wrapping_dap_client_stage_status.h",
+      "lines": 30,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/include/wrapping_dap_client_stage.h",
+      "lines": 29,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_http.c",
+      "lines": 162,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 6 vs 0",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        },
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 3,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_stage.c",
+      "lines": 49,
+      "functions": 6,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/src/wrapping_dap_client_stage_status.c",
+      "lines": 50,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/net/client/src/libdap_client_python.c",
+      "lines": 212,
+      "functions": 24,
+      "issues": [
+        {
+          "type": "complexity",
+          "severity": "MEDIUM",
+          "description": "High function count: 24 functions in one file",
+          "suggestion": "Consider splitting into multiple files"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/test/include/tpo.h",
+      "lines": 50,
+      "functions": 0,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/test/src/tpo.c",
+      "lines": 63,
+      "functions": 3,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/libdap-python.c",
+      "lines": 241,
+      "functions": 16,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 3 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 3
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/math_python.h",
+      "lines": 60,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/node_address.h",
+      "lines": 16,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/libdap-python.h",
+      "lines": 50,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/node_address.c",
+      "lines": 32,
+      "functions": 2,
+      "issues": [
+        {
+          "type": "error_handling",
+          "severity": "HIGH",
+          "description": "Missing return NULL after PyErr_SetString: 1 vs 0",
+          "suggestion": "Add 'return NULL;' after setting Python errors"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/core/src/math_python.c",
+      "lines": 409,
+      "functions": 17,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 2 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 2
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/include/dap_events_python.h",
+      "lines": 21,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/include/dap_events_socket_python.h",
+      "lines": 35,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/include/dap_server_python.h",
+      "lines": 26,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/src/dap_server_python.c",
+      "lines": 45,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/src/dap_events_python.c",
+      "lines": 64,
+      "functions": 5,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/io/src/dap_events_socket_python.c",
+      "lines": 134,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/include/wrapping_dap_global_db_role.h",
+      "lines": 23,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/include/wrapping_dap_global_db_cluster.h",
+      "lines": 23,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/include/wrapping_dap_global_db.h",
+      "lines": 21,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/include/wrapping_dap_global_db_obj.h",
+      "lines": 18,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/include/wrapping_dap_global_db_instance.h",
+      "lines": 10,
+      "functions": 0,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_obj.c",
+      "lines": 39,
+      "functions": 3,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 1,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db.c",
+      "lines": 170,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_instance.c",
+      "lines": 15,
+      "functions": 1,
+      "issues": [],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 0
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_role.c",
+      "lines": 82,
+      "functions": 7,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    },
+    {
+      "file": "python-cellframe/modules/dap-sdk/global-db/src/wrapping_dap_global_db_cluster.c",
+      "lines": 208,
+      "functions": 8,
+      "issues": [
+        {
+          "type": "thread_safety",
+          "severity": "MEDIUM",
+          "description": "Found 1 non-const static variables",
+          "suggestion": "Consider thread-local storage or synchronization"
+        }
+      ],
+      "malloc_calls": 0,
+      "free_calls": 0,
+      "static_vars": 1
+    }
+  ],
+  "summary": {
+    "critical_issues": 0,
+    "high_issues": 6,
+    "medium_issues": 94,
+    "recommendations": [
+      "ВЫСОКИЙ ПРИОРИТЕТ: Исправить 6 проблем высокой важности",
+      "Улучшить обработку ошибок в 6 местах",
+      "Проверить thread safety в 86 местах"
+    ]
+  }
+}

@@ -1,0 +1,529 @@
+{
+  "name": "Smart Layered Context - Cursor IDE Integration",
+  "version": "4.1.2",
+  "type": "cursor_integration_manifest",
+  "auto_load": true,
+  "created": "2025-01-16T23:45:00Z",
+  
+  "description": "🧠 Автозагружаемый манифест Smart Layered Context для Cursor IDE. Этот файл автоматически дает AI-помощнику знания о системе СЛК и доступных командах.",
+  
+  "cli_path": "./.context/tools/scripts/slc_cli.py",
+  "cli_description": "Мощная CLI система с 31 командой для работы с контекстом, шаблонами и организацией проектов",
+  
+  "cursor_integration": {
+    "purpose": "Этот манифест должен быть автоматически загружен в каждый новый чат Cursor для мгновенного понимания СЛК системы",
+    "usage": "AI-помощник использует короткие команды типа 'слк старт', 'слк контекст' для взаимодействия с системой",
+    "auto_context_loading": "При создании нового чата автоматически загружается контекст последней активной задачи"
+  },
+  
+  "quick_commands": {
+    "слк старт": {
+      "description": "Загрузить базовый контекст системы",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py load-context 'базовый старт'",
+      "files_to_load": [
+        ".context/modules/core/manifest.json",
+        ".context/modules/core/standards.json", 
+        ".context/modules/core/project.json"
+      ],
+      "usage": "Пользователь пишет 'слк старт' → ты загружаешь базовые файлы"
+    },
+    
+    "слк контекст": {
+      "description": "Автоматически загрузить контекст для конкретной задачи",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py load-context '[пользовательский запрос]'",
+      "usage": "слк контекст [задача] → загружаешь релевантные модули для задачи",
+      "examples": [
+        "слк контекст python веб-приложение",
+        "слк контекст машинное обучение", 
+        "слк контекст документация проекта"
+      ]
+    },
+    
+    "слк обнови": {
+      "description": "Перезагрузить и обновить текущий контекст",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py analyze-context",
+      "usage": "Анализирует текущий контекст и предлагает обновления",
+      "when_to_use": "Когда пользователь хочет освежить контекст или добавить новые модули"
+    },
+    
+    "слк подумай": {
+      "description": "AI-рекомендации лучших шаблонов для задачи",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py intelligent-recommend '[задача]'",
+      "usage": "слк подумай [что нужно сделать] → предлагаешь лучшие шаблоны",
+      "ai_powered": true
+    },
+    
+    "слк порефлексируй": {
+      "description": "Анализ структуры проекта и предложения по улучшению",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py analyze-structure",
+      "usage": "Глубокий анализ проекта с рекомендациями по организации"
+    },
+    
+    "слк создай": {
+      "description": "Создать проект из шаблона",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py create [путь_к_шаблону]",
+      "usage": "слк создай [тип проекта] → создаешь структуру проекта",
+      "examples": [
+        "слк создай python fastapi",
+        "слк создай документация",
+        "слк создай ml проект"
+      ]
+    },
+    
+    "слк организуй": {
+      "description": "Автоматическая организация файлов проекта",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py organize-files",
+      "usage": "Приводит в порядок структуру проекта (97% автоматизация)"
+    },
+    
+    "слк найди": {
+      "description": "Поиск шаблонов и модулей по ключевым словам",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py search '[ключевые слова]'",
+      "usage": "слк найди [что искать] → показываешь релевантные шаблоны"
+    },
+    
+    "слк список": {
+      "description": "Показать активные задачи проекта",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py list",
+      "usage": "Показывает текущие активные задачи и их статус"
+    },
+    
+    "слк шаблоны": {
+      "description": "Показать все доступные шаблоны и модули",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py templates",
+      "usage": "Полный каталог доступных шаблонов системы (35 шаблонов)"
+    },
+    
+    "слк помощь": {
+      "description": "Показать все команды системы по категориям",
+      "cli_equivalent": "python3 .context/tools/scripts/slc_cli.py help",
+      "usage": "Показывает все 31 команду, сгруппированную по категориям. Используйте 'слк помощь [команда]' для подробной помощи"
+    }
+  },
+  
+  "auto_context_strategy": {
+    "new_chat_behavior": {
+      "step_1": "Автоматически загрузить этот манифест",
+      "step_2": "Загрузить .context/modules/core/manifest.json для понимания системы", 
+      "step_3": "Проверить наличие активных задач в tasks/",
+      "step_4": "Загрузить контекст последней задачи если есть",
+      "step_5": "Представиться как СЛК-интегрированный помощник"
+    },
+    
+    "context_files_priority": [
+      ".context/modules/core/manifest.json",
+      ".context/modules/core/standards.json",
+      ".context/modules/core/project.json",
+      ".context/tasks/active.json",
+      ".context/tasks/current_task.json"
+    ]
+  },
+  
+  "intelligence_features": {
+    "context_prediction": "Анализируй запрос пользователя и автоматически загружай нужные модули",
+    "smart_recommendations": "Предлагай лучшие шаблоны на основе контекста разговора",
+    "adaptive_loading": "Подгружай дополнительные модули по мере развития диалога",
+    "memory_optimization": "Управляй контекстом чтобы не перегружать память"
+  },
+  
+  "system_behavior": {
+    "greeting": "🧠 СЛК-помощник активирован! Система Smart Layered Context готова к работе. Попробуйте 'слк старт' для начала.",
+    "context_loaded_message": "✅ Контекст загружен. Доступны команды: слк контекст, слк подумай, слк создай, слк организуй",
+    "unknown_command_help": "Доступные команды: слк старт, слк контекст [задача], слк подумай [что делать], слк создай [проект], слк организуй, слк найди [тема], слк список (задачи), слк шаблоны, слк помощь"
+  },
+  
+  "project_integration": {
+    "detect_project_type": "Автоматически определяй тип проекта и предлагай релевантные модули СЛК",
+    "suggest_improvements": "Анализируй код и структуру, предлагай улучшения на основе СЛК стандартов",
+    "maintain_context": "Сохраняй контекст работы между сессиями через файлы задач"
+  },
+  
+  "navigation": {
+    "main_system": "modules/core/manifest.json",
+    "cli_tool": "tools/scripts/slc_cli.py", 
+    "user_docs": "docs/user/cursor-quick-start.md",
+    "current_task": "tasks/active.json"
+  },
+
+  "system_info": {
+    "name": "Smart Layered Context (СЛК)",
+    "version": "4.1.2",
+    "author": "Dmitriy Gerasimov",
+    "description": "Система контекстного управления для AI-ассистированной разработки с интеллектуальными рекомендациями",
+    "type": "context_management_system",
+    "architecture": "layered_context_with_zero_duplication",
+    "release_date": "2025-01-14",
+    "license": "MIT"
+  },
+
+  "navigation_system": {
+    "purpose": "Центральная точка навигации для СЛК системы",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/manifest.json",
+    "file_role": "master_navigation_hub",
+    "integration": {
+      "cursor_ide": "Автоматическая загрузка через @.context/manifest.json",
+      "cli_tool": "./slc или python3 .context/tools/scripts/slc_cli.py",
+      "ai_assistant": "JSON контекст для интеллектуальных рекомендаций"
+    }
+  },
+
+  "architecture_rules": {
+    "root_directory_policy": "В корне проекта должны находиться ТОЛЬКО .cursorrules и исполняемый файл slc",
+    "content_organization": {
+      "all_context_files": "Все файлы контекста должны находиться в .context/",
+      "no_external_directories": "Папки docs/, tests/, tasks/ должны быть внутри .context/",
+      "clean_root": "Корень проекта должен быть максимально чистым"
+    },
+    "enforced_structure": {
+      "allowed_in_root": [".cursorrules", "slc", ".context/", ".git/", ".gitignore"],
+      "forbidden_in_root": ["docs/", "tests/", "tasks/", ".slc/", "*.json", "*.md"],
+      "automatic_organization": "CLI команда 'organize' автоматически перемещает нарушающие файлы в .context/"
+    },
+    "zero_duplication_principle": "Никаких дублированных файлов и структур - единая точка истины в .context"
+  },
+
+  "context_map": {
+    "core_files": {
+      "standards": {
+        "path": ".context/modules/core/standards.json",
+        "description": "Стандарты кода и разработки",
+        "load_priority": "always",
+        "size": "~8KB"
+      },
+      "project": {
+        "path": ".context/modules/core/project.json", 
+        "description": "Информация о проекте СЛК",
+        "load_priority": "always",
+        "size": "~7KB"
+      }
+    },
+    
+    "modules": {
+      "ai_ml": {
+        "count": 11,
+        "description": "AI/ML шаблоны и инструменты",
+        "path": ".context/modules/ai_ml/",
+        "examples": ["prompt_engineering.json", "ai_agent_development.json", "fine_tuning_workflow.json"]
+      },
+      "languages": {
+        "count": 8,  
+        "description": "Языки программирования",
+        "path": ".context/modules/languages/",
+        "examples": ["python/python_development.json", "javascript/javascript_development.json"]
+      },
+      "methodologies": {
+        "count": 6,
+        "description": "Методологии и процессы разработки", 
+        "path": ".context/modules/methodologies/",
+        "examples": ["obsidian_workflow.json", "defi_security_audit.json"]
+      },
+      "tools": {
+        "count": 3,
+        "description": "Инструменты разработки",
+        "path": ".context/modules/tools/",
+        "examples": ["cursor_ide_integration.json", "slc_evolution_export.json"]
+      },
+      "projects": {
+        "count": 2,
+        "description": "Специализированные проекты",
+        "path": ".context/modules/projects/",
+        "examples": ["cryptography_project.json", "dap_sdk_project.json"]
+      }
+    },
+
+    "automation": {
+      "cli": {
+        "path": ".context/tools/scripts/slc_cli.py",
+        "wrapper": "./slc",
+        "description": "CLI инструмент с 28 командами",
+        "commands_count": 28,
+        "json_context": "Автоматический JSON вывод для AI интеграции"
+      },
+      "tasks": {
+        "path": ".context/tasks/",
+        "description": "Управление задачами разработки",
+        "active_tasks": "Динамическое управление через CLI"
+      }
+    }
+  },
+
+  "intelligent_context": {
+    "task_suggestions": {
+      "ai_ml_development": {
+        "description": "AI/ML разработка и исследования",
+        "keywords": ["ai", "ml", "llm", "prompt", "fine-tuning", "agents", "neural", "model"],
+        "suggested_modules": ["modules/ai_ml/prompt_engineering.json", "modules/ai_ml/fine_tuning_workflow.json"],
+        "suggested_commands": ["./slc контекст машинное обучение", "./slc создай ai_ml/prompt_engineering.json проект"],
+        "priority": "high"
+      },
+      "prompt_engineering": {
+        "description": "Разработка и оптимизация промптов",
+        "keywords": ["prompt", "llm", "gpt", "claude", "optimization", "conversation", "chatbot"],
+        "suggested_modules": ["modules/ai_ml/prompt_engineering.json"],
+        "suggested_commands": ["./slc load-context \"prompt engineering\"", "./slc создай ai_ml/prompt_engineering.json чатбот"],
+        "priority": "critical"
+      },
+      "python_development": {
+        "description": "Python разработка (AI/ML, web, blockchain)",
+        "keywords": ["python", "django", "fastapi", "pytorch", "tensorflow", "cellframe"],
+        "suggested_modules": ["modules/languages/python/python_development.json"],
+        "suggested_commands": ["./slc контекст python", "./slc создай languages/python/python_development.json приложение"],
+        "priority": "high"
+      },
+      "knowledge_management": {
+        "description": "Организация знаний и документации",
+        "keywords": ["obsidian", "documentation", "knowledge", "notes", "wiki", "markdown"],
+        "suggested_modules": ["modules/methodologies/obsidian_workflow.json", "modules/methodologies/documentation_systems.json"],
+        "suggested_commands": ["./slc контекст документация", "./slc организуй"],
+        "priority": "medium"
+      },
+      "crypto_development": {
+        "description": "Криптографическая разработка и блокчейн проекты",
+        "keywords": ["crypto", "blockchain", "defi", "smart-contracts", "post-quantum", "security", "audit", "valora", "liquid-staking"],
+        "suggested_modules": ["modules/projects/cryptography_project.json", "modules/projects/dap_sdk_project.json"],
+        "suggested_commands": ["./slc контекст криптография", "./slc создай projects/cryptography_project.json деfi"],
+        "priority": "high"
+      },
+      "slk_evolution": {
+        "description": "СЛК система эволюции и синхронизации изменений", 
+        "keywords": ["evolution", "export", "import", "synchronization", "update", "changes", "conflict", "resolution", "slk-update"],
+        "suggested_modules": ["modules/tools/slc_evolution_export.json", "modules/tools/slc_evolution_import.json"],
+        "suggested_commands": ["./slc экспорт", "./slc импорт пакет.slc-update", "./slc эволюция-валидация пакет"],
+        "priority": "high"
+      }
+    },
+    
+    "auto_detection": {
+      "ai_ml_related": {
+        "patterns": ["ai", "ml", "llm", "prompt", "fine-tuning", "agent", "chatbot", "gpt", "claude"],
+        "auto_suggest": ["modules/ai_ml/prompt_engineering.json", "modules/ai_ml/ai_agent_development.json"],
+        "commands": ["./slc контекст машинное обучение"],
+        "explanation": "Обнаружена AI/ML работа, предлагаю AI/ML модули"
+      },
+      "python_related": {
+        "patterns": ["python", "django", "fastapi", "pytorch", "tensorflow", "pandas", "cellframe"],
+        "auto_suggest": ["modules/languages/python/python_development.json"],
+        "commands": ["./slc контекст python"],
+        "explanation": "Обнаружена Python разработка, предлагаю Python модуль"
+      },
+      "javascript_related": {
+        "patterns": ["javascript", "react", "vue", "node", "web3", "ethereum", "frontend"],
+        "auto_suggest": ["modules/languages/javascript/javascript_development.json"],
+        "commands": ["./slc контекст javascript"],
+        "explanation": "Обнаружена JavaScript разработка, предлагаю JavaScript модуль"
+      },
+      "documentation_related": {
+        "patterns": ["documentation", "docs", "markdown", "wiki", "obsidian", "knowledge"],
+        "auto_suggest": ["modules/methodologies/documentation_systems.json", "modules/methodologies/obsidian_workflow.json"],
+        "commands": ["./slc контекст документация", "./slc организуй"],
+        "explanation": "Обнаружена работа с документацией, предлагаю документационные модули"
+      },
+      "crypto_blockchain_related": {
+        "patterns": ["crypto", "blockchain", "defi", "smart-contract", "post-quantum", "security", "audit", "valora", "liquid-staking", "cryptography"],
+        "auto_suggest": ["modules/projects/cryptography_project.json", "modules/projects/dap_sdk_project.json", "modules/methodologies/defi_security_audit.json"],
+        "commands": ["./slc контекст криптография", "./slc контекст defi"],
+        "explanation": "Обнаружена крипто/блокчейн разработка, предлагаю специализированные модули"
+      }
+    }
+  },
+
+  "cli_integration": {
+    "total_commands": 28,
+    "categories": {
+      "tasks": {
+        "description": "Управление задачами и контекстом",
+        "commands": ["list", "load-context", "update-context", "clear-context", "analyze-context"],
+        "json_output": ["list", "update-context", "analyze-context"]
+      },
+      "templates": {
+        "description": "Работа с шаблонами",  
+        "commands": ["templates", "search", "info", "create", "recommend", "intelligent-recommend"],
+        "json_output": []
+      },
+      "intelligent": {
+        "description": "Интеллектуальные функции",
+        "commands": ["generate-adaptive", "intelligence-stats", "record-usage", "template-evolution"],
+        "json_output": ["generate-adaptive", "intelligence-stats", "template-evolution"]
+      },
+      "organization": {
+        "description": "Организация файлов и управление",
+        "commands": ["organize", "cleanup", "create-rule", "monitor", "org-stats"],
+        "json_output": ["organize", "org-stats"]
+      },
+      "evolution": {
+        "description": "Система эволюции СЛК",
+        "commands": ["export", "import", "evolution-validate"],
+        "json_output": ["export", "import", "evolution-validate"]
+      },
+      "system": {
+        "description": "Системные команды",
+        "commands": ["help", "status", "validate", "optimize", "reflection"],
+        "json_output": ["status", "validate"]
+      }
+    },
+    
+    "ai_context_commands": {
+      "description": "Команды с автоматическим JSON выводом для AI",
+      "commands": [
+        "update-context",
+        "list", 
+        "status",
+        "validate",
+        "organize",
+        "analyze-context"
+      ],
+      "json_structure": {
+        "ai_recommendations": "Умные рекомендации следующих действий",
+        "next_commands": "Предлагаемые команды для продолжения",
+        "suggested_files_to_load": "Файлы для загрузки в AI контекст",
+        "status": "Результаты выполнения команды"
+      }
+    }
+  },
+
+  "system_status": {
+    "version": "4.1.2",
+    "build": "2",
+    "release_date": "2025-01-14",
+    "template_count": 30,  
+    "categories": 5,
+    "cli_available": true,
+    "health_check": "./slc validate",
+    "evolution_system": {
+      "export_command": "./slc экспорт",
+      "import_command": "./slc импорт [пакет]",
+      "validate_command": "./slc эволюция-валидация [пакет]",
+      "package_format": ".slc-update"
+    },
+    "self_development_progress": {
+      "overall_completion": "100%",
+      "tasks_status": {
+        "completed": 5,
+        "core_implementation": 5,
+        "architecture_ready": 1,
+        "total": 5
+      },
+      "critical_systems": {
+        "evolution_sync": "100% - полная реализация завершена",
+        "intelligent_recommendations": "100% - полная реализация с JSON контекстом",
+        "usage_tracking": "100% - полная реализация",
+        "analytics": "100% - полностью завершена", 
+        "cli_extensions": "100% - 28 команд с русскими алиасами",
+        "ai_integration": "100% - JSON контекст для AI реализован",
+        "manifest_consolidation": "100% - единый манифест реализован"
+      },
+      "next_priority": "Готов к продакшену - v4.1.1 релиз"
+    }
+  },
+
+  "recovery_procedures": {
+    "context_lost": {
+      "step_1": "Найти любой .json файл в системе",
+      "step_2": "Найти секцию 'navigation_system' → 'recovery_path'", 
+      "step_3": "Следовать ссылке на .context/manifest.json (этот файл)",
+      "step_4": "Использовать context_map для загрузки нужных модулей",
+      "step_5": "Проверить current_task через ./slc список"
+    },
+    "quick_commands": {
+      "validate_system": "./slc валидация",
+      "list_tasks": "./slc список",
+      "list_templates": "./slc шаблоны", 
+      "search_templates": "./slc найди КЛЮЧЕВОЕ_СЛОВО",
+      "get_template_info": "./slc info ШАБЛОН_ПУТЬ",
+      "create_project": "./slc создай ШАБЛОН_ПУТЬ ИМЯ_ПРОЕКТА",
+      "update_context": "./slc обнови",
+      "export_changes": "./slc экспорт"
+    }
+  },
+
+  "usage_optimization": {
+    "context_loading_strategy": {
+      "always_load": [
+        ".context/manifest.json (этот файл)",
+        ".context/modules/core/standards.json", 
+        ".context/modules/core/project.json"
+      ],
+      "load_on_ai_work": [".context/modules/ai_ml/*.json"],
+      "load_on_language_work": [".context/modules/languages/{language}/*.json"],
+      "load_on_methodology_work": [".context/modules/methodologies/*.json"],
+      "load_rarely": ["docs/*.md", "tools/templates/*"]
+    },
+    "memory_optimization": {
+      "core_files_size": "~20KB total",
+      "module_files_size": "~15-25KB each",
+      "recommendation": "Загружать ядро + 1-2 модуля максимум за сессию"
+    },
+    "session_patterns": {
+      "ai_development": "manifest + standards + project + ai_ml модули",
+      "language_development": "manifest + standards + project + языковой модуль",
+      "documentation_work": "manifest + standards + project + методологические модули",
+      "new_project": "manifest + соответствующий шаблон модуля"
+    }
+  },
+
+  "communication_rules": {
+    "language_preferences": {
+      "primary_language": "russian",
+      "guidelines": [
+        "Всегда отвечать на русском языке",
+        "Избегать прямых вставок английских слов где возможно",
+        "Использовать русские эквиваленты технических терминов",
+        "При необходимости англицизмов - давать русское пояснение",
+        "Система называется СЛК (Система Слоёного Контекста), не СКС"
+      ],
+      "technical_terms_policy": "Предпочитать русские аналоги, англицизмы только при необходимости"
+    },
+    "quality_control": {
+      "report_verification": {
+        "rule": "Любой отчет о проделанной работе должен проверяться ТРИЖДЫ на правдивость",
+        "verification_steps": [
+          "Проверка 1: Сопоставить заявления с реальными файлами и кодом",
+          "Проверка 2: Протестировать заявленную функциональность",
+          "Проверка 3: Убедиться что прогресс не завышен"
+        ],
+        "mandatory": true,
+        "applies_to": "все отчеты о статусе, прогрессе и достижениях"
+      }
+    }
+  },
+
+  "navigation_hints": {
+    "need_ai_ml": "🤖 Для AI/ML работы: ./slc контекст машинное обучение",
+    "need_languages": "💻 Для языков программирования: ./slc контекст [язык]",
+    "need_methodology": "📋 Для методологий: ./slc контекст документация",
+    "need_current_tasks": "📋 Для текущего прогресса: ./slc список",
+    "need_templates": "🛠️ Для шаблонов: ./slc шаблоны",
+    "need_search": "🔍 Для поиска: ./slc найди [ключевые слова]",
+    "need_standards": "📐 Для стандартов кода: загрузить core/standards.json",
+    "need_project_info": "🏗️ Для информации о проекте: загрузить core/project.json",
+    "need_help": "❓ Для помощи: ./slc помощь"
+  },
+
+  "deployment_info": {
+    "ready_for_deployment": true,
+    "deployment_script": "tools/deployment/prepare_release.sh",
+    "cli_tool": ".context/tools/scripts/slc_cli.py",
+    "wrapper_script": "./slc",
+    "deployment_docs": [
+      "README.md",
+      "USAGE_GUIDE.md", 
+      "DEPLOYMENT.md"
+    ],
+    "evolution_system": "Готова к децентрализованной синхронизации через .slc-update пакеты"
+  },
+
+  "integration": {
+    "cursor_ide": {
+      "auto_load": "@.context/manifest.json",
+      "rules_file": ".cursorrules",
+      "commands_count": 28,
+      "russian_aliases": "Полная поддержка русских команд"
+    },
+    "ai_assistants": {
+      "json_context": "Автоматический JSON вывод для интеграции",
+      "intelligent_recommendations": "AI рекомендации в JSON формате",
+      "context_awareness": "Умное определение контекста на основе запросов"
+    }
+  }
+} 

@@ -1,0 +1,468 @@
+{
+  "context_info": {
+    "name": "Cellframe Node - Post-Quantum Blockchain Platform",
+    "version": "5.0-development",
+    "type": "blockchain_node_project",
+    "created": "2025-01-16T15:30:00Z",
+    "last_updated": "2025-01-16T15:30:00Z",
+    "domain": "blockchain_development",
+    "category": "projects"
+  },
+
+  "project_overview": {
+    "title": "🔗 Cellframe Node - Пост-квантовая блокчейн платформа",
+    "description": "Высокопроизводительная блокчейн нода с квантово-устойчивой криптографией и поддержкой DAP (Decentralized Application Platform)",
+    "key_features": [
+      "Post-quantum cryptography integration",
+      "Multi-layer blockchain architecture", 
+      "DAP SDK для децентрализованных приложений",
+      "Высокопроизводительная C/C++ реализация",
+      "Python биндинги для быстрой разработки",
+      "Cross-platform поддержка (Linux, macOS, Windows, Android)",
+      "Integrated mining и consensus алгоритмы",
+      "Built-in wallet и transaction processing"
+    ],
+    "target_applications": [
+      "Blockchain node development",
+      "Post-quantum cryptocurrency networks",
+      "Decentralized application platforms", 
+      "Quantum-resistant smart contracts",
+      "High-performance cryptographic services",
+      "Cross-platform blockchain clients"
+    ]
+  },
+
+  "architecture_analysis": {
+    "core_components": {
+      "cellframe-sdk": {
+        "description": "Core SDK с модульной архитектурой блокчейн компонентов",
+        "path": "cellframe-sdk/",
+        "key_modules": [
+          "modules/chain/ - Blockchain core logic",
+          "modules/consensus/ - Consensus algorithms (PoW, PoA, PoS)",
+          "modules/net/ - Network layer и P2P communication", 
+          "modules/wallet/ - Wallet management и transaction signing",
+          "modules/mining/ - Mining pools и algorithms",
+          "modules/mempool/ - Transaction mempool management",
+          "modules/service/ - Various blockchain services"
+        ],
+        "architecture": "Модульная с поддержкой плагинов"
+      },
+      "dap-sdk": {
+        "description": "Decentralized Application Platform SDK",
+        "path": "dap-sdk/",
+        "key_modules": [
+          "core/ - Basic types и utilities",
+          "crypto/ - Post-quantum cryptography",
+          "net/ - Network protocols и RPC",
+          "global-db/ - Distributed database",
+          "io/ - Input/output operations",
+          "plugin/ - Plugin system"
+        ],
+        "architecture": "Cross-platform C library с Python биндингами"
+      },
+      "python-cellframe": {
+        "description": "Python биндинги и высокоуровневые API",
+        "path": "python-cellframe/",
+        "capabilities": [
+          "Python API для blockchain operations",
+          "Примеры и демо приложения", 
+          "Готовые плагины и сервисы",
+          "Интеграция с популярными Python фреймворками"
+        ]
+      }
+    },
+
+    "build_system": {
+      "primary": "CMake-based multi-platform build",
+      "dependencies": {
+        "core": ["build-essential", "cmake", "libmagic-dev", "libsqlite3-dev"],
+        "crypto": ["libjson-c-dev", "libffi-dev"],
+        "development": ["python3-dev", "curl", "jq", "xsltproc"],
+        "database": ["libpq-dev"],
+        "compilation": ["clang"]
+      },
+      "platforms": ["Linux", "macOS", "Windows", "Android"],
+      "configuration": "project.yaml для dependency management"
+    },
+
+    "development_workflow": {
+      "version_control": "Git с submodules для компонентов",
+      "ci_cd": "GitLab CI/CD с multi-platform testing",
+      "documentation": "Integrated docs с examples",
+      "testing": "Comprehensive test framework в dap-sdk/test-framework/",
+      "packaging": "Platform-specific packaging в prod_build/"
+    }
+  },
+
+  "development_context": {
+    "primary_languages": {
+      "c": {
+        "usage": "Core blockchain implementation",
+        "standards": "C99+ с GCC/Clang compatibility",
+        "key_areas": ["consensus algorithms", "cryptography", "network protocols"],
+        "best_practices": [
+          "Memory management с proper cleanup",
+          "Thread-safe operations для network layer",
+          "Modular design с clear interfaces",
+          "Comprehensive error handling"
+        ]
+      },
+      "python": {
+        "usage": "Bindings, tools, и high-level applications",
+        "standards": "Python 3.8+ compatibility", 
+        "key_areas": ["API wrappers", "development tools", "example applications"],
+        "frameworks": ["FastAPI для RPC", "SQLAlchemy для DB", "Pytest для testing"]
+      },
+      "cmake": {
+        "usage": "Cross-platform build configuration",
+        "standards": "CMake 3.16+ с modern practices",
+        "key_areas": ["dependency management", "cross-compilation", "packaging"]
+      }
+    },
+
+    "cryptography_focus": {
+      "post_quantum": {
+        "algorithms": ["CRYSTALS-Kyber", "CRYSTALS-Dilithium", "SPHINCS+"],
+        "implementation": "Custom optimized implementations в dap-sdk/crypto/",
+        "standards": "NIST Post-Quantum Cryptography standards compliance"
+      },
+      "traditional": {
+        "algorithms": ["secp256k1", "ed25519", "AES", "SHA-3"],
+        "usage": "Backwards compatibility и hybrid schemes"
+      },
+      "integration": {
+        "approach": "Hybrid classical + post-quantum signatures",
+        "performance": "Optimized implementations для high-throughput",
+        "security": "Quantum-resistant by design"
+      }
+    },
+
+    "blockchain_specifics": {
+      "consensus_mechanisms": [
+        "Proof of Work (PoW) с customizable algorithms",
+        "Proof of Authority (PoA) для permissioned networks", 
+        "Delegated Proof of Stake (DPoS)",
+        "Hybrid consensus models"
+      ],
+      "network_layer": {
+        "protocols": ["Custom P2P protocol", "JSON-RPC API", "WebSocket support"],
+        "features": ["Node discovery", "Block propagation", "Transaction broadcasting"],
+        "optimization": "High-performance networking с low latency"
+      },
+      "storage": {
+        "backend": "SQLite-based с custom indexing",
+        "features": ["Transaction history", "Block storage", "State management"],
+        "optimization": "Efficient data structures для fast queries"
+      }
+    }
+  },
+
+  "development_patterns": {
+    "code_organization": {
+      "modular_design": "Четкое разделение на функциональные модули",
+      "plugin_architecture": "Extensible через plugin system",
+      "api_layers": "Многоуровневые API: C core → Python bindings → High-level apps",
+      "configuration": "YAML-based configuration management"
+    },
+
+    "best_practices": {
+      "memory_management": [
+        "RAII patterns где возможно",
+        "Careful pointer management в C code",
+        "Memory leak detection в testing",
+        "Proper cleanup в error paths"
+      ],
+      "error_handling": [
+        "Consistent error codes и messages",
+        "Graceful degradation при failures",
+        "Comprehensive logging для debugging",
+        "Recovery mechanisms для network issues"
+      ],
+      "testing": [
+        "Unit tests для core components",
+        "Integration tests для cross-module functionality",
+        "Performance benchmarks",
+        "Security testing для crypto components"
+      ],
+      "documentation": [
+        "API documentation с examples",
+        "Architecture documentation",
+        "Deployment guides",
+        "Developer tutorials"
+      ]
+    },
+
+    "performance_optimization": {
+      "crypto_optimization": "SIMD instructions для crypto operations",
+      "network_optimization": "Async I/O для network operations",
+      "memory_optimization": "Pool allocators для frequent allocations",
+      "database_optimization": "Efficient indexing и query optimization"
+    }
+  },
+
+  "integration_guidelines": {
+    "slc_integration": {
+      "suggested_templates": [
+        "languages/c/c_development_enhanced.json - Для core C development",
+        "languages/python/python_development.json - Для Python bindings",
+        "projects/cryptography_project.json - Для crypto development",
+        "methodologies/defi_security_audit.json - Для security review"
+      ],
+      "workflow_integration": [
+        "Использование СЛК для организации development workflow",
+        "Template-based project structure для new features",
+        "Automated code generation для boilerplate",
+        "Documentation generation из code comments"
+      ]
+    },
+
+    "development_environment": {
+      "required_tools": [
+        "CMake 3.16+ для build management",
+        "GCC/Clang для C compilation", 
+        "Python 3.8+ для bindings development",
+        "Git для version control",
+        "Docker для containerized builds"
+      ],
+      "recommended_ides": [
+        "CLion для C/C++ development",
+        "Cursor IDE с СЛК integration",
+        "VS Code с C/C++ extensions",
+        "PyCharm для Python development"
+      ],
+      "debugging_tools": [
+        "GDB для C debugging",
+        "Valgrind для memory analysis",
+        "AddressSanitizer для memory safety",
+        "Python debugger для bindings"
+      ]
+    }
+  },
+
+  "project_roadmap": {
+    "current_focus": {
+      "phase": "5.0 Development",
+      "priorities": [
+        "Post-quantum cryptography optimization",
+        "Performance improvements в consensus layer",
+        "Enhanced Python API",
+        "Cross-platform compatibility improvements",
+        "Security audit и hardening"
+      ]
+    },
+
+    "upcoming_features": [
+      "WebAssembly support для smart contracts",
+      "Enhanced mining pool capabilities", 
+      "Improved network protocol efficiency",
+      "Mobile SDK development",
+      "Cloud deployment automation"
+    ],
+
+    "long_term_vision": [
+      "Quantum-resistant blockchain ecosystem",
+      "High-performance DAP platform",
+      "Enterprise-grade blockchain solutions",
+      "Academic research collaboration platform"
+    ]
+  },
+
+  "development_tasks": {
+    "common_scenarios": {
+      "new_consensus_algorithm": {
+        "description": "Добавление нового consensus algorithm",
+        "steps": [
+          "Создать новый модуль в cellframe-sdk/modules/consensus/",
+          "Implement consensus interface",
+          "Add configuration options",
+          "Write comprehensive tests",
+          "Update documentation"
+        ],
+        "templates": ["languages/c/c_development_enhanced.json"],
+        "estimated_time": "2-4 weeks"
+      },
+      "python_api_extension": {
+        "description": "Расширение Python API",
+        "steps": [
+          "Add C functions в соответствующем модуле",
+          "Create Python bindings в python-cellframe/",
+          "Write Python tests и examples",
+          "Update documentation",
+          "Performance testing"
+        ],
+        "templates": ["languages/python/python_development.json"],
+        "estimated_time": "1-2 weeks"
+      },
+      "crypto_integration": {
+        "description": "Интеграция нового криптографического алгоритма",
+        "steps": [
+          "Implement algorithm в dap-sdk/crypto/",
+          "Add tests для correctness и performance",
+          "Integrate с existing crypto framework",
+          "Update key management",
+          "Security review"
+        ],
+        "templates": ["projects/cryptography_project.json"],
+        "estimated_time": "3-6 weeks"
+      },
+      "network_protocol_update": {
+        "description": "Обновление network protocol",
+        "steps": [
+          "Modify protocol в dap-sdk/net/",
+          "Update serialization/deserialization",
+          "Ensure backwards compatibility",
+          "Network testing",
+          "Protocol documentation"
+        ],
+        "templates": ["languages/c/c_development_enhanced.json"],
+        "estimated_time": "2-3 weeks"
+      }
+    },
+
+    "maintenance_tasks": {
+      "dependency_updates": "Regular updates третьих библиотек",
+      "security_patches": "Security vulnerability fixes",
+      "performance_optimization": "Continuous performance improvements",
+      "documentation_updates": "Keep docs up-to-date с code changes",
+      "testing_improvements": "Expand test coverage и automation"
+    }
+  },
+
+  "troubleshooting": {
+    "common_issues": {
+      "build_failures": {
+        "symptoms": "CMake configuration или compilation errors",
+        "solutions": [
+          "Check dependency installation",
+          "Verify CMake version compatibility",
+          "Check compiler version support",
+          "Review build logs для specific errors"
+        ]
+      },
+      "crypto_errors": {
+        "symptoms": "Cryptographic operation failures",
+        "solutions": [
+          "Verify algorithm implementations",
+          "Check key format compatibility",
+          "Review random number generation",
+          "Test с known vectors"
+        ]
+      },
+      "network_issues": {
+        "symptoms": "Node connectivity или synchronization problems",
+        "solutions": [
+          "Check network configuration",
+          "Verify port accessibility",
+          "Review peer discovery logic",
+          "Check protocol version compatibility"
+        ]
+      },
+      "python_binding_issues": {
+        "symptoms": "Python import или function call errors",
+        "solutions": [
+          "Verify Python binding compilation",
+          "Check Python version compatibility",
+          "Review C API changes",
+          "Test bindings independently"
+        ]
+      }
+    },
+
+    "debugging_strategies": {
+      "systematic_approach": "Start с logs, move to unit tests, then integration tests",
+      "tool_usage": "Use appropriate debugging tools для each layer",
+      "reproduction": "Create minimal test cases для reliable reproduction",
+      "documentation": "Document fixes для future reference"
+    }
+  },
+
+  "collaboration": {
+    "team_structure": {
+      "core_developers": "C/C++ blockchain core development",
+      "crypto_specialists": "Post-quantum cryptography implementation",
+      "python_developers": "Bindings и high-level applications",
+      "qa_engineers": "Testing и quality assurance",
+      "documentation_team": "Technical writing и user guides"
+    },
+
+    "communication_channels": {
+      "code_reviews": "GitLab merge requests с thorough review process",
+      "issue_tracking": "GitLab issues для bug reports и feature requests",
+      "documentation": "Integrated docs с code repository",
+      "community": "Developer forums и community channels"
+    },
+
+    "contribution_guidelines": {
+      "code_standards": "Follow project coding standards",
+      "testing_requirements": "All changes must include appropriate tests",
+      "documentation_requirements": "Update documentation для user-facing changes",
+      "review_process": "Peer review required для all code changes"
+    }
+  },
+
+  "navigation_system": {
+    "purpose": "Специализированный контекст для cellframe-node development",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/projects/cellframe_node_context.json",
+    "file_role": "project_specific_context_hub",
+    "integration": {
+      "slc_system": "Интегрирован с СЛК для intelligent recommendations",
+      "cursor_ide": "Auto-loading через project detection",
+      "ai_assistant": "JSON контекст для specialized guidance"
+    },
+    "related_contexts": [
+      "projects/dap_sdk_project.json",
+      "projects/cryptography_project.json", 
+      "languages/c/c_development_enhanced.json",
+      "languages/python/python_development.json",
+      "methodologies/defi_security_audit.json"
+    ]
+  },
+
+  "ai_integration": {
+    "intelligent_suggestions": {
+      "context_detection": [
+        "Blockchain development patterns",
+        "Post-quantum cryptography implementations",
+        "Cross-platform C development",
+        "Python binding creation",
+        "Performance optimization strategies"
+      ],
+      "auto_recommendations": [
+        "Suggest relevant modules при specific development tasks",
+        "Recommend testing strategies для crypto code",
+        "Propose optimization techniques",
+        "Guide through debugging processes"
+      ]
+    },
+
+    "development_assistance": {
+      "code_generation": "Template-based code generation для common patterns",
+      "architecture_guidance": "Best practices для модульной архитектуры",
+      "security_review": "Automated security pattern analysis",
+      "performance_analysis": "Bottleneck identification и optimization suggestions"
+    }
+  },
+
+  "success_metrics": {
+    "development_efficiency": [
+      "Reduced time для new feature implementation",
+      "Improved code quality через automated checks",
+      "Faster debugging through better tooling",
+      "Enhanced collaboration через clear documentation"
+    ],
+    "project_health": [
+      "Comprehensive test coverage",
+      "Regular security audits",
+      "Performance benchmarks",
+      "Active community engagement"
+    ],
+    "innovation_goals": [
+      "Leading post-quantum blockchain implementation",
+      "High-performance DAP platform",
+      "Developer-friendly tools и APIs",
+      "Academic research contributions"
+    ]
+  }
+}

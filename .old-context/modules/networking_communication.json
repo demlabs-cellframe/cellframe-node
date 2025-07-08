@@ -1,0 +1,672 @@
+{
+  "type": "universal_template_module",
+  "domain": "networking_communication",
+  "version": "2.1.0",
+  "created": "2025-01-14T13:50:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  
+  "navigation_system": {
+    "file_role": "LEGACY_TEMPLATE",
+    "description": "🌐 Legacy шаблон для networking и communication (рекомендуется использовать языковые шаблоны)",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/",
+      "siblings": ["modules/build_deployment.json", "modules/core_foundation.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🐍 Python": "modules/languages/python/python_development.json - Python разработка",
+      "🌐 JavaScript": "modules/languages/javascript/javascript_development.json - веб разработка",
+      "⚙️ C/C++": "modules/languages/c/c_development.json - системное программирование",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "deprecation_notice": "Этот шаблон устарел. Используйте языковые шаблоны для современной разработки."
+  },
+  
+  "template_info": {
+    "name": "Networking & Communication Universal Template",
+    "description": "Сетевые коммуникации и протоколы на основе анализа DAP SDK",
+    "target_projects": [
+      "Web API и REST сервисы",
+      "Микросервисные архитектуры",
+      "Сетевые приложения",
+      "Real-time коммуникации",
+      "Blockchain и P2P системы",
+      "IoT и встроенные системы"
+    ],
+    "applicability": "85%+ проектов с сетевой составляющей"
+  },
+  
+  "network_protocols": {
+    "application_layer": {
+      "http_https": {
+        "description": "Основной протокол веб-коммуникаций",
+        "versions": ["HTTP/1.1", "HTTP/2", "HTTP/3"],
+        "security": "HTTPS с TLS/SSL шифрованием",
+        "use_cases": ["Web APIs", "REST services", "Web applications"]
+      },
+      "websockets": {
+        "description": "Bidirectional real-time communication",
+        "use_cases": ["Real-time chat", "Live updates", "Gaming"],
+        "alternatives": ["Server-Sent Events", "WebRTC"]
+      },
+      "grpc": {
+        "description": "High-performance RPC framework",
+        "features": ["Protocol Buffers", "Streaming", "Load balancing"],
+        "use_cases": ["Microservices", "High-performance APIs"]
+      }
+    },
+    
+    "transport_layer": {
+      "tcp": {
+        "description": "Reliable connection-oriented protocol",
+        "characteristics": ["Guaranteed delivery", "Ordered packets", "Flow control"],
+        "use_cases": ["HTTP", "Database connections", "File transfer"]
+      },
+      "udp": {
+        "description": "Fast connectionless protocol",
+        "characteristics": ["Low latency", "No guaranteed delivery", "Minimal overhead"],
+        "use_cases": ["Real-time gaming", "Video streaming", "DNS queries"]
+      }
+    },
+    
+    "security_protocols": {
+      "tls_ssl": {
+        "description": "Transport Layer Security",
+        "versions": ["TLS 1.2", "TLS 1.3"],
+        "features": ["Encryption", "Authentication", "Integrity"]
+      },
+      "oauth2": {
+        "description": "Authorization framework",
+        "flows": ["Authorization Code", "Client Credentials", "Implicit"],
+        "use_cases": ["API authorization", "Third-party integrations"]
+      },
+      "jwt": {
+        "description": "JSON Web Tokens",
+        "use_cases": ["Stateless authentication", "Information exchange"],
+        "best_practices": ["Short expiration", "Secure storage", "Signature verification"]
+      }
+    }
+  },
+  
+  "api_architectures": {
+    "rest": {
+      "description": "Representational State Transfer",
+      "principles": ["Stateless", "Cacheable", "Uniform interface"],
+      "http_methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "status_codes": ["2xx Success", "4xx Client Error", "5xx Server Error"],
+      "best_practices": [
+        "Resource-based URLs",
+        "JSON responses",
+        "Proper HTTP status codes",
+        "API versioning",
+        "Rate limiting"
+      ]
+    },
+    
+    "graphql": {
+      "description": "Query language for APIs",
+      "advantages": ["Single endpoint", "Type system", "Real-time subscriptions"],
+      "use_cases": ["Frontend-driven APIs", "Complex data relationships"],
+      "tools": ["Apollo", "Relay", "GraphQL Yoga"]
+    },
+    
+    "rpc": {
+      "description": "Remote Procedure Call",
+      "types": ["gRPC", "JSON-RPC", "XML-RPC"],
+      "advantages": ["Type safety", "Code generation", "Performance"],
+      "use_cases": ["Microservices communication", "Internal APIs"]
+    }
+  },
+  
+  "real_time_communication": {
+    "websockets": {
+      "description": "Full-duplex communication",
+      "libraries": {
+        "javascript": ["Socket.IO", "ws", "WebSocket API"],
+        "python": ["websockets", "Socket.IO", "Tornado"],
+        "java": ["Java-WebSocket", "Spring WebSocket"],
+        "c_cpp": ["libwebsockets", "uWebSockets"]
+      }
+    },
+    
+    "message_queues": {
+      "rabbitmq": "Feature-rich message broker",
+      "kafka": "High-throughput streaming platform",
+      "redis": "In-memory data structure store with pub/sub",
+      "nats": "Lightweight messaging system",
+      "use_patterns": ["Publish/Subscribe", "Work Queues", "Request/Reply"]
+    },
+    
+    "streaming": {
+      "server_sent_events": "One-way server-to-client streaming",
+      "webrtc": "Peer-to-peer real-time communication",
+      "use_cases": ["Live updates", "Video calls", "File sharing"]
+    }
+  },
+  
+  "microservices_communication": {
+    "service_discovery": {
+      "dns_based": "DNS-based service discovery",
+      "service_mesh": ["Istio", "Linkerd", "Consul Connect"],
+      "api_gateway": ["Kong", "Zuul", "Ambassador"],
+      "load_balancing": ["Round robin", "Least connections", "Health-based"]
+    },
+    
+    "inter_service_communication": {
+      "synchronous": {
+        "http_rest": "Simple and widely supported",
+        "grpc": "High performance with type safety",
+        "considerations": ["Latency", "Coupling", "Failure handling"]
+      },
+      "asynchronous": {
+        "message_queues": "Decoupled communication",
+        "event_driven": "Event sourcing and CQRS patterns",
+        "benefits": ["Resilience", "Scalability", "Loose coupling"]
+      }
+    }
+  },
+  
+  "network_security": {
+    "encryption": {
+      "in_transit": "TLS/SSL for data in motion",
+      "at_rest": "Database and file encryption",
+      "end_to_end": "Client-to-client encryption"
+    },
+    
+    "authentication": {
+      "api_keys": "Simple authentication method",
+      "oauth2": "Industry standard authorization",
+      "jwt": "Stateless token-based auth",
+      "mutual_tls": "Certificate-based authentication"
+    },
+    
+    "protection": {
+      "rate_limiting": "Prevent abuse and DoS",
+      "cors": "Cross-Origin Resource Sharing",
+      "csrf": "Cross-Site Request Forgery protection",
+      "input_validation": "Sanitize and validate all inputs"
+    }
+  },
+  
+  "monitoring_observability": {
+    "logging": {
+      "structured_logs": "JSON or key-value format",
+      "centralized": ["ELK Stack", "Fluentd", "Loki"],
+      "log_levels": ["ERROR", "WARN", "INFO", "DEBUG"]
+    },
+    
+    "metrics": {
+      "application_metrics": ["Response time", "Throughput", "Error rate"],
+      "infrastructure_metrics": ["CPU", "Memory", "Network", "Disk"],
+      "tools": ["Prometheus", "Grafana", "StatsD", "DataDog"]
+    },
+    
+    "tracing": {
+      "distributed_tracing": "Track requests across services",
+      "tools": ["Jaeger", "Zipkin", "AWS X-Ray"],
+      "correlation_ids": "Link related log entries"
+    }
+  },
+  
+  "performance_optimization": {
+    "caching": {
+      "levels": ["Browser cache", "CDN", "Application cache", "Database cache"],
+      "strategies": ["Cache-aside", "Write-through", "Write-back"],
+      "tools": ["Redis", "Memcached", "Varnish"]
+    },
+    
+    "compression": {
+      "gzip": "Standard HTTP compression",
+      "brotli": "Better compression ratio",
+      "protocol_specific": ["HTTP/2 header compression", "WebSocket compression"]
+    },
+    
+    "connection_optimization": {
+      "connection_pooling": "Reuse database connections",
+      "keep_alive": "Reuse HTTP connections",
+      "multiplexing": "Multiple streams over single connection"
+    }
+  },
+  
+  "deployment_patterns": {
+    "containerization": {
+      "docker": "Container technology",
+      "kubernetes": "Container orchestration",
+      "service_mesh": "Advanced traffic management"
+    },
+    
+    "scaling": {
+      "horizontal": "Add more instances",
+      "vertical": "Increase instance resources",
+      "auto_scaling": "Dynamic scaling based on metrics"
+    },
+    
+    "reliability": {
+      "circuit_breaker": "Prevent cascade failures",
+      "retry_mechanisms": "Handle transient failures",
+      "bulkhead": "Isolate critical resources"
+    }
+  },
+  
+  "customization_guide": {
+    "step_1": "Определите основные сетевые требования проекта",
+    "step_2": "Выберите подходящую архитектуру API (REST/GraphQL/RPC)",
+    "step_3": "Настройте систему аутентификации и авторизации",
+    "step_4": "Реализуйте необходимые протоколы связи",
+    "step_5": "Добавьте мониторинг и логирование",
+    "step_6": "Оптимизируйте производительность",
+    
+    "project_type_adaptations": {
+      "web_applications": "Фокус на HTTP/HTTPS, REST APIs, WebSockets для real-time",
+      "mobile_backends": "Добавьте push notifications, offline sync, rate limiting",
+      "iot_systems": "Используйте MQTT, CoAP, lightweight protocols",
+      "blockchain": "P2P protocols, consensus mechanisms, cryptographic verification",
+      "gaming": "UDP для real-time, WebRTC for P2P, low-latency optimization",
+      "enterprise": "Message queues, service mesh, strong security, audit logging"
+    }
+  },
+  
+  "template_removal_notes": [
+    "Удалите эту секцию template_removal_notes после кастомизации",
+    "Выберите только протоколы и технологии, нужные вашему проекту",
+    "Не все проекты нуждаются в микросервисной архитектуре",
+    "Начните с простых решений, добавляйте сложность по мере роста",
+    "Безопасность должна быть приоритетом с самого начала"
+  ],
+  
+  "success_metrics": {
+    "latency": "< 200ms response time для критических API",
+    "throughput": "Способность обрабатывать требуемый RPS",
+    "availability": "99.9%+ uptime для production систем",
+    "security": "Отсутствие критических уязвимостей",
+    "scalability": "Возможность масштабирования под нагрузку"
+  },
+  
+  "layered_network_architecture": {
+    "based_on_dap_sdk": {
+      "layer_1_stream": {
+        "description": "Базовый уровень потоков данных", 
+        "location": "net/stream/",
+        "responsibilities": [
+          "Низкоуровневые сетевые операции",
+          "Управление соединениями", 
+          "Буферизация данных",
+          "Обработка сетевых событий"
+        ],
+        "key_components": [
+          "dap_stream.h/c - основной поток данных",
+          "dap_stream_worker.h/c - рабочие потоки",
+          "dap_stream_session.h/c - сессии"
+        ]
+      },
+      
+      "layer_2_link_manager": {
+        "description": "Управление связями и маршрутизацией",
+        "location": "net/link_manager/", 
+        "responsibilities": [
+          "Обнаружение и подключение к узлам",
+          "Управление топологией сети",
+          "Балансировка нагрузки",
+          "Мониторинг качества связей"
+        ],
+        "patterns": [
+          "Автоматическое обнаружение пиров",
+          "Поддержание активных соединений",
+          "Переключение между резервными каналами"
+        ]
+      },
+      
+      "layer_3_client_server": {
+        "client": {
+          "location": "net/client/",
+          "description": "Клиентская часть коммуникаций",
+          "features": [
+            "Подключение к серверам",
+            "Отправка запросов",
+            "Обработка ответов", 
+            "Переподключение при сбоях"
+          ]
+        },
+        "server": {
+          "location": "net/server/",
+          "description": "Серверная часть коммуникаций", 
+          "features": [
+            "Прием входящих соединений",
+            "Обработка клиентских запросов",
+            "Мультиплексирование соединений",
+            "Управление ресурсами сервера"
+          ]
+        }
+      },
+      
+      "layer_4_application": {
+        "location": "net/app-cli/",
+        "description": "Прикладной уровень и CLI интерфейсы",
+        "features": [
+          "Высокоуровневые API",
+          "Командный интерфейс",
+          "Конфигурация сети",
+          "Диагностика и мониторинг"
+        ]
+      }
+    }
+  },
+  
+  "communication_patterns": {
+    "async_event_driven": {
+      "description": "Асинхронная обработка сетевых событий",
+      "implementation": [
+        "Event loops для обработки I/O",
+        "Callback functions для событий",
+        "Non-blocking socket operations",
+        "Epoll/kqueue для мониторинга дескрипторов"
+      ],
+      "benefits": [
+        "Высокая производительность",
+        "Масштабируемость соединений",
+        "Отзывчивость системы"
+      ]
+    },
+    
+    "worker_pool": {
+      "description": "Пул рабочих потоков для обработки соединений",
+      "components": [
+        "Master thread - распределение задач",
+        "Worker threads - обработка запросов", 
+        "Task queue - очередь задач",
+        "Thread synchronization - синхронизация"
+      ],
+      "configuration": [
+        "Количество worker'ов по числу CPU ядер",
+        "Настройка размера очереди задач",
+        "Стратегии распределения нагрузки"
+      ]
+    },
+    
+    "session_management": {
+      "description": "Управление пользовательскими сессиями",
+      "features": [
+        "Создание и уничтожение сессий",
+        "Аутентификация и авторизация",
+        "Хранение состояния сессии",
+        "Таймауты и очистка"
+      ],
+      "security": [
+        "Проверка подлинности соединений",
+        "Контроль доступа к ресурсам",
+        "Защита от DoS атак",
+        "Логирование подозрительной активности"
+      ]
+    }
+  },
+  
+  "protocol_implementation": {
+    "custom_protocols": {
+      "description": "Реализация специализированных протоколов",
+      "design_principles": [
+        "Эффективная сериализация данных",
+        "Версионирование протокола",
+        "Обратная совместимость",
+        "Extensibility для новых функций"
+      ],
+      "message_format": [
+        "Header с метаданными сообщения",
+        "Payload с полезной нагрузкой",
+        "Checksum для проверки целостности",
+        "Compression для оптимизации размера"
+      ]
+    },
+    
+    "tcp_udp_abstraction": {
+      "tcp_features": [
+        "Надежная доставка данных",
+        "Контроль потока",
+        "Контроль перегрузки",
+        "Упорядоченная доставка"
+      ],
+      "udp_features": [
+        "Низкая задержка",
+        "Мультикаст поддержка", 
+        "Простота реализации",
+        "Broadband эффективность"
+      ],
+      "selection_criteria": [
+        "Требования к надежности",
+        "Приоритет задержки vs throughput",
+        "Характер трафика (stream vs datagram)"
+      ]
+    },
+    
+    "ssl_tls_integration": {
+      "conditional_support": "Опциональная поддержка SSL/TLS",
+      "build_configuration": [
+        "DAP_NET_CLIENT_SSL - включение SSL",
+        "DAP_NET_CLIENT_NO_SSL - отключение SSL"
+      ],
+      "security_features": [
+        "Шифрование соединений",
+        "Проверка сертификатов",
+        "Взаимная аутентификация",
+        "Perfect Forward Secrecy"
+      ],
+      "performance_considerations": [
+        "CPU overhead от шифрования",
+        "Память для SSL контекстов",
+        "Задержка установки соединения"
+      ]
+    }
+  },
+  
+  "cross_platform_networking": {
+    "platform_abstraction": {
+      "socket_abstraction": "Единый API для разных ОС",
+      "io_multiplexing": {
+        "linux": "epoll",
+        "macos_bsd": "kqueue", 
+        "windows": "IOCP",
+        "portable": "select/poll fallback"
+      },
+      "threading_model": {
+        "posix": "pthread",
+        "windows": "Windows threads",
+        "android": "Android specific optimizations"
+      }
+    },
+    
+    "mobile_considerations": {
+      "android_specific": [
+        "Network state monitoring",
+        "Battery optimization",
+        "Background execution limits",
+        "Data usage tracking"
+      ],
+      "ios_considerations": [
+        "App Transport Security",
+        "Network reachability",
+        "Background app refresh",
+        "Cellular vs WiFi preferences"
+      ]
+    }
+  },
+  
+  "performance_optimization": {
+    "memory_management": {
+      "buffer_pools": "Переиспользование буферов для I/O",
+      "zero_copy": "Минимизация копирования данных",
+      "memory_mapping": "mmap для больших файлов",
+      "stack_allocation": "Предпочтение stack перед heap"
+    },
+    
+    "network_optimizations": {
+      "tcp_tuning": [
+        "Socket buffer sizes",
+        "TCP_NODELAY для низкой задержки",
+        "Keep-alive settings",
+        "Congestion control algorithms"
+      ],
+      "connection_pooling": [
+        "Переиспользование соединений",
+        "Connection warm-up",
+        "Graceful connection shutdown",
+        "Load balancing across connections"
+      ]
+    },
+    
+    "data_compression": {
+      "algorithms": ["LZ4 для скорости", "zlib для размера", "Custom compression"],
+      "adaptive_compression": "Выбор алгоритма по типу данных",
+      "streaming_compression": "Сжатие в режиме реального времени"
+    }
+  },
+  
+  "error_handling_resilience": {
+    "connection_management": {
+      "automatic_reconnection": [
+        "Exponential backoff стратегия",
+        "Максимальное количество попыток",
+        "Fallback на альтернативные серверы"
+      ],
+      "connection_health": [
+        "Heart-beat механизм",
+        "Timeout detection",
+        "Quality of Service monitoring"
+      ]
+    },
+    
+    "fault_tolerance": {
+      "circuit_breaker": "Защита от каскадных сбоев",
+      "bulkhead_isolation": "Изоляция критических соединений",
+      "graceful_degradation": "Работа при частичных сбоях",
+      "disaster_recovery": "Восстановление после катастрофических сбоев"
+    },
+    
+    "monitoring_diagnostics": {
+      "connection_metrics": [
+        "Количество активных соединений",
+        "Throughput и latency",
+        "Ошибки соединений",
+        "Resource utilization"
+      ],
+      "debugging_tools": [
+        "Network packet capture",
+        "Connection state logging",
+        "Performance profiling",
+        "Real-time monitoring dashboard"
+      ]
+    }
+  },
+  
+  "security_considerations": {
+    "network_security": {
+      "authentication": [
+        "Certificate-based authentication",
+        "Token-based authentication", 
+        "Mutual TLS authentication"
+      ],
+      "authorization": [
+        "Role-based access control",
+        "Resource-level permissions",
+        "Rate limiting per client"
+      ],
+      "data_protection": [
+        "End-to-end encryption",
+        "Message integrity checks",
+        "Forward secrecy",
+        "Anti-replay protection"
+      ]
+    },
+    
+    "attack_mitigation": {
+      "ddos_protection": [
+        "Rate limiting",
+        "Connection throttling",
+        "IP blacklisting",
+        "Traffic shaping"
+      ],
+      "man_in_middle": [
+        "Certificate pinning",
+        "Certificate transparency",
+        "HSTS headers",
+        "Public key pinning"
+      ]
+    }
+  },
+  
+  "testing_validation": {
+    "unit_testing": {
+      "socket_mocking": "Mock объекты для сетевых операций",
+      "protocol_testing": "Тестирование протокольной логики",
+      "error_injection": "Симуляция сетевых сбоев"
+    },
+    
+    "integration_testing": {
+      "end_to_end": "Полные сценарии клиент-сервер",
+      "load_testing": "Тестирование под нагрузкой",
+      "stress_testing": "Тестирование на пределах возможностей",
+      "chaos_engineering": "Тестирование отказоустойчивости"
+    },
+    
+    "network_simulation": {
+      "latency_simulation": "Имитация задержек сети",
+      "packet_loss": "Имитация потерь пакетов",
+      "bandwidth_limitation": "Ограничение пропускной способности",
+      "network_partitioning": "Имитация разделения сети"
+    }
+  },
+  
+  "deployment_considerations": {
+    "configuration_management": {
+      "network_parameters": [
+        "Server addresses and ports",
+        "Connection timeouts",
+        "Buffer sizes",
+        "Thread pool sizes"
+      ],
+      "environment_specific": [
+        "Development vs production settings",
+        "Logging levels",
+        "Debug flags",
+        "Performance tuning parameters"
+      ]
+    },
+    
+    "monitoring_production": {
+      "real_time_metrics": [
+        "Active connections count",
+        "Request/response rates",
+        "Error rates",
+        "Resource utilization"
+      ],
+      "alerting": [
+        "Connection threshold alerts",
+        "Performance degradation alerts",
+        "Security incident alerts",
+        "System health alerts"
+      ]
+    }
+  },
+  
+  "best_practices": {
+    "code_organization": {
+      "layered_approach": "Четкое разделение по сетевым слоям",
+      "module_independence": "Слабая связанность между модулями",
+      "api_consistency": "Единообразный API для всех компонентов"
+    },
+    
+    "resource_management": {
+      "connection_limits": "Контроль количества соединений",
+      "memory_bounds": "Ограничение использования памяти",
+      "thread_management": "Эффективное использование потоков",
+      "cleanup_procedures": "Корректная очистка ресурсов"
+    },
+    
+    "documentation": {
+      "protocol_specification": "Детальное описание протоколов",
+      "api_documentation": "Документация интерфейсов",
+      "deployment_guide": "Руководство по развертыванию",
+      "troubleshooting": "Руководство по решению проблем"
+    }
+  }
+}

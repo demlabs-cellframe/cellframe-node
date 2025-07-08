@@ -1,0 +1,274 @@
+{
+  "type": "enhanced_navigation_system",
+  "version": "1.0", 
+  "created": "2025-01-15T13:00:00Z",
+  "description": "Система улучшенной навигации между шаблонами с intelligent suggestions и dependency tracking",
+
+  "навигационные_улучшения": {
+    "template_headers_enhancement": {
+      "описание": "Добавление navigation hints в каждый шаблон",
+      "структура": {
+        "related_templates": {
+          "frequently_used_with": "Шаблоны часто используемые вместе",
+          "natural_next_steps": "Логические следующие шаги",
+          "workflow_dependencies": "Зависимости workflow'ов"
+        },
+        "quick_access": {
+          "direct_links": "Прямые ссылки на related templates",
+          "context_aware_suggestions": "Предложения на основе текущего контекста",
+          "completion_paths": "Пути завершения workflow'ов"
+        }
+      }
+    },
+
+    "dependency_tracking": {
+      "описание": "Отслеживание зависимостей между шаблонами",
+      "типы_зависимостей": {
+        "prerequisite": "Template A должен быть выполнен перед Template B",
+        "complementary": "Template A и B усиливают друг друга при совместном использовании",
+        "sequential": "Template A естественно ведет к Template B",
+        "conditional": "Template B нужен только при определенных условиях из Template A"
+      },
+      "dependency_map": {
+        "C Development Enhanced": {
+          "leads_to": ["Live Documentation"],
+          "complements": ["Universal Optimization"],
+          "conditional_paths": {
+            "если_performance_issues": "Universal Optimization",
+            "если_complex_project": "Live Documentation + Universal Optimization"
+          }
+        },
+        "Live Documentation": {
+          "enhances": ["Universal Optimization", "Cross-Domain Matrix"],
+          "required_for": "Любые systematic methodologies",
+          "works_with": "Все templates"
+        },
+        "Universal Optimization": {
+          "requires": ["Live Documentation"],
+          "benefits_from": ["Cross-Domain Matrix"],
+          "output_to": ["Domain-specific templates для implementation"]
+        },
+        "Cross-Domain Matrix": {
+          "input_to": ["Universal Optimization", "Live Documentation"],
+          "discovery_tool_for": "Все optimization workflows"
+        }
+      }
+    }
+  },
+
+  "интеллектуальный_поиск": {
+    "enhanced_search_capabilities": {
+      "semantic_search": {
+        "описание": "Поиск по смыслу, не только по ключевым словам",
+        "возможности": [
+          "Понимание синонимов и related concepts",
+          "Context-aware результаты",
+          "Cross-language search (русский/английский)",
+          "Intent recognition"
+        ]
+      },
+      
+      "intelligent_suggestions": {
+        "описание": "Предложения на основе анализа user intent",
+        "алгоритмы": {
+          "context_analysis": "Анализ текущего контекста работы",
+          "pattern_matching": "Сопоставление с successful workflows",
+          "user_history": "Персонализация на основе истории",
+          "collaborative_filtering": "Рекомендации на основе similar users"
+        }
+      },
+
+      "search_result_enhancement": {
+        "результат_содержит": [
+          "Primary template match",
+          "Related templates с обоснованием",
+          "Suggested workflow pattern", 
+          "Estimated time investment",
+          "Success probability на основе similar contexts"
+        ],
+        "пример_результата": {
+          "query": "оптимизация производительности C++",
+          "primary_match": "Universal Optimization",
+          "workflow_suggestion": "Live Doc → Universal Opt → Cross-Domain → C Development",
+          "reasoning": "Systematic approach с documentation + domain expertise",
+          "estimated_time": "2-3 часа для complete workflow"
+        }
+      }
+    },
+
+    "автодополнение_и_подсказки": {
+      "smart_autocomplete": {
+        "на_основе": [
+          "Частоты использования templates",
+          "Текущего контекста",
+          "Successful completion patterns",
+          "User preferences"
+        ]
+      },
+      "contextual_hints": {
+        "при_вводе": "Показывать relevant templates и workflows",
+        "при_navigation": "Highlight optimal paths",
+        "при_completion": "Suggest logical next steps"
+      }
+    }
+  },
+
+  "workflow_guidance_system": {
+    "step_by_step_workflows": {
+      "описание": "Пошаговое руководство для multi-template workflows",
+      "структура": {
+        "workflow_name": "Descriptive название",
+        "total_estimated_time": "Общее время выполнения",
+        "difficulty_level": "Novice/Intermediate/Advanced",
+        "prerequisites": "Что нужно перед началом",
+        "steps": [
+          {
+            "step_number": 1,
+            "template": "Какой шаблон использовать",
+            "phase": "Какая фаза workflow'а",
+            "estimated_time": "Время на этот step",
+            "key_outputs": "Что должно быть получено",
+            "transition_criteria": "Когда переходить к следующему step"
+          }
+        ],
+        "success_indicators": "Как понять что workflow выполнен успешно",
+        "troubleshooting": "Что делать если что-то пошло не так"
+      }
+    },
+
+    "progress_tracking": {
+      "описание": "Отслеживание прогресса multi-template workflows",
+      "возможности": [
+        "Checkpoint system для long workflows",
+        "Progress indicators",
+        "Automatic state saving",
+        "Resume capability после interruption"
+      ]
+    },
+
+    "adaptive_guidance": {
+      "описание": "Guidance адаптируется к user experience level",
+      "levels": {
+        "novice": {
+          "больше_explanations": true,
+          "detailed_steps": true,
+          "предотвращение_ошибок": "Proactive warnings и checks",
+          "примеры": "Много real-world examples"
+        },
+        "intermediate": {
+          "balanced_guidance": true,
+          "shortcuts_available": true,
+          "optional_deep_dives": "Detailed info available on demand"
+        },
+        "expert": {
+          "minimal_guidance": true,
+          "quick_access": true,
+          "advanced_options": "Все customization options доступны",
+          "efficiency_focus": "Optimized для speed"
+        }
+      }
+    }
+  },
+
+  "integration_enhancements": {
+    "cli_improvements": {
+      "новые_команды": [
+        "slc navigate --from=template1 --to=template2",
+        "slc workflow --start=context",
+        "slc suggest --smart",
+        "slc path --goal=optimization",
+        "slc related --template=current"
+      ],
+      "enhanced_existing": {
+        "slc search": "Добавлен semantic search и intelligent suggestions",
+        "slc list": "Показывает relationships и suggested workflows",
+        "slc get": "Включает navigation hints и related templates"
+      }
+    },
+
+    "template_integration": {
+      "header_additions": {
+        "navigation_section": {
+          "frequently_combined_with": "List of commonly used together templates",
+          "workflow_patterns": "Common patterns involving this template",
+          "next_step_suggestions": "Logical follow-ups",
+          "related_reading": "Cross-references к other templates"
+        },
+        "dependency_information": {
+          "prerequisites": "What should be done before this template",
+          "outputs_useful_for": "Which templates benefit from this output",
+          "enhancement_opportunities": "How other templates can enhance this one"
+        }
+      },
+      "footer_additions": {
+        "suggested_next_actions": "Based on template completion",
+        "workflow_continuation": "How to continue the broader workflow",
+        "related_templates_quick_access": "Quick links to relevant templates"
+      }
+    }
+  },
+
+  "метрики_и_валидация": {
+    "navigation_effectiveness": {
+      "key_metrics": [
+        "Time to find relevant template",
+        "Template transition success rate",
+        "Workflow completion rate", 
+        "User satisfaction with navigation",
+        "Reduction in support queries"
+      ],
+      "target_values": {
+        "discovery_time": "< 30 секунд",
+        "transition_success": "> 85%",
+        "workflow_completion": "> 80%",
+        "user_satisfaction": "> 90%",
+        "support_reduction": "> 60%"
+      }
+    },
+
+    "continuous_improvement": {
+      "analytics_collection": [
+        "User navigation patterns",
+        "Search query analysis",
+        "Workflow abandonment points",
+        "Template combination success rates"
+      ],
+      "optimization_cycle": {
+        "data_collection": "Continuous usage analytics",
+        "pattern_analysis": "Weekly analysis of navigation patterns",
+        "improvement_identification": "Monthly review для optimization opportunities",
+        "implementation": "Bi-weekly updates на основе findings"
+      }
+    }
+  },
+
+  "implementation_roadmap": {
+    "phase_1": {
+      "название": "Basic Navigation Enhancement",
+      "срок": "Эта сессия",
+      "задачи": [
+        "Добавить navigation hints в существующие templates",
+        "Создать dependency mapping",
+        "Улучшить template headers с related templates"
+      ]
+    },
+    "phase_2": {
+      "название": "Intelligent Search Implementation", 
+      "срок": "Следующая сессия",
+      "задачи": [
+        "Реализовать semantic search capabilities",
+        "Добавить intelligent suggestions",
+        "Создать workflow recommendation engine"
+      ]
+    },
+    "phase_3": {
+      "название": "Advanced Workflow Guidance",
+      "срок": "Future session",
+      "задачи": [
+        "Step-by-step workflow guidance",
+        "Progress tracking system",
+        "Adaptive guidance на основе user level"
+      ]
+    }
+  }
+} 

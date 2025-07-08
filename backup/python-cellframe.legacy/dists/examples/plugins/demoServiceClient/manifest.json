@@ -1,0 +1,8 @@
+{ 
+        "name": "demoServiceClient",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2022",
+        "dependencies": [],
+        "description": "This plugin have demo service client."
+}
+

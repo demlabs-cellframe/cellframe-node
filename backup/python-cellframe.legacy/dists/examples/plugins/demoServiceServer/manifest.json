@@ -1,0 +1,8 @@
+{ 
+        "name": "demoServiceServer",
+        "version": "1.0",
+        "author": "DEMLABS (C) 2022",
+        "dependencies": [],
+        "description": "This plugin is an example of a service server plugin."
+}
+

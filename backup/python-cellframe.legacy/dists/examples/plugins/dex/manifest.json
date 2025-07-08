@@ -1,0 +1,8 @@
+{
+    "name": "dex",
+    "version": "1.0",
+    "author": "DEMLABS (C) 2024",
+    "dependencies": [],
+    "type":"python",
+    "description": "staking-engine: scan outer providers for new contract event, provide http-api for staking frontend"
+}

@@ -1,0 +1,327 @@
+{
+  "version": "1.0",
+  "templates": {},
+  "queries": [
+    {
+      "timestamp": "2025-06-09T00:16:21.363613",
+      "query": "исправление CLI",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T00:20:38.885580",
+      "query": "исправление CLI",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T00:51:56.648286",
+      "query": "проект саморазвития CLI с документацией и юнит-тестами",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T01:39:20.712244",
+      "query": "доработка CLI команд для JSON вывода и автоматической загрузки контекста особенно для команды рефлексия",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T13:51:58.235891",
+      "query": "CLI разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T13:51:58.236521",
+      "query": "CLI разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:11:51.263881",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:11:51.264517",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:17:35.193990",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:17:35.194792",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:23:58.987671",
+      "query": "dap-sdk разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:23:58.988450",
+      "query": "dap-sdk разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:25:53.054985",
+      "query": "cellframe-node blockchain development",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:25:53.055747",
+      "query": "cellframe-node blockchain development",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:38:07.751299",
+      "query": "анализ архитектуры cellframe-sdk",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:38:07.752300",
+      "query": "анализ архитектуры cellframe-sdk",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:49:04.288701",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:49:04.289555",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:51:35.524574",
+      "query": "reflection_system",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:51:35.525349",
+      "query": "reflection_system",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:53:04.697972",
+      "query": "анализ cellframe-sdk архитектуры",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:53:04.698795",
+      "query": "анализ cellframe-sdk архитектуры",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:56:25.536154",
+      "query": "анализ python-cellframe биндингов",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:56:25.537126",
+      "query": "анализ python-cellframe биндингов",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:59:03.526695",
+      "query": "стратегия рефакторинга cellframe",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T14:59:03.528003",
+      "query": "стратегия рефакторинга cellframe",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:53:44.761399",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:53:44.762142",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:54:30.790213",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:54:30.791231",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:58:37.564911",
+      "query": "анализ cellframe sdk",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T15:58:37.565859",
+      "query": "анализ cellframe sdk",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:12:45.551757",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:12:45.552806",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:13:15.894924",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:13:15.895948",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:28.527919",
+      "query": "рефакторинг python-биндингов",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:28.528812",
+      "query": "рефакторинг python-биндингов",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:30.455218",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:30.456108",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:31.428458",
+      "query": "python биндинги",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:31.429386",
+      "query": "python биндинги",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:56.188648",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:15:56.189655",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:28:10.862049",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:28:10.863447",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:28:33.045172",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:28:33.046159",
+      "query": "python разработка",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:30:02.205258",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:30:02.206318",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:30:42.905027",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:30:42.906013",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:32:25.173038",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:32:25.173981",
+      "query": "рефакторинг",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:38:15.604886",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-09T16:38:15.605770",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T13:27:38.838726",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T13:27:38.839999",
+      "query": "базовый старт",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T17:12:32.581575",
+      "query": "интеллектуальный рефакторинг Python Cellframe",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T17:12:32.582539",
+      "query": "интеллектуальный рефакторинг Python Cellframe",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T18:41:11.769691",
+      "query": "Фаза 1: Критические модули",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T18:41:11.770603",
+      "query": "Фаза 1: Критические модули",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T21:58:21.185058",
+      "query": "Python Cellframe рефакторинг Фаза 1",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-18T21:58:21.186451",
+      "query": "Python Cellframe рефакторинг Фаза 1",
+      "selected_template": null
+    }
+  ],
+  "sessions": []
+}

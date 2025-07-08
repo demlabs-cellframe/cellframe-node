@@ -1,0 +1,119 @@
+# dap_chain_net_get_tx_all
+
+**Категория:** Chain Management  
+**Приоритет:** 105  
+**Модуль:** `cellframe-sdk/modules`
+
+## Описание
+Управляет структурами блокчейн цепочки в экосистеме Cellframe. Функция dap_chain_net_get_tx_all отвечает за создание, валидацию и управление блоками, атомами данных и консенсус-механизмами цепочки. * * @brief dap_chain_net_get_tx_all * @param a_net * @param a_search_type * @param a_tx_callback * @param a_arg Функция принимает 4 параметра и предоставляет гибкие возможности конфигурации.
+
+## Сигнатура
+```c
+void dap_chain_net_get_tx_all(dap_chain_net_t * a_net, dap_chain_net_tx_search_type_t a_search_type ,dap_chain_net_tx_hash_callback_t a_tx_callback, void * a_arg) {
+```
+
+## Параметры
+| Параметр | Тип | Описание | Обязательный | Значение по умолчанию |
+|----------|-----|----------|--------------|----------------------|
+| a_net | `dap_chain_net_t *` |  | Нет | NULL |
+| a_search_type | `dap_chain_net_tx_search_type_t` |  | Да | 0 |
+| a_tx_callback | `dap_chain_net_tx_hash_callback_t` |  | Да | 0 |
+| a_arg | `void *` |  | Нет | NULL |
+
+
+## Возвращаемое значение
+- **Тип:** `void`
+- **Описание:** Результат выполнения операции в категории "Chain Management"
+- `0` - Успешное выполнение
+- `!0` - Код ошибки (см. раздел "Коды ошибок")
+
+## Коды ошибок
+| Код | Описание | Рекомендуемое действие |
+|-----|----------|----------------------|
+| 0 | Успешное выполнение | Продолжить работу |
+| -1 | Общая ошибка | Проверить входные параметры |
+| -2 | Неверные параметры | Валидировать входные данные |
+| -3 | Недостаточно памяти | Освободить ресурсы и повторить |
+| -4 | Ошибка инициализации | Проверить состояние системы |
+
+## Пример использования
+
+### C/C++
+```c
+#include "cellframe_api.h"
+
+int main() {
+    // Инициализация системы
+    dap_common_init("cellframe-app");
+    
+    // Вызов функции dap_chain_net_get_tx_all
+    int result = dap_chain_net_get_tx_all();
+    
+    // Проверка результата
+    if (result == 0) {
+        printf("Функция dap_chain_net_get_tx_all выполнена успешно\n");
+    } else {
+        printf("Ошибка выполнения функции dap_chain_net_get_tx_all: %d\n", result);
+    }
+    
+    // Очистка ресурсов
+    dap_common_deinit();
+    return result;
+}
+```
+
+### Python
+```python
+import libCellFrame
+
+def example_dap_chain_net_get_tx_all():
+    """Пример использования dap_chain_net_get_tx_all"""
+    try:
+        # Вызываем функцию через Python API
+        result = libCellFrame.chain.net.get.tx.all()
+        
+        if result is not None:
+            print(f"Функция dap_chain_net_get_tx_all выполнена успешно")
+            print(f"Результат: {result}")
+            return result
+        else:
+            print(f"Функция dap_chain_net_get_tx_all вернула None")
+            return None
+            
+    except AttributeError:
+        print(f"Функция dap_chain_net_get_tx_all недоступна в Python API")
+        return None
+    except Exception as e:
+        print(f"Исключение: {e}")
+        return None
+
+# Использование
+if __name__ == "__main__":
+    example_dap_chain_net_get_tx_all()
+```
+
+## Связанные функции
+- TODO: Автоматически определить связанные функции
+- См. другие функции категории "Chain Management"
+
+## Производительность
+- **Сложность:** O(?) - требует анализа
+- **Потребление памяти:** Зависит от входных параметров
+- **Потокобезопасность:** Требует проверки
+
+## Примечания
+- Проверяйте возвращаемые значения на ошибки
+- Убедитесь в корректности входных параметров
+- Учитывайте особенности категории "Chain Management"
+
+## История изменений
+- **v1.0:** Первоначальная реализация
+- **Текущая версия:** Требует уточнения
+
+## См. также
+- [API Reference](../README.md)
+- [Категория Chain Management](../categories/chain_management.md)
+- [Getting Started Guide](../../getting-started.md)
+
+---
+*Документация сгенерирована автоматически для Фазы 2 проекта Cellframe API*

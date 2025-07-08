@@ -1,0 +1,172 @@
+{
+  "decision_logging_system": {
+    "purpose": "Address identified gap: decisions documented post-factum, reasoning lost",
+    "implementation_date": "2024-12-20",
+    "system_design": "Lightweight, integrated workflow for real-time decision capture",
+    
+    "decision_template": {
+      "metadata": {
+        "timestamp": "Auto-generated ISO timestamp",
+        "project_context": "Current active project/task",
+        "decision_category": "technical|process|strategic|learning",
+        "impact_level": "low|medium|high|critical"
+      },
+      
+      "decision_content": {
+        "situation": {
+          "description": "What situation prompted this decision?",
+          "constraints": "What limitations or requirements influenced the decision?",
+          "stakeholders": "Who is affected by this decision?"
+        },
+        
+        "options_analysis": {
+          "options_considered": "List of alternatives that were evaluated",
+          "evaluation_criteria": "What factors were used to compare options?",
+          "data_sources": "What measurement data, research, or expertise informed the decision?"
+        },
+        
+        "decision_rationale": {
+          "chosen_option": "What was decided?",
+          "primary_reasons": "Why was this option chosen over alternatives?",
+          "tradeoffs_accepted": "What disadvantages or risks are being accepted?",
+          "assumptions_made": "What assumptions underlie this decision?"
+        },
+        
+        "success_metrics": {
+          "success_criteria": "How will we know if this decision was correct?",
+          "measurement_plan": "How and when will success be measured?",
+          "review_schedule": "When should this decision be revisited?"
+        },
+        
+        "risk_management": {
+          "identified_risks": "What could go wrong with this decision?",
+          "mitigation_strategies": "How will risks be addressed?",
+          "fallback_plan": "What will we do if this decision proves incorrect?"
+        }
+      }
+    },
+    
+    "implementation_workflow": {
+      "trigger_points": [
+        "Before making any significant technical choice",
+        "When changing approach or methodology",
+        "When encountering unexpected results requiring new decisions",
+        "At weekly reflection sessions for decision review"
+      ],
+      
+      "capture_methods": {
+        "real_time_logging": {
+          "tool": "Simple JSON file in project directory",
+          "naming_convention": "decisions_YYYY-MM-DD.json",
+          "update_frequency": "Immediately when decision is made"
+        },
+        
+        "integration_points": {
+          "code_commits": "Reference decision ID in commit messages when implementing decisions",
+          "documentation": "Link decisions to relevant documentation sections",
+          "reflection_sessions": "Review and extract learnings from recent decisions"
+        }
+      }
+    },
+    
+    "decision_categories": {
+      "technical_decisions": {
+        "examples": [
+          "Choice of profiling tools and techniques",
+          "SIMD implementation approach selection",
+          "Integration strategy decisions",
+          "Performance measurement methodology"
+        ],
+        "required_fields": ["data_sources", "technical_constraints", "performance_impact"]
+      },
+      
+      "learning_decisions": {
+        "examples": [
+          "Study approach and resource selection",
+          "Time allocation between theory and practice",
+          "Learning validation methods",
+          "Knowledge application priorities"
+        ],
+        "required_fields": ["learning_objectives", "success_criteria", "application_plan"]
+      },
+      
+      "process_decisions": {
+        "examples": [
+          "Development workflow changes",
+          "Documentation system updates",
+          "Reflection and review schedules",
+          "Tool adoption decisions"
+        ],
+        "required_fields": ["process_impact", "adoption_plan", "success_metrics"]
+      }
+    },
+    
+    "usage_during_week1_study": {
+      "daily_decisions_to_capture": [
+        "Choice of VTune analysis types to focus on",
+        "Selection of Chipmunk functions for profiling practice",
+        "Decisions about tool configuration and setup",
+        "Learning resource prioritization decisions",
+        "Time allocation adjustments based on progress"
+      ],
+      
+      "integration_with_study_plan": {
+        "morning_decision_review": "Review previous day's decisions and outcomes",
+        "real_time_capture": "Log decisions as they are made during study/practice",
+        "evening_reflection": "Assess decision effectiveness and extract learnings",
+        "weekly_summary": "Synthesize decision patterns and process improvements"
+      }
+    },
+    
+    "validation_and_improvement": {
+      "effectiveness_metrics": [
+        "Decision quality improvement over time",
+        "Reduced decision-making time due to better frameworks", 
+        "Increased learning from decision retrospectives",
+        "Better prediction of decision outcomes"
+      ],
+      
+      "system_evolution": [
+        "Template refinement based on usage patterns",
+        "Tool integration improvements",
+        "Process simplification for easier adoption",
+        "Pattern recognition for common decision types"
+      ]
+    },
+    
+    "example_decision_log": {
+      "decision_id": "PROF_001_20241220",
+      "metadata": {
+        "timestamp": "2024-12-20T10:30:00Z",
+        "project_context": "Week 1 VTune Profiler Study",
+        "decision_category": "learning",
+        "impact_level": "medium"
+      },
+      
+      "situation": {
+        "description": "Need to choose between VTune GUI vs CLI for initial learning",
+        "constraints": "Limited time, need practical skills applicable to automation",
+        "stakeholders": "Self-development goals, future optimization projects"
+      },
+      
+      "options_analysis": {
+        "options_considered": ["Start with GUI for ease", "Start with CLI for automation", "Parallel GUI+CLI learning"],
+        "evaluation_criteria": ["Learning efficiency", "Practical applicability", "Long-term value"],
+        "data_sources": ["VTune documentation review", "Professional optimization workflow analysis"]
+      },
+      
+      "decision_rationale": {
+        "chosen_option": "Start with GUI, transition to CLI by day 3",
+        "primary_reasons": ["GUI provides better conceptual understanding", "CLI skills build on GUI foundation", "Matches available tutorial structure"],
+        "tradeoffs_accepted": ["Slightly slower initial automation", "Need to learn both interfaces"],
+        "assumptions_made": ["GUI concepts transfer well to CLI", "Time investment in both interfaces is worthwhile"]
+      },
+      
+      "success_metrics": {
+        "success_criteria": ["Comfortable with both GUI and CLI by end of week", "Able to automate basic analysis tasks", "Understanding of when to use each interface"],
+        "measurement_plan": ["Daily self-assessment of comfort level", "Practical automation exercise by day 6"],
+        "review_schedule": "End of day 3 and end of week"
+      }
+    }
+  }
+} 

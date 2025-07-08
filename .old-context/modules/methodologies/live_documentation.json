@@ -1,0 +1,293 @@
+{
+  "type": "universal_template_module",
+  "domain": "live_documentation_methodology",
+  "version": "1.0",
+  "created": "2025-01-15T09:15:00Z",
+  "updated": "2025-01-15T09:15:00Z",
+  "template_source": "Based on real-time documentation insights from Chipmunk VTune Study and SLC development",
+  
+  "template_info": {
+    "name": "Live Documentation & Learning System",
+    "description": "Comprehensive methodology for capturing insights, learnings, and decision-making processes during active work sessions",
+    "target_projects": [
+      "Software development projects",
+      "Research and optimization work", 
+      "Complex system analysis",
+      "Performance optimization studies",
+      "Knowledge preservation initiatives",
+      "Technical investigation projects"
+    ],
+    "applicability": "90% of knowledge work with minimal customization",
+    "evidence_base": "Validated through Chipmunk optimization study and SLC reflection work"
+  },
+  
+  "core_philosophy": {
+    "capture_during_not_after": {
+      "principle": "Document insights во время работы, не в конце",
+      "rationale": "Real-time capture preserves context, emotions, and decision-making processes",
+      "implementation": "Structured templates for continuous documentation"
+    },
+    "decision_archaeology": {
+      "principle": "Preserve reasoning behind decisions",
+      "rationale": "Future teams need to understand WHY decisions were made",
+      "implementation": "Decision logging with context, alternatives, and rationale"
+    },
+    "learning_extraction": {
+      "principle": "Systematic extraction of reusable insights",
+      "rationale": "Convert project-specific learning into universal knowledge",
+      "implementation": "Pattern recognition and abstraction frameworks"
+    }
+  },
+  
+  "methodology_framework": {
+    "real_time_documentation": {
+      "session_initialization": {
+        "purpose": "Set clear documentation goals for each work session",
+        "template": {
+          "session_id": "Unique identifier for the session",
+          "start_time": "Session start timestamp", 
+          "primary_goal": "What are you trying to achieve?",
+          "expected_duration": "How long do you expect this to take?",
+          "success_criteria": "How will you know you succeeded?",
+          "key_questions": "What questions are you trying to answer?"
+        },
+        "automation": "Use templates and timestamp automation where possible"
+      },
+      
+      "continuous_capture": {
+        "insight_logging": {
+          "format": "INSIGHT-[timestamp]: [insight text]",
+          "frequency": "Whenever you have a realization or understanding",
+          "examples": [
+            "INSIGHT-14:23: SIMD regression correlates with memory access patterns",
+            "INSIGHT-16:45: Template validation should happen incrementally, not at the end"
+          ]
+        },
+        "decision_logging": {
+          "format": "DECISION-[timestamp]: [decision] - BECAUSE: [rationale] - ALTERNATIVES: [other options considered]",
+          "frequency": "Every significant decision or direction change",
+          "examples": [
+            "DECISION-15:30: Switch to real NTT testing - BECAUSE: synthetic benchmarks showed contradictory results - ALTERNATIVES: debug synthetic tests, trust Day 1 results"
+          ]
+        },
+        "discovery_logging": {
+          "format": "DISCOVERY-[timestamp]: [what you found] - IMPACT: [significance] - NEXT: [what this enables]", 
+          "frequency": "When you discover something unexpected or important",
+          "examples": [
+            "DISCOVERY-11:45: Context dependency in SIMD performance - IMPACT: fundamental understanding changed - NEXT: need size-based analysis"
+          ]
+        }
+      },
+      
+      "session_closure": {
+        "achievements_summary": "What did you actually accomplish?",
+        "insights_synthesis": "What are the key learnings from this session?",
+        "next_session_prep": "What should be the focus next time?",
+        "knowledge_artifacts": "What reusable knowledge was created?",
+        "process_improvements": "How could this work session have been better?"
+      }
+    },
+    
+    "evidence_based_documentation": {
+      "claim_validation": {
+        "principle": "Every claim needs evidence",
+        "implementation": [
+          "Link assertions to specific data/tests/measurements",
+          "Include confidence levels for uncertain claims",
+          "Document methodology used to reach conclusions",
+          "Preserve raw data alongside interpretations"
+        ]
+      },
+      "statistical_rigor": {
+        "quantified_claims": "Use numbers, percentages, and measurements where possible",
+        "confidence_intervals": "Include uncertainty bounds for performance claims", 
+        "sample_sizes": "Document how much data supports each conclusion",
+        "reproducibility": "Include enough detail for others to reproduce results"
+      },
+      "contradiction_tracking": {
+        "conflict_documentation": "When new evidence contradicts old assumptions",
+        "investigation_process": "How contradictions were investigated and resolved",
+        "updated_understanding": "How the mental model changed based on new evidence"
+      }
+    },
+    
+    "knowledge_transformation": {
+      "pattern_extraction": {
+        "universal_principles": "What general principles emerge from specific work?",
+        "domain_abstraction": "How can domain-specific knowledge be generalized?",
+        "methodology_patterns": "What approaches work well across different contexts?",
+        "anti_patterns": "What approaches consistently fail or cause problems?"
+      },
+      "cross_project_synthesis": {
+        "comparative_analysis": "How does this work relate to previous projects?",
+        "method_evolution": "How are methods improving over time?",
+        "reusable_frameworks": "What frameworks can be extracted for future use?",
+        "scalability_insights": "What scales well and what doesn't?"
+      }
+    }
+  },
+  
+  "implementation_tools": {
+    "session_templates": {
+      "investigation_session": {
+        "goal": "Understanding or debugging a specific issue",
+        "structure": [
+          "Problem statement and context",
+          "Hypotheses to test",
+          "Investigation methodology", 
+          "Evidence collection",
+          "Conclusion and next steps"
+        ]
+      },
+      "optimization_session": {
+        "goal": "Improving performance or efficiency",
+        "structure": [
+          "Baseline measurements",
+          "Optimization targets",
+          "Implementation approach",
+          "Validation methodology",
+          "Results and analysis"
+        ]
+      },
+      "design_session": {
+        "goal": "Creating or improving system architecture",
+        "structure": [
+          "Requirements and constraints",
+          "Design alternatives",
+          "Trade-off analysis",
+          "Design decisions and rationale",
+          "Implementation plan"
+        ]
+      }
+    },
+    
+    "automation_scripts": {
+      "timestamp_automation": "Auto-insert timestamps for logs",
+      "template_generation": "Quick templates for common documentation patterns",
+      "cross_reference_linking": "Automatic linking between related documents",
+      "summary_generation": "Extract key insights from session logs"
+    },
+    
+    "integration_patterns": {
+      "version_control": "How to integrate documentation with git workflow",
+      "issue_tracking": "Link documentation to specific tickets/issues",
+      "knowledge_base": "Feed insights into searchable knowledge systems",
+      "team_sharing": "Share real-time insights with team members"
+    }
+  },
+  
+  "validation_methodology": {
+    "documentation_quality_metrics": {
+      "insight_density": "Number of captured insights per hour of work",
+      "decision_completeness": "Percentage of decisions with documented rationale",
+      "future_comprehensibility": "Can someone else understand the work from docs alone?",
+      "actionability": "Can insights be directly applied to future work?"
+    },
+    "learning_effectiveness": {
+      "knowledge_reuse": "How often are documented insights referenced later?",
+      "pattern_recognition": "Are universal patterns being identified and abstracted?",
+      "methodology_improvement": "Is the documentation process itself improving?",
+      "team_knowledge_growth": "Is team knowledge increasing through shared documentation?"
+    }
+  },
+  
+  "success_stories": {
+    "chipmunk_optimization_study": {
+      "context": "3-week intensive performance optimization study",
+      "documentation_approach": "Real-time decision logging + daily reports + statistical validation",
+      "outcomes": [
+        "Complete preservation of all decision-making context",
+        "Clear evidence trail for scientific conclusions", 
+        "Methodology that can be applied to future optimization work",
+        "No lost insights or forgotten reasoning"
+      ],
+      "key_innovation": "Live decision documentation prevented context loss"
+    },
+    "slc_reflection_work": {
+      "context": "System architecture analysis and improvement",
+      "documentation_approach": "Template-based systematic analysis + cross-reference mapping",
+      "outcomes": [
+        "Universal templates extracted from specific work",
+        "Clear improvement roadmap with prioritized tasks",
+        "Systematic methodology for knowledge archaeology",
+        "Self-referential documentation system"
+      ],
+      "key_innovation": "Real-time reflection captured improvement opportunities"
+    }
+  },
+  
+  "customization_guide": {
+    "step_1_assessment": {
+      "question": "What type of knowledge work are you documenting?",
+      "options": ["Research", "Development", "Optimization", "Design", "Analysis"],
+      "customization": "Choose appropriate session templates and logging formats"
+    },
+    "step_2_tooling": {
+      "question": "What tools do you use for documentation?", 
+      "options": ["Plain text", "Markdown", "Specialized tools", "Integrated systems"],
+      "customization": "Adapt automation scripts and templates to your toolchain"
+    },
+    "step_3_team_integration": {
+      "question": "Are you documenting for solo work or team collaboration?",
+      "options": ["Solo", "Small team", "Large team", "Cross-team"],
+      "customization": "Adjust sharing patterns and accessibility requirements"
+    },
+    "step_4_domain_specificity": {
+      "question": "How domain-specific is your work?",
+      "options": ["Highly specific", "Moderately specific", "General purpose"],
+      "customization": "Balance between specific details and universal principles"
+    }
+  },
+  
+  "anti_patterns_to_avoid": {
+    "documentation_debt": {
+      "pattern": "Planning to document everything 'at the end'",
+      "problem": "Context loss, forgotten reasoning, incomplete information",
+      "solution": "Document insights immediately when they occur"
+    },
+    "over_documentation": {
+      "pattern": "Documenting every single action and thought",
+      "problem": "Information overload, reduced focus on actual work",
+      "solution": "Focus on insights, decisions, and discoveries - not routine actions"
+    },
+    "template_rigidity": {
+      "pattern": "Forcing all documentation into the same format",
+      "problem": "Templates don't fit all situations, reduces documentation quality",
+      "solution": "Use templates as starting points, adapt to specific needs"
+    },
+    "isolation_documentation": {
+      "pattern": "Creating documentation that no one else can understand or use",
+      "problem": "Knowledge doesn't transfer, limited reusability",
+      "solution": "Write for your future self and potential collaborators"
+    }
+  },
+  
+  "return_on_investment": {
+    "immediate_benefits": [
+      "Better decision-making through explicit reasoning",
+      "Reduced context switching costs",
+      "Improved problem-solving through structured thinking",
+      "Real-time knowledge capture prevents loss"
+    ],
+    "medium_term_benefits": [
+      "Faster onboarding of new team members",
+      "Reusable methodologies for similar problems",
+      "Improved project retrospectives and learning",
+      "Better estimation and planning based on historical data"
+    ],
+    "long_term_benefits": [
+      "Organizational knowledge growth and retention",
+      "Systematic improvement of work processes",
+      "Reduced repeated mistakes and reinvention",
+      "Foundation for training and methodology development"
+    ]
+  },
+  
+  "success_metrics": {
+    "adoption_time": "< 30 minutes to start using basic templates",
+    "insight_capture_rate": "> 80% of important insights documented in real-time",
+    "knowledge_reuse": "> 50% of documented insights referenced in future work",
+    "methodology_transfer": "> 70% of approaches successfully applied to new domains",
+    "team_satisfaction": "> 85% of team members find documentation valuable"
+  }
+} 

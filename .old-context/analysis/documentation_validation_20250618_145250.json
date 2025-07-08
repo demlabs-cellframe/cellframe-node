@@ -1,0 +1,672 @@
+{
+  "timestamp": "2025-06-18T14:52:50.442875",
+  "total_files": 9,
+  "validated_files": 9,
+  "issues_found": 16,
+  "quality_score": 87.10111111111111,
+  "files": {
+    "PyInit_libDAP.md": {
+      "filename": "PyInit_libDAP.md",
+      "total_score": 78.53,
+      "max_total_score": 100,
+      "percentage": 78.53,
+      "issues_count": 2,
+      "issues": [
+        "Отсутствует таблица параметров",
+        "Описание слишком короткое (43 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 9,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 0,
+          "max_score": 20,
+          "issues": [
+            "Отсутствует таблица параметров"
+          ],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.53,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (43 символов, минимум 50)"
+          ],
+          "description_length": 43,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 1,
+          "links": 2,
+          "inline_code": 8
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    },
+    "dap_enc_key_get_dec_size_py.md": {
+      "filename": "dap_enc_key_get_dec_size_py.md",
+      "total_score": 98.74,
+      "max_total_score": 100,
+      "percentage": 98.74,
+      "issues_count": 1,
+      "issues": [
+        "Описание слишком короткое (44 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 18,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 20,
+          "max_score": 20,
+          "issues": [],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.739999999999998,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (44 символов, минимум 50)"
+          ],
+          "description_length": 44,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 3,
+          "links": 2,
+          "inline_code": 10
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    },
+    "dap_chain_ledger_get_tx_out_cond_linked_to_tx_in_cond.md": {
+      "filename": "dap_chain_ledger_get_tx_out_cond_linked_to_tx_in_cond.md",
+      "total_score": 98.74,
+      "max_total_score": 100,
+      "percentage": 98.74,
+      "issues_count": 1,
+      "issues": [
+        "Описание слишком короткое (44 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 18,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 20,
+          "max_score": 20,
+          "issues": [],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.739999999999998,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (44 символов, минимум 50)"
+          ],
+          "description_length": 44,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 3,
+          "links": 2,
+          "inline_code": 10
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    },
+    "PyInit_libTPO.md": {
+      "filename": "PyInit_libTPO.md",
+      "total_score": 78.53,
+      "max_total_score": 100,
+      "percentage": 78.53,
+      "issues_count": 2,
+      "issues": [
+        "Отсутствует таблица параметров",
+        "Описание слишком короткое (43 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 9,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 0,
+          "max_score": 20,
+          "issues": [
+            "Отсутствует таблица параметров"
+          ],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.53,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (43 символов, минимум 50)"
+          ],
+          "description_length": 43,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 1,
+          "links": 2,
+          "inline_code": 8
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    },
+    "README.md": {
+      "filename": "README.md",
+      "total_score": 52.1,
+      "max_total_score": 100,
+      "percentage": 52.1,
+      "issues_count": 7,
+      "issues": [
+        "Отсутствует раздел: Сигнатура",
+        "Отсутствует раздел: Параметры",
+        "Отсутствует раздел: Возвращаемое значение",
+        "Отсутствует раздел: Связанные функции",
+        "Отсутствует таблица параметров",
+        "Отсутствует раздел с кодами ошибок",
+        "Отсутствуют таблицы"
+      ],
+      "details": {
+        "structure": {
+          "score": 10.0,
+          "max_score": 30,
+          "issues": [
+            "Отсутствует раздел: Сигнатура",
+            "Отсутствует раздел: Параметры",
+            "Отсутствует раздел: Возвращаемое значение",
+            "Отсутствует раздел: Связанные функции"
+          ],
+          "found_sections": [
+            "Описание",
+            "Пример использования"
+          ],
+          "missing_sections": [
+            "Параметры",
+            "Связанные функции",
+            "Сигнатура",
+            "Возвращаемое значение"
+          ]
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 16,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 16,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 0,
+          "max_score": 20,
+          "issues": [
+            "Отсутствует таблица параметров"
+          ],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 10.5,
+          "max_score": 15,
+          "issues": [
+            "Отсутствует раздел с кодами ошибок"
+          ],
+          "description_length": 335,
+          "error_codes_present": false
+        },
+        "formatting": {
+          "score": 6.600000000000001,
+          "max_score": 10,
+          "issues": [
+            "Отсутствуют таблицы"
+          ],
+          "code_blocks": 2,
+          "tables": 0,
+          "links": 23,
+          "inline_code": 3
+        }
+      },
+      "suggestions": [
+        "Добавить отсутствующие разделы: Параметры, Связанные функции, Сигнатура, Возвращаемое значение",
+        "Добавить раздел с кодами ошибок",
+        "Добавить таблицы для структурирования информации"
+      ]
+    },
+    "dap_enc_key_get_enc_size_py.md": {
+      "filename": "dap_enc_key_get_enc_size_py.md",
+      "total_score": 98.74,
+      "max_total_score": 100,
+      "percentage": 98.74,
+      "issues_count": 1,
+      "issues": [
+        "Описание слишком короткое (44 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 18,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 20,
+          "max_score": 20,
+          "issues": [],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.739999999999998,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (44 символов, минимум 50)"
+          ],
+          "description_length": 44,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 3,
+          "links": 2,
+          "inline_code": 10
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    },
+    "dap_enc_key_update_py.md": {
+      "filename": "dap_enc_key_update_py.md",
+      "total_score": 100.0,
+      "max_total_score": 100,
+      "percentage": 100.0,
+      "issues_count": 0,
+      "issues": [],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 18,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 20,
+          "max_score": 20,
+          "issues": [],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 15.0,
+          "max_score": 15,
+          "issues": [],
+          "description_length": 198,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 3,
+          "links": 2,
+          "inline_code": 10
+        }
+      }
+    },
+    "dap_enc_key_new_py.md": {
+      "filename": "dap_enc_key_new_py.md",
+      "total_score": 100.0,
+      "max_total_score": 100,
+      "percentage": 100.0,
+      "issues_count": 0,
+      "issues": [],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 18,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 20,
+          "max_score": 20,
+          "issues": [],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 15.0,
+          "max_score": 15,
+          "issues": [],
+          "description_length": 100,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 3,
+          "links": 2,
+          "inline_code": 10
+        }
+      }
+    },
+    "PyInit_libCellFrame.md": {
+      "filename": "PyInit_libCellFrame.md",
+      "total_score": 78.53,
+      "max_total_score": 100,
+      "percentage": 78.53,
+      "issues_count": 2,
+      "issues": [
+        "Отсутствует таблица параметров",
+        "Описание слишком короткое (43 символов, минимум 50)"
+      ],
+      "details": {
+        "structure": {
+          "score": 30.0,
+          "max_score": 30,
+          "issues": [],
+          "found_sections": [
+            "Описание",
+            "Сигнатура",
+            "Параметры",
+            "Возвращаемое значение",
+            "Пример использования",
+            "Связанные функции"
+          ],
+          "missing_sections": []
+        },
+        "examples": {
+          "score": 25.0,
+          "max_score": 25,
+          "issues": [],
+          "found_examples": {
+            "C/C++": {
+              "present": true,
+              "lines_count": 14,
+              "adequate_length": true
+            },
+            "Python": {
+              "present": true,
+              "lines_count": 9,
+              "adequate_length": true
+            }
+          }
+        },
+        "parameters": {
+          "score": 0,
+          "max_score": 20,
+          "issues": [
+            "Отсутствует таблица параметров"
+          ],
+          "parameters_count": 0,
+          "adequate_descriptions": 0
+        },
+        "completeness": {
+          "score": 13.53,
+          "max_score": 15,
+          "issues": [
+            "Описание слишком короткое (43 символов, минимум 50)"
+          ],
+          "description_length": 43,
+          "error_codes_present": true
+        },
+        "formatting": {
+          "score": 9.999999999999998,
+          "max_score": 10,
+          "issues": [],
+          "code_blocks": 3,
+          "tables": 1,
+          "links": 2,
+          "inline_code": 8
+        }
+      },
+      "suggestions": [
+        "Расширить описание функции (минимум 50 символов)"
+      ]
+    }
+  },
+  "summary": {},
+  "recommendations": [
+    "🎯 Приоритетные улучшения:",
+    "- Отсутствует таблица параметров (в 4 файлах, 44.4%)",
+    "- Описание слишком короткое (43 символов, минимум 50) (в 3 файлах, 33.3%)",
+    "- Описание слишком короткое (44 символов, минимум 50) (в 3 файлах, 33.3%)",
+    "- Отсутствует раздел: Сигнатура (в 1 файлах, 11.1%)",
+    "- Отсутствует раздел: Параметры (в 1 файлах, 11.1%)",
+    "✅ Отличный уровень качества - поддерживайте стандарт",
+    "🤖 Рекомендуется настроить автоматическую проверку качества в CI/CD"
+  ]
+}

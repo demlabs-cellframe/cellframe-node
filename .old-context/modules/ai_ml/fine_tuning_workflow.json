@@ -1,0 +1,523 @@
+{
+  "type": "universal_template_module",
+  "domain": "fine_tuning_workflow",
+  "version": "2.1.0",
+  "created": "2025-01-14T17:00:00Z",
+  "updated": "2025-01-14T17:45:00Z",
+  "template_source": "Основано на современных практиках fine-tuning LLM и ML optimization",
+  
+  "navigation_system": {
+    "file_role": "AI_ML_TEMPLATE",
+    "description": "🧠 Шаблон для fine-tuning и model optimization",
+    "recovery_path": {
+      "parent": "core/manifest.json",
+      "category": "modules/ai_ml/",
+      "siblings": ["modules/ai_ml/prompt_engineering.json", "modules/ai_ml/ai_agent_development.json"]
+    },
+    "quick_navigation": {
+      "🏠 Return to root": "core/manifest.json - главный навигатор системы",
+      "📐 Coding standards": "core/standards.json - стандарты разработки",
+      "🤖 Prompt engineering": "modules/ai_ml/prompt_engineering.json - разработка промптов",
+      "🤖 AI Agents": "modules/ai_ml/ai_agent_development.json - разработка агентов",
+      "💻 Python template": "modules/languages/python/python_development.json - Python проекты",
+      "🛠️ CLI tools": "tools/scripts/slc_cli.py - создание проектов"
+    },
+    "usage_hint": "slc_cli.py create ai_ml/fine_tuning_workflow.json my_ml_project"
+  },
+  
+  "template_info": {
+    "name": "Fine-tuning & Model Optimization Workflow Template",
+    "description": "Универсальный шаблон для fine-tuning языковых моделей, оптимизации производительности и адаптации под специфические задачи",
+    "target_projects": [
+      "Domain-specific language models",
+      "Task-specific model adaptation",
+      "Corporate chatbot training", 
+      "Code generation model fine-tuning",
+      "Medical/Legal AI assistants",
+      "Multilingual model development",
+      "Content moderation systems",
+      "Personalized recommendation engines",
+      "Industry-specific AI tools",
+      "Research model optimization"
+    ],
+    "applicability": "100% проектов требующих customized AI models"
+  },
+  
+  "fine_tuning_fundamentals": {
+    "core_concepts": {
+      "transfer_learning": {
+        "description": "Адаптация предобученных моделей для специфических задач",
+        "benefits": [
+          "Reduced training time",
+          "Lower computational costs", 
+          "Better performance with limited data",
+          "Leverage existing knowledge"
+        ],
+        "approach": "Pre-trained model → Task-specific adaptation"
+      },
+      
+      "parameter_efficient_methods": {
+        "lora": {
+          "description": "Low-Rank Adaptation - efficient fine-tuning method",
+          "benefits": ["Memory efficient", "Fast training", "Preserve base model"],
+          "use_cases": ["Large models", "Limited compute", "Multiple tasks"],
+          "parameters": "rank, alpha, dropout, target_modules"
+        },
+        
+        "qlora": {
+          "description": "Quantized LoRA для memory-constrained environments",
+          "benefits": ["4-bit quantization", "Extreme memory efficiency", "Accessible fine-tuning"],
+          "use_cases": ["Consumer hardware", "Large model fine-tuning", "Research"]
+        },
+        
+        "prompt_tuning": {
+          "description": "Learning continuous prompts instead of model parameters",
+          "benefits": ["Very parameter efficient", "Fast adaptation", "Multiple task support"],
+          "implementation": "Trainable prompt embeddings"
+        },
+        
+        "adapter_layers": {
+          "description": "Small neural networks inserted into pre-trained models",
+          "benefits": ["Modular design", "Task-specific adaptation", "Base model preservation"],
+          "architecture": "Bottleneck layers в transformer blocks"
+        }
+      },
+      
+      "full_fine_tuning": {
+        "description": "Training all model parameters for specific task",
+        "when_to_use": [
+          "Abundant training data",
+          "Significantly different domain",
+          "Maximum performance required",
+          "Sufficient computational resources"
+        ],
+        "considerations": ["Catastrophic forgetting", "Resource requirements", "Overfitting risk"]
+      }
+    },
+    
+    "model_selection": {
+      "base_model_evaluation": {
+        "criteria": [
+          "Model size vs performance trade-off",
+          "Domain alignment с target task",
+          "License compatibility",
+          "Community support и documentation",
+          "Computational requirements"
+        ],
+        
+        "popular_bases": {
+          "llama2_7b": "Efficient general-purpose model",
+          "llama2_13b": "Better performance, higher compute",
+          "mistral_7b": "Strong performance, Apache license",
+          "codellama": "Code-specialized variant",
+          "falcon": "High-quality open model",
+          "gpt3_5_turbo": "Commercial fine-tuning option"
+        }
+      },
+      
+      "task_alignment": {
+        "text_generation": "GPT-style autoregressive models",
+        "text_classification": "BERT-style encoder models",
+        "question_answering": "Encoder-decoder models",
+        "code_generation": "Code-specific pre-trained models",
+        "multimodal": "Vision-language models"
+      }
+    }
+  },
+  
+  "data_preparation": {
+    "dataset_creation": {
+      "data_collection": {
+        "sources": [
+          "Internal company data",
+          "Domain-specific corpora", 
+          "Synthetic data generation",
+          "Web scraping (с permission)",
+          "User interaction logs",
+          "Expert annotations"
+        ],
+        
+        "quality_criteria": [
+          "Relevance to target task",
+          "Data diversity и representativeness",
+          "Annotation quality",
+          "Bias assessment",
+          "Privacy compliance"
+        ]
+      },
+      
+      "data_formatting": {
+        "instruction_tuning": {
+          "format": "{'instruction': 'Task description', 'input': 'Context', 'output': 'Expected response'}",
+          "examples": [
+            "Question answering",
+            "Code generation",
+            "Text summarization",
+            "Creative writing"
+          ]
+        },
+        
+        "conversational": {
+          "format": "Multi-turn dialogue format",
+          "structure": "System prompt + User message + Assistant response",
+          "considerations": "Context window management"
+        },
+        
+        "completion": {
+          "format": "Text completion format",
+          "use_cases": ["Domain adaptation", "Style learning", "Knowledge injection"]
+        }
+      },
+      
+      "data_preprocessing": {
+        "cleaning": [
+          "Remove duplicates",
+          "Filter inappropriate content",
+          "Fix encoding issues",
+          "Standardize formatting"
+        ],
+        
+        "augmentation": [
+          "Paraphrasing variations",
+          "Back-translation",
+          "Synthetic data generation",
+          "Context variation"
+        ],
+        
+        "validation": [
+          "Manual quality checks",
+          "Automated validation rules",
+          "Bias detection",
+          "Data leakage prevention"
+        ]
+      }
+    },
+    
+    "train_test_splits": {
+      "splitting_strategies": {
+        "random_split": "80/10/10 train/val/test standard split",
+        "temporal_split": "Time-based split для realistic evaluation",
+        "stratified_split": "Maintain class distribution",
+        "domain_split": "Different domains в different splits"
+      },
+      
+      "evaluation_sets": {
+        "validation_set": "Hyperparameter tuning и early stopping",
+        "test_set": "Final model evaluation",
+        "holdout_set": "Long-term model monitoring",
+        "benchmark_sets": "Comparison с existing models"
+      }
+    }
+  },
+  
+  "training_pipeline": {
+    "hyperparameter_optimization": {
+      "learning_rate": {
+        "typical_range": "1e-5 to 1e-4 для full fine-tuning",
+        "lora_range": "1e-4 to 1e-3 для LoRA",
+        "scheduling": ["Linear warmup", "Cosine annealing", "Step decay"],
+        "adaptive_methods": ["AdamW", "Adafactor", "Lion optimizer"]
+      },
+      
+      "batch_size": {
+        "considerations": ["Memory constraints", "Gradient stability", "Training speed"],
+        "gradient_accumulation": "Simulate larger batch sizes",
+        "dynamic_batching": "Variable sequence length optimization"
+      },
+      
+      "regularization": {
+        "dropout": "Prevent overfitting в adapter layers",
+        "weight_decay": "L2 regularization для stability",
+        "gradient_clipping": "Prevent gradient explosion",
+        "early_stopping": "Validation-based stopping"
+      },
+      
+      "lora_specific": {
+        "rank": "4-64 typical range, higher = more capacity",
+        "alpha": "Scaling factor, often 2x rank",
+        "target_modules": "Which layers to adapt (q_proj, v_proj, etc.)",
+        "dropout": "LoRA-specific dropout rate"
+      }
+    },
+    
+    "training_monitoring": {
+      "key_metrics": {
+        "loss_tracking": ["Training loss", "Validation loss", "Perplexity"],
+        "convergence": ["Loss plateauing", "Gradient norms", "Learning rate effectiveness"],
+        "performance": ["Task-specific metrics", "Benchmark scores", "Human evaluation"]
+      },
+      
+      "monitoring_tools": {
+        "wandb": "Experiment tracking и visualization",
+        "tensorboard": "Loss curves и model analysis",
+        "custom_logging": "Task-specific metric tracking",
+        "mlflow": "Model lifecycle management"
+      },
+      
+      "early_intervention": {
+        "overfitting_detection": "Validation loss increase",
+        "training_instability": "Loss spikes или gradient explosions",
+        "resource_management": "Memory usage и training speed",
+        "checkpoint_strategy": "Regular model saving"
+      }
+    },
+    
+    "distributed_training": {
+      "data_parallelism": {
+        "description": "Distribute batches across multiple GPUs",
+        "implementation": "PyTorch DistributedDataParallel",
+        "use_cases": "Multiple GPUs on single machine",
+        "synchronization": "Gradient synchronization across devices"
+      },
+      
+      "model_parallelism": {
+        "description": "Split model across multiple devices",
+        "implementation": "Pipeline parallelism или tensor parallelism",
+        "use_cases": "Models too large для single GPU",
+        "frameworks": "DeepSpeed, FairScale, Accelerate"
+      },
+      
+      "gradient_checkpointing": {
+        "description": "Trade compute для memory",
+        "benefits": "Enable larger models on limited memory",
+        "drawback": "Increased training time",
+        "implementation": "Automatic с Transformers library"
+      }
+    }
+  },
+  
+  "evaluation_validation": {
+    "automated_evaluation": {
+      "perplexity": "Language modeling quality measure",
+      "bleu_rouge": "Text generation quality",
+      "accuracy_f1": "Classification task metrics",
+      "bertscore": "Semantic similarity measurement",
+      "custom_metrics": "Domain-specific evaluation"
+    },
+    
+    "human_evaluation": {
+      "criteria": [
+        "Fluency и naturalness",
+        "Factual accuracy",
+        "Relevance to prompt",
+        "Safety и appropriateness",
+        "Task-specific quality"
+      ],
+      
+      "evaluation_setup": {
+        "annotator_training": "Clear guidelines и examples",
+        "inter_annotator_agreement": "Consistency measurement",
+        "bias_mitigation": "Diverse annotator pool",
+        "quality_assurance": "Regular calibration"
+      }
+    },
+    
+    "benchmark_testing": {
+      "standard_benchmarks": [
+        "MMLU для general knowledge",
+        "HumanEval для code generation",
+        "HellaSwag для commonsense reasoning",
+        "TruthfulQA для factual accuracy"
+      ],
+      
+      "domain_benchmarks": "Task-specific evaluation sets",
+      "safety_benchmarks": "Harmful content detection tests",
+      "bias_evaluation": "Fairness и representation testing"
+    },
+    
+    "ablation_studies": {
+      "hyperparameter_sensitivity": "Impact of different settings",
+      "data_size_effects": "Performance vs dataset size",
+      "architecture_choices": "Different fine-tuning methods",
+      "component_analysis": "Individual component contributions"
+    }
+  },
+  
+  "deployment_optimization": {
+    "model_compression": {
+      "quantization": {
+        "post_training": "Quantize after training completion",
+        "quantization_aware": "Quantization during training",
+        "bit_precision": "16-bit, 8-bit, 4-bit options",
+        "calibration": "Representative data для accuracy"
+      },
+      
+      "pruning": {
+        "structured": "Remove entire neurons или layers",
+        "unstructured": "Remove individual weights",
+        "magnitude_based": "Remove smallest weights",
+        "importance_based": "Remove least important weights"
+      },
+      
+      "distillation": {
+        "teacher_student": "Large model → smaller model",
+        "progressive": "Gradual size reduction",
+        "task_specific": "Distill for specific capabilities",
+        "ensemble_distillation": "Multiple teachers → single student"
+      }
+    },
+    
+    "inference_optimization": {
+      "batching": {
+        "dynamic_batching": "Group requests efficiently",
+        "continuous_batching": "Overlap generation steps",
+        "sequence_bucketing": "Group similar lengths"
+      },
+      
+      "caching": {
+        "kv_cache": "Key-value cache для attention",
+        "result_caching": "Cache common responses",
+        "prefix_caching": "Cache common prompt prefixes",
+        "sliding_window": "Efficient long context handling"
+      },
+      
+      "hardware_optimization": {
+        "gpu_optimization": "CUDA kernels и memory layout",
+        "tensor_parallelism": "Split computation across devices",
+        "pipeline_parallelism": "Overlap computation stages",
+        "specialized_hardware": "TPUs, custom accelerators"
+      }
+    },
+    
+    "serving_infrastructure": {
+      "model_serving": {
+        "frameworks": ["TensorRT", "ONNX Runtime", "TorchServe", "Triton"],
+        "containerization": "Docker images для consistent deployment",
+        "orchestration": "Kubernetes для scaling",
+        "load_balancing": "Request distribution"
+      },
+      
+      "monitoring": {
+        "performance_metrics": "Latency, throughput, resource usage",
+        "quality_metrics": "Output quality monitoring",
+        "business_metrics": "User satisfaction, task completion",
+        "cost_tracking": "Infrastructure cost optimization"
+      }
+    }
+  },
+  
+  "specialized_applications": {
+    "domain_adaptation": {
+      "medical": {
+        "considerations": ["Regulatory compliance", "Patient privacy", "Clinical accuracy"],
+        "data_sources": ["Medical literature", "Clinical notes", "Drug databases"],
+        "evaluation": "Medical benchmark datasets"
+      },
+      
+      "legal": {
+        "considerations": ["Legal accuracy", "Jurisdiction specificity", "Ethical guidelines"],
+        "data_sources": ["Case law", "Legal documents", "Regulatory texts"],
+        "evaluation": "Legal reasoning benchmarks"
+      },
+      
+      "financial": {
+        "considerations": ["Market sensitivity", "Regulatory compliance", "Risk management"],
+        "data_sources": ["Financial reports", "Market data", "Regulatory filings"],
+        "evaluation": "Financial analysis tasks"
+      },
+      
+      "scientific": {
+        "considerations": ["Scientific accuracy", "Citation practices", "Reproducibility"],
+        "data_sources": ["Research papers", "Scientific databases", "Experimental data"],
+        "evaluation": "Scientific reasoning benchmarks"
+      }
+    },
+    
+    "multilingual_models": {
+      "cross_lingual_transfer": "Knowledge transfer between languages",
+      "language_specific_adaptation": "Optimize for specific languages",
+      "code_switching": "Handle mixed-language inputs",
+      "cultural_adaptation": "Cultural context awareness"
+    },
+    
+    "multimodal_fine_tuning": {
+      "vision_language": "Image + text understanding",
+      "audio_language": "Speech + text processing",
+      "video_language": "Video + text analysis",
+      "document_understanding": "OCR + language comprehension"
+    }
+  },
+  
+  "continuous_learning": {
+    "online_learning": {
+      "incremental_updates": "Update model с new data",
+      "catastrophic_forgetting": "Maintain previous knowledge",
+      "elastic_weight_consolidation": "Protect important parameters",
+      "replay_methods": "Mix old и new data"
+    },
+    
+    "human_feedback": {
+      "rlhf": "Reinforcement Learning from Human Feedback",
+      "constitutional_ai": "Self-improvement through principles",
+      "iterative_refinement": "Multiple rounds of feedback",
+      "preference_learning": "Learn from human preferences"
+    },
+    
+    "active_learning": {
+      "uncertainty_sampling": "Query uncertain predictions",
+      "diversity_sampling": "Query diverse examples",
+      "query_by_committee": "Multiple model disagreement",
+      "expected_model_change": "Maximum learning potential"
+    }
+  },
+  
+  "ethical_safety": {
+    "bias_mitigation": {
+      "data_bias": "Identify и correct training data bias",
+      "model_bias": "Test model outputs для bias",
+      "fairness_metrics": "Demographic parity, equality of opportunity",
+      "debiasing_techniques": "Adversarial training, data augmentation"
+    },
+    
+    "safety_alignment": {
+      "harmful_content": "Prevent generation of harmful content",
+      "truthfulness": "Encourage factual accuracy",
+      "helpfulness": "Optimize для user assistance",
+      "constitutional_training": "Principle-based safety"
+    },
+    
+    "privacy_protection": {
+      "data_privacy": "Protect training data privacy",
+      "differential_privacy": "Formal privacy guarantees",
+      "federated_learning": "Decentralized training",
+      "unlearning": "Remove specific data influence"
+    },
+    
+    "robustness": {
+      "adversarial_attacks": "Test against malicious inputs",
+      "out_of_distribution": "Handle unexpected inputs",
+      "prompt_injection": "Resist malicious prompts",
+      "red_teaming": "Systematic safety testing"
+    }
+  },
+  
+  "cost_optimization": {
+    "training_efficiency": {
+      "mixed_precision": "Use 16-bit training",
+      "gradient_accumulation": "Reduce memory usage",
+      "efficient_optimizers": "Adafactor for memory efficiency",
+      "checkpointing": "Trade compute для memory"
+    },
+    
+    "resource_planning": {
+      "cost_estimation": "Predict training costs",
+      "preemptible_instances": "Use cheaper compute options",
+      "spot_instances": "AWS/GCP spot pricing",
+      "resource_scheduling": "Optimize usage patterns"
+    },
+    
+    "alternative_approaches": {
+      "few_shot_learning": "Minimize training data needs",
+      "in_context_learning": "No parameter updates needed",
+      "prompt_engineering": "Optimize base model usage",
+      "model_selection": "Choose appropriate model size"
+    }
+  },
+  
+  "success_metrics": {
+    "technical_metrics": "Task accuracy > 90%, inference latency < 100ms",
+    "business_metrics": "User adoption, cost reduction, productivity gains",
+    "safety_metrics": "Low harmful output rate, bias scores",
+    "efficiency_metrics": "Training time, inference cost, resource utilization"
+  }
+} 

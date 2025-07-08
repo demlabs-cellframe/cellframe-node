@@ -1,0 +1,25 @@
+{
+  "name": "cellframe-api-docs",
+  "displayName": "Cellframe API Documentation",
+  "description": "IntelliSense \u0434\u043b\u044f Cellframe API",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:cpp"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cellframe.searchAPI",
+        "title": "Search Cellframe API"
+      }
+    ]
+  }
+}
