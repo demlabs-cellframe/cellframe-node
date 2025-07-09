@@ -1,0 +1,229 @@
+# Alert Rules for CellFrame Python SDK Monitoring
+groups:
+  - name: cellframe-python-sdk
+    interval: 30s
+    rules:
+      # Service availability
+      - alert: PythonSDKDown
+        expr: up{job="cellframe-python-sdk"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: python-sdk
+        annotations:
+          summary: "CellFrame Python SDK is down"
+          description: "CellFrame Python SDK has been down for more than 1 minute"
+          runbook_url: "https://docs.cellframe.net/runbooks/python-sdk-down"
+
+      # High error rate
+      - alert: PythonSDKHighErrorRate
+        expr: rate(python_sdk_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "High error rate in Python SDK"
+          description: "Error rate is {{ $value }} errors per second"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-error-rate"
+
+      # High response time
+      - alert: PythonSDKHighResponseTime
+        expr: histogram_quantile(0.95, rate(python_sdk_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "High response time in Python SDK"
+          description: "95th percentile response time is {{ $value }} seconds"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-response-time"
+
+      # Memory usage
+      - alert: PythonSDKHighMemoryUsage
+        expr: python_sdk_memory_usage_bytes / python_sdk_memory_limit_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "High memory usage in Python SDK"
+          description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-memory-usage"
+
+      # CPU usage
+      - alert: PythonSDKHighCPUUsage
+        expr: rate(python_sdk_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "High CPU usage in Python SDK"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-cpu-usage"
+
+      # Database connection issues
+      - alert: PythonSDKDatabaseConnectionIssues
+        expr: python_sdk_database_connection_errors_total > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "Database connection issues in Python SDK"
+          description: "{{ $value }} database connection errors detected"
+          runbook_url: "https://docs.cellframe.net/runbooks/database-issues"
+
+      # Plugin failures
+      - alert: PythonSDKPluginFailures
+        expr: increase(python_sdk_plugin_failures_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "Plugin failures in Python SDK"
+          description: "{{ $value }} plugin failures in the last 5 minutes"
+          runbook_url: "https://docs.cellframe.net/runbooks/plugin-failures"
+
+      # Security alerts
+      - alert: PythonSDKSecurityViolation
+        expr: increase(python_sdk_security_violations_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          service: python-sdk
+        annotations:
+          summary: "Security violation detected in Python SDK"
+          description: "{{ $value }} security violations detected"
+          runbook_url: "https://docs.cellframe.net/runbooks/security-violations"
+
+      # Rate limiting alerts
+      - alert: PythonSDKRateLimitExceeded
+        expr: increase(python_sdk_rate_limit_exceeded_total[5m]) > 100
+        for: 1m
+        labels:
+          severity: warning
+          service: python-sdk
+        annotations:
+          summary: "Rate limit exceeded in Python SDK"
+          description: "{{ $value }} rate limit violations in the last 5 minutes"
+          runbook_url: "https://docs.cellframe.net/runbooks/rate-limit-exceeded"
+
+  - name: cellframe-node
+    interval: 30s
+    rules:
+      # Node availability
+      - alert: CellFrameNodeDown
+        expr: up{job="cellframe-node"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: cellframe-node
+        annotations:
+          summary: "CellFrame Node is down"
+          description: "CellFrame Node has been down for more than 1 minute"
+          runbook_url: "https://docs.cellframe.net/runbooks/node-down"
+
+      # Node synchronization issues
+      - alert: CellFrameNodeSyncIssues
+        expr: cellframe_node_sync_status == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: cellframe-node
+        annotations:
+          summary: "CellFrame Node synchronization issues"
+          description: "Node has been out of sync for more than 5 minutes"
+          runbook_url: "https://docs.cellframe.net/runbooks/sync-issues"
+
+  - name: system
+    interval: 30s
+    rules:
+      # System load
+      - alert: HighSystemLoad
+        expr: node_load1 > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High system load"
+          description: "System load is {{ $value }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-system-load"
+
+      # Disk usage
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.mountpoint }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-disk-usage"
+
+      # Memory usage
+      - alert: HighSystemMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High system memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/high-memory-usage"
+
+  - name: docker
+    interval: 30s
+    rules:
+      # Container down
+      - alert: DockerContainerDown
+        expr: up{job="docker"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Docker container is down"
+          description: "Docker container {{ $labels.container }} has been down for more than 1 minute"
+          runbook_url: "https://docs.cellframe.net/runbooks/container-down"
+
+      # Container high memory usage
+      - alert: DockerContainerHighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "High memory usage in Docker container"
+          description: "Container {{ $labels.container }} memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/container-high-memory"
+
+      # Container high CPU usage
+      - alert: DockerContainerHighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "High CPU usage in Docker container"
+          description: "Container {{ $labels.container }} CPU usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.cellframe.net/runbooks/container-high-cpu"
+
+      # Container restart rate
+      - alert: DockerContainerHighRestartRate
+        expr: increase(container_restart_count[5m]) > 3
+        for: 1m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "High restart rate for Docker container"
+          description: "Container {{ $labels.container }} has restarted {{ $value }} times in the last 5 minutes"
+          runbook_url: "https://docs.cellframe.net/runbooks/container-high-restart-rate" 

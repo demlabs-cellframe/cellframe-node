@@ -1,0 +1,123 @@
+# Prometheus Configuration for CellFrame Python SDK
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    cluster: 'cellframe-python-sdk'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+# Scrape configuration
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  # CellFrame Python SDK
+  - job_name: 'cellframe-python-sdk'
+    static_configs:
+      - targets: ['cellframe-python-sdk:9090']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'python_sdk_(.+)'
+        target_label: 'component'
+        replacement: '${1}'
+
+  # CellFrame Node
+  - job_name: 'cellframe-node'
+    static_configs:
+      - targets: ['cellframe-node:8089']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    scrape_timeout: 10s
+
+  # System metrics (Node Exporter)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  # Docker metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['docker-exporter:9323']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+
+  # Application-specific metrics
+  - job_name: 'python-sdk-plugins'
+    static_configs:
+      - targets: ['cellframe-python-sdk:9091']
+    scrape_interval: 30s
+    metrics_path: '/plugin-metrics'
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+
+  # Database metrics
+  - job_name: 'python-sdk-database'
+    static_configs:
+      - targets: ['cellframe-python-sdk:9092']
+    scrape_interval: 30s
+    metrics_path: '/db-metrics'
+    scrape_timeout: 10s
+
+  # Performance metrics
+  - job_name: 'python-sdk-performance'
+    static_configs:
+      - targets: ['cellframe-python-sdk:9093']
+    scrape_interval: 15s
+    metrics_path: '/performance-metrics'
+    scrape_timeout: 10s
+
+  # Security metrics
+  - job_name: 'python-sdk-security'
+    static_configs:
+      - targets: ['cellframe-python-sdk:9094']
+    scrape_interval: 60s
+    metrics_path: '/security-metrics'
+    scrape_timeout: 10s
+
+  # Health check endpoints
+  - job_name: 'health-checks'
+    static_configs:
+      - targets: 
+        - 'cellframe-python-sdk:8080'
+        - 'cellframe-node:8089'
+    scrape_interval: 30s
+    metrics_path: '/health'
+    scrape_timeout: 5s
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: "http://cortex:9009/api/prom/push"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+
+# Remote read configuration
+remote_read:
+  - url: "http://cortex:9009/api/prom/read"
+    read_recent: true 

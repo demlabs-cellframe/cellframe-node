@@ -1,0 +1,223 @@
+version: '3.8'
+
+services:
+  cellframe-python-sdk:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
+        CELLFRAME_VERSION: ${CELLFRAME_VERSION:-latest}
+        BUILD_DATE: ${BUILD_DATE}
+        VCS_REF: ${VCS_REF}
+    image: cellframe/python-sdk:${CELLFRAME_VERSION:-latest}
+    container_name: cellframe-python-sdk
+    restart: unless-stopped
+    environment:
+      - CELLFRAME_PYTHON_SDK_CONFIG=/opt/cellframe/etc/python-sdk.conf
+      - CELLFRAME_PYTHON_SDK_LOG_LEVEL=${LOG_LEVEL:-info}
+      - CELLFRAME_PYTHON_SDK_PLUGINS_DIR=/opt/cellframe/lib/python-sdk/plugins
+      - PYTHONPATH=/opt/cellframe/lib/python-sdk
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+      - "${HTTPS_PORT:-8443}:8443"
+    volumes:
+      - cellframe_data:/opt/cellframe/var
+      - cellframe_config:/opt/cellframe/etc
+      - ./logs:/opt/cellframe/var/log/python-sdk
+    networks:
+      - cellframe_network
+    depends_on:
+      - cellframe-node
+    healthcheck:
+      test: ["/opt/cellframe/bin/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.python-sdk.rule=Host(`python-sdk.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.python-sdk.tls=true"
+      - "traefik.http.services.python-sdk.loadbalancer.server.port=8080"
+
+  cellframe-node:
+    image: cellframe/node:${CELLFRAME_NODE_VERSION:-latest}
+    container_name: cellframe-node
+    restart: unless-stopped
+    environment:
+      - CELLFRAME_NODE_CONFIG=/opt/cellframe/etc/cellframe-node.cfg
+      - CELLFRAME_NODE_LOG_LEVEL=${NODE_LOG_LEVEL:-info}
+    ports:
+      - "${NODE_PORT:-8089}:8089"
+    volumes:
+      - cellframe_node_data:/opt/cellframe/var
+      - cellframe_node_config:/opt/cellframe/etc
+    networks:
+      - cellframe_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Monitoring services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cellframe-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - cellframe_network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cellframe-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - cellframe_network
+    profiles:
+      - monitoring
+
+  # Log management
+  loki:
+    image: grafana/loki:latest
+    container_name: cellframe-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    networks:
+      - cellframe_network
+    profiles:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: cellframe-promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml
+      - ./logs:/var/log/cellframe
+      - /var/log:/var/log/host:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - cellframe_network
+    profiles:
+      - monitoring
+
+  # Security services
+  vault:
+    image: vault:latest
+    container_name: cellframe-vault
+    restart: unless-stopped
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_TOKEN:-myroot}
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    volumes:
+      - vault_data:/vault/data
+      - ./security/vault-config.json:/vault/config/config.json
+    networks:
+      - cellframe_network
+    cap_add:
+      - IPC_LOCK
+    profiles:
+      - security
+
+  # Reverse proxy
+  traefik:
+    image: traefik:latest
+    container_name: cellframe-traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "${TRAEFIK_HTTP_PORT:-80}:80"
+      - "${TRAEFIK_HTTPS_PORT:-443}:443"
+      - "${TRAEFIK_DASHBOARD_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/acme.json
+    networks:
+      - cellframe_network
+    profiles:
+      - proxy
+
+networks:
+  cellframe_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  cellframe_data:
+    driver: local
+  cellframe_config:
+    driver: local
+  cellframe_node_data:
+    driver: local
+  cellframe_node_config:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  vault_data:
+    driver: local
+  traefik_data:
+    driver: local 

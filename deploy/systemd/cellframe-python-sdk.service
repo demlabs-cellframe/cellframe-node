@@ -1,0 +1,50 @@
+[Unit]
+Description=CellFrame Python SDK Service
+Documentation=https://cellframe.net/docs/python-sdk
+After=network.target network-online.target
+Wants=network-online.target
+Requires=cellframe-node.service
+
+[Service]
+Type=forking
+User=cellframe
+Group=cellframe
+WorkingDirectory=/opt/cellframe/lib/python-sdk
+ExecStart=/opt/cellframe/bin/cellframe-python-sdk --daemon
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/cellframe/var/log/python-sdk /opt/cellframe/var/run/python-sdk /opt/cellframe/var/lib/python-sdk
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=512M
+CPUQuota=200%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cellframe-python-sdk
+
+# Environment
+Environment=CELLFRAME_PYTHON_SDK_CONFIG=/opt/cellframe/etc/python-sdk.conf
+Environment=CELLFRAME_PYTHON_SDK_LOG_LEVEL=info
+Environment=CELLFRAME_PYTHON_SDK_PLUGINS_DIR=/opt/cellframe/lib/python-sdk/plugins
+Environment=PYTHONPATH=/opt/cellframe/lib/python-sdk
+
+[Install]
+WantedBy=multi-user.target
+Alias=python-sdk.service 
