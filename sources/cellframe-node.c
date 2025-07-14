@@ -330,9 +330,9 @@ int main( int argc, const char **argv )
         return -60;
     }
 
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
+
+
+
 
     if( dap_chain_cs_dag_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
@@ -374,9 +374,42 @@ int main( int argc, const char **argv )
         return -61;
     }
 
+    #ifdef DAP_SUPPORT_PYTHON_PLUGINS
+    // Early Python plugin initialization - allows plugins to register services with hardfork callbacks
+    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+        // Initialize plugin manifest system first
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
+        int rc_plugin_manifest_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
+        DAP_DELETE(l_plugins_path_default);
+        
+        if (rc_plugin_manifest_init) {
+            log_it(L_ERROR, "Failed to initialize plugin manifest system. Error code %d", rc_plugin_manifest_init);
+            return -78;
+        }
+        
+        if(dap_config_get_item_bool_default(g_config,"plugins","py_load",false)){
+            log_it(L_NOTICE, "Early Python plugin initialization - before service registration");
+            int rc_early_python = dap_chain_plugins_early_init(g_config);
+            if (rc_early_python != 0) {
+                log_it(L_ERROR, "Failed to initialize Python plugins early phase. Error code %d", rc_early_python);
+                return -79;
+            }
+            log_it(L_NOTICE, "Early Python plugin initialization completed - Python plugins can now register services");
+        }
+    }
+#endif
+
     if( dap_chain_net_srv_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
+    }
+
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
+        log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
     if (dap_chain_net_srv_xchange_init()) {
@@ -501,34 +534,25 @@ int main( int argc, const char **argv )
 #endif
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
         int rc_plugin_init = 0;
-        rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        if (rc_plugin_init) {
-            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);    
-            DAP_DELETE(l_plugins_path_default);
-        } else {
-            DAP_DELETE(l_plugins_path_default);
+        
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            //Init python plugins
-            log_it(L_NOTICE, "Loading python plugins");
+        //Init python plugins (late phase) - manifest system already initialized in early phase
+        if(dap_config_get_item_bool_default(g_config,"plugins","py_load",false)){
+            log_it(L_NOTICE, "Late phase Python plugin initialization");
             dap_plugins_python_app_content_init(l_server);
-            rc_plugin_init = dap_chain_plugins_init(g_config);
+            rc_plugin_init = dap_chain_plugins_late_init(g_config);
+        }
 #endif
-            dap_plugin_start_all();
+        dap_plugin_start_all();
 
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            if (!rc_plugin_init) {
-                dap_chain_plugins_save_thread(g_config);
-            } else {
-                log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
-            }
-#endif
+        if (!rc_plugin_init) {
+            dap_chain_plugins_save_thread(g_config);
+        } else {
+            log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
         }
+#endif
     }
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all();
