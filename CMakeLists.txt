@@ -486,11 +486,14 @@ if(DARWIN)
     
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
-    #install python-modules
+    # Note: pycfhelpers and pycftools are installed as source packages on macOS
+    # Wheel packages are not yet supported on macOS
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
+
+
 
 else()
 
@@ -561,9 +564,157 @@ else()
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
-            #install python-modules
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+            # Download Python wheel files
+            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+                cmake_policy(SET CMP0135 NEW)
+            endif()
+            
+            # Variable to track installation method
+            set(PYTHON_PACKAGES_INSTALL_METHOD "unknown")
+            
+            # Function to download and install wheel packages
+            function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
+                set(DOWNLOAD_SCRIPT "${CMAKE_BINARY_DIR}/download_${PACKAGE_NAME}.cmake")
+                file(WRITE ${DOWNLOAD_SCRIPT} "
+                    # First, get the redirect URL to extract real filename
+                    execute_process(
+                        COMMAND curl -s -I \"${PACKAGE_URL}\"
+                        OUTPUT_VARIABLE CURL_HEADERS
+                        RESULT_VARIABLE CURL_RESULT
+                    )
+                    
+                    if(CURL_RESULT EQUAL 0)
+                        # Extract the Location header to get real filename
+                        string(REGEX MATCH \"Location: ([^\\r\\n]+)\" LOCATION_MATCH \"\${CURL_HEADERS}\")
+                        if(LOCATION_MATCH)
+                            string(REGEX REPLACE \"Location: \" \"\" REAL_URL \"\${LOCATION_MATCH}\")
+                            string(STRIP \"\${REAL_URL}\" REAL_URL)
+                            
+                            # Extract filename from URL
+                            string(REGEX MATCH \"[^/]+\\\\.whl\" REAL_FILENAME \"\${REAL_URL}\")
+                            if(NOT REAL_FILENAME)
+                                set(REAL_FILENAME \"${PACKAGE_NAME}-unknown-py3-none-any.whl\")
+                            endif()
+                            
+                            message(STATUS \"Real ${PACKAGE_NAME} URL: \${REAL_URL}\")
+                            message(STATUS \"Real ${PACKAGE_NAME} filename: \${REAL_FILENAME}\")
+                            
+                            # Download the actual file
+                            file(DOWNLOAD 
+                                \"\${REAL_URL}\"
+                                \"${CMAKE_BINARY_DIR}/\${REAL_FILENAME}\"
+                                SHOW_PROGRESS
+                                INACTIVITY_TIMEOUT 30
+                                TIMEOUT 300
+                                STATUS DOWNLOAD_STATUS
+                            )
+                            
+                            list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                            if(DOWNLOAD_RESULT EQUAL 0)
+                                message(STATUS \"Downloaded ${PACKAGE_NAME} as: \${REAL_FILENAME}\")
+                                set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                            else()
+                                message(WARNING \"Failed to download ${PACKAGE_NAME} wheel from real URL\")
+                                set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                            endif()
+                        else()
+                            message(WARNING \"Could not extract real filename from redirect, using fallback\")
+                            file(DOWNLOAD 
+                                \"${PACKAGE_URL}\"
+                                \"${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-fallback.whl\"
+                                SHOW_PROGRESS
+                                INACTIVITY_TIMEOUT 30
+                                TIMEOUT 300
+                                STATUS DOWNLOAD_STATUS
+                            )
+                            list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                            if(DOWNLOAD_RESULT EQUAL 0)
+                                set(REAL_FILENAME \"${PACKAGE_NAME}-fallback.whl\")
+                                set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                            else()
+                                message(WARNING \"Fallback download failed for ${PACKAGE_NAME}\")
+                                set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                            endif()
+                        endif()
+                    else()
+                        message(WARNING \"curl failed, using direct download\")
+                        file(DOWNLOAD 
+                            \"${PACKAGE_URL}\"
+                            \"${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-direct.whl\"
+                            SHOW_PROGRESS
+                            INACTIVITY_TIMEOUT 30
+                            TIMEOUT 300
+                            STATUS DOWNLOAD_STATUS
+                        )
+                        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                        if(DOWNLOAD_RESULT EQUAL 0)
+                            set(REAL_FILENAME \"${PACKAGE_NAME}-direct.whl\")
+                            set(DOWNLOAD_SUCCESS TRUE PARENT_SCOPE)
+                        else()
+                            message(WARNING \"Direct download failed for ${PACKAGE_NAME}\")
+                            set(DOWNLOAD_SUCCESS FALSE PARENT_SCOPE)
+                        endif()
+                    endif()
+                ")
+                
+                # Execute the download script
+                execute_process(
+                    COMMAND ${CMAKE_COMMAND} -P ${DOWNLOAD_SCRIPT}
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RESULT_VARIABLE DOWNLOAD_RESULT
+                )
+                
+                if(DOWNLOAD_RESULT EQUAL 0)
+                    # Find the downloaded file (now with real version in filename)
+                    file(GLOB WHEEL_FILE "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}-*.whl")
+                    
+                    if(WHEEL_FILE)
+                        # Extract just the filename for logging
+                        get_filename_component(WHEEL_FILENAME "${WHEEL_FILE}" NAME)
+                        
+                        # Install wheel file to wheels directory
+                        INSTALL(FILES ${WHEEL_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
+                        message(STATUS "Found ${PACKAGE_NAME} wheel file: ${WHEEL_FILENAME}")
+                        message(STATUS "Real ${PACKAGE_NAME} version will be installed: ${WHEEL_FILENAME}")
+                        set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
+                    else()
+                        message(WARNING "No ${PACKAGE_NAME} wheel file found after download")
+                        set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
+                    endif()
+                else()
+                    message(WARNING "Failed to download ${PACKAGE_NAME} wheel file")
+                    set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
+                endif()
+            endfunction()
+            
+            # Try to download wheel packages
+            message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
+            
+            # Download pycfhelpers wheel file/
+            download_wheel_package("pycfhelpers" "https://internal-pub.cellframe.net/python/python-cellframe/pycfhelpers/master//latest.universal" PYCFHELPERS_SUCCESS)
+            
+            # Download pycftools wheel file
+            download_wheel_package("pycftools" "https://internal-pub.cellframe.net/python/python-cellframe/pycftools/master//latest.universal" PYCFTOOLS_SUCCESS)
+            
+            # Check if both packages downloaded successfully
+            if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
+                message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+                set(PYTHON_PACKAGES_INSTALL_METHOD "wheel")
+                # Create install method flag file
+                INSTALL(CODE "
+                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"wheel\")
+                    message(STATUS \"[WHEEL] Installation method: wheel packages\")
+                ")
+            else()
+                message(STATUS "[WHEEL] Some wheel packages failed to download, continuing build without them")
+                set(PYTHON_PACKAGES_INSTALL_METHOD "none")
+                # Create install method flag file
+                INSTALL(CODE "
+                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"none\")
+                    message(STATUS \"[WHEEL] Installation method: none (wheel packages not available)\")
+                ")
+            endif()
+            
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
@@ -572,3 +723,5 @@ else()
 
 endif()
 INCLUDE(CPack)
+
+
