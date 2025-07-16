@@ -1,0 +1,82 @@
+{
+  "test_suite": "CellFrame Python SDK Performance Tests",
+  "timestamp": "2025-07-09T22:08:51.634946",
+  "total_time": 23.892356625001412,
+  "tests_run": 6,
+  "tests_passed": 6,
+  "tests_failed": 0,
+  "success_rate": 100.0,
+  "performance_targets": {
+    "plugin_init_time": 100,
+    "plugin_load_time": 1,
+    "memory_usage": 20,
+    "cpu_usage": 80,
+    "security_overhead": 30
+  },
+  "test_results": [
+    {
+      "test_name": "Plugin Loading Performance",
+      "average_load_time": 75.22908682585694,
+      "max_load_time": 78.3887499710545,
+      "min_load_time": 70.0595419621095,
+      "target": 100,
+      "passed": true,
+      "plugins_tested": 12
+    },
+    {
+      "test_name": "Memory Usage Test",
+      "initial_memory": 17.8125,
+      "peak_memory": 17.875,
+      "average_memory": 17.864583333333332,
+      "memory_increase": 0.0625,
+      "target": 20,
+      "passed": true
+    },
+    {
+      "test_name": "CPU Usage Test",
+      "initial_cpu": 41.3,
+      "average_cpu": 29.4,
+      "peak_cpu": 50.8,
+      "target": 80,
+      "passed": true
+    },
+    {
+      "test_name": "Security Overhead Test",
+      "no_security_time": 48.60785020282492,
+      "with_security_time": 75.22279140539467,
+      "security_overhead": 26.614941202569753,
+      "target": 30,
+      "passed": true
+    },
+    {
+      "test_name": "Concurrent Loading Test",
+      "total_time": 317.4714590422809,
+      "average_time": 70.45197933136176,
+      "plugins_loaded": 12,
+      "concurrent_workers": 4,
+      "speedup": 2.532511119032351,
+      "passed": true
+    },
+    {
+      "test_name": "Stress Test",
+      "duration": 15.066399374976754,
+      "plugins_loaded": 201,
+      "throughput": 13.340944640949433,
+      "errors": 0,
+      "target_throughput": 10,
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "memory_optimization": {
+    "plugins_count": 12,
+    "concurrent_workers": 4,
+    "stress_duration": 15,
+    "memory_target": 20
+  },
+  "memory_info": {
+    "initial_memory": 17.8125,
+    "final_memory": 19.984375,
+    "memory_difference": 2.171875
+  }
+}

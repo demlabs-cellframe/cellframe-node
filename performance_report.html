@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CellFrame Python SDK Performance Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .passed { color: green; }
+        .failed { color: red; }
+        .metrics { margin: 20px 0; }
+        .test-result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .memory-opt { background-color: #e8f4f8; padding: 10px; border-radius: 5px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CellFrame Python SDK Performance Report</h1>
+        <p>Generated: 2025-07-09T22:08:51.634946</p>
+        <p>Total Time: 23.89 seconds</p>
+        <p>Success Rate: 100.0%</p>
+    </div>
+    
+    <div class="memory-opt">
+        <h2>Memory Optimization Summary</h2>
+        <table>
+            <tr><th>Parameter</th><th>Value</th></tr>
+            <tr><td>Test Plugins Count</td><td>12</td></tr>
+            <tr><td>Concurrent Workers</td><td>4</td></tr>
+            <tr><td>Memory Target</td><td>20 MB</td></tr>
+            <tr><td>Stress Test Duration</td><td>15 seconds</td></tr>
+        </table>
+    </div>
+    
+    <div class="metrics">
+        <h2>Test Summary</h2>
+        <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>Tests Run</td><td>6</td></tr>
+            <tr><td>Tests Passed</td><td class="passed">6</td></tr>
+            <tr><td>Tests Failed</td><td class="failed">0</td></tr>
+        </table>
+    </div>
+    
+    <div class="test-results">
+        <h2>Test Results</h2>
+
+        <div class="test-result">
+            <h3>Plugin Loading Performance <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "Plugin Loading Performance",
+  "passed": true,
+  "target": 100
+}</pre>
+        </div>
+
+        <div class="test-result">
+            <h3>Memory Usage Test <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "Memory Usage Test",
+  "passed": true,
+  "target": 20,
+  "peak_memory": 17.875
+}</pre>
+        </div>
+
+        <div class="test-result">
+            <h3>CPU Usage Test <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "CPU Usage Test",
+  "passed": true,
+  "target": 80,
+  "average_cpu": 29.4
+}</pre>
+        </div>
+
+        <div class="test-result">
+            <h3>Security Overhead Test <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "Security Overhead Test",
+  "passed": true,
+  "target": 30,
+  "security_overhead": 26.614941202569753
+}</pre>
+        </div>
+
+        <div class="test-result">
+            <h3>Concurrent Loading Test <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "Concurrent Loading Test",
+  "passed": true,
+  "target": "N/A",
+  "speedup": 2.532511119032351
+}</pre>
+        </div>
+
+        <div class="test-result">
+            <h3>Stress Test <span class="passed">✅ PASSED</span></h3>
+            <pre>{
+  "test_name": "Stress Test",
+  "passed": true,
+  "target": "N/A"
+}</pre>
+        </div>
+
+    </div>
+</body>
+</html>

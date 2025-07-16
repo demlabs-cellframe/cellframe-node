@@ -1,9 +1,0 @@
-{
-  "timestamp": "2025-06-18T17:28:52.174172",
-  "phase": "phase_1",
-  "phase_name": "Архитектурный анализ и планирование",
-  "status": "failed",
-  "tools": [
-    "intelligent_module_analyzer.py"
-  ]
-}
