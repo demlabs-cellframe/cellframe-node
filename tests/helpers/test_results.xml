@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="CellFrameNodeTests" tests="0" failures="0" time="1752680099">
+  <testcase name="test_node_startup.sh" classname="CellFrameNode.Integration">
+  </testcase>
+  <testcase name="test_binary_plugins.sh" classname="CellFrameNode.Integration">
+  </testcase>
+  <testcase name="test_python_plugins.sh" classname="CellFrameNode.Integration">
+  </testcase>
+</testsuite>
