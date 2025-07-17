@@ -1,7 +1,3 @@
-[submodule "plugin-python"]
-	path = plugins/plugin-python
-	url = ../cellframe-node-plugin-python.git
-	branch = feature-18297
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
 	url = ../cellframe-sdk.git
@@ -16,3 +12,7 @@
 [submodule "diagtool"]
 	path = diagtool
 	url = ../cellframe-node-diagtool.git
+[submodule "plugins/plugin-python"]
+	path = plugins/plugin-python
+	url = git@gitlab.demlabs.net:/cellframe/cellframe-node-plugin-python
+	branch = feature-18297

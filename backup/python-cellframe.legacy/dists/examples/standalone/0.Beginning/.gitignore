@@ -1,5 +1,0 @@
-tmp/*
-var/log/*
-var/lib/ca/*
-var/lib/global_db
-var/lib/wallet/*
