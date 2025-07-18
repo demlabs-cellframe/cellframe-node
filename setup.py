@@ -3,7 +3,7 @@
 🧬 Python DAP SDK Setup
 
 Setup script for Python DAP SDK with integrated C library.
-Builds python_cellframe_common.so and includes it in the package.
+Builds python_dap.so and includes it in the package.
 """
 
 import os
@@ -36,7 +36,9 @@ class CMakeBuild(build_ext):
         cmake_args = [
             f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={build_temp}',
             f'-DCMAKE_BUILD_TYPE=Release',
-            '-DBUILD_PYTHON_CELLFRAME_COMMON=ON',
+            '-DBUILD_SHARED=ON',
+            '-DBUILD_STATIC=OFF',
+            '-DBUILD_PLUGIN_SPECIFIC=OFF',
             '-DBUILD_TESTS=OFF'
         ]
         
@@ -60,16 +62,16 @@ class CMakeBuild(build_ext):
         lib_dir.mkdir(exist_ok=True)
         
         # Find built library
-        for lib_file in build_temp.glob('**/python_cellframe_common.*'):
+        for lib_file in build_temp.glob('**/python_dap.*'):
             if lib_file.suffix in ['.so', '.dylib', '.dll']:
-                dest = lib_dir / f'python_cellframe_common{lib_file.suffix}'
+                dest = lib_dir / f'python_dap{lib_file.suffix}'
                 print(f"Copying {lib_file} to {dest}")
                 shutil.copy2(lib_file, dest)
                 break
 
 # Dummy extension to trigger CMake build
 cmake_extension = Extension(
-    'python_cellframe_common',
+    'python_dap',
     sources=[],  # CMake handles the sources
 )
 
@@ -84,7 +86,7 @@ offering low-level access to the DAP ecosystem with compiled C performance.
 
 Features:
 - Direct DAP SDK integration
-- No fallback implementations
+- Modular architecture with standalone and plugin modes
 - Production-ready C library
 - Comprehensive test suite
 - CI/CD ready
@@ -96,7 +98,7 @@ Features:
     # Package structure
     packages=find_packages(),
     package_data={
-        'dap': ['../lib/python_cellframe_common.*'],
+        'dap': ['../lib/python_dap.*'],
     },
     include_package_data=True,
     
