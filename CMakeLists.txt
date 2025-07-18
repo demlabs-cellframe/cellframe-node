@@ -32,6 +32,7 @@ set(PYTHON_DAP_SOURCES
     src/python_dap_events.c
     src/python_dap_client.c
     src/python_dap_server.c
+    src/python_gdb.c
 )
 
 # Common include directories
