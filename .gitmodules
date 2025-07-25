@@ -13,6 +13,4 @@
 	path = dap-sdk
 	url = ../../dap/dap-sdk.git
 	branch = develop
-[submodule "diagtool"]
-	path = diagtool
-	url = https://gitlab.demlabs.net/cellframe/cellframe-node-diagtool.git
+
