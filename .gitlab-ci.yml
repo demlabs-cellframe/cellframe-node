@@ -148,11 +148,9 @@ api_json_validation:
       artifacts: true
   dependencies:
     - amd64:linux.rwd.bld
-  before_script:
-    # Установим зависимости
-    - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
 
-    # Скачаем CLI-тесты
+  before_script:
+    - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
     - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
     - unzip cellframe-node-cli.zip -d cli/
 
@@ -162,25 +160,43 @@ api_json_validation:
     - echo -e "[system]\nloglevel=info" > ~/.cellframe-node-daemon/daemon.conf
 
     - echo "📦 Проверим .deb"
-    - ls -l build_linux_rwd/
+    - ls -lh build_linux_rwd/
     - dpkg -i build_linux_rwd/cellframe-node-*.deb || true
     - apt-get install -f -y
 
     - echo "🚀 Запускаем cellframe-node вручную в фоне"
     - cellframe-node-daemon > cli/node.log 2>&1 &
     - NODE_PID=$!
-    - sleep 10
+    - sleep 5
+
+    - echo "⌛ Ждём готовности ноды..."
+    - |
+      for i in {1..60}; do
+        if curl -s http://127.0.0.1:12345/connect >/dev/null 2>&1; then
+          echo "✅ Нода готова!"
+          break
+        fi
+        sleep 1
+        if [ $i -eq 60 ]; then
+          echo "❌ Нода не запустилась. Последние строки лога:"
+          tail -20 cli/node.log
+          exit 1
+        fi
+      done
+
+    - echo "🐍 Создаём и активируем Python venv"
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r cli/requirements.txt
+
+    - echo "✅ Запускаем CLI валидацию"
+    - python cli/main/validate.py
 
   artifacts:
     when: always
     paths:
       - cli/test_results/
       - cli/node.log
-  allow_failure: false
-  artifacts:
-    when: always
-    paths:
-      - cli/test_results/
     reports:
       junit: cli/test_results/test_report_*.json
     expire_in: 1 week
