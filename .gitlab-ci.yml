@@ -142,17 +142,40 @@ api_json_validation:
   extends: .build
   stage: test_build
   image: demlabs/debian/amd64:qt5
+
   needs:
     - job: amd64:linux.rwd.bld
       artifacts: true
+
   before_script:
+    # Установим зависимости
     - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
+
+    # Скачаем CLI-тесты
     - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
     - unzip cellframe-node-cli.zip -d cli/
-    - cd cli/
+
   script:
-    - dpkg -i *.deb
-    - apt-get install -f
+    # Проверим, что .deb файл существует
+    - ls -l build_*
+
+    # Установим node из артефакта
+    - dpkg -i build_*/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
+    - apt-get install -f -y
+
+    # Запускаем CLI тесты
+    - python3 -m venv venv && source venv/bin/activate
+    - pip install -r cli/requirements.txt
+    - python cli/main/validate.py
+
+  artifacts:
+    when: always
+    paths:
+      - cli/test_results/
+    reports:
+      junit: cli/test_results/test_report_*.json
+    expire_in: 1 week
+
 
 
 
