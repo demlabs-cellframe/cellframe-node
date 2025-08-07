@@ -147,6 +147,9 @@ api_json_validation:
     - job: amd64:linux.rwd.bld
       artifacts: true
 
+  dependencies:
+    - amd64:linux.rwd.bld
+
   before_script:
     - apt-get update -y
     - apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
