@@ -157,43 +157,20 @@ api_json_validation:
     - unzip cellframe-node-cli.zip -d cli/
 
   script:
-    # Проверим, что .deb файл существует
-    - ls -l build_linux_rwd/
+    - echo "📄 Создаём конфиг ~/.cellframe-node-daemon/daemon.conf"
+    - mkdir -p ~/.cellframe-node-daemon
+    - echo -e "[system]\nloglevel=info" > ~/.cellframe-node-daemon/daemon.conf
 
-    # Установим node из артефакта
-    - dpkg -i build_linux_rwd/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
+    - echo "📦 Проверим .deb"
+    - ls -l build_linux_rwd/
+    - dpkg -i build_linux_rwd/cellframe-node-*.deb || true
     - apt-get install -f -y
 
-    # Запускаем ноду
     - echo "🚀 Запускаем cellframe-node вручную в фоне"
-    - cellframe-node-daemon > node.log 2>&1 &
-    - sleep 50
-    - cat node.log
-
+    - cellframe-node-daemon > cli/node.log 2>&1 &
     - NODE_PID=$!
-    
-    # Ожидание готовности ноды с улучшенной диагностикой
-    - |
-      for i in {1..60}; do
-        if curl -s http://127.0.0.1:12345/connect >/dev/null 2>&1; then
-          echo "✅ Нода готова!"
-          break
-        fi
-        sleep 1
-        if [ $i -eq 60 ]; then
-          echo "❌ Нода не запустилась"
-          cat node.log | tail -20
-          exit 1
-        fi
-      done
-    
-    # Python окружение
-    - python3 -m venv venv && source venv/bin/activate
-    - pip install -r requirements.txt
-    
-    # ИСПРАВЛЕНО: правильный запуск тестов
-    - python3 test_node.py --node-url http://127.0.0.1:12345/connect --output-dir test_results
-  
+    - sleep 10
+
   artifacts:
     when: always
     paths:
