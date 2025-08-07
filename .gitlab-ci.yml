@@ -166,7 +166,7 @@ api_json_validation:
 
     # Запускаем ноду
     - echo "🚀 Запускаем cellframe-node вручную в фоне"
-    - cellframe-node > node.log 2>&1 &
+    - cellframe-node-daemon > node.log 2>&1 &
     - sleep 5  # Даём время ноде стартовать
 
 
