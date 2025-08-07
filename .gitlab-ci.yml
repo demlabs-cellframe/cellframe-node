@@ -148,24 +148,21 @@ api_json_validation:
       artifacts: true
 
   before_script:
-    # Установим зависимости
     - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
 
-    # Скачаем CLI-тесты
     - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
     - unzip cellframe-node-cli.zip -d cli/
 
   script:
-    # Проверим, что .deb файл существует
-    - ls -l build_linux_rwd/
+    - echo "=== Поиск .deb файла в артефактах ==="
+    - find . -name "*.deb" > deb_paths.txt
+    - cat deb_paths.txt
 
-    # Установим node из артефакта
-
-    
-    - dpkg -i build_linux_rwd/build/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
+    # Если файл найден, установить
+    - DEB_PATH=$(head -n 1 deb_paths.txt)
+    - if [ -f "$DEB_PATH" ]; then dpkg -i "$DEB_PATH" || true; else echo "DEB файл не найден!" && exit 1; fi
     - apt-get install -f -y
 
-    # Запускаем CLI тесты
     - python3 -m venv venv && source venv/bin/activate
     - pip install -r cli/requirements.txt
     - python cli/main/validate.py
