@@ -138,43 +138,27 @@ amd64:linux.rwd.bld:
         - version.mk
         - build_*/*.deb
 
-api_json_validation:
-  extends: .build
-  stage: test_build
-  image: demlabs/debian/amd64:qt5
-  needs:
-    - job: amd64:linux.rwd.bld
-      artifacts: true
-  dependencies:
-    - amd64:linux.rwd.bld
-  before_script:
-    - apt-get update -y
-    - apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
-    - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
-    - unzip -o cellframe-node-cli.zip -d cli/
-  script:
-    - echo "📦 Устанавливаем .deb из build_linux_rwd/"
-    - ls -lh build_linux_rwd/
-    - dpkg -i build_linux_rwd/cellframe-node-*.deb || apt-get install -f -y
-    - systemctl start cellframe-node
+script:
+  - echo "📦 Устанавливаем .deb из build_linux_rwd/"
+  - ls -lh build_linux_rwd/
+  - dpkg -i build_linux_rwd/cellframe-node-*.deb || apt-get install -f -y
 
-    - echo "🐍 Настраиваем Python venv"
-    - python3 -m venv venv
-    - source venv/bin/activate
+  - echo "🚀 Запускаем cellframe-node вручную в фоне"
+  - cellframe-node > node.log 2>&1 &
+  - sleep 5
 
-    - echo "📦 Устанавливаем зависимости CLI"
-    - pip install -r cli/requirements.txt
+  - echo "📄 Проверяем лог cellframe-node"
+  - cat node.log || true
 
-    - echo "✅ Запускаем CLI валидацию"
-    - python cli/main/validate.py
+  - echo "🐍 Настраиваем Python venv"
+  - python3 -m venv venv
+  - source venv/bin/activate
 
-  artifacts:
-    when: always
-    paths:
-      - cli/test_results/
-    reports:
-      junit: cli/test_results/test_report_*.json
-    expire_in: 1 week
+  - echo "📦 Устанавливаем зависимости CLI"
+  - pip install -r cli/requirements.txt
+
+  - echo "✅ Запускаем CLI валидацию"
+  - python cli/main/validate.py
 
 
 
