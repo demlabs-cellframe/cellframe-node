@@ -157,11 +157,14 @@ api_json_validation:
 
   script:
     # Проверим, что .deb файл существует
-    - ls -l build_linux_rwd
+    - ls -l build_linux_rwd/
+
     # Установим node из артефакта
-    script:
-  - dpkg -i build_linux_rwd/cellframe-node-*.deb || true
-  - apt-get install -f -y
+
+    
+    - dpkg -i build_linux_rwd/build/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
+    - apt-get install -f -y
+
     # Запускаем CLI тесты
     - python3 -m venv venv && source venv/bin/activate
     - pip install -r cli/requirements.txt
