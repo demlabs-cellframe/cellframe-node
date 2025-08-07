@@ -161,7 +161,7 @@ api_json_validation:
     - ls -l build_linux_rwd/
 
     # Установим node из артефакта
-    - dpkg -i build_linux_rwd/build/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
+    - dpkg -i build_linux_rwd/cellframe-node-*.deb || true  # не падаем сразу, если зависимости не удовлетворены
     - apt-get install -f -y
 
     # Запускаем ноду
