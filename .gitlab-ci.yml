@@ -138,6 +138,25 @@ amd64:linux.rwd.bld:
         - version.mk
         - build_*/*.deb
 
+api_json_validation:
+  extends: .build
+  stage: test_build
+  image: demlabs/debian/amd64:qt5
+  needs:
+    - job: amd64:linux.rwd.bld
+      artifacts: true
+  before_script:
+    - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
+    - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
+    - unzip cellframe-node-cli.zip -d cli/
+    - cd cli/
+  script:
+    - dpkg -i *.deb
+    - apt-get install -f
+
+
+
+
 autotests:
   extends: .ci-test
   interruptible: true
