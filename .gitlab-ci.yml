@@ -470,34 +470,34 @@ version:up:
 
 
 
-
 cellframe_rpc_validate:
   stage: test_build
   image: python:3.12-slim
   tags:
     - ci-polygon
   timeout: 30m
+
   # Все значения можно переопределить в Run pipeline → Variables
   variables:
-    # Откуда брать валидатор (по умолчанию из приватного репо через CI_JOB_TOKEN)
+    # Репозиторий и ветка валидатора (по умолчанию приватный с CI_JOB_TOKEN)
     CELLFRAME_VALIDATOR_REPO: ""
     CELLFRAME_VALIDATOR_REF: "master"
 
     # На какой endpoint слать запросы (rpc|local)
     VALIDATOR_TARGET: "rpc"
 
-    # Адреса нод (если VALIDATOR_TARGET=rpc, то используется CELLFRAME_RPC_URL)
+    # Адреса нод
     CELLFRAME_LOCAL_URL: "http://127.0.0.1:12345/connect"
     CELLFRAME_RPC_URL: "http://rpc.cellframe.net"
 
-    # Параметры кейсов (заполняй при необходимости)
+    # Параметры кейсов
     TEST_ENABLE_WALLET_LIST: "1"
     TEST_NET: "KelVPN"
-    TEST_ADDR: ""          # адрес кошелька для wallet_info_addr / wallet_outputs_addr
-    TEST_WALLET: ""        # имя кошелька для wallet_info_w / wallet_outputs_w / tx_history_w
+    TEST_ADDR: ""
+    TEST_WALLET: ""
     TEST_TOKEN: "KEL"
-    TEST_CHAIN: "main"     # для block_dump
-    TEST_BLOCK_HASH: ""    # для block_dump
+    TEST_CHAIN: "main"
+    TEST_BLOCK_HASH: ""
     TEST_TAIL: "null"
     TEST_LIMIT: ""
 
@@ -508,23 +508,23 @@ cellframe_rpc_validate:
       if [ -z "${CELLFRAME_VALIDATOR_REPO}" ]; then
         export CELLFRAME_VALIDATOR_REPO="https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.demlabs.net/nikolay.panko/cellframe-node-cli.git"
       fi
+      export VALIDATOR_DIR="validator"
       echo "Using validator repo: ${CELLFRAME_VALIDATOR_REPO} @ ${CELLFRAME_VALIDATOR_REF}"
-    - git clone --depth 1 --branch "${CELLFRAME_VALIDATOR_REF}" "${CELLFRAME_VALIDATOR_REPO}" validator
-    - cd validator
-    - python -m venv .venv
-    - . .venv/bin/activate
+    - git clone --depth 1 --branch "${CELLFRAME_VALIDATOR_REF}" "${CELLFRAME_VALIDATOR_REPO}" "${VALIDATOR_DIR}"
+    - python -m venv "${VALIDATOR_DIR}/.venv"
+    - . "${VALIDATOR_DIR}/.venv/bin/activate"
     - pip install --upgrade pip
-    - pip install -r requirements.txt
+    - pip install -r "${VALIDATOR_DIR}/requirements.txt"
 
   script:
     - |
       set -euo pipefail
       export PYTHONUNBUFFERED=1
-      cd validator
-      . .venv/bin/activate
-      .venv/bin/python main/run_tests.py --target "${VALIDATOR_TARGET}" --verbose | tee ../validator_reports_output.txt
-      mkdir -p ../validator_reports
-      awk '/^=== Summary ===/{flag=1; next} flag {print}' ../validator_reports_output.txt > ../validator_reports/summary.json
+      . "${VALIDATOR_DIR}/.venv/bin/activate"
+      "${VALIDATOR_DIR}/.venv/bin/python" "${VALIDATOR_DIR}/main/run_tests.py" --target "${VALIDATOR_TARGET}" --verbose \
+        | tee validator_reports_output.txt
+      mkdir -p validator_reports
+      awk '/^=== Summary ===/{flag=1; next} flag {print}' validator_reports_output.txt > validator_reports/summary.json
 
   artifacts:
     when: always
