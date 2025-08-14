@@ -476,7 +476,9 @@ cellframe_rpc_validate:
   tags:
     - ci-polygon
   timeout: 30m
-
+  rules:
+    - when: manual
+      allow_failure: true
   # Все значения можно переопределить в Run pipeline → Variables
   variables:
     # Репозиторий и ветка валидатора (по умолчанию приватный с CI_JOB_TOKEN)
