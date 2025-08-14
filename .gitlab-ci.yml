@@ -41,7 +41,7 @@ cppcheck_full_analysis:
 
 cppcheck_code_quality:
 # Generates a code quality report in JSON format for merge requests, identifying potential issues in the codebase.
-  stage: code_check
+  stage: tools
   image: demlabs/debian/amd64:cpp_check
   timeout: 3h
   script:
