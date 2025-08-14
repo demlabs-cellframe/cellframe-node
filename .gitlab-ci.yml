@@ -10,7 +10,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - code_check
+    - tools
     - test_build
     - diagnostic_builds
     - build
@@ -20,7 +20,7 @@ stages:
 
 cppcheck_full_analysis:
 # Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
-  stage: code_check
+  stage: tools
   image: demlabs/debian/amd64:cpp_check
   timeout: 12h
   script:
@@ -137,73 +137,6 @@ amd64:linux.rwd.bld:
       paths:
         - version.mk
         - build_*/*.deb
-
-api_json_validation:
-  extends: .build
-  stage: test_build
-  image: demlabs/debian/amd64:qt5
-  needs:
-    - job: amd64:linux.rwd.bld
-      artifacts: true
-  dependencies:
-    - amd64:linux.rwd.bld
-  before_script:
-    - apt-get update && apt-get install -y python3 python3-pip python3-venv curl jq unzip wget
-    - wget https://internal-pub.cellframe.net/linux/cellframe-node-cli/master/cellframe-node-cli-1.0.0.zip -O cellframe-node-cli.zip
-    - unzip cellframe-node-cli.zip -d cli/
-  script:
-    - echo "📦 Устанавливаем .deb из build_linux_rwd/"
-    - ls -lh build_linux_rwd/
-    - dpkg -i build_linux_rwd/cellframe-node-*.deb || true
-    - apt-get install -f -y
-    - echo "🚀 Запускаем cellframe-node-daemon вручную в фоне (с прямым путём)"
-    - /opt/cellframe-node/bin/cellframe-node-daemon > cli/node.log 2>&1 &
-    - NODE_PID=$!
-    - echo "⏳ Ожидаем готовности ноды (проверка CLI-сервера на порту 12345)"
-    - |
-      for i in {1..60}; do
-        if curl -s http://127.0.0.1:12345/connect >/dev/null 2>&1; then
-          echo "✅ Нода готова!"
-          break
-        fi
-        sleep 1
-        if [ $i -eq 60 ]; then
-          echo "❌ Нода не запустилась"
-          echo "Последние 50 строк лога ноды:"
-          tail -50 cli/node.log
-          kill $NODE_PID || true  # Убиваем процесс, если он висит
-          exit 1
-        fi
-      done
-    - echo "🐍 Настраиваем Python venv"
-    - python3 -m venv venv
-    - source venv/bin/activate
-    - echo "📦 Устанавливаем зависимости CLI"
-    - pip install -r cli/requirements.txt
-    - echo "✅ Запускаем CLI валидацию"
-    - python3 cli/main/validate.py
-  artifacts:
-    when: always
-    paths:
-      - cli/test_results/
-      - cli/node.log
-    reports:
-      junit: cli/test_results/test_report_*.json
-    expire_in: 1 week
-
-
-  artifacts:
-    when: always
-    paths:
-      - cli/test_results/
-      - cli/node.log
-    reports:
-      junit: cli/test_results/test_report_*.json
-    expire_in: 1 week
-
-
-
-
 
 autotests:
   extends: .ci-test
@@ -470,8 +403,8 @@ version:up:
 
 
 
-cellframe_rpc_validate:
-  stage: test_build
+cellframe_rpc_api_response_validation:
+  stage: tools
   image: python:3.12-slim
   tags:
     - ci-polygon
@@ -479,20 +412,12 @@ cellframe_rpc_validate:
   rules:
     - when: manual
       allow_failure: true
-  # Все значения можно переопределить в Run pipeline → Variables
   variables:
-    # Репозиторий и ветка валидатора (по умолчанию приватный с CI_JOB_TOKEN)
     CELLFRAME_VALIDATOR_REPO: ""
     CELLFRAME_VALIDATOR_REF: "master"
-
-    # На какой endpoint слать запросы (rpc|local)
     VALIDATOR_TARGET: "rpc"
-
-    # Адреса нод
-    CELLFRAME_LOCAL_URL: "http://127.0.0.1:12345/connect"
     CELLFRAME_RPC_URL: "http://rpc.cellframe.net"
-
-    # Параметры кейсов
+    # tests parametrs
     TEST_ENABLE_WALLET_LIST: "1"
     TEST_NET: "KelVPN"
     TEST_ADDR: ""
@@ -502,7 +427,6 @@ cellframe_rpc_validate:
     TEST_BLOCK_HASH: ""
     TEST_TAIL: "null"
     TEST_LIMIT: ""
-
   before_script:
     - set -euo pipefail
     - apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
