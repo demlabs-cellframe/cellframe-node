@@ -701,18 +701,18 @@ else()
                 message(STATUS "[WHEEL] All wheel packages downloaded successfully")
                 set(PYTHON_PACKAGES_INSTALL_METHOD "wheel")
                 # Create install method flag file
-                INSTALL(CODE "
-                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"wheel\")
-                    message(STATUS \"[WHEEL] Installation method: wheel packages\")
-                ")
+                file(WRITE "${CMAKE_BINARY_DIR}/python_install_method.txt" "wheel")
+                install(FILES "${CMAKE_BINARY_DIR}/python_install_method.txt" 
+                        DESTINATION ${CMAKE_INSTALL_PREFIX}/share)
+                message(STATUS "[WHEEL] Installation method: wheel packages")
             else()
                 message(STATUS "[WHEEL] Some wheel packages failed to download, continuing build without them")
                 set(PYTHON_PACKAGES_INSTALL_METHOD "none")
                 # Create install method flag file
-                INSTALL(CODE "
-                    file(WRITE \"${CMAKE_INSTALL_PREFIX}/share/python_install_method.txt\" \"none\")
-                    message(STATUS \"[WHEEL] Installation method: none (wheel packages not available)\")
-                ")
+                file(WRITE "${CMAKE_BINARY_DIR}/python_install_method.txt" "none")
+                install(FILES "${CMAKE_BINARY_DIR}/python_install_method.txt" 
+                        DESTINATION ${CMAKE_INSTALL_PREFIX}/share)
+                message(STATUS "[WHEEL] Installation method: none (wheel packages not available)")
             endif()
             
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
