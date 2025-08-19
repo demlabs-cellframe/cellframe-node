@@ -699,20 +699,10 @@ else()
             # Check if both packages downloaded successfully
             if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
                 message(STATUS "[WHEEL] All wheel packages downloaded successfully")
-                set(PYTHON_PACKAGES_INSTALL_METHOD "wheel")
-                # Create install method flag file
-                file(WRITE "${CMAKE_BINARY_DIR}/python_install_method.txt" "wheel")
-                install(FILES "${CMAKE_BINARY_DIR}/python_install_method.txt" 
-                        DESTINATION ${CMAKE_INSTALL_PREFIX}/share)
-                message(STATUS "[WHEEL] Installation method: wheel packages")
+                message(STATUS "[WHEEL] Wheel packages will be installed during package installation")
             else()
                 message(STATUS "[WHEEL] Some wheel packages failed to download, continuing build without them")
-                set(PYTHON_PACKAGES_INSTALL_METHOD "none")
-                # Create install method flag file
-                file(WRITE "${CMAKE_BINARY_DIR}/python_install_method.txt" "none")
-                install(FILES "${CMAKE_BINARY_DIR}/python_install_method.txt" 
-                        DESTINATION ${CMAKE_INSTALL_PREFIX}/share)
-                message(STATUS "[WHEEL] Installation method: none (wheel packages not available)")
+                message(STATUS "[WHEEL] Will fallback to source packages during installation")
             endif()
             
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
