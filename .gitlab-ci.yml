@@ -421,19 +421,7 @@ cellframe_rpc_api_response_validation:
     CELLFRAME_VALIDATOR_REPO: ""
     CELLFRAME_VALIDATOR_REF: "master"
     VALIDATOR_TARGET: "rpc"
-# rpc
-#    CELLFRAME_RPC_URL: "http://rpc.cellframe.net"
-#    CELLFRAME_RPC_URL: "http://64.176.71.223"
-#    CELLFRAME_RPC_URL: "http://64.176.71.224"
-#    CELLFRAME_RPC_URL: "http://64.176.8.238"
-#    CELLFRAME_RPC_URL: "http://158.160.34.60"  
-    CELLFRAME_RPC_URL: "http://188.166.221.98"   
-#    CELLFRAME_RPC_URL: "http://164.90.140.15"   
-#    CELLFRAME_RPC_URL: "http://45.77.52.56"   
-#    CELLFRAME_RPC_URL: "http://45.77.52.56"   
-#    CELLFRAME_RPC_URL: "http://45.77.52.56"   
-#    CELLFRAME_RPC_URL: "http://45.77.52.56"   
-
+    CELLFRAME_RPC_URL: "http://rpc.cellframe.net"
     # tests parametrs
     TEST_ENABLE_WALLET_LIST: "1"
     TEST_NET: "KelVPN"
