@@ -421,7 +421,7 @@ cellframe_rpc_api_response_validation:
 #    CELLFRAME_RPC_URL: "http://64.176.71.223"
 #    CELLFRAME_RPC_URL: "http://64.176.71.224"
 #    CELLFRAME_RPC_URL: "http://64.176.8.238"
-    CELLFRAME_RPC_URL: "158.160.34.60"  
+    CELLFRAME_RPC_URL: "http://158.160.34.60"  
 #    CELLFRAME_RPC_URL: "http://45.77.52.56"   
 #    CELLFRAME_RPC_URL: "http://45.77.52.56"   
 #    CELLFRAME_RPC_URL: "http://45.77.52.56"   
@@ -453,7 +453,7 @@ cellframe_rpc_api_response_validation:
     - . "${VALIDATOR_DIR}/.venv/bin/activate"
     - pip install --upgrade pip
     - pip install -r "${VALIDATOR_DIR}/requirements.txt"
-
+    - echo ">>> Using CELLFRAME_RPC_URL=${CELLFRAME_RPC_URL}"
   script:
     - |
       set -euo pipefail
