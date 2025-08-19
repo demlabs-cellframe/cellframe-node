@@ -112,25 +112,31 @@ install_python_packages() {
         if [ -d "$wheel_dir" ]; then
             for wheel_file in "$wheel_dir"/*.whl "$wheel_dir"/*.zip; do
                 if [ -f "$wheel_file" ]; then
-                    echo "[!] Installing wheel: $(basename "$wheel_file")"
-                    if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>/dev/null; then
-                        echo "[+] Wheel installed successfully: $(basename "$wheel_file")"
-                        wheel_success=$((wheel_success + 1))
-                        
-                        # Test basic import for Python packages
-                        if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
-                            if verify_package_import "pycfhelpers"; then
-                                packages_verified=$((packages_verified + 1))
+                    # Check wheel file integrity before installation
+                    echo "[*] Checking integrity of wheel: $(basename "$wheel_file")"
+                    if python3 -m zipfile -t "$wheel_file" >/dev/null 2>&1; then
+                        echo "[+] Wheel file integrity check passed: $(basename "$wheel_file")"
+                        echo "[!] Installing wheel: $(basename "$wheel_file")"
+                        if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>/dev/null; then
+                            echo "[+] Wheel installed successfully: $(basename "$wheel_file")"
+                            wheel_success=$((wheel_success + 1))
+                            
+                            # Test basic import for Python packages
+                            if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
+                                if verify_package_import "pycfhelpers"; then
+                                    packages_verified=$((packages_verified + 1))
+                                fi
+                            elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
+                                if verify_package_import "pycftools"; then
+                                    packages_verified=$((packages_verified + 1))
+                                fi
                             fi
-                        elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
-                            if verify_package_import "pycftools"; then
-                                packages_verified=$((packages_verified + 1))
-                            fi
+                        else
+                            echo "[!] Warning: wheel installation failed for $(basename "$wheel_file")"
                         fi
                     else
-                        echo "[!] Warning: wheel installation failed for $(basename "$wheel_file")"
+                        echo "[!] Warning: wheel file integrity check failed for $(basename "$wheel_file"), skipping"
                     fi
-                fi
             done
         fi
     done
