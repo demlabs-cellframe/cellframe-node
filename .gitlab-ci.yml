@@ -420,7 +420,9 @@ cellframe_rpc_api_response_validation:
 #    CELLFRAME_RPC_URL: "http://64.176.71.223"
 #    CELLFRAME_RPC_URL: "http://64.176.71.224"
 #    CELLFRAME_RPC_URL: "http://64.176.8.238"
-    CELLFRAME_RPC_URL: "http://45.77.52.56"    
+#    CELLFRAME_RPC_URL: "http://45.77.52.56"  
+    CELLFRAME_RPC_URL: "http://194.87.118.235"    
+  
     # tests parametrs
     TEST_ENABLE_WALLET_LIST: "1"
     TEST_NET: "KelVPN"
