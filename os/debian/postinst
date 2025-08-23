@@ -96,108 +96,62 @@ check_source_packages() {
 install_python_packages() {
     echo "[*] Installing Python packages..."
     
-    # Check installation method from build time
-    local install_method="unknown"
-    if [ -f "$DAP_PREFIX/share/python_install_method.txt" ]; then
-        install_method=$(cat "$DAP_PREFIX/share/python_install_method.txt")
-        echo "[*] Build-time installation method: $install_method"
-    else
-        echo "[!] Warning: No installation method file found, trying wheel first"
-        install_method="wheel"
-    fi
-    
     # Find Python executables
     if ! find_python_executables; then
         echo "[!] Error: Cannot find working Python/pip executables"
         return 1
     fi
     
-    local wheel_success=0
-    local packages_verified=0
+    local installed_count=0
     
-    # Try wheel installation first (if method is wheel or unknown)
-    if [ "$install_method" = "wheel" ] || [ "$install_method" = "unknown" ]; then
-        echo "[*] Attempting wheel package installation..."
+    # Install wheel packages
+    if [ -d "$DAP_PREFIX/share/wheels" ]; then
+        echo "[*] Found wheels directory, installing packages..."
         
-        for wheel_dir in "$DAP_PREFIX/share/wheels" "$DAP_PREFIX/share"; do
-            if [ -d "$wheel_dir" ]; then
-                for wheel_file in "$wheel_dir"/*.whl "$wheel_dir"/*.zip; do
-                    if [ -f "$wheel_file" ]; then
-                        echo "[!] Installing wheel: $(basename "$wheel_file")"
-                        if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>/dev/null; then
-                            echo "[+] Wheel installed successfully: $(basename "$wheel_file")"
-                            wheel_success=$((wheel_success + 1))
-                            
-                            # Test basic import for Python packages
-                            if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
-                                if verify_package_import "pycfhelpers"; then
-                                    packages_verified=$((packages_verified + 1))
-                                fi
-                            elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
-                                if verify_package_import "pycftools"; then
-                                    packages_verified=$((packages_verified + 1))
-                                fi
-                            fi
-                        else
-                            echo "[!] Warning: wheel installation failed for $(basename "$wheel_file")"
-                        fi
-                    fi
-                done
+        for wheel_file in "$DAP_PREFIX/share/wheels"/*.whl; do
+            if [ -f "$wheel_file" ]; then
+                local wheel_name=$(basename "$wheel_file")
+                echo "[*] Installing: $wheel_name"
+                
+                # Install with detailed error logging
+                if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>&1; then
+                    echo "[+] Successfully installed: $wheel_name"
+                    installed_count=$((installed_count + 1))
+                else
+                    echo "[!] Failed to install: $wheel_name"
+                    echo "[!] Check pip output above for details"
+                fi
             fi
         done
-        
-        # Check if wheel installation was successful
-        if [ $wheel_success -gt 0 ] && [ $packages_verified -ge 2 ]; then
-            echo "[+] Wheel packages installation completed successfully ($packages_verified packages verified)"
-            return 0
-        elif [ $wheel_success -gt 0 ]; then
-            echo "[!] Warning: Some wheel packages installed but verification failed"
-        else
-            echo "[!] Warning: No wheel packages were installed successfully"
-        fi
-    fi
-    
-    # Fallback to source packages if wheel installation failed or method is source
-    echo "[*] Checking for source packages as fallback..."
-    
-    check_source_packages
-    local source_packages_count=$?
-    
-    if [ $source_packages_count -gt 0 ]; then
-        echo "[+] Found $source_packages_count source packages, verifying imports..."
-        
-        local source_verified=0
-        
-        # Verify source packages
-        if verify_package_import "pycfhelpers"; then
-            source_verified=$((source_verified + 1))
-        fi
-        
-        if verify_package_import "pycftools"; then
-            source_verified=$((source_verified + 1))
-        fi
-        
-        if [ $source_verified -ge 2 ]; then
-            echo "[+] Source packages are working correctly ($source_verified packages verified)"
-            if [ "$install_method" = "wheel" ]; then
-                echo "[!] Note: Fell back to source packages after wheel installation issues"
-            fi
-            return 0
-        else
-            echo "[!] Warning: Source packages found but some imports failed ($source_verified packages verified)"
-        fi
     else
-        echo "[!] Error: No source packages found for fallback"
+        echo "[!] Warning: Wheels directory not found: $DAP_PREFIX/share/wheels"
     fi
     
-    # Final status
-    if [ $wheel_success -gt 0 ] || [ $source_packages_count -gt 0 ]; then
-        echo "[!] Warning: Python packages partially installed, some functionality may be limited"
+    # Verify installed packages and show versions
+    if [ $installed_count -gt 0 ]; then
+        echo "[*] Verifying installed packages..."
+        
+        # Check pycfhelpers
+        if "$PYTHON_BIN" -c "import pycfhelpers; print(f'pycfhelpers version: {pycfhelpers.__version__}')" 2>/dev/null; then
+            echo "[+] pycfhelpers package verified and version shown"
+        else
+            echo "[!] Warning: pycfhelpers import failed"
+            "$PYTHON_BIN" -c "import pycfhelpers" 2>&1 || true
+        fi
+        
+        # Check pycftools
+        if "$PYTHON_BIN" -c "import pycftools; print(f'pycftools version: {pycftools.__version__}')" 2>/dev/null; then
+            echo "[+] pycftools package verified and version shown"
+        else
+            echo "[!] Warning: pycftools import failed"
+            "$PYTHON_BIN" -c "import pycftools" 2>&1 || true
+        fi
+        
+        echo "[+] Python packages installation completed successfully ($installed_count packages installed)"
         return 0
     else
-        echo "[!] Warning: No Python packages could be installed (neither wheel nor source)"
-        echo "[!] Warning: Some Python-dependent features may not work correctly"
-        echo "[!] Warning: Installation will continue, but functionality may be limited"
+        echo "[!] Warning: No Python packages were installed"
+        echo "[!] Some Python-dependent features may not work correctly"
         return 0  # Continue installation even without Python packages
     fi
 }
