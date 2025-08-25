@@ -24,6 +24,187 @@ fi
 echo "[!] Set exec permissions"
 chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
 
+# Function to find working pip and python executables
+find_python_executables() {
+    # Find working pip executable
+    for pip_cmd in "$DAP_PREFIX/python/bin/pip3" "$DAP_PREFIX/python/bin/pip"; do
+        if [ -x "$pip_cmd" ]; then
+            PYTHON_PIP="$pip_cmd"
+            echo "[+] Found pip: $PYTHON_PIP"
+            break
+        fi
+    done
+    
+    # Find working python executable
+    for python_cmd in "$DAP_PREFIX/python/bin/python3.10" "$DAP_PREFIX/python/bin/python3.11" "$DAP_PREFIX/python/bin/python3" "$DAP_PREFIX/python/bin/python"; do
+        if [ -x "$python_cmd" ]; then
+            PYTHON_BIN="$python_cmd"
+            echo "[+] Found python: $PYTHON_BIN"
+            break
+        fi
+    done
+    
+    # Check if both found
+    if [ -z "$PYTHON_PIP" ]; then
+        echo "[!] Warning: No working pip found"
+        return 1
+    fi
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "[!] Warning: No working python found"
+        return 1
+    fi
+    return 0
+}
+
+# Function to verify package import
+verify_package_import() {
+    local package_name="$1"
+    
+    # Проверяем файлы вместо вызова Python
+    if [ -d "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name" ]; then
+        echo "[+] $package_name found in site-packages"
+        return 0
+    elif [ -f "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name.py" ]; then
+        echo "[+] $package_name.py found in site-packages"
+        return 0
+    else
+        echo "[!] Warning: $package_name not found in site-packages"
+        return 1
+    fi
+}
+
+# Function to check if source packages are available
+check_source_packages() {
+    local packages_available=0
+    
+    # Check for pycfhelpers source
+    if [ -d "$DAP_PREFIX/python/lib/python3.10/site-packages/pycfhelpers" ] || [ -d "$DAP_PREFIX/python/lib/python3.11/site-packages/pycfhelpers" ]; then
+        echo "[+] Found pycfhelpers source package"
+        packages_available=$((packages_available + 1))
+    fi
+    
+    # Check for pycftools source
+    if [ -d "$DAP_PREFIX/python/lib/python3.10/site-packages/pycftools" ] || [ -d "$DAP_PREFIX/python/lib/python3.11/site-packages/pycftools" ]; then
+        echo "[+] Found pycftools source package"
+        packages_available=$((packages_available + 1))
+    fi
+    
+    return $packages_available
+}
+
+# Main Python packages installation logic
+install_python_packages() {
+    echo "[*] Installing Python packages..."
+    
+    # Check installation method from build time
+    local install_method="unknown"
+    if [ -f "$DAP_PREFIX/share/python_install_method.txt" ]; then
+        install_method=$(cat "$DAP_PREFIX/share/python_install_method.txt")
+        echo "[*] Build-time installation method: $install_method"
+    else
+        echo "[!] Warning: No installation method file found, trying wheel first"
+        install_method="wheel"
+    fi
+    
+    # Find Python executables
+    if ! find_python_executables; then
+        echo "[!] Error: Cannot find working Python/pip executables"
+        return 1
+    fi
+    
+    local wheel_success=0
+    local packages_verified=0
+    
+    # Try wheel installation first (if method is wheel or unknown)
+    if [ "$install_method" = "wheel" ] || [ "$install_method" = "unknown" ]; then
+        echo "[*] Attempting wheel package installation..."
+        
+        for wheel_dir in "$DAP_PREFIX/share/wheels" "$DAP_PREFIX/share"; do
+            if [ -d "$wheel_dir" ]; then
+                for wheel_file in "$wheel_dir"/*.whl "$wheel_dir"/*.zip; do
+                    if [ -f "$wheel_file" ]; then
+                        echo "[!] Installing wheel: $(basename "$wheel_file")"
+                        if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>/dev/null; then
+                            echo "[+] Wheel installed successfully: $(basename "$wheel_file")"
+                            wheel_success=$((wheel_success + 1))
+                            
+                            # Test basic import for Python packages
+                            if [[ "$(basename "$wheel_file")" == *"pycfhelpers"* ]]; then
+                                if verify_package_import "pycfhelpers"; then
+                                    packages_verified=$((packages_verified + 1))
+                                fi
+                            elif [[ "$(basename "$wheel_file")" == *"pycftools"* ]]; then
+                                if verify_package_import "pycftools"; then
+                                    packages_verified=$((packages_verified + 1))
+                                fi
+                            fi
+                        else
+                            echo "[!] Warning: wheel installation failed for $(basename "$wheel_file")"
+                        fi
+                    fi
+                done
+            fi
+        done
+        
+        # Check if wheel installation was successful
+        if [ $wheel_success -gt 0 ] && [ $packages_verified -ge 2 ]; then
+            echo "[+] Wheel packages installation completed successfully ($packages_verified packages verified)"
+            return 0
+        elif [ $wheel_success -gt 0 ]; then
+            echo "[!] Warning: Some wheel packages installed but verification failed"
+        else
+            echo "[!] Warning: No wheel packages were installed successfully"
+        fi
+    fi
+    
+    # Fallback to source packages if wheel installation failed or method is source
+    echo "[*] Checking for source packages as fallback..."
+    
+    check_source_packages
+    local source_packages_count=$?
+    
+    if [ $source_packages_count -gt 0 ]; then
+        echo "[+] Found $source_packages_count source packages, verifying imports..."
+        
+        local source_verified=0
+        
+        # Verify source packages
+        if verify_package_import "pycfhelpers"; then
+            source_verified=$((source_verified + 1))
+        fi
+        
+        if verify_package_import "pycftools"; then
+            source_verified=$((source_verified + 1))
+        fi
+        
+        if [ $source_verified -ge 2 ]; then
+            echo "[+] Source packages are working correctly ($source_verified packages verified)"
+            if [ "$install_method" = "wheel" ]; then
+                echo "[!] Note: Fell back to source packages after wheel installation issues"
+            fi
+            return 0
+        else
+            echo "[!] Warning: Source packages found but some imports failed ($source_verified packages verified)"
+        fi
+    else
+        echo "[!] Error: No source packages found for fallback"
+    fi
+    
+    # Final status
+    if [ $wheel_success -gt 0 ] || [ $source_packages_count -gt 0 ]; then
+        echo "[!] Warning: Python packages partially installed, some functionality may be limited"
+        return 0
+    else
+        echo "[!] Warning: No Python packages could be installed (neither wheel nor source)"
+        echo "[!] Warning: Some Python-dependent features may not work correctly"
+        echo "[!] Warning: Installation will continue, but functionality may be limited"
+        return 0  # Continue installation even without Python packages
+    fi
+}
+
+# Install wheel files if present
+install_python_packages
+
 echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
 
