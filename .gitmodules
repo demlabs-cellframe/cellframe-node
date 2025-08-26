@@ -9,6 +9,7 @@
 [submodule "prod_build"]
 	path = prod_build
 	url = ../prod_build_cellframe-node.git
+	branch = feature-16121
 [submodule "dap-sdk"]
 	path = dap-sdk
 	url = ../../dap/dap-sdk.git
@@ -16,3 +17,4 @@
 [submodule "diagtool"]
 	path = diagtool
 	url = https://gitlab.demlabs.net/cellframe/cellframe-node-diagtool.git
+	branch = feature-16121-port
