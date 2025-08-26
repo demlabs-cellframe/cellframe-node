@@ -280,10 +280,8 @@ if(BSD)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
-if(BUILD_DIAGTOOL)
-    message("[*] Diagtool build on")
-    add_subdirectory(diagtool)
-endif()
+# Diagtool moved to separate package
+# Use diagtool/build-diagtool.sh for standalone builds
 
 add_subdirectory(conftool)
 
@@ -412,9 +410,7 @@ if(DARWIN)
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
-    if(BUILD_DIAGTOOL)
-        INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
-    endif()
+    # Diagtool installation moved to separate package
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
@@ -476,9 +472,7 @@ else()
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
-    if (BUILD_DIAGTOOL)
-            INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    endif()
+    # Diagtool installation moved to separate package
 
     if (NOT ANDROID)
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )

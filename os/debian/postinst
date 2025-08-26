@@ -36,20 +36,7 @@ chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
 echo "[!] Setting up cellframe-node as service"
 $DAP_PREFIX/bin/cellframe-node-config -e service enable
 
-if [ -e "$DAP_PREFIX/bin/cellframe-diagtool" ]; then
-    echo "[!] Starting up cellframe-diagtool"
-    systemctl --system enable $DAP_PREFIX/share/cellframe-diagtool.service || true
-    systemctl start cellframe-diagtool || true
-
-    echo "[!] Starting up cellframe-tray"
-
-    if [ -d /run/user/$SUDO_UID ]; then
-        export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
-        echo "Use $XDG_RUNTIME_DIR as XDG_RUNTIME_DIR, for tray install"
-        su  $SUDO_USER -c "systemctl --user enable $DAP_PREFIX/share/cellframe-tray.service" || true
-        su  $SUDO_USER -c "systemctl --user start cellframe-tray.service" || true
-    fi
-fi
+# Diagtool services are managed by separate cellframe-diagtool package
 
 if [ -e "$DAP_PREFIX/share/cellframe-updater.service" ]; then
     echo "[!] Starting up cellframe-updater"
