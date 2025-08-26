@@ -206,7 +206,7 @@ amd64:windows.rwd:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows rwd -DBUILD_DIAGTOOL=ON
+      - ./prod_build/build.sh --target windows rwd
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
@@ -235,7 +235,35 @@ amd64:linux.debug:
       - echo "Do hard work"
       - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
       - ./prod_build/pack.sh --target linux debug
-      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
+      
+diagtool:amd64:linux.release:
+    extends: .build
+    image: demlabs/debian/amd64:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
+    script:
+      - echo "Building diagtool separately"
+      - cd diagtool && ./build-diagtool.sh release && ./pack-diagtool.sh release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-diagtool/$CI_COMMIT_REF_NAME/ ../build_diagtool_*/*.deb 
+    artifacts:
+      paths:
+        - build_diagtool_*/*.deb
+
+diagtool:amd64:linux.debug:
+    extends: .build
+    image: demlabs/debian/amd64:qt5
+    before_script: 
+      - /opt/buildtools/prepare_environment.sh amd64-linux
+      - *fill_version_mk
+    script:
+      - echo "Building diagtool debug"
+      - cd diagtool && ./build-diagtool.sh debug && ./pack-diagtool.sh debug
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-diagtool/$CI_COMMIT_REF_NAME/ ../build_diagtool_*/*.deb 
+    artifacts:
+      paths:
+        - build_diagtool_*/*.deb 
 amd64:linux.rwd.opt:
     extends: .build
     image: demlabs/debian/amd64:qt5
@@ -311,6 +339,34 @@ arm64:linux.release:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
+
+diagtool:arm64:linux.release:
+    extends: .build
+    image: demlabs/debian/arm64:qt5
+    before_script:
+      - /opt/buildtools/prepare_environment.sh arm64-linux
+      - *fill_version_mk
+    script:
+      - echo "Building diagtool ARM64"
+      - cd diagtool && ./build-diagtool.sh release && ./pack-diagtool.sh release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-diagtool/$CI_COMMIT_REF_NAME/ ../build_diagtool_*/*.deb 
+    artifacts:
+      paths:
+        - build_diagtool_*/*.deb
+
+diagtool:armhf:linux.release:
+    extends: .build
+    image: demlabs/debian/arm32:qt5
+    before_script:
+      - /opt/buildtools/prepare_environment.sh armhf-linux
+      - *fill_version_mk
+    script:
+      - echo "Building diagtool ARM32"
+      - cd diagtool && ./build-diagtool.sh release && ./pack-diagtool.sh release
+      - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-diagtool/$CI_COMMIT_REF_NAME/ ../build_diagtool_*/*.deb 
+    artifacts:
+      paths:
+        - build_diagtool_*/*.deb
   
 any:android.release:
     extends: .build
