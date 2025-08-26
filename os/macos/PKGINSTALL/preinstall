@@ -5,7 +5,8 @@ USER_RES="/Library/Application Support/CellframeNode"
 INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
 
 /Applications/CellframeNode.app/Contents/MacOS/cellframe-node-config -e service disable || true
-killall cellframe-node cellframe-diagtool
+killall cellframe-node
+# diagtool process is now managed by separate cellframe-diagtool package
 
 mv_safe() {
     local SOURCE_DIR="$1"
