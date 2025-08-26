@@ -182,13 +182,13 @@ Section "${APP_NAME}" CORE
 
 	SetOutPath "$INSTDIR"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
-	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diagtool.exe'
+	; diagtool process is now managed by separate cellframe-diagtool package
 
 	File /oname=cellframe-node.tmp "opt/cellframe-node/bin/${NODE_NAME}.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-cli.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-tool.exe"
 	File "opt/cellframe-node/bin/${NODE_NAME}-config.exe"
-	File "opt/cellframe-node/bin/cellframe-diagtool.exe"
+	; diagtool.exe is now packaged separately
 
 	Call createRuntimePaths
 
@@ -225,17 +225,8 @@ Section "${APP_NAME}" CORE
 	; check net states after install to show in checkboxes
 	Call getNetworksStates
 
-	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe' --tray"
-	${DisableX64FSRedirection}
-	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeTray"'
-	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeTray"'
-	${EnableX64FSRedirection}
-
-	StrCpy $0 "'$INSTDIR\cellframe-diagtool.exe'"
-	${DisableX64FSRedirection}
-	nsExec::ExecToLog /OEM  'schtasks /Create /F /RL highest /SC onlogon /TR "$0" /TN "CellframeDiagtool"'
-	nsExec::ExecToLog /OEM  'schtasks /run  /TN CellframeDiagtool"'
-	${EnableX64FSRedirection}
+	; diagtool and tray tasks are now managed by separate cellframe-diagtool package
+	; Use separate cellframe-diagtool installer to enable these services
 
 SectionEnd
 
@@ -326,9 +317,8 @@ Section "Uninstall"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service disable"
 	nsExec::ExecToLog /OEM "$INSTDIR\${NODE_NAME}-config.exe -e service stop"
 	nsExec::ExecToLog /OEM  'taskkill /f /im ${NODE_NAME}.exe'
-	nsExec::ExecToLog /OEM  'taskkill /f /im cellframe-diagtool.exe'
+	; diagtool process and files are now managed by separate cellframe-diagtool package
 
-	Delete "$INSTDIR\cellframe-diagtool.exe"	
 	Delete "$INSTDIR\${NODE_NAME}.exe"
 	Delete "$INSTDIR\${NODE_NAME}-tool.exe"
 	Delete "$INSTDIR\${NODE_NAME}-cli.exe"
