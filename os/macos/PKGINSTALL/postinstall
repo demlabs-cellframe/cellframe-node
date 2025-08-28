@@ -17,7 +17,8 @@ mkdir -p "${USER_RES}/var/run/"
 echo "[!] Checking for network config duplicates before setup"
 NETWORK_DIR="${USER_RES}/etc/network"
 if [ -d "${NETWORK_DIR}" ]; then
-    for cfg_file in "${NETWORK_DIR}"/*.cfg; do
+    # Use find to avoid shell glob expansion issues when no .cfg files exist
+    find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg" -type f | while read -r cfg_file; do
         if [ -f "${cfg_file}" ]; then
             basename_cfg=$(basename "${cfg_file}" .cfg)
             dis_file="${cfg_file}.dis"
@@ -35,7 +36,8 @@ ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 # Final check and cleanup for duplicate configs after setup
 echo "[!] Post-setup cleanup: checking for network config duplicates"
 if [ -d "${NETWORK_DIR}" ]; then
-    for cfg_file in "${NETWORK_DIR}"/*.cfg; do
+    # Use find to avoid shell glob expansion issues when no .cfg files exist
+    find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg" -type f | while read -r cfg_file; do
         if [ -f "${cfg_file}" ]; then
             basename_cfg=$(basename "${cfg_file}" .cfg)
             dis_file="${cfg_file}.dis"
