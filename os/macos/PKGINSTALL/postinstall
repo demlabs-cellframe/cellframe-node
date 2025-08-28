@@ -6,12 +6,47 @@ INSTALL_RES=/Applications/CellframeNode.app/Contents/Resources
 USER_RES="/Library/Application Support/CellframeNode" 
 
 mkdir -p "${USER_RES}/"
+
+# Copy configuration files
 cp -r "${INSTALL_RES}/etc" "${USER_RES}/"
 cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 
-mkdir "${USER_RES}/var/run/"
+mkdir -p "${USER_RES}/var/run/"
 
+# Check for potential duplicate network configs before running setup
+echo "[!] Checking for network config duplicates before setup"
+NETWORK_DIR="${USER_RES}/etc/network"
+if [ -d "${NETWORK_DIR}" ]; then
+    for cfg_file in "${NETWORK_DIR}"/*.cfg; do
+        if [ -f "${cfg_file}" ]; then
+            basename_cfg=$(basename "${cfg_file}" .cfg)
+            dis_file="${cfg_file}.dis"
+            if [ -f "${dis_file}" ]; then
+                echo "[!] Warning: Found both ${cfg_file} and ${dis_file}, removing .dis file to prevent conflicts"
+                rm -f "${dis_file}"
+            fi
+        fi
+    done
+fi
+
+# Run configuration setup
 ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
+
+# Final check and cleanup for duplicate configs after setup
+echo "[!] Post-setup cleanup: checking for network config duplicates"
+if [ -d "${NETWORK_DIR}" ]; then
+    for cfg_file in "${NETWORK_DIR}"/*.cfg; do
+        if [ -f "${cfg_file}" ]; then
+            basename_cfg=$(basename "${cfg_file}" .cfg)
+            dis_file="${cfg_file}.dis"
+            if [ -f "${dis_file}" ]; then
+                echo "[!] Warning: Found duplicate configs after setup: ${cfg_file} and ${dis_file}"
+                echo "[!] Keeping user's enabled config and removing duplicate disabled config"
+                rm -f "${dis_file}"
+            fi
+        fi
+    done
+fi
 
 echo "[!] Set cfg permissions"
 find "${USER_RES}/" -type d -exec chmod 777 {} \;
