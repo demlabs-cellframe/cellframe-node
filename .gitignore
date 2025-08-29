@@ -78,3 +78,8 @@ cmake-build-*
 .mcp
 .context
 .cache
+.clangd
+.cursorrules
+.slc/
+slc
+vpn_refact_docs/*
