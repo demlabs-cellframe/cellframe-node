@@ -138,7 +138,7 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting")
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-auctions compose")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -486,11 +486,14 @@ if(DARWIN)
     
     INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     
-    #install python-modules
+    # Note: pycfhelpers and pycftools are installed as source packages on macOS
+    # Wheel packages are not yet supported on macOS
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
     INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
     endif()
+
+
 
 else()
 
@@ -561,9 +564,87 @@ else()
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
-            #install python-modules
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-            INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+            # Download Python wheel files
+            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+                cmake_policy(SET CMP0135 NEW)
+            endif()
+            
+            
+                        # Function to download and install wheel packages
+            function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
+                # Download wheel file with temporary name first
+                set(TEMP_WHEEL_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_temp.whl")
+                
+                message(STATUS "Downloading ${PACKAGE_NAME} from ${PACKAGE_URL}")
+                
+                # Download the wheel file (CMake will handle redirects automatically)
+                file(DOWNLOAD 
+                    "${PACKAGE_URL}"
+                    "${TEMP_WHEEL_PATH}"
+                    SHOW_PROGRESS
+                    INACTIVITY_TIMEOUT 30
+                    TIMEOUT 300
+                    STATUS DOWNLOAD_STATUS
+                )
+                
+                # Check download result
+                list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                if(DOWNLOAD_RESULT EQUAL 0)
+                    # Read first few bytes to check if it's a valid wheel file
+                    file(READ "${TEMP_WHEEL_PATH}" WHEEL_HEADER LIMIT 100)
+                    
+                    # Check if it starts with PK (zip file signature)
+                    if(WHEEL_HEADER MATCHES "^PK")
+                        # Extract filename from URL
+                        string(REGEX MATCH "([^/]+\\.[^/]+)$" FILENAME_MATCH "${PACKAGE_URL}")
+                        if(FILENAME_MATCH)
+                            set(REAL_FILENAME "${FILENAME_MATCH}")
+                            
+                            # Check if filename matches pip wheel format (package-version-python-tag-platform.whl)
+                            if(NOT "${REAL_FILENAME}" MATCHES "^[a-zA-Z0-9_-]+-[0-9]+\\.[0-9]+\\.[0-9]+.*\\.whl$")
+                                message(FATAL_ERROR "Wheel filename '${REAL_FILENAME}' does not match pip format. Expected: package-version-python-tag-platform.whl")
+                            endif()
+                        else()
+                            message(FATAL_ERROR "Could not extract wheel filename from URL: ${PACKAGE_URL}")
+                        endif()
+                        
+                        # Rename to final filename
+                        set(FINAL_WHEEL_PATH "${CMAKE_BINARY_DIR}/${REAL_FILENAME}")
+                        file(RENAME "${TEMP_WHEEL_PATH}" "${FINAL_WHEEL_PATH}")
+                        
+                        message(STATUS "Using filename: ${REAL_FILENAME}")
+                        
+                        # Install wheel file to wheels directory
+                        INSTALL(FILES ${FINAL_WHEEL_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
+                        message(STATUS "Successfully downloaded and installed ${PACKAGE_NAME} as ${REAL_FILENAME}")
+                        set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
+                    else()
+                        message(WARNING "Downloaded file is not a valid wheel file (doesn't start with PK)")
+                        file(REMOVE "${TEMP_WHEEL_PATH}")
+                        set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
+                    endif()
+                else()
+                    message(WARNING "Failed to download ${PACKAGE_NAME}")
+                    set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
+                endif()
+            endfunction()
+            
+            # Try to download wheel packages
+            message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
+            
+            # Download pycfhelpers wheel file/
+            download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
+            
+            # Download pycftools wheel file
+            download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
+            
+            # Check if both packages downloaded successfully
+            if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
+                message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+            else()
+                message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
+            endif()
+            
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
@@ -572,3 +653,5 @@ else()
 
 endif()
 INCLUDE(CPack)
+
+
