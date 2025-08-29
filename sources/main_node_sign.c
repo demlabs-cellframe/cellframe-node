@@ -667,7 +667,7 @@ static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
             json_object_object_add(json_obj_item,"addr", json_object_new_string(l_addr_str));            
         } break;
         case TX_ITEM_TYPE_SIG: {
-            dap_sign_t *l_sign = dap_chain_datum_tx_item_sign_get_sig((dap_chain_tx_sig_t*)item);
+            dap_sign_t *l_sign = dap_chain_datum_tx_item_sig_get_sign((dap_chain_tx_sig_t*)item);
             json_object_object_add(json_obj_item,"type", json_object_new_string("sign"));
             dap_chain_hash_fast_t l_hash_pkey;
             json_object_object_add(json_obj_item,"sig_type",json_object_new_string(dap_sign_type_to_str(l_sign->header.type)));
