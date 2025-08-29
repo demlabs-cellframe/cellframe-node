@@ -110,6 +110,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_auctions.h"
 #include "dap_chain_wallet_shared.h"
 
 #include "dap_chain_wallet_cache.h"
@@ -389,6 +390,10 @@ int main( int argc, const char **argv )
     
     if (dap_chain_net_srv_bridge_init()) {
         log_it(L_ERROR, "Can't provide bridge capability");
+    }
+
+    if (dap_chain_net_srv_auctions_init()) {
+        log_it(L_ERROR, "Can't provide auctions capability");
     }
     
     if (dap_chain_net_srv_stake_lock_init()) {

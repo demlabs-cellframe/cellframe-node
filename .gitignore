@@ -74,5 +74,10 @@ cmake_install.cmake
 *~
 cmake-build-*
 .idea
-.mcp
-.cache
+.mcp/
+.cache/
+.context/
+.slc/
+.cursorrules
+.clangd
+slc
