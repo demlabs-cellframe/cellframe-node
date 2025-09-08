@@ -111,6 +111,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_dex.h"
 #include "dap_chain_wallet_shared.h"
 
 #include "dap_chain_wallet_cache.h"
@@ -383,6 +384,11 @@ int main( int argc, const char **argv )
 
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
+    }
+    // Initialize DEX v2 service
+    extern int dap_chain_net_srv_dex_init();
+    if (dap_chain_net_srv_dex_init()) {
+        log_it(L_ERROR, "Can't provide DEX v2 capability");
     }
 
     if (dap_chain_net_srv_voting_init()) {
