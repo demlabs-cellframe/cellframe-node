@@ -630,12 +630,11 @@ else()
                     set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
                 endif()
             endfunction()
-            
-            # Try to download wheel packages
-            message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
-            
+
             # Download pycfhelpers wheel file/
             if(PYTHON_WHEELS_PREBUILD)
+               # Try to download wheel packages
+                message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
                 download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
                 # Download pycftools wheel file
                 download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
@@ -645,9 +644,9 @@ else()
                 else()
                     message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
                 endif()
+            else()
+                message(STATUS "[WHEEL] Skipping wheel packages download")
             endif()
-
-
             
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
