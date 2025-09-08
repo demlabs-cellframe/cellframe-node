@@ -19,6 +19,8 @@ SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 # Option to enable full cppcheck analysis
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
+# Option for weel download on-build
+option(PYTHON_WHEELS_PREBUILD "Download wheels on build" ON)
 # Cpp check
 if(ENABLE_CPPCHECK_ANALYSIS)
     find_program(CPPCHECK cppcheck)
@@ -633,17 +635,19 @@ else()
             message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
             
             # Download pycfhelpers wheel file/
-            download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
-            
-            # Download pycftools wheel file
-            download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
-            
-            # Check if both packages downloaded successfully
-            if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
-                message(STATUS "[WHEEL] All wheel packages downloaded successfully")
-            else()
-                message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
+            if(PYTHON_WHEELS_PREBUILD)
+                download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
+                # Download pycftools wheel file
+                download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
+                        # Check if both packages downloaded successfully
+                if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
+                    message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+                else()
+                    message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
+                endif()
             endif()
+
+
             
             INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
