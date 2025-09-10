@@ -24,6 +24,141 @@ fi
 echo "[!] Set exec permissions"
 chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
 
+# Function to find working pip and python executables
+find_python_executables() {
+    # Find working pip executable
+    for pip_cmd in "$DAP_PREFIX/python/bin/pip3" "$DAP_PREFIX/python/bin/pip"; do
+        if [ -x "$pip_cmd" ]; then
+            PYTHON_PIP="$pip_cmd"
+            echo "[+] Found pip: $PYTHON_PIP"
+            break
+        fi
+    done
+    
+    # Find working python executable
+    for python_cmd in "$DAP_PREFIX/python/bin/python3.10" "$DAP_PREFIX/python/bin/python3.11" "$DAP_PREFIX/python/bin/python3" "$DAP_PREFIX/python/bin/python"; do
+        if [ -x "$python_cmd" ]; then
+            PYTHON_BIN="$python_cmd"
+            echo "[+] Found python: $PYTHON_BIN"
+            break
+        fi
+    done
+    
+    # Check if both found
+    if [ -z "$PYTHON_PIP" ]; then
+        echo "[!] Warning: No working pip found"
+        return 1
+    fi
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "[!] Warning: No working python found"
+        return 1
+    fi
+    return 0
+}
+
+# Function to verify package import
+verify_package_import() {
+    local package_name="$1"
+    
+    # Проверяем файлы вместо вызова Python
+    if [ -d "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name" ]; then
+        echo "[+] $package_name found in site-packages"
+        return 0
+    elif [ -f "/opt/cellframe-node/python/lib/python3.10/site-packages/$package_name.py" ]; then
+        echo "[+] $package_name.py found in site-packages"
+        return 0
+    else
+        echo "[!] Warning: $package_name not found in site-packages"
+        return 1
+    fi
+}
+
+# Function to check if source packages are available
+check_source_packages() {
+    local packages_available=0
+    
+    # Check for pycfhelpers source
+    if [ -d "$DAP_PREFIX/python/lib/python3.10/site-packages/pycfhelpers" ] || [ -d "$DAP_PREFIX/python/lib/python3.11/site-packages/pycfhelpers" ]; then
+        echo "[+] Found pycfhelpers source package"
+        packages_available=$((packages_available + 1))
+    fi
+    
+    # Check for pycftools source
+    if [ -d "$DAP_PREFIX/python/lib/python3.10/site-packages/pycftools" ] || [ -d "$DAP_PREFIX/python/lib/python3.11/site-packages/pycftools" ]; then
+        echo "[+] Found pycftools source package"
+        packages_available=$((packages_available + 1))
+    fi
+    
+    return $packages_available
+}
+
+# Main Python packages installation logic
+install_python_packages() {
+    echo "[*] Installing Python packages..."
+    
+    # Find Python executables
+    if ! find_python_executables; then
+        echo "[!] Error: Cannot find working Python/pip executables"
+        return 1
+    fi
+    
+    local installed_count=0
+    
+    # Install wheel packages
+    if [ -d "$DAP_PREFIX/share/wheels" ]; then
+        echo "[*] Found wheels directory, installing packages..."
+        
+        for wheel_file in "$DAP_PREFIX/share/wheels"/*.whl; do
+            if [ -f "$wheel_file" ]; then
+                local wheel_name=$(basename "$wheel_file")
+                echo "[*] Installing: $wheel_name"
+                
+                # Install with detailed error logging
+                if "$PYTHON_PIP" install "$wheel_file" --force-reinstall 2>&1; then
+                    echo "[+] Successfully installed: $wheel_name"
+                    installed_count=$((installed_count + 1))
+                else
+                    echo "[!] Failed to install: $wheel_name"
+                    echo "[!] Check pip output above for details"
+                fi
+            fi
+        done
+    else
+        echo "[!] Warning: Wheels directory not found: $DAP_PREFIX/share/wheels"
+    fi
+    
+    # Verify installed packages and show versions
+    if [ $installed_count -gt 0 ]; then
+        echo "[*] Verifying installed packages..."
+        
+        # Check pycfhelpers
+        if "$PYTHON_BIN" -c "import pycfhelpers; print(f'pycfhelpers version: {pycfhelpers.__version__}')" 2>/dev/null; then
+            echo "[+] pycfhelpers package verified and version shown"
+        else
+            echo "[!] Warning: pycfhelpers import failed"
+            "$PYTHON_BIN" -c "import pycfhelpers" 2>&1 || true
+        fi
+        
+        # Check pycftools
+        if "$PYTHON_BIN" -c "import pycftools; print(f'pycftools version: {pycftools.__version__}')" 2>/dev/null; then
+            echo "[+] pycftools package verified and version shown"
+        else
+            echo "[!] Warning: pycftools import failed"
+            "$PYTHON_BIN" -c "import pycftools" 2>&1 || true
+        fi
+        
+        echo "[+] Python packages installation completed successfully ($installed_count packages installed)"
+        return 0
+    else
+        echo "[!] Warning: No Python packages were installed"
+        echo "[!] Some Python-dependent features may not work correctly"
+        return 0  # Continue installation even without Python packages
+    fi
+}
+
+# Install wheel files if present
+install_python_packages
+
 echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
 
