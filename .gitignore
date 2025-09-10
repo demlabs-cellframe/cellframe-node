@@ -73,8 +73,13 @@ cmake_install.cmake
 # Editor's temp files
 *~
 cmake-build-*
+
 .idea
-.git
-.mcp
-.context
-.cache
+.git/
+.mcp/
+.context/
+.cache/
+.slc/
+.cursorrules
+.clangd
+slc
