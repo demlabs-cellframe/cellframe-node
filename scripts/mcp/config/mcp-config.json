@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "dap-sdk-docs": {
+      "command": "node",
+      "args": ["scripts/mcp/servers/dap-sdk-docs-server.js"],
+      "env": {
+        "PROJECT_ROOT": "'"$PROJECT_ROOT"'",
+        "LOG_LEVEL": "info"
+      }
+    },
+    "dap-sdk-code": {
+      "command": "python3",
+      "args": ["scripts/mcp/servers/dap-sdk-code-server.py"],
+      "env": {
+        "PROJECT_ROOT": "'"$PROJECT_ROOT"'",
+        "PYTHONPATH": "'"$PROJECT_ROOT"'"
+      }
+    },
+    "dap-sdk-validation": {
+      "command": "node",
+      "args": ["scripts/mcp/servers/dap-sdk-validation-server.js"],
+      "env": {
+        "PROJECT_ROOT": "'"$PROJECT_ROOT"'",
+        "VALIDATION_MODE": "strict"
+      }
+    }
+  },
+  "global": {
+    "logLevel": "info",
+    "timeout": 30000,
+    "retryAttempts": 3
+  }
+}
