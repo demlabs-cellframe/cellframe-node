@@ -401,6 +401,20 @@ static int s_cert_create(int argc, const char **argv) {
     }
 
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    // Optional seed parsing: look for -seed <ascii>
+    const char *l_seed_str = NULL;
+    for (int i = 5; i < argc; i++) {
+        if (!strcmp(argv[i], "-seed")) {
+            if (i + 1 < argc) {
+                l_seed_str = argv[i + 1];
+                i++;
+            } else {
+                log_it(L_ERROR, "Option -seed requires a value\n");
+                DAP_DELETE(l_cert_path);
+                exit(-603);
+            }
+        }
+    }
 
     if (l_sig_type.type == SIG_TYPE_NULL || l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
         log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s",
@@ -425,9 +439,28 @@ static int s_cert_create(int argc, const char **argv) {
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
 
     if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
-      dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
+      dap_cert_t * l_cert = NULL;
+      if (l_seed_str && *l_seed_str) {
+          l_cert = dap_cert_generate_mem_with_seed(l_cert_name, l_key_type, l_seed_str, strlen(l_seed_str));
+      } else {
+          l_cert = dap_cert_generate_mem(l_cert_name, l_key_type);
+      }
       if (l_cert == NULL){
-        log_it(L_ERROR, "Can't create \"%s\"",l_cert_path);
+        log_it(L_ERROR, "Can't create certificate in memory");
+        DAP_DELETE(l_cert_path);
+        exit(-500);
+      }
+      if (dap_cert_add(l_cert)) {
+        log_it(L_ERROR, "Can't register certificate in memory");
+        dap_cert_delete(l_cert);
+        DAP_DELETE(l_cert_path);
+        exit(-500);
+      }
+      if (dap_cert_save_to_folder(l_cert, s_system_ca_dir)) {
+        log_it(L_ERROR, "Can't save certificate to the file!\n");
+        dap_cert_delete(l_cert);
+        DAP_DELETE(l_cert_path);
+        exit(-500);
       }
       dap_cert_delete(l_cert);
     } else {
@@ -822,7 +855,7 @@ static void s_help()
     printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
-    printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
+    printf("\t%s cert create <cert name> <sign type> [-seed \"ascii value here\"] [<key length>]\n\n", l_tool_appname);
 
     printf(" * Dump cert data stored in <file path>\n");
     printf("\t%s cert dump <cert name>\n\n", l_tool_appname);
