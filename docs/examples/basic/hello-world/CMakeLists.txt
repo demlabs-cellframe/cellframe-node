@@ -35,3 +35,5 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
+
+
