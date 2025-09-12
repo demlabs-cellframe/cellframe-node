@@ -21,7 +21,8 @@ compile_example() {
     local cmd="gcc -o $example_name $source_file -I$include_dirs $libraries -Wall -Wextra -O2 -DDAP_OS_LINUX"
     echo "  Command: $cmd"
 
-    if eval "$cmd" 2>/dev/null; then
+    # Security fix: avoid eval with user data, use direct execution
+    if $cmd 2>/dev/null; then
         echo "  ✅ $example_name compiled successfully"
         echo "  📍 Executable: $(pwd)/$example_name"
         return 0
@@ -74,5 +75,6 @@ else
     echo "Some examples failed to compile"
     exit 1
 fi
+
 
 

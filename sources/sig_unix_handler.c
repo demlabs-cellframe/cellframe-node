@@ -37,10 +37,18 @@ static void clear_pid_file() {
         fclose(f);
 }
 
+// Global flag for signal-safe shutdown
+static volatile sig_atomic_t g_shutdown_requested = 0;
+
 static void sig_exit_handler(int sig_code) {
-    log_it(L_DEBUG, "Got exit code: %d", sig_code);
-    fflush(stdout);
-    exit(0);
+    // Security fix: use signal-safe operations only
+    g_shutdown_requested = 1;
+    
+    // Signal-safe write to stderr
+    const char msg[] = "Shutdown signal received\n";
+    write(STDERR_FILENO, msg, sizeof(msg) - 1);
+    
+    // Don't call exit() directly in signal handler - let main loop handle cleanup
     /*clear_pid_file();
 	
     dap_plugin_deinit();

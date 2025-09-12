@@ -1,0 +1,40 @@
+CompileFlags:
+  Add:
+    # XKCP required defines for proper clang analysis and IDE support  
+    - -DXKCP_has_KeccakP1600=1
+    - -DXKCP_has_FIPS202=1
+    - -DXKCP_has_Sponge_Keccak=1
+    - -DKeccakP1600timesN_excluded=1
+    # DAP memory allocation macros for IDE syntax highlighting  
+    - -DDAP_NEW_Z_SIZE_RET_VAL_IF_FAIL(t,s,r,...)=((t*)0)
+    - -DDAP_NEW_Z_RET_VAL_IF_FAIL(t,r,...)=((t*)0)
+    - -DDAP_DUP_SIZE_RET_VAL_IF_FAIL(p,s,r,...)=((void*)0)
+    # Include project config.h before XKCP includes (avoids 3rdparty modifications)
+    - -include
+    - ./.vscode/config.h
+    # Additional include paths for XKCP
+    - -I./dap-sdk/crypto/XKCP
+    - -I./dap-sdk/crypto/XKCP/lib/common  
+    - -I./dap-sdk/crypto/XKCP/lib/high/Keccak
+    - -I./dap-sdk/crypto/XKCP/lib/high/Keccak/FIPS202
+    - -I./dap-sdk/crypto/XKCP/lib/low/KeccakP-1600/compact
+    - -I./dap-sdk/crypto/XKCP/lib/low/KeccakP-1600/x86-64
+    - -I./dap-sdk/crypto/include
+    # Add .mcp to include path so config.h can be found
+    - -I./.mcp
+    # Standard includes
+    - -I./dap-sdk/core/include
+    - -I./dap-sdk/3rdparty/uthash/src
+    - -I./dap-sdk/3rdparty/json-c
+    # Compiler flags optimized for IDE
+    - -std=c11
+
+Diagnostics:
+  # Отключаем все диагностики clangd для Problems panel
+  # IntelliSense подсветка будет работать, но ошибки не попадут в Problems
+  Suppress: "*"
+  UnusedIncludes: None
+  # MissingIncludes: None
+  ClangTidy:
+    Remove:
+      - "*"
