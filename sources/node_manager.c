@@ -63,6 +63,11 @@ void client_new(dap_server_client_t *client,void * arg){
 void client_read(dap_server_client_t *client,void * arg){
     log_it(L_INFO,"Client read %u",client->buf_in_size);
     unsigned char* data = (char*)malloc(client->buf_in_size);
+    // Security fix: check malloc result
+    if (!data) {
+        log_it(L_ERROR, "Memory allocation failed for client data");
+        return;
+    }
     data[client->buf_in_size] = 0;
     if(client->_ready_to_read)
     {        
