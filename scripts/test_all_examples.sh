@@ -28,7 +28,8 @@ test_example() {
 
     # Сборка
     echo "  🔨 Building..."
-    if eval "$build_cmd"; then
+    # Security fix: avoid eval with user data, use direct execution
+    if $build_cmd; then
         echo "  ✅ Build successful"
     else
         echo "  ❌ Build failed"
