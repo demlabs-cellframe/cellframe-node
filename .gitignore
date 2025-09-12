@@ -3,6 +3,7 @@ build/*
 debug/*
 build_stretch/*
 test/build
+mcp_env
 *.txt.user
 *.txt.user.*
 *.autosave
@@ -19,7 +20,9 @@ test/build
 *.ilk
 *.map
 *.exp
-
+.context
+.cursorrules
+slc
 # Precompiled Headers
 *.gch
 *.pch

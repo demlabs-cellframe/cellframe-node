@@ -1,0 +1,8 @@
+INFO:dap-mcp-server:Starting DAP SDK MCP Server...
+INFO:dap-mcp-server:Available tools:
+INFO:dap-mcp-server:  - analyze_crypto_algorithms: Анализ криптографических алгоритмов DAP SDK (Kyber, Falcon, SPHINCS+, etc.)
+INFO:dap-mcp-server:  - analyze_network_modules: Анализ сетевых модулей DAP SDK (HTTP, JSON-RPC, DNS серверы)
+INFO:dap-mcp-server:  - analyze_build_system: Анализ системы сборки DAP SDK (CMake, зависимости, конфигурация)
+INFO:dap-mcp-server:  - find_code_examples: Поиск и анализ примеров кода в DAP SDK
+INFO:dap-mcp-server:  - analyze_security_features: Анализ функций безопасности DAP SDK (пост-квантовые алгоритмы, защита)
+INFO:dap-mcp-server:  - get_project_overview: Получение общего обзора проекта DAP SDK
