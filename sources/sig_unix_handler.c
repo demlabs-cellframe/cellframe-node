@@ -37,43 +37,12 @@ static void clear_pid_file() {
         fclose(f);
 }
 
-// Global flag for signal-safe shutdown
-static volatile sig_atomic_t g_shutdown_requested = 0;
-
 static void sig_exit_handler(int sig_code) {
-    // Security fix: use signal-safe operations only
-    g_shutdown_requested = 1;
-    
     // Signal-safe write to stderr
     const char msg[] = "Shutdown signal received\n";
     write(STDERR_FILENO, msg, sizeof(msg) - 1);
-    
-    // Don't call exit() directly in signal handler - let main loop handle cleanup
-    /*clear_pid_file();
-	
-    dap_plugin_deinit();
-    dap_chain_node_mempool_autoproc_deinit();
-    dap_chain_net_srv_xchange_deinit();
-    dap_chain_net_srv_stake_pos_delegate_deinit();
-    dap_chain_net_srv_stake_lock_deinit();
-    dap_chain_net_deinit();
-    dap_global_db_deinit();
-    dap_chain_deinit();
-    dap_stream_ctl_deinit();
-    dap_stream_deinit();
-    dap_enc_ks_deinit();
-    enc_http_deinit();
-    dap_http_deinit();
-#ifdef DAP_MODULES_DYNAMIC
-    dap_modules_dynamic_close_cdb();
-#endif
-    dap_interval_timer_deinit();
-    dap_common_deinit();
-
-    log_it(L_NOTICE,"Stopped Cellframe Node");
-    fflush(stdout);
-
-    exit(0);*/
+    // Security fix: use signal-safe operations only
+    dap_events_stop_all();
 }
 
 
