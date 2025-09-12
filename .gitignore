@@ -3,6 +3,7 @@ build/*
 debug/*
 build_stretch/*
 test/build
+mcp_env
 *.txt.user
 *.txt.user.*
 *.autosave
