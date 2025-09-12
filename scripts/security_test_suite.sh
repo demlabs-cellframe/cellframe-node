@@ -102,9 +102,9 @@ run_test "Command injection fix" \
     "! grep -r 'eval.*cmd' scripts/" \
     "pass"
 
-# Проверка что memset заменен на explicit_bzero для паролей
+# Проверка что memset заменен на dap_secure_bzero для паролей
 run_test "Password clearing fix" \
-    "grep -q 'explicit_bzero.*pass' cellframe-sdk/modules/wallet/dap_chain_wallet.c" \
+    "grep -q 'dap_secure_bzero.*pass' cellframe-sdk/modules/wallet/dap_chain_wallet.c" \
     "pass"
 
 # Проверка что добавлены overflow проверки

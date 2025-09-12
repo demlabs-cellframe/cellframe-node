@@ -44,7 +44,7 @@ class CellFrameSecurityScanner:
                 'pattern': r'\bmemset\s*\(\s*\w*pass\w*',
                 'severity': 'HIGH',
                 'description': 'Using memset for password clearing',
-                'recommendation': 'Use explicit_bzero() for secure memory clearing'
+                'recommendation': 'Use dap_secure_bzero() for secure memory clearing'
             },
             
             # Crypto issues
