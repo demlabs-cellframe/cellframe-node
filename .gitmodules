@@ -15,4 +15,4 @@
 	branch = develop
 [submodule "diagtool"]
 	path = diagtool
-	url = https://gitlab.demlabs.net/cellframe/cellframe-node-diagtool.git
+	url = ../cellframe-node-diagtool.git
