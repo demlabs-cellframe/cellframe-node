@@ -523,3 +523,4 @@ export DAP_LOG_LEVEL=DEBUG
 **Следующий шаг: [Basic Wallet](../basic-wallet/) - управление криптовалютой**
 
 
+
