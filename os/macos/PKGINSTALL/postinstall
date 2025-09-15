@@ -37,7 +37,8 @@ if [ -d "${NETWORK_BACKUP_DIR}" ]; then
         if [ -f "${backup_file}" ]; then
             filename=$(basename "${backup_file}")
             
-            if [[ "${filename}" == *.cfg.dis ]]; then
+            case "${filename}" in
+                *.cfg.dis)
                 # User had this network disabled
                 network_name="${filename%.cfg.dis}"
                 target_dis_file="${USER_RES}/etc/network/${filename}"
@@ -55,7 +56,8 @@ if [ -d "${NETWORK_BACKUP_DIR}" ]; then
                     rm -f "${target_cfg_file}"
                 fi
                 
-            elif [[ "${filename}" == *.cfg ]]; then
+                ;;
+                *.cfg)
                 # User had this network enabled
                 network_name="${filename%.cfg}"
                 target_cfg_file="${USER_RES}/etc/network/${filename}"
@@ -69,7 +71,8 @@ if [ -d "${NETWORK_BACKUP_DIR}" ]; then
                     echo "[!] Removing conflicting disabled config for enabled network: ${network_name}"
                     rm -f "${target_dis_file}"
                 fi
-            fi
+                ;;
+            esac
         fi
     done
     
