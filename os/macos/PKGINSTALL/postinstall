@@ -28,6 +28,7 @@ cp -r "${INSTALL_RES}/etc" "${USER_RES}/"
 cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 
 # Restore user's network configurations, preserving user's choices
+USER_DISABLED_NETWORKS=""
 if [ -d "${NETWORK_BACKUP_DIR}" ]; then
     echo "[!] Restoring user network configurations"
     
@@ -44,6 +45,9 @@ if [ -d "${NETWORK_BACKUP_DIR}" ]; then
                 
                 echo "[!] Restoring disabled network: ${network_name}"
                 cp "${backup_file}" "${target_dis_file}"
+                
+                # Remember that this network should stay disabled
+                USER_DISABLED_NETWORKS="${USER_DISABLED_NETWORKS} ${network_name}"
                 
                 # Remove any .cfg file for this network to prevent conflicts
                 if [ -f "${target_cfg_file}" ]; then
@@ -98,6 +102,23 @@ ${INSTALL_BINS}/cellframe-node-config -i "${USER_RES}/share/default.setup"
 # Final check and cleanup for duplicate configs after setup
 echo "[!] Post-setup cleanup: checking for network config duplicates"
 if [ -d "${NETWORK_DIR}" ]; then
+    # First, restore user's disabled networks that may have been re-enabled by setup
+    if [ -n "${USER_DISABLED_NETWORKS}" ]; then
+        echo "[!] Enforcing user's disabled networks after setup"
+        for network_name in ${USER_DISABLED_NETWORKS}; do
+            cfg_file="${NETWORK_DIR}/${network_name}.cfg"
+            dis_file="${NETWORK_DIR}/${network_name}.cfg.dis"
+            
+            if [ -f "${cfg_file}" ] && [ -f "${dis_file}" ]; then
+                echo "[!] Setup re-enabled user's disabled network ${network_name}, fixing this"
+                rm -f "${cfg_file}"
+            elif [ -f "${cfg_file}" ] && [ ! -f "${dis_file}" ]; then
+                echo "[!] Setup created config for user's disabled network ${network_name}, disabling it"
+                mv "${cfg_file}" "${dis_file}"
+            fi
+        done
+    fi
+    
     # Check for .cfg.dis files first and remove corresponding .cfg files that may have been created by setup
     find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg.dis" -type f | while read -r dis_file; do
         if [ -f "${dis_file}" ]; then
