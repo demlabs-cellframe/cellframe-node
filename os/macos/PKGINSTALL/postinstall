@@ -7,12 +7,13 @@ USER_RES="/Library/Application Support/CellframeNode"
 
 mkdir -p "${USER_RES}/"
 
-# Backup existing network configurations to preserve user settings
+# Backup existing network configuration files to preserve user settings
 NETWORK_BACKUP_DIR="${USER_RES}/network_backup_$$"
 if [ -d "${USER_RES}/etc/network" ]; then
     echo "[!] Backing up existing network configurations"
     mkdir -p "${NETWORK_BACKUP_DIR}"
-    cp -r "${USER_RES}/etc/network/"* "${NETWORK_BACKUP_DIR}/" 2>/dev/null || true
+    # Only backup .cfg and .cfg.dis files, not directories
+    find "${USER_RES}/etc/network" -maxdepth 1 -type f \( -name "*.cfg" -o -name "*.cfg.dis" \) -exec cp {} "${NETWORK_BACKUP_DIR}/" \; 2>/dev/null || true
 fi
 
 # Copy configuration files (this will overwrite existing configs)
@@ -22,39 +23,42 @@ cp -r "${INSTALL_RES}/share" "${USER_RES}/"
 # Restore user's network configurations, preserving disabled networks
 if [ -d "${NETWORK_BACKUP_DIR}" ]; then
     echo "[!] Restoring user network configurations"
-    for backup_file in "${NETWORK_BACKUP_DIR}"/*; do
+    # Process .cfg.dis files first to ensure disabled networks stay disabled
+    for backup_file in "${NETWORK_BACKUP_DIR}"/*.cfg.dis; do
         if [ -f "${backup_file}" ]; then
             filename=$(basename "${backup_file}")
+            network_name="${filename%.cfg.dis}"
             target_file="${USER_RES}/etc/network/${filename}"
+            active_config="${USER_RES}/etc/network/${network_name}.cfg"
             
-            # If it's a disabled network (.cfg.dis), restore it and remove any duplicate .cfg
-            if [[ "${filename}" == *.cfg.dis ]]; then
-                network_name="${filename%.cfg.dis}"
-                active_config="${USER_RES}/etc/network/${network_name}.cfg"
-                
-                echo "[!] Restoring disabled network: ${network_name}"
-                cp "${backup_file}" "${target_file}"
-                
-                # Remove the active config if it exists to prevent duplicates
-                if [ -f "${active_config}" ]; then
-                    echo "[!] Removing duplicate active config for disabled network: ${network_name}"
-                    rm -f "${active_config}"
-                fi
-            # If it's an active network (.cfg), only restore if no .cfg.dis exists
-            elif [[ "${filename}" == *.cfg ]]; then
-                network_name="${filename%.cfg}"
-                disabled_config="${USER_RES}/etc/network/${network_name}.cfg.dis"
-                
-                # Only restore active config if user doesn't have it disabled
-                if [ ! -f "${disabled_config}" ]; then
-                    echo "[!] Restoring active network: ${network_name}"
-                    cp "${backup_file}" "${target_file}"
-                else
-                    echo "[!] Skipping active config for ${network_name} - user has it disabled"
-                fi
+            echo "[!] Restoring disabled network: ${network_name}"
+            cp "${backup_file}" "${target_file}"
+            
+            # Remove the active config if it exists to prevent duplicates
+            if [ -f "${active_config}" ]; then
+                echo "[!] Removing duplicate active config for disabled network: ${network_name}"
+                rm -f "${active_config}"
             fi
         fi
-    done
+    done 2>/dev/null || true
+    
+    # Then process .cfg files, but only if no corresponding .cfg.dis exists
+    for backup_file in "${NETWORK_BACKUP_DIR}"/*.cfg; do
+        if [ -f "${backup_file}" ]; then
+            filename=$(basename "${backup_file}")
+            network_name="${filename%.cfg}"
+            target_file="${USER_RES}/etc/network/${filename}"
+            disabled_config="${USER_RES}/etc/network/${network_name}.cfg.dis"
+            
+            # Only restore active config if user doesn't have it disabled
+            if [ ! -f "${disabled_config}" ]; then
+                echo "[!] Restoring active network: ${network_name}"
+                cp "${backup_file}" "${target_file}"
+            else
+                echo "[!] Skipping active config for ${network_name} - user has it disabled"
+            fi
+        fi
+    done 2>/dev/null || true
     
     # Clean up backup directory
     rm -rf "${NETWORK_BACKUP_DIR}"
