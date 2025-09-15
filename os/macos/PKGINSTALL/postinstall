@@ -13,8 +13,7 @@ if [ -d "${USER_RES}/etc/network" ]; then
     echo "[!] Backing up existing network configurations"
     mkdir -p "${NETWORK_BACKUP_DIR}"
     # Only backup .cfg and .cfg.dis files, not directories
-    # Use explicit loop to avoid issues with extended attributes on macOS
-    find "${USER_RES}/etc/network" -maxdepth 1 -type f \( -name "*.cfg" -o -name "*.cfg.dis" \) | while read -r config_file; do
+    for config_file in "${USER_RES}/etc/network/"*.cfg "${USER_RES}/etc/network/"*.cfg.dis; do
         if [ -f "${config_file}" ]; then
             filename=$(basename "${config_file}")
             echo "[!] Backing up: ${filename}"
@@ -82,12 +81,10 @@ fi
 
 mkdir -p "${USER_RES}/var/run/"
 
-# Check for potential duplicate network configs before running setup
-echo "[!] Checking for network config duplicates before setup"
+# Pre-setup cleanup: remove any conflicts before running setup
 NETWORK_DIR="${USER_RES}/etc/network"
 if [ -d "${NETWORK_DIR}" ]; then
-    # Check for .cfg.dis files first and remove corresponding .cfg files
-    find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg.dis" -type f | while read -r dis_file; do
+    for dis_file in "${NETWORK_DIR}/"*.cfg.dis; do
         if [ -f "${dis_file}" ]; then
             basename_dis=$(basename "${dis_file}" .cfg.dis)
             cfg_file="${NETWORK_DIR}/${basename_dis}.cfg"
@@ -96,7 +93,7 @@ if [ -d "${NETWORK_DIR}" ]; then
                 rm -f "${cfg_file}"
             fi
         fi
-    done
+    done 2>/dev/null || true
 fi
 
 # Run configuration setup
@@ -122,8 +119,8 @@ if [ -d "${NETWORK_DIR}" ]; then
         done
     fi
     
-    # Check for .cfg.dis files first and remove corresponding .cfg files that may have been created by setup
-    find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg.dis" -type f | while read -r dis_file; do
+    # Final cleanup: remove any remaining duplicates and weird files
+    for dis_file in "${NETWORK_DIR}/"*.cfg.dis; do
         if [ -f "${dis_file}" ]; then
             basename_dis=$(basename "${dis_file}" .cfg.dis)
             cfg_file="${NETWORK_DIR}/${basename_dis}.cfg"
@@ -133,15 +130,15 @@ if [ -d "${NETWORK_DIR}" ]; then
                 rm -f "${cfg_file}"
             fi
         fi
-    done
+    done 2>/dev/null || true
     
-    # Also check for weird filenames like .cfg.dis.cfg and clean them up
-    find "${NETWORK_DIR}" -maxdepth 1 -name "*.cfg.dis.*" -type f | while read -r weird_file; do
+    # Clean up weird filenames like .cfg.dis.cfg
+    for weird_file in "${NETWORK_DIR}/"*.cfg.dis.*; do
         if [ -f "${weird_file}" ]; then
             echo "[!] Warning: Found weird config file: ${weird_file}, removing it"
             rm -f "${weird_file}"
         fi
-    done
+    done 2>/dev/null || true
 fi
 
 echo "[!] Set cfg permissions"
