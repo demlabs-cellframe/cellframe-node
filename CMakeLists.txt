@@ -635,7 +635,7 @@ else()
             if(PYTHON_WHEELS_PREBUILD)
                # Try to download wheel packages
                 message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
-                download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/bugfix-19464/pycfhelpers-1.0.4-py3-none-any.whl" PYCFHELPERS_SUCCESS)
+                download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.4-py3-none-any.whl" PYCFHELPERS_SUCCESS)
                 # Download pycftools wheel file
                 download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
                         # Check if both packages downloaded successfully
