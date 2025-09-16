@@ -207,7 +207,7 @@ static int s_wallet_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type))
+    if (dap_sign_type_is_deprecated(l_sig_type))
     {
         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                 dap_sign_get_str_recommended_types());
@@ -235,7 +235,7 @@ static int s_wallet_create(int argc, const char **argv) {
                         argv[i], dap_sign_get_str_recommended_types());
                 exit(-2007);
             }
-            if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+            if (dap_sign_type_is_deprecated(l_types[l_count_signs]))
             {
                 log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                         dap_sign_get_str_recommended_types());
@@ -291,7 +291,7 @@ static int s_wallet_create_wp(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type))
+    if (dap_sign_type_is_deprecated(l_sig_type))
     {
         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                 dap_sign_get_str_recommended_types());
@@ -325,7 +325,7 @@ static int s_wallet_create_wp(int argc, const char **argv) {
                         argv[i], dap_sign_get_str_recommended_types());
                 exit(-2007);
             }
-            if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+            if (dap_sign_type_is_deprecated(l_types[l_count_signs]))
             {
                 log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                         dap_sign_get_str_recommended_types());
@@ -416,7 +416,7 @@ static int s_cert_create(int argc, const char **argv) {
     //
     // Check unsupported algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type)) {
+    if (dap_sign_type_is_deprecated(l_sig_type)) {
         log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s",
                argv[4], dap_cert_get_str_recommended_sign());
         exit(-602);
