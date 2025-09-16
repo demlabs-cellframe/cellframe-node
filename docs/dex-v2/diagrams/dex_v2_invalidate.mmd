@@ -1,0 +1,25 @@
+flowchart LR
+
+subgraph INVALIDATE["TX_INVALIDATE (owner closes order)"]
+  direction TB
+  PREV["Prev TX: OUT_COND V_prev"]
+  IN0["IN_COND (prev_hash,out_idx)"]
+  CALC["Calc:<br/>Return V_prev to seller<br/>Check owner signature"]
+  OUT_BACK["OUT_EXT seller: +V_prev (sell token)"]
+  FEES["Fees"]
+  PREV --> IN0
+  IN0 --> CALC
+  CALC --> OUT_BACK
+  CALC --> FEES
+end
+
+
+
+
+
+
+
+
+
+
+

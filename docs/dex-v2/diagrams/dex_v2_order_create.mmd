@@ -1,0 +1,30 @@
+flowchart LR
+
+subgraph ORDER_CREATE["TX_CREATE (datum)"]
+  IN_SELL["IN: Σ inputs(sell_token) = V_sell + Δ_native_fees?<br/>(if native fee is taken from sell)"]
+  IN_FEE["IN: optional fee inputs (native)"]
+  OUT_ORDER["OUT_COND(SRV_DEX)<br/>value V = V_sell<br/>buy_token, rate, seller_addr"]
+  OUT_NET["OUT_EXT net_fee (native)"]
+  OUT_VAL["FEE validator"]
+  OUT_SRV["FEE service (policy)"]
+  OUT_CHG_SELL["OUT_EXT change (sell_token)"]
+  OUT_CHG_FEE["OUT_EXT change (native fee)"]
+  CALC["Calc:<br/>Require: V_sell>0, rate>0<br/>If sell_token==native: ΣIN_sell ≥ V_sell+Σfees; else: ΣIN_sell ≥ V_sell and ΣIN_fee ≥ Σfees<br/>Change = inputs - required"]
+  IN_SELL --> OUT_ORDER
+  IN_SELL --> OUT_CHG_SELL
+  IN_FEE --> OUT_NET
+  IN_FEE --> OUT_SRV
+  IN_FEE --> OUT_CHG_FEE
+  IN_SELL --> OUT_VAL
+end
+
+
+
+
+
+
+
+
+
+
+

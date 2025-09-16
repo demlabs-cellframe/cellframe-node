@@ -1,0 +1,29 @@
+flowchart LR
+
+subgraph EX_SINGLE["TX_EXCHANGE (single order)"]
+  direction TB
+  PREV["Prev TX: OUT_COND(SRV_DEX) V_prev"]
+  IN0["IN_COND[0] (prev_hash,out_idx)"]
+  CALC["Calc:<br/>S = min(request, V_prev)<br/>B = S * rate<br/>L = V_prev - S<br/>If sell==native: S' = S - fee_native; else: S' = S"]
+  OUT_RES["OUT_COND(SRV_DEX) residual<br/>V_out = L (refs IN[0])"]
+  OUT_PAY_SELLER["OUT_EXT seller: +B (buy_token)"]
+  OUT_PAY_BUYER["OUT_EXT buyer: +S' (sell_token)"]
+  FEES["Fees: net/validator/service"]
+  PREV --> IN0
+  IN0 --> CALC
+  CALC --> OUT_RES
+  CALC --> OUT_PAY_SELLER
+  CALC --> OUT_PAY_BUYER
+  CALC --> FEES
+end
+
+
+
+
+
+
+
+
+
+
+

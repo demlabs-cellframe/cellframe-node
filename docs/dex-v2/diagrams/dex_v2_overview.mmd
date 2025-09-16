@@ -1,0 +1,51 @@
+flowchart LR
+
+subgraph A["Single-order partial fill"]
+  O_prev["OUT_COND(SRV_DEX) V_prev"] --> IN0["IN_COND(prev_hash,out_idx)"]
+  IN0 --> TX1["TX_EXCHANGE"]
+  TX1 --> R["OUT_COND(SRV_DEX) V_out = V_prev - c"]
+  TX1 --> P["Payout seller: c * rate"]
+  R -. "references" .- IN0
+end
+
+subgraph B["Multi-order fill (no residual)"]
+  O1["OUT_COND V1"] --> IN1["IN_COND 1 (full)"]
+  O2["OUT_COND V2"] --> IN2["IN_COND 2 (full)"]
+  IN1 --> TX2["TX_EXCHANGE"]
+  IN2 --> TX2
+  TX2 --> P1["Payouts Σ S_i * rate_i"]
+end
+
+subgraph C["Multi-order with single residual (IN[0] partial)"]
+  O_full["OUT_COND V_full"] --> INx["IN_COND x (full)"]
+  O_part["OUT_COND V_prev(k+1)"] --> IN0c["IN_COND 0 (partial)"]
+  INx --> TX3["TX_EXCHANGE"]
+  IN0c --> TX3
+  TX3 --> Rc["OUT_COND(SRV_DEX) V_out = V_prev - c'"]
+  TX3 --> P2["Payouts Σ S_i * rate_i"]
+  Rc -. "references" .- IN0c
+end
+
+subgraph D["Order chain (head/tail)"]
+  Head["Head (first_chain_tx_hash)"] --> E1["Exchange / Invalidate"] --> E2["Exchange …"] --> Tail["Tail (final_chain_tx_hash)"]
+end
+
+subgraph E["Multi-order all closed + new buyer order"]
+  Oa["OUT_COND V1"] --> INa["IN_COND 1 (full)"]
+  Ob["OUT_COND V2"] --> INb["IN_COND 2 (full)"]
+  INa --> TX4["TX_EXCHANGE"]
+  INb --> TX4
+  TX4 --> P3["Payouts Σ S_i * rate_i"]
+  TX4 --> Rb["NEW OUT_COND(SRV_DEX) (buyer leftover) V_new = C_total_sell - Σ S_i"]
+end
+
+
+
+
+
+
+
+
+
+
+

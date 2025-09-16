@@ -1,0 +1,33 @@
+flowchart LR
+
+subgraph EX_MULTI_ALL_FULL["TX_EXCHANGE (multi-orders, all full)"]
+  direction TB
+  PREV1["Prev TX1: OUT_COND V1"]
+  PREV2["Prev TX2: OUT_COND V2"]
+  DOTS(("..."))
+  IN1["IN_COND 1 (full)"]
+  IN2["IN_COND 2 (full)"]
+  CALC["Calc:<br/>For each i: S_i = V_i; B_i = S_i*rate_i<br/>SumS = ΣS_i = ΣV_i<br/>SumB = ΣB_i = Σ(S_i*rate_i)"]
+  OUT_PAY_SELLERS["Σ OUT_EXT seller_i: +B_i (token_i)"]
+  OUT_PAY_BUYER["OUT_EXT buyer: +SumS' (sell_token)"]
+  FEES["Fees: net/validator/service"]
+  PREV1 --> IN1
+  PREV2 --> IN2
+  DOTS --> CALC
+  IN1 --> CALC
+  IN2 --> CALC
+  CALC --> OUT_PAY_SELLERS
+  CALC --> OUT_PAY_BUYER
+  CALC --> FEES
+end
+
+
+
+
+
+
+
+
+
+
+

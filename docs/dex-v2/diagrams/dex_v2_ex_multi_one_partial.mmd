@@ -1,0 +1,33 @@
+flowchart LR
+
+subgraph EX_MULTI_ONE_PARTIAL["TX_EXCHANGE (multi-orders, one partial IN[0])"]
+  direction TB
+  PREV_PART["Prev TX(k+1): OUT_COND V_prev"]
+  PREV_FULL["Prev TXi: OUT_COND V_full"]
+  IN0["IN_COND 0 (partial)"]
+  INi["IN_COND i (full)"]
+  CALC["Calc:<br/>Full i: S_i=V_full; B_i=S_i*rate_i<br/>Partial 0: S0=c', L0=V_prev - c'<br/>SumS = S0 + ΣS_i<br/>SumB = B0 + ΣB_i (B0=S0*rate0)"]
+  OUT_RES["OUT_COND(SRV_DEX) residual: V_out=L0 (refs IN[0])"]
+  OUT_PAY_SELLERS["Σ OUT_EXT seller_j: +B_j (token_j)"]
+  OUT_PAY_BUYER["OUT_EXT buyer: +SumS' (sell_token)"]
+  FEES["Fees"]
+  PREV_PART --> IN0
+  PREV_FULL --> INi
+  IN0 --> CALC
+  INi --> CALC
+  CALC --> OUT_RES
+  CALC --> OUT_PAY_SELLERS
+  CALC --> OUT_PAY_BUYER
+  CALC --> FEES
+end
+
+
+
+
+
+
+
+
+
+
+
