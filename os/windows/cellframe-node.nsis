@@ -314,8 +314,10 @@ Function pgNetSelectLeave
 	!insertmacro ensureNetworkState "riemann" $NetRiemannState
 	!insertmacro ensureNetworkState "raiden" $NetRaidenState
 
+	; Rename staged binary only if it exists to avoid accidental deletion on Back/Next
+	IfFileExists "$INSTDIR\cellframe-node.tmp" 0 +3
 	Delete "$INSTDIR\${NODE_NAME}.exe"
-	Rename 	"$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
+	Rename "$INSTDIR\cellframe-node.tmp" "$INSTDIR\cellframe-node.exe"
 
 	
 FunctionEnd
