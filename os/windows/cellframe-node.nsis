@@ -244,17 +244,25 @@ Function checkEnabledNets
 
 	${If} $NetBackboneState == "on"
 		${NSD_Check} $NetBackboneCb
+	${ElseIf} $NetBackboneState == "1"
+		${NSD_Check} $NetBackboneCb
 	${EndIf}
 	
 	${If} $NetKelVPNState == "on"
+		${NSD_Check} $NetKelVPNCb
+	${ElseIf} $NetKelVPNState == "1"
 		${NSD_Check} $NetKelVPNCb
 	${EndIf}
 	
 	${If} $NetRiemannState == "on"
 		${NSD_Check} $NetRiemannCb
+	${ElseIf} $NetRiemannState == "1"
+		${NSD_Check} $NetRiemannCb
 	${EndIf}
 
 	${If} $NetRaidenState == "on"
+		${NSD_Check} $NetRaidenCb
+	${ElseIf} $NetRaidenState == "1"
 		${NSD_Check} $NetRaidenCb
 	${EndIf}
 
