@@ -419,7 +419,7 @@ cellframe_rpc_api_response_validation:
       allow_failure: true
   variables:
     CELLFRAME_VALIDATOR_REPO: ""
-    CELLFRAME_VALIDATOR_REF: "master"
+    CELLFRAME_VALIDATOR_REF: "feature-17573"
     VALIDATOR_TARGET: "rpc"
     CELLFRAME_RPC_URL: "http://rpc.cellframe.net"
     # tests parametrs
