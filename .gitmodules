@@ -12,4 +12,4 @@
 [submodule "dap-sdk"]
 	path = dap-sdk
 	url = ../../dap/dap-sdk.git
-	branch = develop
+	branch = rc-5.5-network
