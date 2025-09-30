@@ -30,8 +30,9 @@
 
 #include "dap_common.h"
 #include "dap_config.h"
+#include "dap_sys_paths.h"
+#include "dap_resource_manager.h"
 #include "dap_cert.h"
-#include "dap_cert_file.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
 
@@ -518,7 +519,8 @@ static int s_cert_dump(int argc, const char **argv)
 {
     if (argc>=4) {
       const char * l_cert_name = argv[3];
-      dap_cert_t * l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      // Use unified certificate loading (now works consistently between CLI and SDK)
+      dap_cert_t * l_cert = dap_cert_find_by_name(l_cert_name);
       if ( l_cert ) {
         char *l_cert_dump = dap_cert_dump(l_cert);
         printf("%s", l_cert_dump);
@@ -541,7 +543,7 @@ static int s_cert_create_pkey(int argc, const char **argv) {
     }
       const char *l_cert_name = argv[3];
       const char *l_cert_pkey_path = argv[4];
-      dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+      dap_cert_t *l_cert = dap_cert_find_by_name(l_cert_name);
       if ( !l_cert ) {
           log_it(L_ERROR, "Failed to open \"%s\" certificate.", l_cert_name);
           exit(-7021);
@@ -582,7 +584,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
     }
     const char *l_cert_name = argv[3];
     const char *l_cert_new_name = argv[4];
-    dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+    dap_cert_t *l_cert = dap_cert_find_by_name(l_cert_name);
     if (!l_cert) {
         log_it(L_ERROR, "Can't read specified certificate");
         exit(-7023);
@@ -631,7 +633,7 @@ static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
 static int s_cert_add_metadata(int argc, const char **argv) {
     if (argc >= 5) {
         const char *l_cert_name = argv[3];
-        dap_cert_t *l_cert = dap_cert_add_file(l_cert_name, s_system_ca_dir);
+        dap_cert_t *l_cert = dap_cert_find_by_name(l_cert_name);
         if ( l_cert ) {
             char **l_params = dap_strsplit(argv[4], ":", 4);
             dap_cert_metadata_type_t l_type = (dap_cert_metadata_type_t)atoi(l_params[1]);
@@ -793,24 +795,41 @@ static int s_init()
     if ( dap_common_init(dap_get_appname(), NULL) )
         return printf("Fatal Error: Can't init common functions module"), -2;
 #if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
-        dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
+    dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
 #else
-        dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+    dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
 #endif
     dap_log_level_set(L_ERROR);
     {
         char l_config_dir[MAX_PATH];
-        snprintf(l_config_dir, MAX_PATH, "%s/etc", g_sys_dir_path);
+        char *l_etc_path = dap_sys_path_get(DAP_SYS_PATH_CONFIG);
+        snprintf(l_config_dir, MAX_PATH, "%s", l_etc_path);
+        DAP_DELETE(l_etc_path);
         if ( dap_config_init(l_config_dir) || !(g_config = dap_config_open(dap_get_appname())) )
             return printf("Can't init general config \"%s/%s.cfg\"\n", l_config_dir, dap_get_appname()), -3;
     }
-    char *l_ca_path = dap_config_get_item_str_path_default(g_config, "resources", "ca_folders", "."),
-         *l_wal_path = dap_config_get_item_str_path_default(g_config, "resources", "wallets_path", ".");
-    char *l_pos = dap_strncpy(s_system_ca_dir, l_ca_path, MAX_PATH);
-    if (*--l_pos == '/')
-        *l_pos = '\0';
-    dap_strncpy(s_system_wallet_dir, l_wal_path, MAX_PATH);
-    DAP_DEL_MULTY(l_ca_path, l_wal_path);
+    // Initialize unified resource manager
+    if (dap_resource_manager_init(g_config) != 0) {
+        printf("Failed to initialize resource manager\n");
+        return -4;
+    }
+    
+    // Get unified paths for CLI compatibility
+    const char *l_ca_path = dap_resource_cert_get_storage_path(true);  // Primary path only
+    const char *l_wal_path = dap_resource_wallet_get_storage_path();
+    
+    if (l_ca_path) {
+        dap_strncpy(s_system_ca_dir, l_ca_path, MAX_PATH);
+    } else {
+        strcpy(s_system_ca_dir, ".");
+    }
+    
+    if (l_wal_path) {
+        dap_strncpy(s_system_wallet_dir, l_wal_path, MAX_PATH);
+    } else {
+        strcpy(s_system_wallet_dir, ".");
+    }
+    
     return 0;
 }
 

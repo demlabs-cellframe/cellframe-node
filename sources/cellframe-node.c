@@ -23,6 +23,8 @@
 */
 
 #include "dap_strfuncs.h"
+#include "dap_sys_paths.h"
+#include "dap_resource_manager.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -194,7 +196,9 @@ int main( int argc, const char **argv )
         rc = -1;
     } else {
         char l_path[MAX_PATH + 1];
-        int pos = snprintf(l_path, sizeof(l_path), "%s/var/log", g_sys_dir_path);
+        char *l_log_path = dap_sys_path_get(DAP_SYS_PATH_LOGS);
+        int pos = snprintf(l_path, sizeof(l_path), "%s", l_log_path);
+        DAP_DELETE(l_log_path);
         if ( dap_mkdir_with_parents(l_path) ) {
             printf("Can't create directory %s, error %d", l_path, errno);
             rc = -2;
@@ -213,7 +217,9 @@ int main( int argc, const char **argv )
                 dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
 #endif
                 log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
-                snprintf(l_path, sizeof(l_path), "%s/etc", g_sys_dir_path);
+                char *l_config_path = dap_sys_path_get(DAP_SYS_PATH_CONFIG);
+                snprintf(l_path, sizeof(l_path), "%s", l_config_path);
+                DAP_DELETE(l_config_path);
                 if ( dap_config_init(l_path) ) {
                     log_it( L_CRITICAL,"Can't init general config \"%s/%s.cfg\"\n", l_path, NODE_NAME );
                     rc = -4;
@@ -226,9 +232,16 @@ int main( int argc, const char **argv )
 
     if (!( g_config = dap_config_open(dap_get_appname()) ))
         return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
+    
+    // Initialize unified resource manager for CLI/SDK compatibility
+    if (dap_resource_manager_init(g_config) != 0) {
+        return log_it(L_CRITICAL, "Failed to initialize resource manager"), DAP_DELETE(g_sys_dir_path), -6;
+    }
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH + 1];
-    snprintf(l_default_dir, MAX_PATH + 1, "%s/tmp", g_sys_dir_path);
+    char *l_tmp_path = dap_sys_path_get(DAP_SYS_PATH_TMP);
+    snprintf(l_default_dir, MAX_PATH + 1, "%s", l_tmp_path);
+    DAP_DELETE(l_tmp_path);
     char *l_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir);
     int l_pid_check = s_proc_running_check(l_pid_file_path);
     DAP_DELETE(l_pid_file_path);
@@ -514,11 +527,7 @@ int main( int argc, const char **argv )
 #endif
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
+        char *l_plugins_path_default = dap_sys_path_get(DAP_SYS_PATH_VAR_PLUGINS);
         int rc_plugin_init = 0;
         rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
         if (rc_plugin_init) {
