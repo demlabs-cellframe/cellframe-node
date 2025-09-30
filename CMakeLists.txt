@@ -20,7 +20,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Option for weel download on-build
-option(PYTHON_WHEELS_PREBUILD "Download wheels on build" ON)
+option(PYTHON_WHEELS_PREBUILD "Download wheels on build" OFF)
 # Cpp check
 if(ENABLE_CPPCHECK_ANALYSIS)
     find_program(CPPCHECK cppcheck)
