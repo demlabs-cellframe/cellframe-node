@@ -51,6 +51,7 @@ static const char *listen_socket = NULL;
 #if !DAP_OS_ANDROID
 int main(int argc, const char *argv[])
 {
+    dap_chain_node_cli_parser_init();
     dap_set_appname(NODE_NAME "-cli");
     // get relative path to config
     if (argc > 2 && !dap_strcmp("-B" , argv[1])) {

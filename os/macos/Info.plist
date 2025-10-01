@@ -10,7 +10,6 @@
         <string>cellframe-node-cli</string>
         <string>cellframe-node-tool</string>
         <string>cellframe-node-config</string>
-        <string>cellframe-diagtool</string>
     </array>
 
     <key>CFBundleGetInfoString</key>

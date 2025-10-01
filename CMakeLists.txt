@@ -20,7 +20,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Option for weel download on-build
-option(PYTHON_WHEELS_PREBUILD "Download wheels on build" ON)
+option(PYTHON_WHEELS_PREBUILD "Download wheels on build" OFF)
 # Cpp check
 if(ENABLE_CPPCHECK_ANALYSIS)
     find_program(CPPCHECK cppcheck)
@@ -66,8 +66,6 @@ else()
     message(WARNING "cppcheck not found, lint_cellframe_node target unavailable")
 endif()
 
-#enable for diagtool 
-#set(BUILD_DIAGTOOL OFF)
 
 SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
 SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
@@ -336,10 +334,6 @@ if(BSD)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -L /usr/local/lib")
 endif()
 
-if(BUILD_DIAGTOOL)
-    message("[*] Diagtool build on")
-    add_subdirectory(diagtool)
-endif()
 
 add_subdirectory(conftool)
 
@@ -468,11 +462,8 @@ if(DARWIN)
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS cellframe-node-config DESTINATION ${BINDIR} )
-    if(BUILD_DIAGTOOL)
-        INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
-    endif()
+
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
-    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
     if (BUILD_WITH_PYTHON_ENV)
@@ -534,9 +525,6 @@ else()
         INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-    endif()
-    if (BUILD_DIAGTOOL)
-            INSTALL(TARGETS cellframe-diagtool DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
 
     if (NOT ANDROID)
