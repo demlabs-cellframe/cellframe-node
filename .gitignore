@@ -78,3 +78,6 @@ cmake-build-*
 .mcp
 .context
 .cache
+#slc
+slc
+.cursorrules
