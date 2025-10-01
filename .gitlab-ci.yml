@@ -254,18 +254,23 @@ amd64:windows.rwd:
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
 
-amd64:macos.release:
+any:macos.release:
     extends: .build
-    image: demlabs/macos/amd64:qt5
+    tags:
+      - macos-native
+
     dependencies:
       - amd64:linux.rwd.bld
-    before_script: 
-      - /opt/buildtools/prepare_environment.sh amd64-osx
+
     script:
-      - echo "Do hard work"
-      - ./prod_build/build.sh --target osx release
-      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/macos/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*-signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 
+      - export PATH=/opt/homebrew/bin:$PATH
+      - security unlock-keychain -p 1234 ~/Library/Keychains/login.keychain-db 
+      - ./prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/demlabs.sh
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg
+      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest.universal --just-redirect
+      - lipo -info build_osx_release/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
+
     artifacts:
       paths:
         - build_*/*.pkg
