@@ -233,9 +233,14 @@ int main( int argc, const char **argv )
     if (!( g_config = dap_config_open(dap_get_appname()) ))
         return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
     
+    // Initialize system paths with configuration
+    if (dap_sys_paths_init(g_config) != 0) {
+        return log_it(L_CRITICAL, "Failed to initialize system paths"), DAP_DELETE(g_sys_dir_path), -6;
+    }
+    
     // Initialize unified resource manager for CLI/SDK compatibility
     if (dap_resource_manager_init(g_config) != 0) {
-        return log_it(L_CRITICAL, "Failed to initialize resource manager"), DAP_DELETE(g_sys_dir_path), -6;
+        return log_it(L_CRITICAL, "Failed to initialize resource manager"), DAP_DELETE(g_sys_dir_path), -7;
     }
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH + 1];

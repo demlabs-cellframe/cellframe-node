@@ -808,10 +808,17 @@ static int s_init()
         if ( dap_config_init(l_config_dir) || !(g_config = dap_config_open(dap_get_appname())) )
             return printf("Can't init general config \"%s/%s.cfg\"\n", l_config_dir, dap_get_appname()), -3;
     }
+    
+    // Initialize system paths with configuration
+    if (dap_sys_paths_init(g_config) != 0) {
+        printf("Failed to initialize system paths\n");
+        return -4;
+    }
+    
     // Initialize unified resource manager
     if (dap_resource_manager_init(g_config) != 0) {
         printf("Failed to initialize resource manager\n");
-        return -4;
+        return -5;
     }
     
     // Get unified paths for CLI compatibility
