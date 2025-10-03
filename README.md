@@ -23,7 +23,7 @@ To successfully complete of the build, you need to have the following packages t
 
 Please use the command below to install dependencies listed above
 ```
-sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils xsltproc
+sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils xsltproc libpq-dev
 ```
 
 #### MacOS Prerequsites 

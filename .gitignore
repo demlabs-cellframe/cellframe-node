@@ -74,3 +74,11 @@ cmake_install.cmake
 *~
 cmake-build-*
 .idea
+.git
+.mcp
+.context
+.cache
+#slc
+.slc
+slc
+.cursorrules
