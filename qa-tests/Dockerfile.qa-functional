@@ -1,0 +1,57 @@
+# Cellframe Node QA Functional Testing Container
+# Purpose: Test cellframe-node as a real user would (without systemd)
+# Version: 5.5-0 from internal repository
+# Based on QA_SPECIFICATION_LINUX.md
+
+FROM debian:bullseye
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    gnupg \
+    procps \
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    sudo \
+    less \
+    pv \
+    psmisc \
+    logrotate \
+    irqbalance \
+    xz-utils \
+    libmagic1 \
+    bc \
+    dpkg \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install latest cellframe-node package
+RUN wget -q https://internal-pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-0-amd64.deb -O /tmp/cellframe-node.deb && \
+    dpkg -i /tmp/cellframe-node.deb || true && \
+    apt-get update && apt-get install -f -y && \
+    rm /tmp/cellframe-node.deb
+
+# Create missing directories that user might need
+RUN mkdir -p /opt/cellframe-node/var/log && \
+    mkdir -p /opt/cellframe-node/var/lib/plugins && \
+    chmod 777 /opt/cellframe-node/var/log
+
+# Copy test scripts
+COPY test-suite-functional.sh /opt/qa-tests/test-suite.sh
+COPY health-check.sh /opt/qa-tests/health-check.sh
+COPY startup-node.sh /opt/qa-tests/startup-node.sh
+RUN chmod +x /opt/qa-tests/*.sh
+
+# Set working directory
+WORKDIR /opt/qa-tests
+
+# Default command: start node and run tests
+CMD ["/opt/qa-tests/test-suite.sh"]
+

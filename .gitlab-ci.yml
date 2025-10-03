@@ -12,6 +12,7 @@ workflow:
 stages:
     - code_check
     - test_build
+    - qa_tests
     - diagnostic_builds
     - build
     - post_build
@@ -137,6 +138,75 @@ amd64:linux.rwd.bld:
       paths:
         - version.mk
         - build_*/*.deb
+
+qa_functional_tests:
+  # QA Functional Testing: automated testing of cellframe-node from user perspective
+  # Reference: QA_SPECIFICATION_LINUX.md, QA_TEST_REPORT.md
+  extends: .ci-polygon
+  stage: qa_tests
+  image: docker:latest
+  services:
+    - docker:dind
+  dependencies:
+    - amd64:linux.rwd.bld
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH =~ /^qa.*/
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - when: manual
+      allow_failure: true
+  timeout: 30 minutes
+  script:
+    - |
+      echo "=== QA Functional Testing ==="
+      echo "Reference: QA_SPECIFICATION_LINUX.md"
+      
+      # Install required packages
+      apk add --no-cache bash curl wget bc
+      
+      # Build QA Docker image
+      cd qa-tests
+      docker build -f Dockerfile.qa-functional -t cellframe-node-qa:${CI_COMMIT_SHORT_SHA} .
+      
+      # Run functional tests
+      echo "Running 40 functional tests..."
+      docker run --rm --privileged cellframe-node-qa:${CI_COMMIT_SHORT_SHA} > qa-test-results.log 2>&1
+      TEST_EXIT_CODE=$?
+      
+      # Display results
+      cat qa-test-results.log
+      
+      # Extract metrics
+      TESTS_PASSED=$(grep -o "Passed:.*[0-9]" qa-test-results.log | grep -o "[0-9]*" | head -1 || echo "0")
+      TESTS_FAILED=$(grep -o "Failed:.*[0-9]" qa-test-results.log | grep -o "[0-9]*" | tail -1 || echo "0")
+      SUCCESS_RATE=$(grep -o "Success Rate:.*%" qa-test-results.log | grep -o "[0-9.]*" || echo "0")
+      
+      echo ""
+      echo "=== QA Test Summary ==="
+      echo "Tests Passed: ${TESTS_PASSED}"
+      echo "Tests Failed: ${TESTS_FAILED}"
+      echo "Success Rate: ${SUCCESS_RATE}%"
+      echo ""
+      
+      # Fail if success rate is below 95%
+      if [ $(echo "$SUCCESS_RATE < 95" | bc -l 2>/dev/null || echo "1") -eq 1 ] && [ "$TESTS_FAILED" -gt 0 ]; then
+        echo "❌ QA Tests FAILED: Success rate below 95% or tests failed"
+        exit 1
+      fi
+      
+      echo "✅ QA Tests PASSED: Success rate >= 95%"
+      exit 0
+  artifacts:
+    when: always
+    paths:
+      - qa-tests/qa-test-results.log
+    reports:
+      junit: qa-tests/qa-test-results.xml
+    expire_in: 1 week
+  allow_failure: false
 
 autotests:
   extends: .ci-test

@@ -1,0 +1,61 @@
+# Cellframe Node QA Testing Container - Internal Repository
+# Purpose: Automated testing with latest master build
+# Based on QA_SPECIFICATION_LINUX.md
+
+FROM debian:bullseye
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install basic dependencies required for testing
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    procps \
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    systemd \
+    systemd-sysv \
+    sudo \
+    less \
+    pv \
+    psmisc \
+    logrotate \
+    irqbalance \
+    xz-utils \
+    libmagic1 \
+    bc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add Internal DemLabs repository for latest builds
+RUN echo "deb https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64 bullseye main" > /etc/apt/sources.list.d/cellframe-internal.list
+
+# Add GPG key
+RUN wget -q https://debian.pub.demlabs.net/public/public-key.gpg -O /tmp/public-key.gpg && \
+    apt-key add /tmp/public-key.gpg && \
+    rm /tmp/public-key.gpg
+
+# Update package lists
+RUN apt-get update
+
+# Copy QA test scripts
+COPY test-suite.sh /opt/qa-tests/test-suite.sh
+COPY health-check.sh /opt/qa-tests/health-check.sh
+RUN chmod +x /opt/qa-tests/*.sh
+
+# Set working directory
+WORKDIR /opt/qa-tests
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /opt/qa-tests/health-check.sh || exit 1
+
+# Default command: run full test suite
+CMD ["/opt/qa-tests/test-suite.sh"]
+
