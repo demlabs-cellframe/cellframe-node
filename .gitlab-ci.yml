@@ -140,8 +140,9 @@ amd64:linux.rwd.bld:
         - build_*/*.deb
 
 qa_functional_tests:
-  # QA Functional Testing: automated testing of cellframe-node from user perspective
-  # Reference: QA_SPECIFICATION_LINUX.md, QA_TEST_REPORT.md
+  # QA Functional Testing with Official Allure Reports
+  # Professional testing using pytest + allure-pytest
+  # Reference: https://allurereport.org/
   extends: .ci-polygon
   stage: qa_tests
   image: docker:latest
@@ -161,50 +162,65 @@ qa_functional_tests:
   timeout: 30 minutes
   script:
     - |
-      echo "=== QA Functional Testing ==="
-      echo "Reference: QA_SPECIFICATION_LINUX.md"
+      echo "=============================================="
+      echo "  QA Testing with Allure Report"
+      echo "  Framework: pytest + allure-pytest"
+      echo "  Reference: https://allurereport.org/"
+      echo "=============================================="
+      echo ""
       
       # Install required packages
-      apk add --no-cache bash curl wget bc
+      apk add --no-cache bash curl wget
       
-      # Build QA Docker image
+      # Build QA Docker image with pytest and Allure
       cd qa-tests
-      docker build -f Dockerfile.qa-functional -t cellframe-node-qa:${CI_COMMIT_SHORT_SHA} .
+      docker build -f Dockerfile.qa-pytest -t cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} .
       
-      # Run functional tests
-      echo "Running 40 functional tests..."
-      docker run --rm --privileged cellframe-node-qa:${CI_COMMIT_SHORT_SHA} > qa-test-results.log 2>&1
+      # Run tests and generate Allure results
+      echo "Running professional QA tests with pytest..."
+      docker run --rm --privileged \
+        -v $(pwd)/allure-results:/opt/qa-tests/allure-results \
+        -v $(pwd)/allure-report:/opt/qa-tests/allure-report \
+        cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} > qa-test-output.log 2>&1
       TEST_EXIT_CODE=$?
       
-      # Display results
-      cat qa-test-results.log
+      # Display test output
+      cat qa-test-output.log
       
-      # Extract metrics
-      TESTS_PASSED=$(grep -o "Passed:.*[0-9]" qa-test-results.log | grep -o "[0-9]*" | head -1 || echo "0")
-      TESTS_FAILED=$(grep -o "Failed:.*[0-9]" qa-test-results.log | grep -o "[0-9]*" | tail -1 || echo "0")
-      SUCCESS_RATE=$(grep -o "Success Rate:.*%" qa-test-results.log | grep -o "[0-9.]*" || echo "0")
+      # Extract test metrics
+      TESTS_TOTAL=$(grep -o "[0-9]* passed" qa-test-output.log | grep -o "[0-9]*" | head -1 || echo "0")
+      TESTS_FAILED=$(grep -o "[0-9]* failed" qa-test-output.log | grep -o "[0-9]*" | head -1 || echo "0")
       
       echo ""
-      echo "=== QA Test Summary ==="
-      echo "Tests Passed: ${TESTS_PASSED}"
-      echo "Tests Failed: ${TESTS_FAILED}"
-      echo "Success Rate: ${SUCCESS_RATE}%"
+      echo "=============================================="
+      echo "  QA Test Summary"
+      echo "=============================================="
+      echo "Total Passed: ${TESTS_TOTAL}"
+      echo "Total Failed: ${TESTS_FAILED}"
       echo ""
       
-      # Fail if success rate is below 95%
-      if [ $(echo "$SUCCESS_RATE < 95" | bc -l 2>/dev/null || echo "1") -eq 1 ] && [ "$TESTS_FAILED" -gt 0 ]; then
-        echo "❌ QA Tests FAILED: Success rate below 95% or tests failed"
+      if [ $TEST_EXIT_CODE -eq 0 ]; then
+        echo "✅ All QA tests PASSED"
+        echo ""
+        echo "📊 Allure Report:"
+        echo "   - Download artifacts from this job"
+        echo "   - Open allure-report/index.html"
+        echo "   - Or run: allure serve allure-results"
+        exit 0
+      else
+        echo "❌ QA tests FAILED"
+        echo ""
+        echo "📊 Check Allure Report for details:"
+        echo "   - Download allure-results/ from artifacts"
+        echo "   - Run: allure serve allure-results"
         exit 1
       fi
-      
-      echo "✅ QA Tests PASSED: Success rate >= 95%"
-      exit 0
   artifacts:
     when: always
     paths:
-      - qa-tests/qa-test-results.log
-    reports:
-      junit: qa-tests/qa-test-results.xml
+      - qa-tests/allure-results/
+      - qa-tests/allure-report/
+      - qa-tests/qa-test-output.log
     expire_in: 1 week
   allow_failure: false
 

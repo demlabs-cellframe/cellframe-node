@@ -1,0 +1,83 @@
+# Professional QA Testing with pytest and Allure
+# Based on official Allure Report (https://allurereport.org/)
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    procps \
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    sudo \
+    python3 \
+    python3-pip \
+    python3-venv \
+    openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Allure CLI (official from https://allurereport.org/)
+RUN wget -q https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O /tmp/allure.tgz && \
+    tar -xzf /tmp/allure.tgz -C /opt/ && \
+    ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure && \
+    rm /tmp/allure.tgz
+
+# Install Cellframe Node
+RUN wget -q https://internal-pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-0-amd64.deb -O /tmp/cellframe-node.deb && \
+    dpkg -i /tmp/cellframe-node.deb || true && \
+    apt-get update && apt-get install -f -y && \
+    rm /tmp/cellframe-node.deb
+
+# Create necessary directories
+RUN mkdir -p /opt/cellframe-node/var/log && \
+    mkdir -p /opt/cellframe-node/var/lib/plugins && \
+    chmod 777 /opt/cellframe-node/var/log
+
+# Setup Python environment for tests
+WORKDIR /opt/qa-tests
+
+# Copy requirements first (for better layer caching)
+COPY requirements.txt .
+# Ubuntu 24.04 requires --break-system-packages due to PEP 668
+RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+
+# Copy test files
+COPY test_cellframe_qa.py .
+COPY pytest.ini .
+
+# Create environment info
+RUN echo "DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null || cat /etc/os-release | grep VERSION_ID | cut -d'=' -f2 | tr -d '\"')" > environment.properties && \
+    echo "PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)" >> environment.properties && \
+    echo "PYTEST_VERSION=$(pytest --version | head -1 | cut -d' ' -f2)" >> environment.properties && \
+    echo "ALLURE_VERSION=$(allure --version | cut -d' ' -f2)" >> environment.properties
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD pgrep -x cellframe-node > /dev/null || exit 1
+
+# Default: run tests with Allure and generate report
+CMD ["sh", "-c", "\
+    echo '=== Starting Cellframe Node QA Tests ===' && \
+    echo 'Framework: pytest + allure-pytest (https://allurereport.org/)' && \
+    echo '' && \
+    pytest test_cellframe_qa.py \
+        --alluredir=allure-results \
+        --tb=short \
+        -v && \
+    echo '' && \
+    echo '=== Generating Allure Report ===' && \
+    allure generate allure-results -o allure-report --clean && \
+    cp environment.properties allure-results/ && \
+    echo '' && \
+    echo '✓ Tests completed!' && \
+    echo '✓ Allure report: allure-report/index.html' && \
+    echo '✓ Run: allure serve allure-results' \
+    "]
+
