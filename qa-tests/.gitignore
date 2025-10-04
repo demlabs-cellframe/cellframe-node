@@ -1,0 +1,40 @@
+# QA Test Artifacts
+allure-results/
+allure-report/
+allure-results.old/
+allure-report.old/
+
+# Test outputs
+*.log
+qa-test-results.log
+qa-test-output.log
+test-run.log
+
+# Local build artifacts
+*.deb
+*.rpm
+*.tar.gz
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
