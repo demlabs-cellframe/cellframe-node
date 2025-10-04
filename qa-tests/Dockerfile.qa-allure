@@ -1,0 +1,67 @@
+# Cellframe Node QA Testing with Allure Reports
+# Purpose: Automated testing with beautiful visual reports
+# Based on latest internal build
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install dependencies including Java for Allure
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    gnupg \
+    procps \
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    sudo \
+    less \
+    pv \
+    psmisc \
+    logrotate \
+    irqbalance \
+    xz-utils \
+    libmagic1 \
+    bc \
+    dpkg \
+    bash \
+    openjdk-17-jre-headless \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Allure CLI
+RUN wget -q https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O /tmp/allure.tgz && \
+    tar -xzf /tmp/allure.tgz -C /opt/ && \
+    ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure && \
+    rm /tmp/allure.tgz
+
+# Download and install latest cellframe-node
+RUN wget -q https://internal-pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-0-amd64.deb -O /tmp/cellframe-node.deb && \
+    dpkg -i /tmp/cellframe-node.deb || true && \
+    apt-get update && apt-get install -f -y && \
+    rm /tmp/cellframe-node.deb
+
+# Create missing directories
+RUN mkdir -p /opt/cellframe-node/var/log && \
+    mkdir -p /opt/cellframe-node/var/lib/plugins && \
+    chmod 777 /opt/cellframe-node/var/log
+
+# Copy test scripts
+COPY allure-results-generator.sh /opt/qa-tests/allure-results-generator.sh
+COPY test-suite-allure.sh /opt/qa-tests/test-suite-allure.sh
+COPY health-check.sh /opt/qa-tests/health-check.sh
+COPY startup-node.sh /opt/qa-tests/startup-node.sh
+RUN chmod +x /opt/qa-tests/*.sh
+
+WORKDIR /opt/qa-tests
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /opt/qa-tests/health-check.sh || exit 1
+
+# Default: run tests and generate Allure report
+CMD ["/bin/bash", "-c", "/opt/qa-tests/test-suite-allure.sh && allure generate /opt/qa-tests/allure-results -o /opt/qa-tests/allure-report --clean && echo 'Allure report generated at /opt/qa-tests/allure-report/index.html'"]
+
