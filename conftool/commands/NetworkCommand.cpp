@@ -101,7 +101,22 @@ bool CNetworkCommand::execute(bool non_intercative, int flags)
         if (fs::exists(check_exist_path)) 
         {
             if (flags & F_VERBOSE) std::cout << "[VE][network default] File " << check_exist_path << " exists, but default state requested [" << this->default_val << "]";
-            std::cout << "[C}[network default] Skip altering state for newtwork [" << this->net_name<<"] due to it was user-configured" << std::endl;
+            std::cout << "[C][network default] Skip altering state for network [" << this->net_name<<"] due to it was user-configured" << std::endl;
+            return false;
+        }
+
+        // Also check if network exists in disabled state when requesting enabled, and vice versa
+        // This prevents creating duplicates during reinstallation when user had network disabled
+        fs::path alt_state_path;
+        if (this->default_val == "on") {
+            alt_state_path = config_path(this->net_name, CFG_GENERAL, CFG_OFF);
+        } else {
+            alt_state_path = config_path(this->net_name, CFG_GENERAL, CFG_ON);
+        }
+        
+        if (fs::exists(alt_state_path)) {
+            if (flags & F_VERBOSE) std::cout << "[VE][network default] Network [" << this->net_name << "] already configured in opposite state: " << alt_state_path;
+            std::cout << "[C][network default] Skip creating default config for network [" << this->net_name << "] - user has it configured in opposite state" << std::endl;
             return false;
         }
 
