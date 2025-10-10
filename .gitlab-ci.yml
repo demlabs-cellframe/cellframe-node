@@ -148,8 +148,8 @@ qa_functional_tests:
   image: docker:latest
   services:
     - docker:dind
-  dependencies:
-    - amd64:linux.rwd.bld
+  # dependencies:
+  #   - amd64:linux.rwd.bld  # Disabled - QA tests use latest-amd64 URL instead
   variables:
     # TestOps Configuration
     ALLURE_ENDPOINT: "http://178.49.151.230:8080"
