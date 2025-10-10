@@ -190,11 +190,21 @@ qa_functional_tests:
       
       # Run tests and generate Allure results
       echo "Running professional QA tests with pytest..."
+      
+      # Create directories for results
+      mkdir -p allure-results allure-report
+      
+      # Run tests with volume mounts
       docker run --rm --privileged \
         -v $(pwd)/allure-results:/opt/qa-tests/allure-results \
         -v $(pwd)/allure-report:/opt/qa-tests/allure-report \
         cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} > qa-test-output.log 2>&1
       TEST_EXIT_CODE=$?
+      
+      # Check what was generated
+      echo "Checking generated files:"
+      ls -la allure-results/ || echo "allure-results directory is empty"
+      ls -la allure-report/ || echo "allure-report directory is empty"
       
       # Display test output
       echo "=============================================="

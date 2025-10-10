@@ -67,6 +67,7 @@ CMD ["sh", "-c", "\
     echo '=== Starting Cellframe Node QA Tests ===' && \
     echo 'Framework: pytest + allure-pytest (https://allurereport.org/)' && \
     echo '' && \
+    mkdir -p allure-results allure-report && \
     pytest test_cellframe_qa.py \
         --alluredir=allure-results \
         --tb=short \
@@ -78,6 +79,10 @@ CMD ["sh", "-c", "\
     echo '' && \
     echo '✓ Tests completed!' && \
     echo '✓ Allure report: allure-report/index.html' && \
-    echo '✓ Run: allure serve allure-results' \
+    echo '✓ Run: allure serve allure-results' && \
+    echo '' && \
+    echo '=== Results Summary ===' && \
+    echo \"Allure results: $(ls -la allure-results/ | wc -l) files\" && \
+    echo \"Report files: $(ls -la allure-report/ | wc -l) files\" \
     "]
 
