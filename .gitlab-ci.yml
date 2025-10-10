@@ -140,8 +140,8 @@ amd64:linux.rwd.bld:
         - build_*/*.deb
 
 qa_functional_tests:
-  # QA Functional Testing with Official Allure Reports
-  # Professional testing using pytest + allure-pytest
+  # QA Functional Testing with Official Allure Reports + TestOps Integration
+  # Professional testing using pytest + allure-pytest + allurectl
   # Reference: https://allurereport.org/
   extends: .ci-polygon
   stage: qa_tests
@@ -150,6 +150,16 @@ qa_functional_tests:
     - docker:dind
   dependencies:
     - amd64:linux.rwd.bld
+  variables:
+    # TestOps Configuration
+    ALLURE_ENDPOINT: "http://178.49.151.230:8080"
+    ALLURE_TOKEN: "c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
+    ALLURE_PROJECT_ID: "1"
+    ALLURE_LAUNCH_NAME: "Cellframe Node QA - $CI_COMMIT_SHORT_SHA - $CI_PIPELINE_ID"
+    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab"
+    ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Pipeline $CI_PIPELINE_ID"
+    ALLURE_ENVIRONMENT: "gitlab-ci"
+    ALLURE_BUILD_NAME: "cellframe-node-$CI_COMMIT_SHORT_SHA"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
@@ -163,9 +173,10 @@ qa_functional_tests:
   script:
     - |
       echo "=============================================="
-      echo "  QA Testing with Allure Report"
+      echo "  QA Testing with Allure Report + TestOps"
       echo "  Framework: pytest + allure-pytest"
-      echo "  Reference: https://allurereport.org/"
+      echo "  TestOps: ${ALLURE_ENDPOINT}"
+      echo "  Project: Cellframe Node QA"
       echo "=============================================="
       echo ""
       
@@ -174,6 +185,7 @@ qa_functional_tests:
       
       # Build QA Docker image with pytest and Allure
       cd qa-tests
+      echo "Building QA Docker image..."
       docker build -f Dockerfile.qa-pytest -t cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} .
       
       # Run tests and generate Allure results
@@ -185,11 +197,15 @@ qa_functional_tests:
       TEST_EXIT_CODE=$?
       
       # Display test output
+      echo "=============================================="
+      echo "  Test Execution Output"
+      echo "=============================================="
       cat qa-test-output.log
       
       # Extract test metrics
       TESTS_TOTAL=$(grep -o "[0-9]* passed" qa-test-output.log | grep -o "[0-9]*" | head -1 || echo "0")
       TESTS_FAILED=$(grep -o "[0-9]* failed" qa-test-output.log | grep -o "[0-9]*" | head -1 || echo "0")
+      TESTS_SKIPPED=$(grep -o "[0-9]* skipped" qa-test-output.log | grep -o "[0-9]*" | head -1 || echo "0")
       
       echo ""
       echo "=============================================="
@@ -197,22 +213,70 @@ qa_functional_tests:
       echo "=============================================="
       echo "Total Passed: ${TESTS_TOTAL}"
       echo "Total Failed: ${TESTS_FAILED}"
+      echo "Total Skipped: ${TESTS_SKIPPED}"
+      echo "Exit Code: ${TEST_EXIT_CODE}"
       echo ""
+      
+      # Upload to TestOps
+      echo "=============================================="
+      echo "  Uploading to Allure TestOps"
+      echo "=============================================="
+      
+      # Download and setup allurectl
+      echo "Downloading allurectl..."
+      wget -q https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -O ./allurectl
+      chmod +x ./allurectl
+      
+      # Check if allure-results directory exists and has files
+      if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then
+        echo "Found Allure results, uploading to TestOps..."
+        
+        # Upload results to TestOps
+        if ./allurectl upload allure-results \
+          --launch-name "${ALLURE_LAUNCH_NAME}" \
+          --launch-tags "${ALLURE_LAUNCH_TAGS}"; then
+          echo "✅ Results uploaded to TestOps successfully"
+          echo "📊 View report: ${ALLURE_ENDPOINT}/launch/[ID]"
+          echo "🔗 Project: ${ALLURE_ENDPOINT}/project/${ALLURE_PROJECT_ID}"
+        else
+          echo "⚠️ Failed to upload to TestOps, but continuing..."
+          echo "Check TestOps connectivity and credentials"
+        fi
+      else
+        echo "⚠️ No Allure results found, skipping TestOps upload"
+        echo "Directory allure-results: $(ls -la allure-results 2>/dev/null || echo 'not found')"
+      fi
+      
+      echo ""
+      echo "=============================================="
+      echo "  Final Results"
+      echo "=============================================="
       
       if [ $TEST_EXIT_CODE -eq 0 ]; then
         echo "✅ All QA tests PASSED"
         echo ""
-        echo "📊 Allure Report:"
-        echo "   - Download artifacts from this job"
-        echo "   - Open allure-report/index.html"
-        echo "   - Or run: allure serve allure-results"
+        echo "📊 Reports available:"
+        echo "   - Local: Download artifacts and open allure-report/index.html"
+        echo "   - TestOps: ${ALLURE_ENDPOINT}"
+        echo "   - Command: allure serve allure-results"
+        echo ""
+        echo "🎯 Next steps:"
+        echo "   - Check TestOps dashboard for detailed analytics"
+        echo "   - Review test trends and metrics"
+        echo "   - Set up notifications for future runs"
         exit 0
       else
         echo "❌ QA tests FAILED"
         echo ""
-        echo "📊 Check Allure Report for details:"
-        echo "   - Download allure-results/ from artifacts"
-        echo "   - Run: allure serve allure-results"
+        echo "📊 Check reports for details:"
+        echo "   - Local: Download allure-results/ from artifacts"
+        echo "   - TestOps: ${ALLURE_ENDPOINT}"
+        echo "   - Command: allure serve allure-results"
+        echo ""
+        echo "🔍 Troubleshooting:"
+        echo "   - Review test output above"
+        echo "   - Check TestOps for detailed failure analysis"
+        echo "   - Verify test environment and dependencies"
         exit 1
       fi
   artifacts:
@@ -221,6 +285,7 @@ qa_functional_tests:
       - qa-tests/allure-results/
       - qa-tests/allure-report/
       - qa-tests/qa-test-output.log
+      - qa-tests/allurectl
     expire_in: 1 week
   allow_failure: false
 
