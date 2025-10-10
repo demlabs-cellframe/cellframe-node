@@ -194,15 +194,34 @@ qa_functional_tests:
       # Create directories for results
       mkdir -p allure-results allure-report
       
-      # Run tests with volume mounts
-      docker run --rm --privileged \
-        -v $(pwd)/allure-results:/opt/qa-tests/allure-results \
-        -v $(pwd)/allure-report:/opt/qa-tests/allure-report \
-        cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} > qa-test-output.log 2>&1
-      TEST_EXIT_CODE=$?
+      # Run tests in container and copy results out
+      CONTAINER_ID=$(docker run -d --privileged cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA})
       
-      # Check what was generated
-      echo "Checking generated files:"
+      # Wait for container to finish
+      docker wait $CONTAINER_ID > qa-test-output.log 2>&1 &
+      WAIT_PID=$!
+      
+      # Stream logs while waiting
+      docker logs -f $CONTAINER_ID >> qa-test-output.log 2>&1 &
+      LOGS_PID=$!
+      
+      # Wait for completion
+      wait $WAIT_PID
+      TEST_EXIT_CODE=$(docker wait $CONTAINER_ID)
+      
+      # Stop log streaming
+      kill $LOGS_PID 2>/dev/null || true
+      
+      # Copy results from container
+      echo "Copying results from container..."
+      docker cp $CONTAINER_ID:/opt/qa-tests/allure-results/. ./allure-results/ || echo "Failed to copy allure-results"
+      docker cp $CONTAINER_ID:/opt/qa-tests/allure-report/. ./allure-report/ || echo "Failed to copy allure-report"
+      
+      # Clean up container
+      docker rm $CONTAINER_ID
+      
+      # Check what was copied
+      echo "Checking copied files:"
       ls -la allure-results/ || echo "allure-results directory is empty"
       ls -la allure-report/ || echo "allure-report directory is empty"
       
