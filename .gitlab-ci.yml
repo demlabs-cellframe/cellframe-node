@@ -155,11 +155,11 @@ qa_functional_tests:
     ALLURE_ENDPOINT: "http://178.49.151.230:8080"
     ALLURE_TOKEN: "c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
     ALLURE_PROJECT_ID: "1"
-    ALLURE_LAUNCH_NAME: "Cellframe Node QA - $CI_COMMIT_SHORT_SHA - $CI_PIPELINE_ID"
-    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab"
-    ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Pipeline $CI_PIPELINE_ID"
+    ALLURE_LAUNCH_NAME: "QA Tests - $(date +%d.%m.%Y_%H:%M) - v${CI_COMMIT_SHORT_SHA}"
+    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME}"
+    ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Branch: ${CI_COMMIT_REF_NAME} - Pipeline: ${CI_PIPELINE_ID} - Commit: ${CI_COMMIT_TITLE}"
     ALLURE_ENVIRONMENT: "gitlab-ci"
-    ALLURE_BUILD_NAME: "cellframe-node-$CI_COMMIT_SHORT_SHA"
+    ALLURE_BUILD_NAME: "cellframe-node-${CI_COMMIT_SHORT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
@@ -176,7 +176,9 @@ qa_functional_tests:
       echo "  QA Testing with Allure Report + TestOps"
       echo "  Framework: pytest + allure-pytest"
       echo "  TestOps: ${ALLURE_ENDPOINT}"
-      echo "  Project: Cellframe Node QA"
+      echo "  Branch: ${CI_COMMIT_REF_NAME}"
+      echo "  Commit: ${CI_COMMIT_SHORT_SHA} (${CI_COMMIT_TITLE})"
+      echo "  Date: $(date '+%d.%m.%Y %H:%M:%S')"
       echo "=============================================="
       echo ""
       
