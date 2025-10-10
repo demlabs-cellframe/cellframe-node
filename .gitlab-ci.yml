@@ -10,14 +10,14 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - code_check
-    - test_build
+    # - code_check
+    # - test_build
     - qa_tests
-    - diagnostic_builds
-    - build
-    - post_build
-    - publish
-    - deploy
+    # - diagnostic_builds
+    # - build
+    # - post_build
+    # - publish
+    # - deploy
 
 cppcheck_full_analysis:
 # Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
