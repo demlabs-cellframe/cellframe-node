@@ -155,7 +155,6 @@ qa_functional_tests:
     ALLURE_ENDPOINT: "http://178.49.151.230:8080"
     ALLURE_TOKEN: "c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
     ALLURE_PROJECT_ID: "1"
-    ALLURE_LAUNCH_NAME: "QA Tests - $(date +%d.%m.%Y_%H:%M) - v${CI_COMMIT_SHORT_SHA}"
     ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME}"
     ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Branch: ${CI_COMMIT_REF_NAME} - Pipeline: ${CI_PIPELINE_ID} - Commit: ${CI_COMMIT_TITLE}"
     ALLURE_ENVIRONMENT: "gitlab-ci"
@@ -258,13 +257,17 @@ qa_functional_tests:
       wget -q https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -O ./allurectl
       chmod +x ./allurectl
       
+      # Generate launch name with current date/time
+      LAUNCH_NAME="QA Tests - $(date +%d.%m.%Y_%H:%M) - v${CI_COMMIT_SHORT_SHA}"
+      echo "Launch name: ${LAUNCH_NAME}"
+      
       # Check if allure-results directory exists and has files
       if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then
         echo "Found Allure results, uploading to TestOps..."
         
         # Upload results to TestOps
         if ./allurectl upload allure-results \
-          --launch-name "${ALLURE_LAUNCH_NAME}" \
+          --launch-name "${LAUNCH_NAME}" \
           --launch-tags "${ALLURE_LAUNCH_TAGS}"; then
           echo "✅ Results uploaded to TestOps successfully"
           echo "📊 View report: ${ALLURE_ENDPOINT}/launch/[ID]"
