@@ -29,8 +29,11 @@ RUN wget -q https://github.com/allure-framework/allure2/releases/download/2.24.1
     ln -s /opt/allure-2.24.1/bin/allure /usr/local/bin/allure && \
     rm /tmp/allure.tgz
 
-# Install Cellframe Node (latest version)
-RUN wget -q https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64 -O /tmp/cellframe-node.deb && \
+# Install Cellframe Node (configurable version)
+# Default URL if NODE_DOWNLOAD_URL is not provided
+ARG NODE_DOWNLOAD_URL=https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64
+RUN echo "Downloading Cellframe Node from: ${NODE_DOWNLOAD_URL}" && \
+    wget -q "${NODE_DOWNLOAD_URL}" -O /tmp/cellframe-node.deb && \
     dpkg -i /tmp/cellframe-node.deb || true && \
     apt-get update && apt-get install -f -y && \
     rm /tmp/cellframe-node.deb
@@ -53,10 +56,12 @@ COPY test_cellframe_qa.py .
 COPY pytest.ini .
 
 # Create environment info
+ARG NODE_DOWNLOAD_URL=https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64
 RUN echo "DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null || cat /etc/os-release | grep VERSION_ID | cut -d'=' -f2 | tr -d '\"')" > environment.properties && \
     echo "PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)" >> environment.properties && \
     echo "PYTEST_VERSION=$(pytest --version | head -1 | cut -d' ' -f2)" >> environment.properties && \
-    echo "ALLURE_VERSION=$(allure --version | cut -d' ' -f2)" >> environment.properties
+    echo "ALLURE_VERSION=$(allure --version | cut -d' ' -f2)" >> environment.properties && \
+    echo "NODE_DOWNLOAD_URL=${NODE_DOWNLOAD_URL}" >> environment.properties
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

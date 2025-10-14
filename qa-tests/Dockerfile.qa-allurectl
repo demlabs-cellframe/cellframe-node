@@ -1,0 +1,75 @@
+# Cellframe Node QA Testing Container with Allure TestOps Integration
+# Purpose: Automated testing environment with TestOps reporting
+# Based on QA_SPECIFICATION_LINUX.md
+
+FROM debian:bullseye
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    gnupg \
+    procps \
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    sudo \
+    less \
+    pv \
+    psmisc \
+    logrotate \
+    irqbalance \
+    xz-utils \
+    libmagic1 \
+    bc \
+    dpkg \
+    bash \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install latest cellframe-node package
+RUN wget -q https://internal-pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-0-amd64.deb -O /tmp/cellframe-node.deb && \
+    dpkg -i /tmp/cellframe-node.deb || true && \
+    apt-get update && apt-get install -f -y && \
+    rm /tmp/cellframe-node.deb
+
+# Create missing directories
+RUN mkdir -p /opt/cellframe-node/var/log && \
+    mkdir -p /opt/cellframe-node/var/lib/plugins && \
+    chmod 777 /opt/cellframe-node/var/log
+
+# Install Python dependencies for Allure
+RUN pip3 install pytest allure-pytest
+
+# Download and install allurectl
+RUN wget -q https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -O /usr/local/bin/allurectl && \
+    chmod +x /usr/local/bin/allurectl
+
+# Copy test scripts and configuration
+COPY test_cellframe_qa.py /opt/qa-tests/test_cellframe_qa.py
+COPY test-suite-functional.sh /opt/qa-tests/test-suite.sh
+COPY health-check.sh /opt/qa-tests/health-check.sh
+COPY startup-node.sh /opt/qa-tests/startup-node.sh
+COPY run-tests-with-allurectl.sh /opt/qa-tests/run-tests-with-allurectl.sh
+COPY allurectl.env /opt/qa-tests/allurectl.env
+COPY pytest.ini /opt/qa-tests/pytest.ini
+COPY requirements.txt /opt/qa-tests/requirements.txt
+
+# Make scripts executable
+RUN chmod +x /opt/qa-tests/*.sh
+
+# Set working directory
+WORKDIR /opt/qa-tests
+
+# Default command: run tests with Allure TestOps integration
+CMD ["/opt/qa-tests/run-tests-with-allurectl.sh"]
+
+
+
+

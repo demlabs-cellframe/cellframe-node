@@ -1,0 +1,100 @@
+# GitLab CI Configuration with Allure TestOps Integration
+# Этот файл показывает как интегрировать allurectl в GitLab CI
+
+stages:
+  - test
+  - report
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# QA Tests with Allure TestOps Integration
+qa-tests-allurectl:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    # TestOps Configuration (настройте в GitLab CI Variables)
+    ALLURE_ENDPOINT: $ALLURE_ENDPOINT
+    ALLURE_TOKEN: $ALLURE_TOKEN
+    ALLURE_PROJECT_ID: $ALLURE_PROJECT_ID
+    ALLURE_LAUNCH_NAME: "Cellframe Node QA - $CI_COMMIT_SHORT_SHA - $CI_PIPELINE_ID"
+    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab"
+    ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Pipeline $CI_PIPELINE_ID"
+    ALLURE_ENVIRONMENT: "gitlab-ci"
+    ALLURE_BUILD_NAME: "cellframe-node-$CI_COMMIT_SHORT_SHA"
+  script:
+    # Build test container with allurectl
+    - cd qa-tests
+    - docker build -f Dockerfile.qa-allurectl -t cellframe-node-qa-allurectl .
+    
+    # Run tests and upload to TestOps
+    - docker run --rm --privileged 
+        -e ALLURE_ENDPOINT=$ALLURE_ENDPOINT
+        -e ALLURE_TOKEN=$ALLURE_TOKEN
+        -e ALLURE_PROJECT_ID=$ALLURE_PROJECT_ID
+        -e ALLURE_LAUNCH_NAME="$ALLURE_LAUNCH_NAME"
+        -e ALLURE_LAUNCH_TAGS="$ALLURE_LAUNCH_TAGS"
+        -e ALLURE_LAUNCH_DESCRIPTION="$ALLURE_LAUNCH_DESCRIPTION"
+        -e ALLURE_ENVIRONMENT="$ALLURE_ENVIRONMENT"
+        -e ALLURE_BUILD_NAME="$ALLURE_BUILD_NAME"
+        -v $(pwd)/allure-results:/opt/qa-tests/allure-results
+        cellframe-node-qa-allurectl
+  artifacts:
+    paths:
+      - qa-tests/allure-results/
+    expire_in: 1 week
+    reports:
+      junit: qa-tests/allure-results/junit.xml
+  only:
+    - master
+    - develop
+    - qa
+    - merge_requests
+  when: always
+
+# Generate and serve Allure report locally (optional)
+allure-report:
+  stage: report
+  image: openjdk:11-jre-slim
+  dependencies:
+    - qa-tests-allurectl
+  before_script:
+    - apt-get update && apt-get install -y wget
+    - wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
+    - tar -xzf allure-2.24.1.tgz
+    - export PATH=$PATH:$(pwd)/allure-2.24.1/bin
+  script:
+    - cd qa-tests
+    - allure generate allure-results -o allure-report --clean
+    - allure serve allure-results -p 8080 &
+    - sleep 10
+  artifacts:
+    paths:
+      - qa-tests/allure-report/
+    expire_in: 1 week
+  only:
+    - master
+    - develop
+  when: always
+
+# Health check job
+qa-health-check:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd qa-tests
+    - docker build -f Dockerfile.qa -t cellframe-node-qa .
+    - docker run --rm --privileged cellframe-node-qa /opt/qa-tests/health-check.sh
+  only:
+    - master
+    - develop
+  when: manual
+
+
+
+
