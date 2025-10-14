@@ -382,9 +382,9 @@ process_failed_tests_for_defects() {
     
     log_debug "Sample defect analysis: ${sample_defect_data}"
     
-    # Create Redmine defect
-    local defect_id
-    if defect_id=$(create_redmine_defect \
+    # Always create TestOps defect
+    local testops_defect_id
+    if testops_defect_id=$(create_testops_defect \
         "${sample_defect_data}" \
         "${launch_id}" \
         "${launch_name}" \
@@ -392,11 +392,15 @@ process_failed_tests_for_defects() {
         "${commit_hash}" \
         "${pipeline_url}"); then
         
-        log_success "Defect created with ID: ${defect_id}"
-        
-        # Create TestOps defect
-        local testops_defect_id
-        if testops_defect_id=$(create_testops_defect \
+        log_success "TestOps defect created with ID: ${testops_defect_id}"
+    else
+        log_warning "Failed to create TestOps defect"
+    fi
+    
+    # Create Redmine defect if configured
+    if [[ -n "${REDMINE_API_KEY:-}" && -n "${REDMINE_URL:-}" && -n "${REDMINE_PROJECT_ID:-}" ]]; then
+        local defect_id
+        if defect_id=$(create_redmine_defect \
             "${sample_defect_data}" \
             "${launch_id}" \
             "${launch_name}" \
@@ -404,16 +408,15 @@ process_failed_tests_for_defects() {
             "${commit_hash}" \
             "${pipeline_url}"); then
             
-            log_success "TestOps defect created with ID: ${testops_defect_id}"
+            log_success "Redmine defect created with ID: ${defect_id}"
         else
-            log_warning "Failed to create TestOps defect"
+            log_warning "Failed to create Redmine defect"
         fi
-        
-        return 0
     else
-        log_error "Failed to create defect"
-        return 1
+        log_info "Redmine not configured - skipping Redmine defect creation"
     fi
+    
+    return 0
 }
 
 # Function to check Redmine connection

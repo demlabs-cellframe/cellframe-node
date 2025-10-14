@@ -79,12 +79,12 @@ process_issues() {
     
     # Check if issue manager is available and configured
     if [[ ! -f "${ISSUE_MANAGER_PATH}" ]]; then
-        log_warn "Issue manager not found at ${ISSUE_MANAGER_PATH}"
+        log_warning "Issue manager not found at ${ISSUE_MANAGER_PATH}"
         return 0
     fi
     
     if [[ -z "${GITLAB_TOKEN:-}" ]]; then
-        log_warn "GitLab token not configured - skipping issue management"
+        log_warning "GitLab token not configured - skipping issue management"
         return 0
     fi
     
@@ -141,16 +141,16 @@ process_defects() {
     
     # Check if defect manager is available and configured
     if [[ ! -f "${DEFECT_MANAGER_PATH}" ]]; then
-        log_warn "Defect manager not found at ${DEFECT_MANAGER_PATH}"
+        log_warning "Defect manager not found at ${DEFECT_MANAGER_PATH}"
         return 0
     fi
     
+    # Note: We can create TestOps defects even without Redmine
     if [[ -z "${REDMINE_API_KEY:-}" ]]; then
-        log_warn "Redmine API key not configured - skipping defect management"
-        return 0
+        log_info "Redmine API key not configured - will create only TestOps defects"
     fi
     
-    log_info "Processing defects for launch ${launch_id}"
+    log_info "Processing defects for launch ${launch_name} (ID: ${launch_id})"
     
     # Get failed test count from current launch
     local launch_data
@@ -169,6 +169,7 @@ process_defects() {
         
         # Create defects for failed tests
         if [[ "${CREATE_DEFECTS_ON_FAILURE:-true}" == "true" ]]; then
+            log_info "Creating defects for ${failed_count} failed tests"
             "${DEFECT_MANAGER_PATH}" process \
                 "${launch_id}" \
                 "${launch_name}" \
