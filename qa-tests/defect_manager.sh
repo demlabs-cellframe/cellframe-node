@@ -90,7 +90,7 @@ analyze_failed_test() {
     local error_message="$2"
     local stack_trace="$3"
     
-    log_debug "Analyzing failed test: ${test_name}"
+    # Analyzing failed test: ${test_name} (debug disabled for JSON parsing)
     
     # Simple categorization based on error patterns
     local defect_category="Unknown"
@@ -102,7 +102,7 @@ analyze_failed_test() {
         defect_category="Network/Connection"
         defect_priority="High"
         defect_severity="Major"
-    elif [[ "${error_message}" =~ [Aa]ssertion.*[Ff]ailed|[Ee]xpected.*but.*was ]]; then
+    elif [[ "${error_message}" =~ [Aa]ssertion.*[Ff]ailed|[Ee]xpected.*but.*was|AssertionError ]]; then
         defect_category="Logic/Assertion"
         defect_priority="Normal"
         defect_severity="Normal"
@@ -372,15 +372,38 @@ process_failed_tests_for_defects() {
     
     log_defect "Found ${failed_count} failed tests - analyzing for defect creation"
     
-    # For demonstration, create a sample defect
-    # In a real implementation, you would parse actual test results
+    # Get real failed test data from TestOps API
+    log_info "Fetching failed test details from TestOps API..."
+    local api_response
+    api_response=$(curl -s -H "Authorization: Api-Token ${ALLURE_TOKEN}" \
+        "${ALLURE_ENDPOINT}/api/rs/testresult?launchId=${launch_id}&size=50")
+    
+    local test_name test_message
+    test_name=$(echo "${api_response}" | jq -r '.content[] | select(.status=="failed") | .name' | head -1)
+    test_message=$(echo "${api_response}" | jq -r '.content[] | select(.status=="failed") | .message' | head -1)
+    
+    if [[ -z "${test_name}" || "${test_name}" == "null" ]]; then
+        log_warning "No failed test details found via API, using fallback"
+        test_name="unknown_test"
+        test_message="Test failed - details not available"
+    else
+        log_success "Found real failed test data from API"
+        log_info "Processing failed test: ${test_name}"
+        
+        if [[ "${test_message}" == "null" || -z "${test_message}" ]]; then
+            test_message="Test failed without error message"
+        fi
+        
+        log_debug "Error message: ${test_message}"
+    fi
+    
     local sample_defect_data
     sample_defect_data=$(analyze_failed_test \
-        "test_cellframe_node_connection" \
-        "Connection timeout after 30 seconds" \
-        "ConnectionError: Failed to connect to cellframe-node")
+        "${test_name}" \
+        "${test_message}" \
+        "Stack trace from TestOps")
     
-    log_debug "Sample defect analysis: ${sample_defect_data}"
+    # Note: Don't log the JSON data as it interferes with parsing
     
     # Always create TestOps defect
     local testops_defect_id
