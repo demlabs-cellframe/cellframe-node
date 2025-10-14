@@ -1,0 +1,46 @@
+[
+  {
+    "id": 26,
+    "projectId": 1,
+    "name": "QA Tests - 14.10.2025_14:06 - latest-amd64 - vabd339ee",
+    "tags": [
+      {
+        "id": 4,
+        "name": "cellframe"
+      },
+      {
+        "id": 8,
+        "name": "ci"
+      },
+      {
+        "id": 9,
+        "name": "gitlab"
+      },
+      {
+        "id": 5,
+        "name": "node"
+      },
+      {
+        "id": 6,
+        "name": "qa"
+      },
+      {
+        "id": 10,
+        "name": "qa-v2"
+      }
+    ],
+    "statistic": [
+      {
+        "status": "failed",
+        "count": 1
+      },
+      {
+        "status": "passed",
+        "count": 28
+      }
+    ],
+    "closed": false,
+    "external": false,
+    "ready": true
+  }
+]

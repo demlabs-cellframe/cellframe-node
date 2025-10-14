@@ -91,7 +91,7 @@ cd qa-tests
 docker build -f Dockerfile.qa-allurectl -t cellframe-node-qa-allurectl .
 docker run --rm --privileged \
   -e ALLURE_ENDPOINT=http://178.49.151.230:8080 \
-  -e ALLURE_TOKEN=c9d45bd4-394a-4e6c-aab2-f7bce2b5be44 \
+  -e ALLURE_TOKEN=YOUR_ALLURE_TOKEN_HERE \
   -e ALLURE_PROJECT_ID=1 \
   cellframe-node-qa-allurectl
 ```
@@ -109,7 +109,7 @@ source allurectl.env.production
 ```yaml
 variables:
   ALLURE_ENDPOINT: "http://178.49.151.230:8080"
-  ALLURE_TOKEN: "c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
+  ALLURE_TOKEN: "YOUR_ALLURE_TOKEN_HERE"
   ALLURE_PROJECT_ID: "1"
 ```
 

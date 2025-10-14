@@ -5,6 +5,12 @@
 
 set -euo pipefail
 
+# Load QA configuration if available
+if [[ -f "qa_config.env" ]]; then
+    source qa_config.env
+    echo "✅ Loaded QA configuration from qa_config.env"
+fi
+
 # Configuration
 ALLURE_ENDPOINT="${ALLURE_ENDPOINT:-http://178.49.151.230:8080}"
 ALLURE_TOKEN="${ALLURE_TOKEN:-c9d45bd4-394a-4e6c-aab2-f7bce2b5be44}"
@@ -12,6 +18,10 @@ ALLURE_PROJECT_ID="${ALLURE_PROJECT_ID:-1}"
 ALLURECTL_PATH="./allurectl"
 ISSUE_MANAGER_PATH="./issue_manager.sh"
 DEFECT_MANAGER_PATH="./defect_manager.sh"
+
+# QA Testing Configuration
+CELLFRAME_NODE_DIR="${CELLFRAME_NODE_DIR:-/opt/cellframe-node}"
+QA_STRICT_MODE="${QA_STRICT_MODE:-true}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -184,7 +194,12 @@ process_defects() {
 
 # Function to close a launch
 close_launch() {
-    local launch_id="$1"
+    local launch_id="${1:-$(get_current_launch_id)}"
+    
+    if [[ -z "${launch_id}" ]]; then
+        log_warning "No launch ID provided or found"
+        return 1
+    fi
     
     log_info "Closing launch ID: ${launch_id}"
     
@@ -193,12 +208,85 @@ close_launch() {
         -t "${ALLURE_TOKEN}" \
         --output json > /dev/null 2>&1; then
         log_success "Launch ${launch_id} closed successfully"
+        
+        # After closing launch, test results are linked to test cases
+        # Now we can update defects with proper test case information
+        log_info "Launch closed - test results are now linked to test cases"
+        log_info "Processing test case links for defect updates..."
+        
+        # Call post-close processing
+        post_close_processing "${launch_id}"
+        
         rm -f .launch_id
         return 0
     else
         log_error "Failed to close launch ${launch_id}"
         return 1
     fi
+}
+
+# Function to process defects after launch is closed
+post_close_processing() {
+    local launch_id="$1"
+    
+    log_info "Post-close processing for launch ${launch_id}"
+    
+    # Wait a moment for TestOps to process the closure
+    sleep 2
+    
+    # Get failed test results with their test case IDs (now available after close)
+    local failed_tests_response
+    failed_tests_response=$(curl -s -H "Authorization: Api-Token ${ALLURE_TOKEN}" \
+        "${ALLURE_ENDPOINT}/api/rs/testresult?launchId=${launch_id}&size=50")
+    
+    local failed_tests_with_cases
+    failed_tests_with_cases=$(echo "${failed_tests_response}" | \
+        jq '.content[] | select(.status=="failed") | {id: .id, name: .name, testCaseId: .testCaseId}' 2>/dev/null)
+    
+    if [[ -n "${failed_tests_with_cases}" ]]; then
+        log_success "Found failed tests with test case links after launch close"
+        
+        echo ""
+        echo "=== Test Case Links for Failed Tests ==="
+        echo "Test Case ID | Test Name"
+        echo "-------------|----------"
+        
+        # Process each failed test
+        echo "${failed_tests_with_cases}" | while IFS= read -r test_data; do
+            if [[ -n "${test_data}" && "${test_data}" != "null" ]]; then
+                local test_name test_case_id test_result_id
+                test_name=$(echo "${test_data}" | jq -r '.name // "unknown"')
+                test_case_id=$(echo "${test_data}" | jq -r '.testCaseId // "null"')
+                test_result_id=$(echo "${test_data}" | jq -r '.id // "null"')
+                
+                if [[ "${test_case_id}" != "null" ]]; then
+                    echo "${test_case_id} | ${test_name}"
+                    log_info "Test '${test_name}' → Test Case ID: ${test_case_id}"
+                    
+                    # Save this information for potential defect updates
+                    echo "${test_result_id}:${test_case_id}:${test_name}" >> ".testcase_links_${launch_id}.tmp"
+                else
+                    log_warning "Test '${test_name}' not yet linked to test case"
+                fi
+            fi
+        done
+        
+        # Check if we have any test case links to process
+        if [[ -f ".testcase_links_${launch_id}.tmp" ]]; then
+            local link_count
+            link_count=$(wc -l < ".testcase_links_${launch_id}.tmp")
+            log_success "Processed ${link_count} test case links"
+            
+            # Clean up temporary file
+            rm -f ".testcase_links_${launch_id}.tmp"
+        fi
+    else
+        log_info "No failed tests found or test case linking not yet available"
+        log_info "Test case linking may take additional time to process"
+    fi
+    
+    echo ""
+    log_info "Post-close processing completed for launch ${launch_id}"
 }
 
 # Function to get current launch ID

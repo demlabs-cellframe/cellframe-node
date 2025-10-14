@@ -583,7 +583,7 @@ main() {
                 exit 1
             fi
             local defect_data
-            defect_data=$(analyze_failed_test "$1" "$2" "Stack trace not available" 2>/dev/null | tail -n +2)
+            defect_data=$(analyze_failed_test "$1" "$2" "Stack trace not available")
             create_testops_defect "${defect_data}" "$3" "$4" "$5" "$6" "${7:-}"
             ;;
         "help"|*)

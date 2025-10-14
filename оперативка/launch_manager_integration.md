@@ -142,7 +142,7 @@ Current launch:  25 (5 failed)
 ### **Переменные окружения:**
 ```bash
 ALLURE_ENDPOINT="http://178.49.151.230:8080"
-ALLURE_TOKEN="c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
+ALLURE_TOKEN="YOUR_ALLURE_TOKEN_HERE"
 ALLURE_PROJECT_ID="1"
 ALLURE_LAUNCH_TAGS="cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME}"
 ```

@@ -153,14 +153,19 @@ qa_functional_tests:
   variables:
     # TestOps Configuration
     ALLURE_ENDPOINT: "http://178.49.151.230:8080"
-    ALLURE_TOKEN: "c9d45bd4-394a-4e6c-aab2-f7bce2b5be44"
+    # ALLURE_TOKEN: Set this in GitLab CI/CD Variables (Settings > CI/CD > Variables)
     ALLURE_PROJECT_ID: "1"
-    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME}"
-    ALLURE_LAUNCH_DESCRIPTION: "Automated QA testing for Cellframe Node - Branch: ${CI_COMMIT_REF_NAME} - Pipeline: ${CI_PIPELINE_ID} - Commit: ${CI_COMMIT_TITLE}"
+    ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME},fixed-tests"
+    ALLURE_LAUNCH_DESCRIPTION: "FIXED QA testing for Cellframe Node - Branch: ${CI_COMMIT_REF_NAME} - Pipeline: ${CI_PIPELINE_ID} - Commit: ${CI_COMMIT_TITLE}"
     ALLURE_ENVIRONMENT: "gitlab-ci"
     ALLURE_BUILD_NAME: "cellframe-node-${CI_COMMIT_SHORT_SHA}"
     # Node Download Configuration (can be overridden via TestOps or manual pipeline)
     NODE_DOWNLOAD_URL: "https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64"
+    # QA Configuration for Fixed Tests
+    CELLFRAME_NODE_DIR: "/opt/cellframe-node"
+    QA_STRICT_MODE: "true"
+    QA_MEMORY_LIMIT_MB: "1024"
+    QA_VERBOSE_LOGGING: "true"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always

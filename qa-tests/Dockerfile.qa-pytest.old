@@ -55,16 +55,13 @@ RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 COPY test_cellframe_qa.py .
 COPY pytest.ini .
 
-# Create environment info and set environment variables for tests
+# Create environment info
 ARG NODE_DOWNLOAD_URL=https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64
-ENV CELLFRAME_NODE_DIR=/opt/cellframe-node
-
 RUN echo "DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null || cat /etc/os-release | grep VERSION_ID | cut -d'=' -f2 | tr -d '\"')" > environment.properties && \
     echo "PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)" >> environment.properties && \
     echo "PYTEST_VERSION=$(pytest --version | head -1 | cut -d' ' -f2)" >> environment.properties && \
     echo "ALLURE_VERSION=$(allure --version | cut -d' ' -f2)" >> environment.properties && \
-    echo "NODE_DOWNLOAD_URL=${NODE_DOWNLOAD_URL}" >> environment.properties && \
-    echo "CELLFRAME_NODE_DIR=${CELLFRAME_NODE_DIR}" >> environment.properties
+    echo "NODE_DOWNLOAD_URL=${NODE_DOWNLOAD_URL}" >> environment.properties
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
