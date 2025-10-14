@@ -79,10 +79,10 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 
-#include "dap_chain_cs_blocks.h"
-#include "dap_chain_cs_dag.h"
-#include "dap_chain_cs_dag_poa.h"
-#include "dap_chain_cs_none.h"
+#include "dap_chain_type_blocks.h"
+#include "dap_chain_type_dag.h"
+#include "dap_chain_type_dag_poa.h"
+#include "dap_chain_type_none.h"
 #include "dap_chain_cs_esbocs.h"
 
 //#include "dap_chain_bridge.h"
@@ -109,7 +109,7 @@
 #include "dap_chain_net_srv_voting.h"
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
-#include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_stake.h"
 #include "dap_chain_net_srv_auctions.h"
 #include "dap_chain_wallet_shared.h"
 
@@ -335,17 +335,17 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
 
-    if( dap_chain_cs_dag_init() ) {
+    if( dap_chain_type_dag_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
         return -62;
     }
 
-    if( dap_chain_cs_dag_poa_init() ) {
+    if( dap_chain_type_dag_poa_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
         return -63;
     }
 
-    if( dap_chain_cs_blocks_init() ) {
+    if( dap_chain_type_blocks_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
         return -62;
     }
@@ -396,7 +396,7 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't provide auctions capability");
     }
     
-    if (dap_chain_net_srv_stake_lock_init()) {
+    if (dap_chain_net_srv_stake_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
@@ -559,7 +559,7 @@ int main( int argc, const char **argv )
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_pos_delegate_deinit();
-    dap_chain_net_srv_stake_lock_deinit();
+    dap_chain_net_srv_stake_deinit();
     dap_chain_net_srv_bridge_deinit();
     dap_chain_net_srv_voting_deinit();
     dap_chain_net_deinit();
