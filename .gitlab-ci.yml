@@ -290,10 +290,20 @@ qa_functional_tests:
           ./launch_manager.sh compare
           COMPARE_EXIT_CODE=$?
           
-          # Close the launch
-          echo ""
-          echo "=== Closing Launch ==="
-          ./launch_manager.sh close
+             # Process issues (create for failures, close for successes)
+             echo ""
+             echo "=== Processing Issues ==="
+             ./launch_manager.sh issues \
+               "$(cat .launch_id 2>/dev/null || echo '')" \
+               "${LAUNCH_NAME}" \
+               "${NODE_VERSION_INFO}" \
+               "${CI_COMMIT_SHORT_SHA}" \
+               "${CI_PIPELINE_URL}"
+             
+             # Close the launch
+             echo ""
+             echo "=== Closing Launch ==="
+             ./launch_manager.sh close
           
           echo "📊 View report: ${ALLURE_ENDPOINT}/launch/$(cat .launch_id 2>/dev/null || echo '[ID]')"
           echo "🔗 Project: ${ALLURE_ENDPOINT}/project/${ALLURE_PROJECT_ID}"
@@ -350,15 +360,17 @@ qa_functional_tests:
         echo "   - Verify test environment and dependencies"
         exit 1
       fi
-  artifacts:
-    when: always
-    paths:
-      - qa-tests/allure-results/
-      - qa-tests/allure-report/
-      - qa-tests/qa-test-output.log
-      - qa-tests/allurectl
-      - qa-tests/launch_manager.sh
-    expire_in: 1 week
+         artifacts:
+           when: always
+           paths:
+             - qa-tests/allure-results/
+             - qa-tests/allure-report/
+             - qa-tests/qa-test-output.log
+             - qa-tests/allurectl
+             - qa-tests/launch_manager.sh
+             - qa-tests/issue_manager.sh
+             - qa-tests/issue_config.env
+           expire_in: 1 week
   allow_failure: false
 
 cellframe_rpc_api_response_validation:

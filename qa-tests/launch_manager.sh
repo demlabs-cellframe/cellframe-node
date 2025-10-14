@@ -10,6 +10,7 @@ ALLURE_ENDPOINT="${ALLURE_ENDPOINT:-http://178.49.151.230:8080}"
 ALLURE_TOKEN="${ALLURE_TOKEN:-c9d45bd4-394a-4e6c-aab2-f7bce2b5be44}"
 ALLURE_PROJECT_ID="${ALLURE_PROJECT_ID:-1}"
 ALLURECTL_PATH="./allurectl"
+ISSUE_MANAGER_PATH="./issue_manager.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -59,6 +60,68 @@ create_launch() {
     else
         log_error "Failed to create launch"
         return 1
+    fi
+}
+
+# Function to process issues based on test results
+process_issues() {
+    local launch_id="$1"
+    local launch_name="${2:-Unknown Launch}"
+    local node_version="${3:-unknown}"
+    local commit_hash="${4:-unknown}"
+    local pipeline_url="${5:-}"
+    
+    # Load issue configuration if available
+    if [[ -f "issue_config.env" ]]; then
+        source issue_config.env
+    fi
+    
+    # Check if issue manager is available and configured
+    if [[ ! -f "${ISSUE_MANAGER_PATH}" ]]; then
+        log_warn "Issue manager not found at ${ISSUE_MANAGER_PATH}"
+        return 0
+    fi
+    
+    if [[ -z "${GITLAB_TOKEN:-}" ]]; then
+        log_warn "GitLab token not configured - skipping issue management"
+        return 0
+    fi
+    
+    log_info "Processing issues for launch ${launch_id}"
+    
+    # Get failed test count from current launch
+    local launch_data
+    launch_data=$("${ALLURECTL_PATH}" launch get "${launch_id}" \
+        -e "${ALLURE_ENDPOINT}" \
+        -t "${ALLURE_TOKEN}" \
+        --output json 2>/dev/null || echo "[]")
+    
+    local failed_count=0
+    if [[ "${launch_data}" != "[]" ]]; then
+        failed_count=$(echo "${launch_data}" | jq -r '.[0].statistic[]? | select(.status=="failed") | .count // 0')
+    fi
+    
+    if [[ "${failed_count}" -gt 0 ]]; then
+        log_info "Found ${failed_count} failed tests - creating issue"
+        
+        # Create issue for failed tests
+        if [[ "${CREATE_ISSUES_ON_FAILURE:-true}" == "true" ]]; then
+            "${ISSUE_MANAGER_PATH}" process \
+                "${launch_id}" \
+                "${launch_name}" \
+                "${node_version}" \
+                "${commit_hash}" \
+                "${pipeline_url}"
+        fi
+    else
+        log_info "All tests passed - checking for issues to close"
+        
+        # Close resolved issues
+        if [[ "${CLOSE_ISSUES_ON_SUCCESS:-true}" == "true" ]]; then
+            "${ISSUE_MANAGER_PATH}" close-resolved \
+                "${launch_id}" \
+                "${node_version}"
+        fi
     fi
 }
 
@@ -293,8 +356,12 @@ main() {
                 echo "No current launch"
             fi
             ;;
+        "issues")
+            shift
+            process_issues "$@"
+            ;;
         *)
-            echo "Usage: $0 {create|close|upload|stats|compare|add-issue|current}"
+            echo "Usage: $0 {create|close|upload|stats|compare|add-issue|current|issues}"
             echo ""
             echo "Commands:"
             echo "  create <name> <tags>     - Create new launch"
@@ -304,6 +371,7 @@ main() {
             echo "  compare [launch_id]      - Compare with previous launch"
             echo "  add-issue <id> <key>     - Add issue to launch"
             echo "  current                  - Show current launch ID"
+            echo "  issues <id> [name] [ver] [commit] [url] - Process issues for launch"
             exit 1
             ;;
     esac
