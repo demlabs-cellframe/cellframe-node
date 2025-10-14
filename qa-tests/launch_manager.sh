@@ -11,6 +11,7 @@ ALLURE_TOKEN="${ALLURE_TOKEN:-c9d45bd4-394a-4e6c-aab2-f7bce2b5be44}"
 ALLURE_PROJECT_ID="${ALLURE_PROJECT_ID:-1}"
 ALLURECTL_PATH="./allurectl"
 ISSUE_MANAGER_PATH="./issue_manager.sh"
+DEFECT_MANAGER_PATH="./defect_manager.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -122,6 +123,61 @@ process_issues() {
                 "${launch_id}" \
                 "${node_version}"
         fi
+    fi
+}
+
+# Function to process defects based on test results
+process_defects() {
+    local launch_id="$1"
+    local launch_name="${2:-Unknown Launch}"
+    local node_version="${3:-unknown}"
+    local commit_hash="${4:-unknown}"
+    local pipeline_url="${5:-}"
+    
+    # Load defect configuration if available
+    if [[ -f "redmine_config.env" ]]; then
+        source redmine_config.env
+    fi
+    
+    # Check if defect manager is available and configured
+    if [[ ! -f "${DEFECT_MANAGER_PATH}" ]]; then
+        log_warn "Defect manager not found at ${DEFECT_MANAGER_PATH}"
+        return 0
+    fi
+    
+    if [[ -z "${REDMINE_API_KEY:-}" ]]; then
+        log_warn "Redmine API key not configured - skipping defect management"
+        return 0
+    fi
+    
+    log_info "Processing defects for launch ${launch_id}"
+    
+    # Get failed test count from current launch
+    local launch_data
+    launch_data=$("${ALLURECTL_PATH}" launch get "${launch_id}" \
+        -e "${ALLURE_ENDPOINT}" \
+        -t "${ALLURE_TOKEN}" \
+        --output json 2>/dev/null || echo "[]")
+    
+    local failed_count=0
+    if [[ "${launch_data}" != "[]" ]]; then
+        failed_count=$(echo "${launch_data}" | jq -r '.[0].statistic[]? | select(.status=="failed") | .count // 0')
+    fi
+    
+    if [[ "${failed_count}" -gt 0 ]]; then
+        log_info "Found ${failed_count} failed tests - creating defects"
+        
+        # Create defects for failed tests
+        if [[ "${CREATE_DEFECTS_ON_FAILURE:-true}" == "true" ]]; then
+            "${DEFECT_MANAGER_PATH}" process \
+                "${launch_id}" \
+                "${launch_name}" \
+                "${node_version}" \
+                "${commit_hash}" \
+                "${pipeline_url}"
+        fi
+    else
+        log_info "All tests passed - no defects to create"
     fi
 }
 
@@ -360,8 +416,12 @@ main() {
             shift
             process_issues "$@"
             ;;
+        "defects")
+            shift
+            process_defects "$@"
+            ;;
         *)
-            echo "Usage: $0 {create|close|upload|stats|compare|add-issue|current|issues}"
+            echo "Usage: $0 {create|close|upload|stats|compare|add-issue|current|issues|defects}"
             echo ""
             echo "Commands:"
             echo "  create <name> <tags>     - Create new launch"
@@ -372,6 +432,7 @@ main() {
             echo "  add-issue <id> <key>     - Add issue to launch"
             echo "  current                  - Show current launch ID"
             echo "  issues <id> [name] [ver] [commit] [url] - Process issues for launch"
+            echo "  defects <id> [name] [ver] [commit] [url] - Process defects for launch"
             exit 1
             ;;
     esac

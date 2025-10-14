@@ -300,6 +300,16 @@ qa_functional_tests:
                "${CI_COMMIT_SHORT_SHA}" \
                "${CI_PIPELINE_URL}"
              
+             # Process defects (create Redmine defects for failed tests)
+             echo ""
+             echo "=== Processing Defects ==="
+             ./launch_manager.sh defects \
+               "$(cat .launch_id 2>/dev/null || echo '')" \
+               "${LAUNCH_NAME}" \
+               "${NODE_VERSION_INFO}" \
+               "${CI_COMMIT_SHORT_SHA}" \
+               "${CI_PIPELINE_URL}"
+             
              # Close the launch
              echo ""
              echo "=== Closing Launch ==="
@@ -370,6 +380,8 @@ qa_functional_tests:
              - qa-tests/launch_manager.sh
              - qa-tests/issue_manager.sh
              - qa-tests/issue_config.env
+             - qa-tests/defect_manager.sh
+             - qa-tests/redmine_config.env
            expire_in: 1 week
   allow_failure: false
 
