@@ -258,28 +258,97 @@ EOF
     fi
 }
 
-# Function to create TestOps defect (if supported by API)
+# Function to create TestOps defect
 create_testops_defect() {
     local defect_data="$1"
     local launch_id="$2"
+    local launch_name="$3"
+    local node_version="$4"
+    local commit_hash="$5"
+    local pipeline_url="$6"
     
-    # Note: This is a placeholder for TestOps defect creation
-    # The actual implementation would depend on TestOps API capabilities
-    
-    local test_name category
+    local test_name category priority severity error_message
     test_name=$(echo "${defect_data}" | jq -r '.test_name')
     category=$(echo "${defect_data}" | jq -r '.category')
+    priority=$(echo "${defect_data}" | jq -r '.priority')
+    severity=$(echo "${defect_data}" | jq -r '.severity')
+    error_message=$(echo "${defect_data}" | jq -r '.error_message')
     
     log_info "Creating TestOps defect for test: ${test_name}"
-    log_warning "TestOps defect creation not yet implemented via API"
     
-    # TODO: Implement when TestOps API supports defect creation
-    # This would typically involve:
-    # 1. Creating a defect entity in TestOps
-    # 2. Linking it to the failed test result
-    # 3. Setting appropriate metadata (category, priority, etc.)
+    # Generate defect name and description
+    local defect_name="[${category}] ${test_name} - ${node_version}"
+    local defect_description
+    defect_description=$(cat << EOF
+## 🐛 Автоматически созданный дефект
+
+### 📊 Информация о тесте
+- **Тест**: ${test_name}
+- **Категория**: ${category}
+- **Приоритет**: ${priority}
+- **Серьезность**: ${severity}
+- **Версия ноды**: ${node_version}
+- **Коммит**: ${commit_hash}
+
+### 🔍 Детали ошибки
+\`\`\`
+${error_message}
+\`\`\`
+
+### 🔗 Ссылки
+- **TestOps Launch**: ${ALLURE_ENDPOINT}/launch/${launch_id}
+- **TestOps Project**: ${ALLURE_ENDPOINT}/project/${ALLURE_PROJECT_ID}
+- **GitLab Pipeline**: ${pipeline_url}
+
+### 📋 Шаги для воспроизведения
+1. Запустить тест: ${test_name}
+2. Использовать версию ноды: ${node_version}
+3. Проверить окружение и конфигурацию
+
+---
+*Дефект создан автоматически системой QA*  
+*Дата: $(date '+%d.%m.%Y %H:%M:%S')*  
+*Launch ID: ${launch_id}*
+EOF
+    )
     
-    return 0
+    # Create JSON payload for TestOps defect
+    local json_payload
+    json_payload=$(jq -n \
+        --arg name "${defect_name}" \
+        --arg description "${defect_description}" \
+        --arg projectId "${ALLURE_PROJECT_ID}" \
+        '{
+            name: $name,
+            description: $description,
+            projectId: ($projectId | tonumber)
+        }')
+    
+    log_debug "Creating TestOps defect with payload: ${json_payload}"
+    
+    # Create defect via TestOps API
+    local response
+    response=$(curl -s -X POST \
+        "${ALLURE_ENDPOINT}/api/rs/defect?projectId=${ALLURE_PROJECT_ID}" \
+        -H "Authorization: Api-Token ${ALLURE_TOKEN}" \
+        -H "Content-Type: application/json" \
+        -d "${json_payload}" || echo "{}")
+    
+    # Check if defect was created
+    local defect_id
+    defect_id=$(echo "${response}" | jq -r '.id // empty')
+    
+    if [[ -n "${defect_id}" ]]; then
+        local defect_url="${ALLURE_ENDPOINT}/project/${ALLURE_PROJECT_ID}/defects/${defect_id}"
+        log_success "TestOps defect created: ${defect_url}"
+        log_success "Defect ID: ${defect_id}"
+        echo "${defect_id}"
+        return 0
+    else
+        log_error "Failed to create TestOps defect"
+        log_debug "Response: ${response}"
+        return 1
+    fi
 }
 
 # Function to process failed tests and create defects
@@ -325,8 +394,20 @@ process_failed_tests_for_defects() {
         
         log_success "Defect created with ID: ${defect_id}"
         
-        # Create TestOps defect (placeholder)
-        create_testops_defect "${sample_defect_data}" "${launch_id}"
+        # Create TestOps defect
+        local testops_defect_id
+        if testops_defect_id=$(create_testops_defect \
+            "${sample_defect_data}" \
+            "${launch_id}" \
+            "${launch_name}" \
+            "${node_version}" \
+            "${commit_hash}" \
+            "${pipeline_url}"); then
+            
+            log_success "TestOps defect created with ID: ${testops_defect_id}"
+        else
+            log_warning "Failed to create TestOps defect"
+        fi
         
         return 0
     else
@@ -378,6 +459,26 @@ list_recent_defects() {
         "${REDMINE_URL}/issues.json?limit=${limit}&sort=created_on:desc&subject=*QA%20Defect*" || echo "{}")
     
     echo "${response}" | jq -r '.issues[]? | "#\(.id) - \(.subject) (\(.status.name)) - \(.created_on)"'
+}
+
+# Function to list TestOps defects
+list_testops_defects() {
+    local limit="${1:-10}"
+    
+    log_info "Listing TestOps defects (limit: ${limit})"
+    
+    local response
+    response=$(curl -s -H "Authorization: Api-Token ${ALLURE_TOKEN}" \
+        "${ALLURE_ENDPOINT}/api/rs/defect?projectId=${ALLURE_PROJECT_ID}&size=${limit}" || echo "{}")
+    
+    local defects
+    defects=$(echo "${response}" | jq -r '.content[]? | "#\(.id) - \(.name) (\(.closed | if . then "Closed" else "Open" end)) - Count: \(.count)"')
+    
+    if [[ -n "${defects}" ]]; then
+        echo "${defects}"
+    else
+        echo "No defects found in TestOps"
+    fi
 }
 
 # Function to get defect statistics
@@ -435,6 +536,10 @@ main() {
             local limit="${1:-10}"
             list_recent_defects "${limit}"
             ;;
+        "list-testops")
+            local limit="${1:-10}"
+            list_testops_defects "${limit}"
+            ;;
         "stats")
             local days="${1:-7}"
             get_defect_statistics "${days}"
@@ -446,15 +551,26 @@ main() {
             fi
             analyze_failed_test "$1" "$2" "$3"
             ;;
+        "create-testops")
+            if [[ $# -lt 6 ]]; then
+                log_error "Usage: $0 create-testops <test_name> <error_message> <launch_id> <launch_name> <node_version> <commit_hash> [pipeline_url]"
+                exit 1
+            fi
+            local defect_data
+            defect_data=$(analyze_failed_test "$1" "$2" "Stack trace not available" 2>/dev/null | tail -n +2)
+            create_testops_defect "${defect_data}" "$3" "$4" "$5" "$6" "${7:-}"
+            ;;
         "help"|*)
-            echo "Usage: $0 {process|test-redmine|list|stats|analyze}"
+            echo "Usage: $0 {process|test-redmine|list|list-testops|stats|analyze|create-testops}"
             echo ""
             echo "Commands:"
             echo "  process <launch_id> [name] [version] [commit] [url]  - Process failed tests and create defects"
             echo "  test-redmine                                         - Test Redmine connection"
-            echo "  list [limit]                                         - List recent QA defects"
+            echo "  list [limit]                                         - List recent QA defects from Redmine"
+            echo "  list-testops [limit]                                 - List defects from TestOps"
             echo "  stats [days]                                         - Get defect statistics"
             echo "  analyze <test> <error> <trace>                       - Analyze test failure"
+            echo "  create-testops <test> <error> <launch> <name> <ver> <commit> [url] - Create TestOps defect"
             echo ""
             echo "Environment variables:"
             echo "  REDMINE_URL         - Redmine instance URL"

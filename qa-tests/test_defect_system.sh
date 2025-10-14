@@ -89,6 +89,11 @@ echo "📊 Recent TestOps launches with failures:"
     --format "ID,Name,Failed,Broken" \
     | head -5 | awk 'NR==1 || $3>0 || $4>0'
 
+# List recent defects from TestOps
+echo ""
+echo "🐛 Recent defects from TestOps:"
+./defect_manager.sh list-testops 5 || echo "No defects found in TestOps"
+
 # List recent defects (if Redmine configured)
 echo ""
 echo "🐛 Recent defects from Redmine:"
