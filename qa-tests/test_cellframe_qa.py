@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Cellframe Node QA Test Suite - ИСПРАВЛЕННАЯ ВЕРСИЯ
+Cellframe Node QA Test Suite - ИСПРАВЛЕННАЯ ВЕРСИЯ v2
 Устранены критические проблемы с ложными срабатываниями
+ИСПРАВЛЕНИЕ v2: Автоматический поиск путей к бинарникам
 """
 
 import subprocess
@@ -12,12 +13,68 @@ import allure
 from pathlib import Path
 
 
-# ИСПРАВЛЕНИЕ 1: Конфигурируемые пути
+def find_cellframe_binaries():
+    """Автоматический поиск путей к бинарникам Cellframe Node"""
+    possible_paths = [
+        '/opt/cellframe-node/bin',
+        '/usr/bin',
+        '/usr/local/bin',
+        '/bin',
+        '/sbin',
+        '/usr/sbin'
+    ]
+    
+    binaries = {
+        'node': None,
+        'cli': None,
+        'config': None
+    }
+    
+    # Поиск бинарников в возможных путях
+    for path in possible_paths:
+        if os.path.exists(f"{path}/cellframe-node"):
+            binaries['node'] = f"{path}/cellframe-node"
+        if os.path.exists(f"{path}/cellframe-node-cli"):
+            binaries['cli'] = f"{path}/cellframe-node-cli"
+        if os.path.exists(f"{path}/cellframe-node-config"):
+            binaries['config'] = f"{path}/cellframe-node-config"
+    
+    # Дополнительный поиск через which
+    if not binaries['cli']:
+        try:
+            result = subprocess.run(['which', 'cellframe-node-cli'], capture_output=True, text=True)
+            if result.returncode == 0:
+                binaries['cli'] = result.stdout.strip()
+        except:
+            pass
+    
+    if not binaries['node']:
+        try:
+            result = subprocess.run(['which', 'cellframe-node'], capture_output=True, text=True)
+            if result.returncode == 0:
+                binaries['node'] = result.stdout.strip()
+        except:
+            pass
+            
+    return binaries
+
+
+# ИСПРАВЛЕНИЕ 1: Конфигурируемые пути с автопоиском
 NODE_DIR = os.environ.get('CELLFRAME_NODE_DIR', '/opt/cellframe-node')
-NODE_BIN = f"{NODE_DIR}/bin/cellframe-node"
-CLI_BIN = f"{NODE_DIR}/bin/cellframe-node-cli"
-CONFIG_BIN = f"{NODE_DIR}/bin/cellframe-node-config"
+
+# Автоматический поиск бинарников
+BINARIES = find_cellframe_binaries()
+NODE_BIN = BINARIES['node'] or f"{NODE_DIR}/bin/cellframe-node"
+CLI_BIN = BINARIES['cli'] or f"{NODE_DIR}/bin/cellframe-node-cli"  
+CONFIG_BIN = BINARIES['config'] or f"{NODE_DIR}/bin/cellframe-node-config"
 LOG_FILE = f"{NODE_DIR}/var/log/cellframe-node.log"
+
+# Отладочная информация
+print(f"🔍 DEBUGGING: Found binaries:")
+print(f"   NODE_BIN: {NODE_BIN} (exists: {os.path.exists(NODE_BIN)})")
+print(f"   CLI_BIN: {CLI_BIN} (exists: {os.path.exists(CLI_BIN)})")
+print(f"   CONFIG_BIN: {CONFIG_BIN} (exists: {os.path.exists(CONFIG_BIN)})")
+print(f"   LOG_FILE: {LOG_FILE}")
 
 
 def run_command(cmd, timeout=30):

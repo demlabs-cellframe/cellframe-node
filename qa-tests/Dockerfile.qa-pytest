@@ -36,7 +36,13 @@ RUN echo "Downloading Cellframe Node from: ${NODE_DOWNLOAD_URL}" && \
     wget -q "${NODE_DOWNLOAD_URL}" -O /tmp/cellframe-node.deb && \
     dpkg -i /tmp/cellframe-node.deb || true && \
     apt-get update && apt-get install -f -y && \
-    rm /tmp/cellframe-node.deb
+    rm /tmp/cellframe-node.deb && \
+    echo "=== DEBUGGING: Finding installed binaries ===" && \
+    find /usr -name "*cellframe*" -type f -executable 2>/dev/null || true && \
+    find /opt -name "*cellframe*" -type f -executable 2>/dev/null || true && \
+    ls -la /usr/bin/cellframe* 2>/dev/null || echo "No cellframe binaries in /usr/bin/" && \
+    ls -la /usr/local/bin/cellframe* 2>/dev/null || echo "No cellframe binaries in /usr/local/bin/" && \
+    echo "=== END DEBUGGING ==="
 
 # Create necessary directories
 RUN mkdir -p /opt/cellframe-node/var/log && \
