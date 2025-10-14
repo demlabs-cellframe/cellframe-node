@@ -1,0 +1,14 @@
+pytest_json_report-1.5.0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+pytest_json_report-1.5.0.dist-info/LICENSE,sha256=0ra28aHEyLrGCN91qzlk6OZtVn3haULCI3ClL29WN5o,1065
+pytest_json_report-1.5.0.dist-info/METADATA,sha256=vAou4D265aa7YIWFXF34S1PG82LnKktQYjyFcrQeP3I,15489
+pytest_json_report-1.5.0.dist-info/RECORD,,
+pytest_json_report-1.5.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+pytest_json_report-1.5.0.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
+pytest_json_report-1.5.0.dist-info/entry_points.txt,sha256=dyGViXyJdOcgNVIsgjszy70Jn5-h8bDdSVcpyC6DjrM,56
+pytest_json_report-1.5.0.dist-info/top_level.txt,sha256=mPAIRP0gtweC5DjhUetdxOv1vQZmWDi-37LelZdbNpY,18
+pytest_jsonreport/__init__.py,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+pytest_jsonreport/__pycache__/__init__.cpython-312.pyc,,
+pytest_jsonreport/__pycache__/plugin.cpython-312.pyc,,
+pytest_jsonreport/__pycache__/serialize.cpython-312.pyc,,
+pytest_jsonreport/plugin.py,sha256=DnK13KnN387qYNdws9_DhCLBNUlfZKeDeyuC-Dyyvxg,15208
+pytest_jsonreport/serialize.py,sha256=HEGlEIrmTmSABIEq1V1YSf9gMmhMNWGo15cfo_kqcEE,3572

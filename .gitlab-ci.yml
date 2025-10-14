@@ -184,12 +184,25 @@ qa_functional_tests:
       echo ""
       
       # Install required packages
-      apk add --no-cache bash curl wget
+      apk add --no-cache bash curl wget jq
       
       # Build QA Docker image with pytest and Allure
       cd qa-tests
       echo "Building QA Docker image..."
       echo "Using NODE_DOWNLOAD_URL: ${NODE_DOWNLOAD_URL}"
+      
+      # Download and setup allurectl and launch manager
+      echo "Setting up TestOps integration..."
+      wget -q https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -O ./allurectl
+      chmod +x ./allurectl
+      
+      # Create TestOps launch
+      NODE_VERSION_INFO=$(echo "${NODE_DOWNLOAD_URL}" | sed 's|.*/||' | sed 's|\.deb$||')
+      LAUNCH_NAME="QA Tests - $(date +%d.%m.%Y_%H:%M) - ${NODE_VERSION_INFO} - v${CI_COMMIT_SHORT_SHA}"
+      LAUNCH_TAGS="${ALLURE_LAUNCH_TAGS}"
+      
+      echo "Creating TestOps launch: ${LAUNCH_NAME}"
+      ./launch_manager.sh create "${LAUNCH_NAME}" "${LAUNCH_TAGS}"
       docker build -f Dockerfile.qa-pytest \
         --build-arg NODE_DOWNLOAD_URL="${NODE_DOWNLOAD_URL}" \
         -t cellframe-qa-pytest:${CI_COMMIT_SHORT_SHA} .
@@ -252,39 +265,57 @@ qa_functional_tests:
       echo "Exit Code: ${TEST_EXIT_CODE}"
       echo ""
       
-      # Upload to TestOps
+      # Upload to TestOps using Launch Manager
       echo "=============================================="
       echo "  Uploading to Allure TestOps"
       echo "=============================================="
-      
-      # Download and setup allurectl
-      echo "Downloading allurectl..."
-      wget -q https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 -O ./allurectl
-      chmod +x ./allurectl
-      
-      # Generate launch name with current date/time and node info
-      NODE_VERSION_INFO=$(echo "${NODE_DOWNLOAD_URL}" | sed 's|.*/||' | sed 's|\.deb$||')
-      LAUNCH_NAME="QA Tests - $(date +%d.%m.%Y_%H:%M) - ${NODE_VERSION_INFO} - v${CI_COMMIT_SHORT_SHA}"
-      echo "Launch name: ${LAUNCH_NAME}"
       
       # Check if allure-results directory exists and has files
       if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then
         echo "Found Allure results, uploading to TestOps..."
         
-        # Upload results to TestOps
-        if ./allurectl upload allure-results \
-          --launch-name "${LAUNCH_NAME}" \
-          --launch-tags "${ALLURE_LAUNCH_TAGS}"; then
+        # Upload results to existing launch
+        if ./launch_manager.sh upload; then
           echo "✅ Results uploaded to TestOps successfully"
-          echo "📊 View report: ${ALLURE_ENDPOINT}/launch/[ID]"
+          
+          # Get launch statistics
+          echo ""
+          echo "=== Launch Statistics ==="
+          ./launch_manager.sh stats
+          STATS_EXIT_CODE=$?
+          
+          # Compare with previous launch
+          echo ""
+          echo "=== Regression Analysis ==="
+          ./launch_manager.sh compare
+          COMPARE_EXIT_CODE=$?
+          
+          # Close the launch
+          echo ""
+          echo "=== Closing Launch ==="
+          ./launch_manager.sh close
+          
+          echo "📊 View report: ${ALLURE_ENDPOINT}/launch/$(cat .launch_id 2>/dev/null || echo '[ID]')"
           echo "🔗 Project: ${ALLURE_ENDPOINT}/project/${ALLURE_PROJECT_ID}"
+          
+          # Set exit code based on test results and regression analysis
+          if [[ $STATS_EXIT_CODE -ne 0 ]]; then
+            echo "⚠️ Tests failed - check results in TestOps"
+          fi
+          if [[ $COMPARE_EXIT_CODE -ne 0 ]]; then
+            echo "⚠️ Regression detected - more tests failed than in previous run"
+          fi
         else
           echo "⚠️ Failed to upload to TestOps, but continuing..."
           echo "Check TestOps connectivity and credentials"
+          # Still try to close launch if it exists
+          ./launch_manager.sh close 2>/dev/null || true
         fi
       else
         echo "⚠️ No Allure results found, skipping TestOps upload"
         echo "Directory allure-results: $(ls -la allure-results 2>/dev/null || echo 'not found')"
+        # Close launch even if no results
+        ./launch_manager.sh close 2>/dev/null || true
       fi
       
       echo ""
@@ -326,6 +357,7 @@ qa_functional_tests:
       - qa-tests/allure-report/
       - qa-tests/qa-test-output.log
       - qa-tests/allurectl
+      - qa-tests/launch_manager.sh
     expire_in: 1 week
   allow_failure: false
 
