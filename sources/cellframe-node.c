@@ -550,7 +550,6 @@ int main( int argc, const char **argv )
 
 //failure or exit:
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-        dap_plugin_stop_all();
         dap_plugin_deinit();
     }
     dap_events_deinit();
