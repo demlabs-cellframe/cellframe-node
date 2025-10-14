@@ -153,7 +153,7 @@ qa_functional_tests:
   variables:
     # TestOps Configuration
     ALLURE_ENDPOINT: "http://178.49.151.230:8080"
-    # ALLURE_TOKEN: Set this in GitLab CI/CD Variables (Settings > CI/CD > Variables)
+    ALLURE_TOKEN: "${ALLURE_TOKEN}" # Set this in GitLab CI/CD Variables (Settings > CI/CD > Variables)
     ALLURE_PROJECT_ID: "1"
     ALLURE_LAUNCH_TAGS: "cellframe,node,qa,ci,gitlab,${CI_COMMIT_REF_NAME},fixed-tests"
     ALLURE_LAUNCH_DESCRIPTION: "FIXED QA testing for Cellframe Node - Branch: ${CI_COMMIT_REF_NAME} - Pipeline: ${CI_PIPELINE_ID} - Commit: ${CI_COMMIT_TITLE}"
