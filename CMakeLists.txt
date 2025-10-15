@@ -148,6 +148,11 @@ endif()
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
 
+# Disable SDK installation - they are build-time dependencies only
+# SDKs should not be installed into app bundle or system
+set(INSTALL_DAP_SDK OFF CACHE BOOL "Disable DAP SDK installation (build-time dependency)" FORCE)
+set(INSTALL_CELLFRAME_SDK OFF CACHE BOOL "Disable Cellframe SDK installation (build-time dependency)" FORCE)
+
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
 if(UNIX)
