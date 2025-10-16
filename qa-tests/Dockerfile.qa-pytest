@@ -57,9 +57,11 @@ COPY requirements.txt .
 # Ubuntu 24.04 requires --break-system-packages due to PEP 668
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
-# Copy test files
-COPY test_cellframe_qa.py .
+# Copy framework and test files
+COPY framework/ ./framework/
+COPY test_professional_qa.py .
 COPY pytest.ini .
+COPY conftest.py .
 
 # Create environment info and set environment variables for tests
 ARG NODE_DOWNLOAD_URL=https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64
@@ -83,7 +85,7 @@ CMD ["sh", "-c", "\
     echo \"Node Package: $(dpkg -l | grep cellframe-node | awk '{print $2 \" \" $3}' || echo 'unknown')\" && \
     echo '' && \
     mkdir -p allure-results allure-report && \
-    pytest test_cellframe_qa.py \
+    pytest test_professional_qa.py \
         --alluredir=allure-results \
         --tb=short \
         -v && \
