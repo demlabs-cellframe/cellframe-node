@@ -59,7 +59,7 @@ RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Copy framework and test files
 COPY framework/ ./framework/
-COPY test_professional_qa.py .
+COPY test_critical_node_functionality.py .
 COPY pytest.ini .
 COPY conftest.py .
 
@@ -85,7 +85,7 @@ CMD ["sh", "-c", "\
     echo \"Node Package: $(dpkg -l | grep cellframe-node | awk '{print $2 \" \" $3}' || echo 'unknown')\" && \
     echo '' && \
     mkdir -p allure-results allure-report && \
-    pytest test_professional_qa.py \
+    pytest test_critical_node_functionality.py \
         --alluredir=allure-results \
         --tb=short \
         -v && \
