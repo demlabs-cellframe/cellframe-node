@@ -470,7 +470,6 @@ if(DARWIN)
         INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
     endif()
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
-    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
     if (BUILD_WITH_PYTHON_ENV)
