@@ -149,6 +149,12 @@ if(BUILD_CELLFRAME_NODE_TESTS)
     set(BUILD_CELLFRAME_SDK_TESTS ON)
 endif()
 
+# Enable DAP SDK tests when Cellframe SDK tests are enabled
+if(BUILD_CELLFRAME_SDK_TESTS)
+    set(BUILD_TESTS ON)
+    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+endif()
+
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
 
