@@ -360,6 +360,11 @@ int main( int argc, const char **argv )
         return -71;
     }
 
+    if (dap_net_common_init()) {
+        log_it(L_CRITICAL, "Can't init net common module");
+        return -72;
+    }
+
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
