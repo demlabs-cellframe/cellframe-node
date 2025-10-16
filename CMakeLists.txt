@@ -153,6 +153,8 @@ endif()
 if(BUILD_CELLFRAME_SDK_TESTS)
     set(BUILD_TESTS ON)
     set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    enable_testing()
+    message(STATUS "Cellframe SDK tests enabled - CTest configured")
 endif()
 
 # activate sphincsplus flexible option
