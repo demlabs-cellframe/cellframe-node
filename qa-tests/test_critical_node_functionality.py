@@ -212,23 +212,42 @@ class TestNodeStartup:
             
             assert binary_path is not None, "Cannot find cellframe-node binary"
             
-            # Запускаем в фоне
-            start_result = subprocess.run(
-                [binary_path, "-D"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            
-            allure.attach(
-                start_result.stdout + "\n" + start_result.stderr,
-                name="Node Startup Output",
-                attachment_type=allure.attachment_type.TEXT
-            )
+            # Запускаем в фоне (daemon mode не завершается, поэтому Popen)
+            with open("/tmp/cellframe-node-startup.log", "w") as log_file:
+                process = subprocess.Popen(
+                    [binary_path, "-D"],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT
+                )
+                
+                allure.attach(
+                    f"Node started with PID: {process.pid}\n"
+                    f"Command: {binary_path} -D\n"
+                    f"Log file: /tmp/cellframe-node-startup.log",
+                    name="Node Startup Info",
+                    attachment_type=allure.attachment_type.TEXT
+                )
         
         # Даем время на запуск
         with allure.step("Wait for node to initialize (5 seconds)"):
             time.sleep(5)
+            
+            # Читаем лог запуска
+            try:
+                with open("/tmp/cellframe-node-startup.log", "r") as log_file:
+                    startup_log = log_file.read()
+                
+                allure.attach(
+                    startup_log if startup_log else "Log is empty",
+                    name="Node Startup Log",
+                    attachment_type=allure.attachment_type.TEXT
+                )
+            except Exception as e:
+                allure.attach(
+                    f"Could not read startup log: {e}",
+                    name="Log Read Error",
+                    attachment_type=allure.attachment_type.TEXT
+                )
         
         # Проверяем что процесс запустился
         with allure.step("Verify node process is running"):
@@ -246,7 +265,17 @@ class TestNodeStartup:
                     attachment_type=allure.attachment_type.TEXT
                 )
             else:
-                pytest.fail("Node process did not start successfully")
+                # Проверяем не завершился ли процесс с ошибкой
+                try:
+                    with open("/tmp/cellframe-node-startup.log", "r") as log_file:
+                        error_log = log_file.read()
+                    
+                    pytest.fail(
+                        f"Node process did not start successfully.\n"
+                        f"Startup log:\n{error_log}"
+                    )
+                except:
+                    pytest.fail("Node process did not start successfully")
     
     @allure.story("Initialization")
     @allure.title("Node initializes networks")
