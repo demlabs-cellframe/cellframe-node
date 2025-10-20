@@ -1,0 +1,22 @@
+# Full Network Template
+# Complete network with 4 nodes (3 validators + 1 full node)
+
+network:
+  topology: default
+  nodes:
+    - name: node1
+      role: root
+      validator: true
+    
+    - name: node2
+      role: master
+      validator: true
+    
+    - name: node3
+      role: master
+      validator: true
+    
+    - name: node4
+      role: full
+      validator: false
+
