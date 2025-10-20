@@ -109,11 +109,6 @@ endif()
 
 include (dap-sdk/cmake/OS_Detection.cmake)
 
-set(BUILD_WITH_GDB_DRIVER_MDBX ON)
-if (NOT ANDROID)
-    set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
-#    set(BUILD_WITH_GDB_DRIVER_PGSQL ON)
-endif()
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #set(BUILD_DAP_SDK_TESTS ON)
 #set (BUILD_WITH_TPS_TEST ON)
@@ -121,6 +116,7 @@ if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
 endif()
 
+set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
 set(BUILD_WITH_ZIP OFF)
 option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
 option(ADD_UPDATER OFF)
@@ -133,8 +129,8 @@ option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+    #set(BUILD_WITH_PYTHON_ENV ON)
+    #set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
@@ -151,6 +147,11 @@ endif()
 
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
+
+# Disable SDK installation - they are build-time dependencies only
+# SDKs should not be installed into app bundle or system
+set(INSTALL_DAP_SDK OFF CACHE BOOL "Disable DAP SDK installation (build-time dependency)" FORCE)
+set(INSTALL_CELLFRAME_SDK OFF CACHE BOOL "Disable Cellframe SDK installation (build-time dependency)" FORCE)
 
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
@@ -318,10 +319,10 @@ if(WIN32)
             kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
             oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
     set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-    target_link_libraries(${NODE_TOOL_TARGET} cellframe-sdk )
+    target_link_libraries(${NODE_TOOL_TARGET} cellframe_sdk )
     set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
 
-    target_link_libraries(${PROJECT_NAME} cellframe-sdk dap_json-c )
+    target_link_libraries(${PROJECT_NAME} cellframe_sdk dap_json-c )
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
         set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     else()
@@ -344,11 +345,10 @@ add_subdirectory(conftool)
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-    set(NODE_LIBRARIES cellframe-sdk )
-
-    set(NODE_CLI_LIBRARIES m cellframe-sdk)
-
-    set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+    
+    set(NODE_LIBRARIES cellframe_sdk dap_sdk)
+    set(NODE_CLI_LIBRARIES m cellframe_sdk dap_sdk)
+    set(NODE_TOOL_LIBRARIES m cellframe_sdk dap_sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")
@@ -470,7 +470,6 @@ if(DARWIN)
         INSTALL(TARGETS cellframe-diagtool DESTINATION ${BINDIR})
     endif()
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
-    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-diagtool.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
     if (BUILD_WITH_PYTHON_ENV)
