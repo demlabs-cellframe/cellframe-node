@@ -1,5 +1,5 @@
-# Minimal Network Template
-# Single root node for basic testing
+# Single Node Network
+# Предоставляет: node1 (root validator)
 
 network:
   topology: minimal
