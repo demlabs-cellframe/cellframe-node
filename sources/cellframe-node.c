@@ -322,11 +322,6 @@ int main( int argc, const char **argv )
         return -58;
     }
 
-    if ( dap_datum_mempool_init() ) {
-        log_it( L_CRITICAL, "Can't init mempool module" );
-        return -59;
-    }
-
     if( dap_chain_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain modules");
         return -60;
@@ -431,6 +426,11 @@ int main( int argc, const char **argv )
 
     if( dap_chain_net_srv_order_init() )
         return -67;
+
+    if ( dap_datum_mempool_init() ) {
+        log_it( L_CRITICAL, "Can't init mempool module" );
+        return -134;
+    }
 
     if (dap_chain_node_list_clean_init()) {
         log_it( L_CRITICAL, "Can't init node list clean" );
