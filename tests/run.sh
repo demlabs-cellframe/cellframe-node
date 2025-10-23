@@ -262,7 +262,7 @@ if $RUN_E2E; then
             
             # Collect artifacts and generate reports
             info "Collecting artifacts and generating reports..."
-            if python3 "$TEST_DIR/collect_artifacts.py" e2e $E2E_EXIT; then
+            if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" collect-artifacts e2e --exit-code=$E2E_EXIT; then
                 success "Artifacts collected successfully"
             else
                 warning "Failed to collect some artifacts"
@@ -305,7 +305,7 @@ if $RUN_FUNCTIONAL; then
             
             # Collect artifacts and generate reports
             info "Collecting artifacts and generating reports..."
-            if python3 "$TEST_DIR/collect_artifacts.py" functional $FUNCTIONAL_EXIT; then
+            if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" collect-artifacts functional --exit-code=$FUNCTIONAL_EXIT; then
                 success "Artifacts collected successfully"
             else
                 warning "Failed to collect some artifacts"
