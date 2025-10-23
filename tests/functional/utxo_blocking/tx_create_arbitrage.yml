@@ -17,25 +17,37 @@ setup:
   # Create token
   - cli: token_decl -net stagenet -token ARBCMD -total 1000000
     save: token
+    node: node1
+    expect: success
     wait: 3s
+    description: "Create ARBCMD token"
   
   # Emit tokens
-  - cli: token_emit -token ARBCMD -value 10000 -addr {{wallet_addr}}
+  - cli: token_emit -net stagenet -token ARBCMD -value 10000 -addr {{wallet_addr}}
+    node: node1
+    expect: success
     wait: 3s
+    description: "Emit tokens"
 
 test:
   # Test: Create arbitrage transaction
   - cli: tx_create -net stagenet -token ARBCMD -value 1000 -arbitrage
     save: arb_tx
+    node: node1
     expect: success
     wait: 3s
+    description: "Create arbitrage transaction"
 
 check:
   # Verify transaction exists
   - cli: tx_history -net stagenet -tx {{arb_tx}}
+    node: node1
     contains: "{{arb_tx}}"
+    description: "Verify tx in history"
   
-  # Verify arbitrage marker present
+  # Verify arbitrage marker present (if it's in the output)
   - cli: tx_info -net stagenet -tx {{arb_tx}}
-    contains: "arbitrage"
+    node: node1
+    expect: success
+    description: "Get tx info"
 

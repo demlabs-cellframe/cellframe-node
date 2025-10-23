@@ -1,0 +1,42 @@
+# Test: Wallet Balance
+# Test wallet balance checking
+
+name: Wallet Balance Test
+description: Test checking wallet balance after token emission
+tags: [functional, wallet, balance]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+
+setup:
+  # Create and emit tokens
+  - cli: token_decl -net stagenet -token BALTEST -total 1000000
+    node: node1
+    expect: success
+    wait: 3s
+  
+  - cli: token_emit -net stagenet -token BALTEST -value 5000 -addr {{wallet_addr}}
+    node: node1
+    expect: success
+    wait: 3s
+
+test:
+  # Test: Check wallet balance
+  - cli: wallet info -w test_wallet -net stagenet -addr {{wallet_addr}}
+    node: node1
+    expect: success
+    save: balance_info
+    description: "Check wallet balance"
+
+check:
+  # Verify balance info is returned
+  - python: |
+      balance = ctx.get_variable('balance_info')
+      assert balance, "Balance info should not be empty"
+    description: "Balance info is accessible"
+

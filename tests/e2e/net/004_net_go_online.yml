@@ -1,0 +1,32 @@
+# Test: Network Go Online
+# Test bringing network online
+
+name: Network Go Online Test
+description: Test network online/offline transitions
+tags: [e2e, network, state]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 5s
+
+test:
+  # Test: Check initial status
+  - cli: net -net stagenet get status
+    node: node1
+    expect: success
+    save: status_initial
+    description: "Get initial status"
+
+check:
+  # Verify status is accessible
+  - python: |
+      status = ctx.get_variable('status_initial')
+      assert status, "Network status should not be empty"
+    description: "Network status is accessible"
+

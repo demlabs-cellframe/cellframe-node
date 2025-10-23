@@ -1,0 +1,14 @@
+# E2E Test Suite: Token Operations
+# Complete token lifecycle testing
+
+name: Token Operations Suite
+description: End-to-end testing of token creation, emission, transfers, and updates
+tags: [e2e, token, economics]
+version: "1.0"
+
+network:
+  topology: default
+
+# This is a suite description file
+# Individual tests are in the token/ subdirectory
+

@@ -1,0 +1,14 @@
+# E2E Test Suite: Wallet Operations
+# Complete wallet lifecycle testing
+
+name: Wallet Operations Suite
+description: End-to-end testing of wallet creation, management, and operations
+tags: [e2e, wallet, critical]
+version: "1.0"
+
+network:
+  topology: default
+
+# This is a suite description file
+# Individual tests are in the wallet/ subdirectory
+

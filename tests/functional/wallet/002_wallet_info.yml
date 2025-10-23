@@ -1,0 +1,57 @@
+# Test: Wallet Info Detailed
+# Test detailed wallet information retrieval
+
+name: Wallet Info Detailed Test
+description: Test retrieving detailed wallet information
+tags: [functional, wallet, info]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 2s
+  
+  # Create test wallet
+  - cli: wallet new -w info_test_wallet
+    node: node1
+    expect: success
+    wait: 1s
+    description: "Create wallet"
+
+test:
+  # Test: Get wallet info
+  - cli: wallet info -w info_test_wallet -net stagenet
+    node: node1
+    expect: success
+    save: wallet_info
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet_addr
+    description: "Get wallet info"
+  
+  # Test: List wallets
+  - cli: wallet list
+    node: node1
+    expect: success
+    save: wallet_list
+    description: "List wallets"
+
+check:
+  # Verify wallet info contains address
+  - python: |
+      addr = ctx.get_variable('wallet_addr')
+      assert addr, "Wallet address should not be empty"
+      assert '::' in addr, "Address should contain :: separator"
+    description: "Wallet address format is valid"
+  
+  # Verify wallet in list
+  - python: |
+      wallet_list = ctx.get_variable('wallet_list')
+      assert 'info_test_wallet' in wallet_list, "Wallet should be in list"
+    description: "Wallet appears in list"
+

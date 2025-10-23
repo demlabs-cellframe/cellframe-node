@@ -1,0 +1,14 @@
+# E2E Test Suite: Node Operations
+# Complete node information and management testing
+
+name: Node Operations Suite
+description: End-to-end testing of node info, connections, and management
+tags: [e2e, node, management]
+version: "1.0"
+
+network:
+  topology: default
+
+# This is a suite description file
+# Individual tests are in the node/ subdirectory
+

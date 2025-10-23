@@ -1,0 +1,42 @@
+# Test: Token Listing
+# Verify token enumeration
+
+name: Token List Test
+description: Test listing available tokens
+tags: [e2e, token, list, fast]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  # Create test tokens
+  - cli: token_decl -net stagenet -token LIST1 -total 1000000
+    node: node1
+    expect: success
+    wait: 2s
+  
+  - cli: token_decl -net stagenet -token LIST2 -total 2000000
+    node: node1
+    expect: success
+    wait: 2s
+
+test:
+  # Test: List tokens
+  - cli: token list -net stagenet
+    node: node1
+    expect: success
+    save: token_list
+    description: "List all tokens"
+
+check:
+  # Verify our tokens are in the list
+  - python: |
+      token_list = ctx.get_variable('token_list')
+      assert 'LIST1' in token_list, "LIST1 should be in token list"
+      assert 'LIST2' in token_list, "LIST2 should be in token list"
+    description: "Created tokens appear in list"
+

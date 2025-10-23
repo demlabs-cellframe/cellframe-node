@@ -1,0 +1,42 @@
+# Test: Wallet Address Operations  
+# Test wallet address generation and retrieval
+
+name: Wallet Address Operations
+description: Test getting and verifying wallet addresses
+tags: [e2e, wallet, address]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 2s
+  
+  # Create test wallet
+  - cli: wallet new -w test_addr_wallet
+    node: node1
+    expect: success
+    wait: 1s
+
+test:
+  # Test: Get wallet info with address
+  - cli: wallet info -w test_addr_wallet -net stagenet
+    node: node1
+    expect: success
+    save: wallet_info
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet_address
+    description: "Extract wallet address"
+
+check:
+  # Verify address is present
+  - cli: wallet info -w test_addr_wallet -net stagenet
+    node: node1
+    contains: "::"
+    description: "Wallet address format is valid (contains ::)"
+

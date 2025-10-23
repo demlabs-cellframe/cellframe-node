@@ -1,0 +1,14 @@
+# Functional Test Suite: Node Features
+# Functional testing of node management
+
+name: Node Features Suite
+description: Functional testing of node management and connection operations
+tags: [functional, node, management]
+version: "1.0"
+
+network:
+  topology: default
+
+# This is a suite description file
+# Individual tests are in the node/ subdirectory
+

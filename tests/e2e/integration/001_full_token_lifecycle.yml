@@ -1,0 +1,91 @@
+# Test: Full Token Lifecycle
+# Complete token lifecycle from creation to transfer
+
+name: Full Token Lifecycle Test
+description: Test complete token lifecycle - create, emit, transfer, check
+tags: [e2e, integration, token, critical]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 3s
+  
+  # Create two wallets
+  - cli: wallet new -w lifecycle_wallet1
+    node: node1
+    expect: success
+    wait: 1s
+  
+  - cli: wallet new -w lifecycle_wallet2
+    node: node1
+    expect: success
+    wait: 1s
+  
+  # Get addresses
+  - cli: wallet info -w lifecycle_wallet1 -net stagenet
+    node: node1
+    expect: success
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet1_addr
+  
+  - cli: wallet info -w lifecycle_wallet2 -net stagenet
+    node: node1
+    expect: success
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet2_addr
+
+test:
+  # Step 1: Create token
+  - cli: token_decl -net stagenet -token LIFECYCLE -total 1000000
+    node: node1
+    expect: success
+    wait: 3s
+    description: "Step 1: Create LIFECYCLE token"
+  
+  # Step 2: Emit to wallet1
+  - cli: token_emit -net stagenet -token LIFECYCLE -value 10000 -addr {{wallet1_addr}}
+    node: node1
+    expect: success
+    save: emission_tx
+    wait: 3s
+    description: "Step 2: Emit 10000 tokens to wallet1"
+  
+  # Step 3: Transfer from wallet1 to wallet2
+  - cli: tx_create -net stagenet -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet2_addr}} -value 5000
+    node: node1
+    expect: success
+    save: transfer_tx
+    wait: 5s
+    description: "Step 3: Transfer 5000 tokens to wallet2"
+
+check:
+  # Verify token exists
+  - cli: token info -net stagenet -name LIFECYCLE
+    node: node1
+    expect: success
+    contains: "LIFECYCLE"
+    description: "Token exists and is accessible"
+  
+  # Verify transaction history
+  - cli: tx_history -net stagenet -tx {{transfer_tx}}
+    node: node1
+    expect: success
+    contains: "{{transfer_tx}}"
+    description: "Transfer transaction is in history"
+  
+  # Verify token history
+  - cli: token info -net stagenet -name LIFECYCLE -history_limit 10
+    node: node1
+    expect: success
+    save: token_history
+    description: "Token has transaction history"
+

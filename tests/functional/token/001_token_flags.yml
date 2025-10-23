@@ -1,0 +1,49 @@
+# Test: Token Flags
+# Test various token flags
+
+name: Token Flags Test
+description: Test creating tokens with different flags
+tags: [functional, token, flags]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 3s
+
+test:
+  # Test: Create token with ALL_FROZEN flag
+  - cli: token_decl -net stagenet -token FROZEN -total 1000000 -flags ALL_FROZEN
+    node: node1
+    expect: success
+    save: frozen_token
+    wait: 3s
+    description: "Create token with ALL_FROZEN flag"
+  
+  # Test: Create token with ALL_ALLOWED_FOR_ALL flag  
+  - cli: token_decl -net stagenet -token ALLOWED -total 1000000 -flags ALL_ALLOWED_FOR_ALL
+    node: node1
+    expect: success
+    save: allowed_token
+    wait: 3s
+    description: "Create token with ALL_ALLOWED_FOR_ALL flag"
+
+check:
+  # Verify frozen token info
+  - cli: token info -net stagenet -token FROZEN
+    node: node1
+    expect: success
+    contains: "FROZEN"
+    description: "Frozen token is accessible"
+  
+  # Verify allowed token info
+  - cli: token info -net stagenet -token ALLOWED
+    node: node1
+    expect: success
+    contains: "ALLOWED"
+    description: "Allowed token is accessible"
+

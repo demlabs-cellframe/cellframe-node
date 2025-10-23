@@ -1,0 +1,46 @@
+# Test: Token with Multiple Flags
+# Test creating token with various flag combinations
+
+name: Token with Flags Test
+description: Test creating tokens with different flag combinations
+tags: [e2e, token, flags]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 3s
+
+test:
+  # Test: Create token with specific flags
+  - cli: token_decl -net stagenet -token FLAGTEST1 -total 1000000 -flags ALL_ALLOWED_FOR_ALL
+    node: node1
+    expect: success
+    wait: 3s
+    description: "Create token with ALL_ALLOWED_FOR_ALL flag"
+  
+  # Test: Create another token
+  - cli: token_decl -net stagenet -token FLAGTEST2 -total 2000000
+    node: node1
+    expect: success
+    wait: 3s
+    description: "Create token without flags"
+
+check:
+  # Verify both tokens exist
+  - cli: token list -net stagenet
+    node: node1
+    expect: success
+    save: token_list
+    description: "List tokens"
+  
+  - python: |
+      tokens = ctx.get_variable('token_list')
+      assert 'FLAGTEST1' in tokens, "FLAGTEST1 should be in list"
+      assert 'FLAGTEST2' in tokens, "FLAGTEST2 should be in list"
+    description: "Both tokens are in list"
+

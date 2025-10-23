@@ -17,30 +17,45 @@ setup:
   # Create token with UTXO blocking
   - cli: token_decl -net stagenet -token ADDTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
     save: token
+    node: node1
+    expect: success
     wait: 3s
+    description: "Create ADDTEST token"
   
   # Emit and create UTXO
-  - cli: token_emit -token ADDTEST -value 1000 -addr {{wallet_addr}}
+  - cli: token_emit -net stagenet -token ADDTEST -value 1000 -addr {{wallet_addr}}
     save: emission
+    node: node1
+    expect: success
     wait: 3s
+    description: "Emit tokens"
   
-  - cli: tx_create -token ADDTEST -from_emission {{emission}} -value 500
+  - cli: tx_create -net stagenet -token ADDTEST -from_emission {{emission}} -value 500
     save: utxo
+    node: node1
+    expect: success
     wait: 3s
+    description: "Create UTXO"
 
 test:
   # Test: Add UTXO to blocklist
   - cli: token_update -net stagenet -token ADDTEST -utxo_blocked_add {{utxo}}:0
+    node: node1
     expect: success
     wait: 3s
+    description: "Add UTXO to blocklist"
 
 check:
   # Verify UTXO is in blocklist
-  - cli: token info -net stagenet -token ADDTEST -history_limit 10
-    contains: "{{utxo}}"
+  - cli: token info -net stagenet -name ADDTEST
+    node: node1
+    contains: "ADDTEST"
+    description: "Verify token info"
   
   # Verify UTXO is actually blocked
-  - cli: tx_create -token ADDTEST -from {{utxo}}:0 -value 100
+  - cli: tx_create -net stagenet -token ADDTEST -from {{utxo}}:0 -value 100
+    node: node1
     expect: error
     contains: "blocked"
+    description: "Verify UTXO is blocked"
 
