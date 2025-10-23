@@ -113,35 +113,49 @@ success "Prerequisites OK"
 
 # Detect if running in cellframe-node repository and build local package
 if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_ROOT/CMakeLists.txt"; then
-    info "Detected cellframe-node repository - building local package..."
+    info "Detected cellframe-node repository"
     
-    # Create test_build directory
-    mkdir -p "$TEST_BUILD_DIR"
-    cd "$TEST_BUILD_DIR"
+    # Check if we need to build
+    DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f 2>/dev/null | head -n 1)
     
-    # Configure with CMake (Debug mode for testing)
-    info "Configuring with CMake (Debug mode)..."
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
-        error "CMake configuration failed"
-        exit 1
-    }
-    
-    # Build
-    info "Building cellframe-node..."
-    make -j$(nproc) cellframe-node || {
-        error "Build failed"
-        exit 1
-    }
-    
-    # Package with cpack
-    info "Creating .deb package..."
-    cpack -G DEB || {
-        error "Packaging failed"
-        exit 1
-    }
-    
-    # Find the generated .deb package
-    DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
+    if [ -z "$DEB_PACKAGE" ] || [ "$CLEAN_BEFORE" = true ]; then
+        if [ "$CLEAN_BEFORE" = true ]; then
+            info "Cleaning previous build..."
+            rm -rf "$TEST_BUILD_DIR"
+        fi
+        
+        info "Building local package..."
+        
+        # Create test_build directory
+        mkdir -p "$TEST_BUILD_DIR"
+        cd "$TEST_BUILD_DIR"
+        
+        # Configure with CMake (Debug mode for testing)
+        info "Configuring with CMake (Debug mode)..."
+        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
+            error "CMake configuration failed"
+            exit 1
+        }
+        
+        # Build
+        info "Building cellframe-node..."
+        make -j$(nproc) cellframe-node || {
+            error "Build failed"
+            exit 1
+        }
+        
+        # Package with cpack
+        info "Creating .deb package..."
+        cpack -G DEB || {
+            error "Packaging failed"
+            exit 1
+        }
+        
+        # Find the newly generated .deb package
+        DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
+    else
+        info "Using existing package: $(basename "$DEB_PACKAGE")"
+    fi
     
     if [ -z "$DEB_PACKAGE" ]; then
         error "No .deb package found after build"
