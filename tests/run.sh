@@ -259,6 +259,14 @@ if $RUN_E2E; then
             info "Stopping stage environment..."
             "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
             success "Stage environment stopped"
+            
+            # Collect artifacts and generate reports
+            info "Collecting artifacts and generating reports..."
+            if python3 "$TEST_DIR/collect_artifacts.py" e2e $E2E_EXIT; then
+                success "Artifacts collected successfully"
+            else
+                warning "Failed to collect some artifacts"
+            fi
         else
             error "Failed to start stage environment"
         fi
@@ -293,6 +301,14 @@ if $RUN_FUNCTIONAL; then
                 success "Functional tests passed"
             else
                 error "Functional tests failed"
+            fi
+            
+            # Collect artifacts and generate reports
+            info "Collecting artifacts and generating reports..."
+            if python3 "$TEST_DIR/collect_artifacts.py" functional $FUNCTIONAL_EXIT; then
+                success "Artifacts collected successfully"
+            else
+                warning "Failed to collect some artifacts"
             fi
         else
             warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
