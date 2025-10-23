@@ -111,6 +111,7 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake.h"
 #include "dap_chain_net_srv_stake_ext.h"
+#include "dap_chain_net_srv_auctions.h"
 #include "dap_chain_wallet_shared.h"
 
 #include "dap_chain_wallet_cache.h"
