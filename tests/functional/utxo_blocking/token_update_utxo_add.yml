@@ -6,9 +6,12 @@ description: Test adding UTXO to token blocklist
 tags: [functional, utxo-blocking, token_update, fast]
 version: "1.0"
 
+network:
+  topology: default
+
 includes:
-  - ../../common/networks/single_node.yml
-  - ../../common/wallets/create_wallet.yml
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
 
 setup:
   # Create token with UTXO blocking
@@ -34,7 +37,7 @@ test:
 check:
   # Verify UTXO is in blocklist
   - cli: token info -net stagenet -token ADDTEST -history_limit 10
-    contains: {{utxo}}
+    contains: "{{utxo}}"
   
   # Verify UTXO is actually blocked
   - cli: tx_create -token ADDTEST -from {{utxo}}:0 -value 100

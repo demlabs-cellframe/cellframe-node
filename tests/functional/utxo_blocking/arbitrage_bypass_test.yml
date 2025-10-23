@@ -7,10 +7,13 @@ author: QA Team
 tags: [arbitrage, utxo-blocking, critical]
 version: "1.0"
 
+network:
+  topology: default
+
 # Include common templates
 includes:
-  - common/network_minimal.yml
-  - common/wallet_setup.yml
+  - common/networks/network_minimal.yml
+  - common/wallets/create_wallet.yml
 
 # Setup phase: create token with UTXO blocking enabled
 setup:
@@ -46,8 +49,8 @@ test:
 # Check phase: verify results
 check:
   - cli: tx_history -tx {{arb_tx}}
-    contains: {{arb_tx}}
+    contains: "{{arb_tx}}"
   
   - cli: token info -token ARBTEST -history_limit 10
-    contains: {{tx_hash}}
+    contains: "{{tx_hash}}"
 

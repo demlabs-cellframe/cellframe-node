@@ -6,9 +6,12 @@ description: Test creating arbitrage transaction with -arbitrage flag
 tags: [functional, utxo-blocking, tx_create, arbitrage, fast]
 version: "1.0"
 
+network:
+  topology: default
+
 includes:
-  - ../../common/networks/single_node.yml
-  - ../../common/wallets/create_wallet.yml
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
 
 setup:
   # Create token
@@ -30,7 +33,7 @@ test:
 check:
   # Verify transaction exists
   - cli: tx_history -net stagenet -tx {{arb_tx}}
-    contains: {{arb_tx}}
+    contains: "{{arb_tx}}"
   
   # Verify arbitrage marker present
   - cli: tx_info -net stagenet -tx {{arb_tx}}
