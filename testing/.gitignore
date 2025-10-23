@@ -1,9 +1,0 @@
-# Ignore all testing artifacts and cache
-*
-
-# But track this .gitignore
-!.gitignore
-
-# And track README
-!README.md
-
