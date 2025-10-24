@@ -157,17 +157,27 @@ class ScenarioExecutor:
         if not defaults:
             return step
         
-        # Apply to CLI/RPC/Bash steps (have node, wait, expect, timeout)
-        if isinstance(step, (CLIStep, RPCStep, BashStep)):
-            if defaults.node and not hasattr(step, '_node_set'):
-                # Only apply if using default node value
-                if step.node == "node1":  # Default value
-                    step.node = defaults.node
-            if defaults.wait and not step.wait:
+        # Universal approach: apply all defaults to all steps that have these attributes
+        # No type checking - just check if attribute exists and has default value
+        
+        # node
+        if defaults.node and hasattr(step, 'node'):
+            if step.node == "node1":  # Default value
+                step.node = defaults.node
+        
+        # wait
+        if defaults.wait and hasattr(step, 'wait'):
+            if not step.wait:  # None or empty
                 step.wait = defaults.wait
-            if defaults.expect and step.expect == "success":  # Default value
+        
+        # expect
+        if defaults.expect and hasattr(step, 'expect'):
+            if step.expect == "success":  # Default value
                 step.expect = defaults.expect
-            if defaults.timeout and step.timeout == 30:  # Default value
+        
+        # timeout
+        if defaults.timeout and hasattr(step, 'timeout'):
+            if step.timeout == 30:  # Default value
                 step.timeout = defaults.timeout
         
         return step
@@ -459,12 +469,17 @@ class ScenarioExecutor:
         for i, check in enumerate(checks, 1):
             logger.info(f"Check {i}/{len(checks)}: {type(check).__name__}")
             
-            # Apply defaults to checks (node, timeout)
-            if defaults and isinstance(check, (CLICheck, RPCCheck, BashCheck)):
-                if defaults.node and check.node == "node1":  # Default value
-                    check.node = defaults.node
-                if defaults.timeout and check.timeout == 30:  # Default value
-                    check.timeout = defaults.timeout
+            # Apply defaults universally - check if attribute exists
+            if defaults:
+                # node
+                if defaults.node and hasattr(check, 'node'):
+                    if check.node == "node1":  # Default value
+                        check.node = defaults.node
+                
+                # timeout
+                if defaults.timeout and hasattr(check, 'timeout'):
+                    if check.timeout == 30:  # Default value
+                        check.timeout = defaults.timeout
             
             if isinstance(check, CLICheck):
                 await self._execute_cli_check(check, ctx)
