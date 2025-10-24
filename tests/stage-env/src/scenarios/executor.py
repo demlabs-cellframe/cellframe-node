@@ -54,6 +54,11 @@ class RuntimeContext:
         if hasattr(scenario, 'network') and scenario.network:
             if hasattr(scenario.network, 'name') and scenario.network.name:
                 self.variables['network_name'] = scenario.network.name
+                logger.debug(f"Set network_name from scenario.network.name: {scenario.network.name}")
+            else:
+                logger.warning(f"scenario.network exists but has no 'name' attribute or it's None")
+        else:
+            logger.warning(f"scenario has no 'network' attribute or it's None")
         
         self.step_results: List[Dict[str, Any]] = []
         self.start_time = time.time()
@@ -104,16 +109,18 @@ class RuntimeContext:
 class ScenarioExecutor:
     """Execute test scenarios with full lifecycle management."""
     
-    def __init__(self, node_cli_path: str = "cellframe-node-cli", log_file: Optional[Path] = None):
+    def __init__(self, node_cli_path: str = "cellframe-node-cli", log_file: Optional[Path] = None, debug: bool = False):
         """
         Initialize executor.
         
         Args:
             node_cli_path: Path to cellframe-node-cli binary
             log_file: Optional path to detailed log file
+            debug: Enable debug logging
         """
         self.node_cli_path = node_cli_path
         self.log_file = log_file
+        self.debug = debug
         self._running = False
         # Monitoring manager будет получен через синглтон при старте сценария
     
@@ -357,7 +364,8 @@ class ScenarioExecutor:
             if cmd_with_defaults and isinstance(cmd_with_defaults, str):
                 cmd = cmd_with_defaults
             else:
-                logger.warning(f"apply_cli_defaults returned invalid result: {type(cmd_with_defaults)}")
+                if self.debug:
+                    logger.warning(f"apply_cli_defaults returned invalid result: {type(cmd_with_defaults)}")
         
         logger.debug(f"Executing CLI: {cmd} on {step.node}")
         
@@ -434,7 +442,8 @@ class ScenarioExecutor:
                     # Extract wallet name from command
                     # Ensure cmd is a string
                     if not isinstance(cmd, str):
-                        self._log_to_file(f"⚠️  Command is not a string: {type(cmd)}")
+                        if self.debug:
+                            self._log_to_file(f"⚠️  Command is not a string: {type(cmd)}")
                         cmd = str(cmd)
                     
                     wallet_match = re.search(r'-w\s+(\S+)', cmd)
@@ -453,10 +462,12 @@ class ScenarioExecutor:
                             # Ensure output is a string
                             wallet_info_output = info_result.get("stdout", "")
                             if not isinstance(wallet_info_output, str):
-                                self._log_to_file(f"⚠️  wallet info output is not string: {type(wallet_info_output)}")
+                                if self.debug:
+                                    self._log_to_file(f"⚠️  wallet info output is not string: {type(wallet_info_output)}")
                                 wallet_info_output = str(wallet_info_output) if wallet_info_output else ""
                             
-                            self._log_to_file(f"wallet info output (first 200 chars): {wallet_info_output[:200]}")
+                            if self.debug:
+                                self._log_to_file(f"wallet info output (first 200 chars): {wallet_info_output[:200]}")
                             
                             addr, error = DataExtractor.extract_and_validate(
                                 output=wallet_info_output,

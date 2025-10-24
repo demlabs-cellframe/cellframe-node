@@ -280,7 +280,11 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                                 log_f.write(f"{'=' * 60}\n\n")
                             
                             # Execute scenario
-                            executor = ScenarioExecutor(node_cli_path=cli_path, log_file=scenario_log_file)
+                            executor = ScenarioExecutor(
+                                node_cli_path=cli_path, 
+                                log_file=scenario_log_file,
+                                debug=debug_mode
+                            )
                             
                             async def _execute():
                                 return await executor.execute_scenario(scenario)
