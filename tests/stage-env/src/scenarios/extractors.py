@@ -127,20 +127,29 @@ class DataExtractor:
         match = re.search(pattern, output, re.MULTILINE)
         
         if not match:
-            error_msg = f"Pattern '{pattern}' not found in output"
+            error_msg = f"Pattern '{pattern}' not found in output (searched {len(output)} characters)"
+            print(f"[EXTRACT_DEBUG] Pattern match FAILED")
+            print(f"[EXTRACT_DEBUG] Pattern: {pattern}")
+            print(f"[EXTRACT_DEBUG] Output preview (first 200 chars): {output[:200]}")
             if required:
                 raise ExtractionError(error_msg)
             return (default, error_msg if default is None else None)
         
+        print(f"[EXTRACT_DEBUG] ✓ Pattern matched at position {match.start()}-{match.end()}")
+        print(f"[EXTRACT_DEBUG] Matched text: '{match.group(0)}'")
+        
         try:
             extracted_value = match.group(group)
+            print(f"[EXTRACT_DEBUG] ✓ Captured group {group}: '{extracted_value}'")
         except IndexError:
             error_msg = f"Capture group {group} not found in pattern '{pattern}'"
+            print(f"[EXTRACT_DEBUG] ✗ Capture group {group} NOT FOUND (pattern has {match.lastindex} groups)")
             if required:
                 raise ExtractionError(error_msg)
             return (default, error_msg if default is None else None)
         
         # Validate extracted value against type
+        print(f"[EXTRACT_DEBUG] Validating extracted value against type: {extract_type}")
         error_msg = DataExtractor._validate_type(extracted_value, extract_type)
         
         if error_msg:
@@ -163,32 +172,46 @@ class DataExtractor:
         
         if extract_type == ExtractType.WALLET_ADDRESS:
             # Basic format check
+            print(f"[WALLET_ADDR_DEBUG] Validating: '{value}'")
+            print(f"[WALLET_ADDR_DEBUG] Length: {len(value)} characters")
+            
             if not re.match(DataExtractor.WALLET_ADDRESS_PATTERN, value):
-                return (
+                error_msg = (
                     f"Invalid wallet address format: '{value}' "
                     f"(expected base58, 75-105 characters, got {len(value)})"
                 )
+                print(f"[WALLET_ADDR_DEBUG] ✗ Format check FAILED: {error_msg}")
+                return error_msg
+            
+            print(f"[WALLET_ADDR_DEBUG] ✓ Format check passed (base58, length OK)")
             
             # Decode base58 and validate structure + checksum
             try:
                 decoded = base58.b58decode(value)
+                print(f"[WALLET_ADDR_DEBUG] ✓ Base58 decode successful, decoded length: {len(decoded)} bytes")
+                
                 is_valid, components, error = DataExtractor._validate_wallet_address_checksum(decoded)
                 
                 if not is_valid:
-                    return (
+                    error_msg = (
                         f"Invalid wallet address: {error}\n"
-                        f"Address: {value}"
+                        f"Address: {value}\n"
+                        f"Decoded length: {len(decoded)} bytes"
                     )
+                    print(f"[WALLET_ADDR_DEBUG] ✗ Checksum validation FAILED: {error}")
+                    return error_msg
                 
-                # Optionally log components for debugging (can be removed in production)
-                # print(f"✓ Valid wallet address: {components.to_dict()}")
+                print(f"[WALLET_ADDR_DEBUG] ✓ Checksum validation PASSED")
+                print(f"[WALLET_ADDR_DEBUG] Address components: addr_ver={components.addr_ver}, net_id={components.net_id}, sig_type={components.sig_type}")
                 
             except Exception as e:
                 # base58 decoding can fail for invalid characters
-                return (
+                error_msg = (
                     f"Failed to decode wallet address (invalid base58): {str(e)}\n"
                     f"Address: {value}"
                 )
+                print(f"[WALLET_ADDR_DEBUG] ✗ Base58 decode FAILED: {str(e)}")
+                return error_msg
         
         elif extract_type == ExtractType.NODE_ADDRESS:
             if not re.match(DataExtractor.NODE_ADDRESS_PATTERN, value):
