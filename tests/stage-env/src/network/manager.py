@@ -176,24 +176,19 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Clean up stale Docker resources before starting
-        logger.info("cleaning_up_stale_resources")
+        # Clean up previous environment completely (containers + volumes)
+        # This ensures fresh state for each test run
+        logger.info("cleaning_previous_environment")
+        try:
+            # docker-compose down -v removes containers AND cleans bind-mounted data
+            self.compose.down(volumes=True, remove_images=False)
+            logger.info("previous_environment_cleaned")
+        except Exception as e:
+            # It's OK if there was nothing to clean
+            logger.debug("no_previous_environment", error=str(e))
+        
+        # Clean up any remaining stale resources
         self.compose.cleanup_stale_resources()
-        
-        # Clean node data directories for fresh state (wallets, chains, etc.)
-        import shutil
-        cache_dir_relative = self.paths_config.get('cache_dir', 'cache')
-        cache_dir = (self.base_path / cache_dir_relative).resolve()
-        data_dir = cache_dir / "data"
-        
-        if data_dir.exists():
-            logger.info("cleaning_node_data", path=str(data_dir))
-            try:
-                shutil.rmtree(data_dir)
-                data_dir.mkdir(parents=True, exist_ok=True)
-                logger.info("node_data_cleaned")
-            except Exception as e:
-                logger.warning("failed_to_clean_node_data", error=str(e))
         
         # Generate dynamic docker-compose.yml for all nodes
         logger.info("generating_docker_compose")
