@@ -139,6 +139,33 @@ FileSpec = Union[FileFromSource, FileFromContent]
 
 
 # ============================================================================
+# Extract Helpers - Built-in data extraction with validation
+# ============================================================================
+
+class ExtractType(str, Enum):
+    """Type of data to extract and validate."""
+    WALLET_ADDRESS = "wallet_address"  # Wallet address (base58, ~88 chars)
+    NODE_ADDRESS = "node_address"      # Node address (hex with :: separators, e.g., A1B2::C3D4::E5F6)
+    HASH = "hash"                      # Transaction/block hash (0x... hex)
+    NUMBER = "number"                  # Numeric value
+    TOKEN_NAME = "token_name"          # Token ticker (alphanumeric)
+    BOOL = "bool"                      # Boolean value
+    RAW = "raw"                        # Raw string (no validation)
+
+
+class ExtractSpec(BaseModel):
+    """Specification for extracting and validating data from command output."""
+    pattern: str = Field(..., description="Regex pattern to extract data")
+    type: ExtractType = Field(ExtractType.RAW, description="Type of extracted data for validation")
+    group: int = Field(1, description="Regex capture group number (default: 1)")
+    required: bool = Field(True, description="Whether extraction failure should fail the test")
+    default: Optional[str] = Field(None, description="Default value if extraction fails (only if not required)")
+    
+    class Config:
+        use_enum_values = True
+
+
+# ============================================================================
 # Test Step Models
 # ============================================================================
 
@@ -147,6 +174,7 @@ class CLIStep(BaseModel):
     cli: str = Field(..., description="CLI command to execute")
     node: str = Field("node1", description="Node to execute on")
     save: Optional[str] = Field(None, description="Variable name to save result to")
+    extract_to: Optional[Dict[str, ExtractSpec]] = Field(None, description="Extract and save specific values from output")
     wait: Optional[str] = Field(None, description="Wait duration after command (e.g., '5s')")
     expect: ExpectResult = Field(ExpectResult.SUCCESS, description="Expected result")
     contains: Optional[str] = Field(None, description="Expected substring in output")

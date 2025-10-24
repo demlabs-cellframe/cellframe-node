@@ -10,6 +10,7 @@ rich>=13.0.0          # Terminal formatting, progress bars, tables
 pyyaml>=6.0.0         # YAML parsing (configs, topologies, scenarios)
 pydantic>=2.0.0       # Data validation (better than jsonschema for Python)
 jinja2>=3.1.0         # Config templating
+base58>=2.1.1         # Base58 encoding/decoding for address validation
 
 # Docker Integration - docker SDK handles compose v2 natively
 docker>=7.0.0         # Docker SDK (includes compose v2 support via docker.from_env())
