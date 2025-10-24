@@ -18,61 +18,65 @@ version: "1.0"
 
 network:
   topology: default
+  name: stagenet
 
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
+defaults:
+  network: "{{network_name}}"
+
 setup:
   # Create token with UTXO blocking feature
-  - cli: token_decl -net stagenet -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -net {{network}} -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
     wait: 3s
   
   # Emit tokens to wallet
-  - cli: token_emit -net stagenet -token ARBTEST -value 1000000 -addr {{wallet_addr}}
+  - cli: token_emit -net {{network}} -token ARBTEST -value 1000000 -addr {{wallet_addr}}
     save: emission_tx
     wait: 3s
   
   # Create UTXO by making transaction from emission
-  - cli: tx_create -net stagenet -token ARBTEST -from_emission {{emission_tx}} -value 500000
+  - cli: tx_create -net {{network}} -token ARBTEST -from_emission {{emission_tx}} -value 500000
     save: utxo_tx
     wait: 5s
   
   # Block the UTXO
-  - cli: token_update -net stagenet -token ARBTEST -utxo_blocked_add {{utxo_tx}}:0
+  - cli: token_update -net {{network}} -token ARBTEST -utxo_blocked_add {{utxo_tx}}:0
     wait: 3s
   
   # Verify UTXO is in blocklist
-  - cli: token info -net stagenet -name ARBTEST -history_limit 10
+  - cli: token info -net {{network}} -name ARBTEST -history_limit 10
     contains: "{{utxo_tx}}"
 
 test:
   # Step 1: Regular transaction should FAIL (UTXO is blocked)
-  - cli: tx_create -net stagenet -token ARBTEST -value 100000
+  - cli: tx_create -net {{network}} -token ARBTEST -value 100000
     expect: error
     contains: "UTXO is blocked"
   
   # Step 2: Arbitrage transaction should SUCCESS (bypasses block)
-  - cli: tx_create -net stagenet -token ARBTEST -value 100000 -arbitrage
+  - cli: tx_create -net {{network}} -token ARBTEST -value 100000 -arbitrage
     save: arb_tx
     expect: success
     wait: 3s
 
 check:
   # Verify arbitrage transaction was created
-  - cli: tx_history -net stagenet -tx {{arb_tx}}
+  - cli: tx_history -net {{network}} -tx {{arb_tx}}
     contains: "{{arb_tx}}"
   
   # Verify arbitrage marker is present in transaction
-  - cli: tx_info -net stagenet -tx {{arb_tx}}
+  - cli: tx_info -net {{network}} -tx {{arb_tx}}
     contains: "arbitrage"
   
   # Verify blocked UTXO still in history
-  - cli: token info -net stagenet -name ARBTEST -history_limit 20
+  - cli: token info -net {{network}} -name ARBTEST -history_limit 20
     contains: "{{utxo_tx}}"
   
   # Verify token still has blocking enabled
-  - cli: token info -net stagenet -name ARBTEST
+  - cli: token info -net {{network}} -name ARBTEST
     contains: "UTXO_BLOCKING_ENABLED"
 
