@@ -246,9 +246,9 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
         E2E_EXIT=1
         FUNCTIONAL_EXIT=1
     else
-        # Start stage environment with config
+        # Start stage environment with config (clean data for fresh state)
         info "Starting stage environment..."
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait || E2E_EXIT=$?
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait --clean || E2E_EXIT=$?
         
         if [ $E2E_EXIT -eq 0 ]; then
             success "Stage environment started"
@@ -311,9 +311,9 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
                 warning "No test directories found"
             fi
             
-            # Stop environment
+            # Stop environment and clean volumes
             info "Stopping stage environment..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
+            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop --volumes || true
             success "Stage environment stopped"
         else
             error "Failed to start stage environment"
