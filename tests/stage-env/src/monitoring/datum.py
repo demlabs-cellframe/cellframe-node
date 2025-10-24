@@ -225,10 +225,23 @@ class DatumMonitor:
         import re
         hash_pattern = r'^0x[0-9a-fA-F]{64,}$'
         if not re.match(hash_pattern, datum_hash):
-            self._log(f"⚠️  WARNING: Invalid datum hash format: {datum_hash[:100]}...")
+            error_msg = f"Invalid datum hash format: {datum_hash[:200]}"
+            self._log(f"❌ {error_msg}")
             self._log(f"  Expected: 0x[hex] format (64+ hex chars)")
             self._log(f"  This likely means the CLI command failed and returned error output instead of a hash")
-            # Still register it, but log the warning
+            
+            # Return immediate error - don't waste time monitoring invalid hash
+            error_result = DatumMonitorResult(
+                status=DatumStatus.REJECTED,
+                datum_hash=datum_hash[:100],
+                elapsed_time=0.0,
+                error_message=error_msg
+            )
+            
+            # Create already-resolved future
+            future = asyncio.Future()
+            future.set_result(error_result)
+            return future
         
         # Register for tracking
         self._tracking[datum_hash] = request
