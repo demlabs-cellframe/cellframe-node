@@ -1,0 +1,17 @@
+# UTXO Blocking Suite
+# Tests for UTXO blocking functionality including arbitrage transactions
+
+suite: "UTXO Blocking Suite"
+description: "Functional tests for UTXO blocking and arbitrage transactions"
+author: "Cellframe Team"
+tags: [functional, utxo, blocking, arbitrage]
+version: "1.0"
+
+scenarios:
+  - arbitrage_bypass_test.yml
+  - token_update_utxo_add.yml
+  - tx_create_arbitrage.yml
+
+network:
+  topology: default
+
