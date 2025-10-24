@@ -45,7 +45,7 @@ test:
     save: emission_tx
   
   # Step 3: Transfer from wallet1 to wallet2
-  - cli: tx_create -net stagenet -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet2_addr}} -value 5000
+  - cli: tx_create -net stagenet -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
     save: transfer_tx
     wait: 5s
 

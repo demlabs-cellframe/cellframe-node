@@ -49,14 +49,12 @@ setup:
 
 test:
   # Test: Transfer tokens to wallet2
-  - cli: tx_create -net stagenet -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet2_addr}} -value 1000
+  - cli: tx_create -net stagenet -token XFERTEST -from {{emit_tx}}:0 -to_addr {{wallet2_addr}} -value 1000 -fee 0.1
     save: transfer_tx
     wait: 5s
-    description: "Transfer 1000 tokens to wallet2"
 
 check:
   # Verify transaction in history
   - cli: tx_history -net stagenet -tx {{transfer_tx}}
     contains: "{{transfer_tx}}"
-    description: "Verify transfer in history"
 
