@@ -176,25 +176,24 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Clean up stale Docker resources before starting (including volumes for fresh state)
+        # Clean up stale Docker resources before starting
         logger.info("cleaning_up_stale_resources")
         self.compose.cleanup_stale_resources()
         
-        # Remove stale volumes for clean slate
-        try:
-            stale_volumes = self.compose.client.volumes.list(
-                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
-            )
-            if stale_volumes:
-                logger.info("removing_stale_volumes", count=len(stale_volumes))
-                for volume in stale_volumes:
-                    try:
-                        volume.remove(force=True)
-                        logger.debug("removed_volume", name=volume.name)
-                    except Exception as e:
-                        logger.warning("failed_to_remove_volume", name=volume.name, error=str(e))
-        except Exception as e:
-            logger.warning("failed_to_list_volumes", error=str(e))
+        # Clean node data directories for fresh state (wallets, chains, etc.)
+        import shutil
+        cache_dir_relative = self.paths_config.get('cache_dir', 'cache')
+        cache_dir = (self.base_path / cache_dir_relative).resolve()
+        data_dir = cache_dir / "data"
+        
+        if data_dir.exists():
+            logger.info("cleaning_node_data", path=str(data_dir))
+            try:
+                shutil.rmtree(data_dir)
+                data_dir.mkdir(parents=True, exist_ok=True)
+                logger.info("node_data_cleaned")
+            except Exception as e:
+                logger.warning("failed_to_clean_node_data", error=str(e))
         
         # Generate dynamic docker-compose.yml for all nodes
         logger.info("generating_docker_compose")
