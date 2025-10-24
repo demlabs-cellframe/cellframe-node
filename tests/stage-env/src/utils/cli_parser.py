@@ -6,6 +6,7 @@ enabling automatic prefix injection in scenarios.
 """
 
 import re
+import json
 from typing import Dict, List, Set
 from pathlib import Path
 
@@ -17,22 +18,91 @@ logger = get_logger(__name__)
 class CLICommandParser:
     """Parse CLI commands and extract available options."""
     
-    def __init__(self):
-        """Initialize CLI parser."""
+    def __init__(self, cache_file: Path = None):
+        """
+        Initialize CLI parser.
+        
+        Args:
+            cache_file: Optional path to cache file for parsed commands
+        """
         self.commands: Dict[str, Set[str]] = {}
         self._parsed = False
+        self.cache_file = cache_file
     
-    async def parse_cli_help(self, node_container: str) -> bool:
+    def load_from_cache(self) -> bool:
+        """
+        Load parsed commands from cache file.
+        
+        Returns:
+            True if cache was loaded successfully
+        """
+        if not self.cache_file or not self.cache_file.exists():
+            return False
+        
+        try:
+            with open(self.cache_file, 'r') as f:
+                data = json.load(f)
+            
+            # Convert lists back to sets
+            self.commands = {
+                cmd: set(opts) 
+                for cmd, opts in data.items()
+            }
+            
+            self._parsed = True
+            logger.info(f"Loaded CLI commands from cache: {len(self.commands)} commands")
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Failed to load cache: {e}")
+            return False
+    
+    def save_to_cache(self) -> bool:
+        """
+        Save parsed commands to cache file.
+        
+        Returns:
+            True if cache was saved successfully
+        """
+        if not self.cache_file or not self._parsed:
+            return False
+        
+        try:
+            # Ensure cache directory exists
+            self.cache_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Convert sets to lists for JSON serialization
+            data = {
+                cmd: list(opts) 
+                for cmd, opts in self.commands.items()
+            }
+            
+            with open(self.cache_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            
+            logger.info(f"Saved CLI commands to cache: {self.cache_file}")
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Failed to save cache: {e}")
+            return False
+    
+    async def parse_cli_help(self, node_container: str, use_cache: bool = True) -> bool:
         """
         Parse CLI help from a running node container.
         
         Args:
             node_container: Docker container name
+            use_cache: If True, try to load from cache first
             
         Returns:
             True if parsing succeeded
         """
         import asyncio
+        
+        # Try cache first
+        if use_cache and self.load_from_cache():
+            return True
         
         try:
             logger.info("Parsing CLI help from container", container=node_container)
@@ -57,6 +127,10 @@ class CLICommandParser:
             
             self._parsed = True
             logger.info(f"CLI parsing complete: {len(self.commands)} commands mapped")
+            
+            # Save to cache
+            self.save_to_cache()
+            
             return True
             
         except Exception as e:
@@ -214,10 +288,18 @@ class CLICommandParser:
 _cli_parser: CLICommandParser = None
 
 
-def get_cli_parser() -> CLICommandParser:
-    """Get global CLI parser instance."""
+def get_cli_parser(cache_file: Path = None) -> CLICommandParser:
+    """
+    Get global CLI parser instance.
+    
+    Args:
+        cache_file: Optional cache file path (only used on first call)
+    
+    Returns:
+        Global CLICommandParser instance
+    """
     global _cli_parser
     if _cli_parser is None:
-        _cli_parser = CLICommandParser()
+        _cli_parser = CLICommandParser(cache_file=cache_file)
     return _cli_parser
 
