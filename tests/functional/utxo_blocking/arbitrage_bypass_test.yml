@@ -15,41 +15,34 @@ includes:
   - common/networks/network_minimal.yml
   - common/wallets/create_wallet.yml
 
+# Global defaults for all sections
+defaults:
+  node: node1
+  wait: 3s
+
 # Setup phase: create token with UTXO blocking enabled
 setup:
   - cli: token_decl -net stagenet -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
-    node: node1
-    expect: success
-    wait: 3s
     description: "Create ARBTEST token with UTXO blocking"
   
   - cli: token_emit -net stagenet -token ARBTEST -value 1000000 -addr {{wallet_addr}}
     save: emission_tx
-    node: node1
-    expect: success
-    wait: 3s
     description: "Emit ARBTEST tokens"
   
   - cli: tx_create -net stagenet -token ARBTEST -from_emission {{emission_tx}} -value 500
     save: tx_hash
-    node: node1
-    expect: success
     wait: 5s
     description: "Create transaction from emission"
   
   # Block the UTXO
   - cli: token_update -net stagenet -token ARBTEST -utxo_blocked_add {{tx_hash}}:0
-    node: node1
-    expect: success
-    wait: 3s
     description: "Block UTXO"
 
 # Test phase: verify blocking and arbitrage bypass
 test:
   # Regular transaction should fail
   - cli: tx_create -net stagenet -token ARBTEST -value 100
-    node: node1
     expect: error
     contains: "blocked"
     description: "Regular tx should fail on blocked UTXO"
@@ -57,20 +50,15 @@ test:
   # Arbitrage transaction should succeed (if -arbitrage flag exists)
   - cli: tx_create -net stagenet -token ARBTEST -value 100 -arbitrage
     save: arb_tx
-    node: node1
-    expect: success
-    wait: 3s
     description: "Arbitrage tx should bypass block"
 
 # Check phase: verify results
 check:
   - cli: tx_history -net stagenet -tx {{arb_tx}}
-    node: node1
     contains: "{{arb_tx}}"
     description: "Verify arbitrage tx in history"
   
   - cli: token info -net stagenet -name ARBTEST
-    node: node1
     contains: "ARBTEST"
     description: "Verify token info"
 
