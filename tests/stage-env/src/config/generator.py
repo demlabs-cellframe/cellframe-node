@@ -635,13 +635,15 @@ blocks-sign-cert=pvt.{network_name}.master.{validator_idx}
             node_data_cert_dir.mkdir(parents=True, exist_ok=True)
             
             # Copy all public validator certs (stagenet.master.N.dcert)
-            for val_idx in range(len(validator_nodes)):
-                src_pub_cert = self.certs_cache / f"node{val_idx + 1}" / f"{network_name}.master.{val_idx}.dcert"
+            # IMPORTANT: Use validator_nodes list, not sequential val_idx + 1
+            for val_idx, val_node in enumerate(validator_nodes):
+                src_pub_cert = self.certs_cache / f"node{val_node.node_id}" / f"{network_name}.master.{val_idx}.dcert"
                 if src_pub_cert.exists():
                     dst_pub_cert = node_data_cert_dir / f"{network_name}.master.{val_idx}.dcert"
                     shutil.copy2(src_pub_cert, dst_pub_cert)
                     logger.debug("copied_public_validator_cert_to_node",
                                node_id=node.node_id,
+                               validator_node_id=val_node.node_id,
                                validator_idx=val_idx,
                                dst=str(dst_pub_cert))
         

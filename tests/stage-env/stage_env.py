@@ -597,7 +597,11 @@ def run_tests(
                         if scenario.tags:
                             print_info(f"  🏷️  Tags: {', '.join(scenario.tags)}")
                         
-                        print_info(f"  📊 Steps: setup={len(scenario.setup)}, test={len(scenario.test)}, check={len(scenario.check)}")
+                        # Get step counts (handle both list and SectionConfig)
+                        setup_count = len(scenario.setup.steps) if hasattr(scenario.setup, 'steps') else len(scenario.setup or [])
+                        test_count = len(scenario.test.steps) if hasattr(scenario.test, 'steps') else len(scenario.test or [])
+                        check_count = len(scenario.check.steps) if hasattr(scenario.check, 'steps') else len(scenario.check or [])
+                        print_info(f"  📊 Steps: setup={setup_count}, test={test_count}, check={check_count}")
                         print_info(f"  📄 Log: {scenario_log_file.name}")
                         
                         # Setup scenario logging
