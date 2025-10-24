@@ -35,7 +35,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
         from ..utils.report_generator import ReportGenerator
         from ..scenarios.extractors import set_debug_mode
         import docker
-        from ..utils.logging import logger
+        from ..utils.logger import logger
         
         print_info(f"Running tests from {len(test_dirs)} director{'y' if len(test_dirs) == 1 else 'ies'}:")
         for test_dir in test_dirs:
