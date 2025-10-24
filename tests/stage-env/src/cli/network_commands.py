@@ -58,11 +58,29 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
         
         # Check prerequisites inline
         import shutil
-        required_tools = ["docker", "docker-compose"]
-        missing = [t for t in required_tools if not shutil.which(t)]
-        if missing:
-            print_error(f"Missing required tools: {', '.join(missing)}")
-            print_info("Please install Docker and Docker Compose")
+        import subprocess
+        
+        # Check for docker
+        if not shutil.which("docker"):
+            print_error("Missing required tool: docker")
+            print_info("Please install Docker")
+            raise typer.Exit(1)
+        
+        # Check for docker compose (V2) or docker-compose (V1)
+        has_compose = False
+        if shutil.which("docker"):
+            # Try docker compose (V2)
+            result = subprocess.run(["docker", "compose", "version"], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                has_compose = True
+            # Fallback to docker-compose (V1)
+            elif shutil.which("docker-compose"):
+                has_compose = True
+        
+        if not has_compose:
+            print_error("Missing Docker Compose")
+            print_info("Please install Docker Compose (either V1 or V2)")
             raise typer.Exit(1)
         
         if clean:

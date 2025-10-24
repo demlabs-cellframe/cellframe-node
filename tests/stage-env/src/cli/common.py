@@ -62,17 +62,29 @@ def format_duration(seconds: float) -> str:
 def check_prerequisites() -> bool:
     """Check if all required tools are installed."""
     import shutil
+    import subprocess
     
-    required_tools = ["docker", "docker-compose"]
-    missing = []
+    # Check for docker
+    if not shutil.which("docker"):
+        print_error("Missing required tool: docker")
+        print_info("Please install Docker")
+        return False
     
-    for tool in required_tools:
-        if not shutil.which(tool):
-            missing.append(tool)
+    # Check for docker compose (V2) or docker-compose (V1)
+    has_compose = False
+    if shutil.which("docker"):
+        # Try docker compose (V2)
+        result = subprocess.run(["docker", "compose", "version"], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            has_compose = True
+        # Fallback to docker-compose (V1)
+        elif shutil.which("docker-compose"):
+            has_compose = True
     
-    if missing:
-        print_error(f"Missing required tools: {', '.join(missing)}")
-        print_info("Please install Docker and Docker Compose")
+    if not has_compose:
+        print_error("Missing Docker Compose")
+        print_info("Please install Docker Compose (either V1 or V2)")
         return False
     
     return True
