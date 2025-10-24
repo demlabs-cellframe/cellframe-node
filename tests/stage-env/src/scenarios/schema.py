@@ -361,8 +361,8 @@ class TestScenario(BaseModel):
     # Includes for reusable configs
     includes: List[str] = Field(default_factory=list, description="Paths to included YAML files")
     
-    # Network configuration
-    network: NetworkConfig = Field(..., description="Network topology")
+    # Network configuration (optional, defaults to 'default' topology)
+    network: Optional[NetworkConfig] = Field(None, description="Network topology (default: topology='default')")
     
     # Package installation
     packages: List[PackageSpec] = Field(default_factory=list, description="Packages to install")
@@ -388,6 +388,10 @@ class TestScenario(BaseModel):
     @model_validator(mode='after')
     def validate_scenario(self) -> 'TestScenario':
         """Validate scenario structure."""
+        # Set default network if not specified
+        if self.network is None:
+            self.network = NetworkConfig(topology="default")
+        
         # Normalize sections to SectionConfig/CheckSectionConfig format
         if isinstance(self.setup, list):
             self.setup = SectionConfig(steps=self.setup)

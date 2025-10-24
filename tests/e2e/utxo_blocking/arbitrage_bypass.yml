@@ -16,6 +16,9 @@ author: QA Team
 tags: [e2e, utxo-blocking, arbitrage, critical]
 version: "1.0"
 
+network:
+  topology: default
+
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
