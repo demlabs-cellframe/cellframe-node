@@ -176,15 +176,38 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Clean up previous environment completely (containers + volumes)
-        # This ensures fresh state for each test run
-        logger.info("cleaning_previous_environment")
+        # Clean node data directories BEFORE stopping containers
+        # Files are owned by root inside containers, so we need docker exec
+        logger.info("cleaning_node_data_from_previous_run")
         try:
-            # docker-compose down -v removes containers AND cleans bind-mounted data
-            self.compose.down(volumes=True, remove_images=False)
-            logger.info("previous_environment_cleaned")
+            # Get running containers
+            running_containers = self.compose.client.containers.list(
+                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
+            )
+            
+            if running_containers:
+                logger.info("cleaning_data_via_docker_exec", count=len(running_containers))
+                for container in running_containers:
+                    try:
+                        # Clean /opt/cellframe-node/var/* (wallets, chains, GDB)
+                        result = container.exec_run(
+                            "sh -c 'rm -rf /opt/cellframe-node/var/* 2>/dev/null || true'",
+                            user="root"
+                        )
+                        logger.debug("cleaned_container_data", container=container.name)
+                    except Exception as e:
+                        logger.warning("failed_to_clean_container", container=container.name, error=str(e))
+                
+                logger.info("node_data_cleaned_via_exec")
         except Exception as e:
-            # It's OK if there was nothing to clean
+            logger.debug("no_containers_to_clean", error=str(e))
+        
+        # Now stop and remove containers
+        logger.info("stopping_previous_environment")
+        try:
+            self.compose.down(volumes=False, remove_images=False)
+            logger.info("previous_environment_stopped")
+        except Exception as e:
             logger.debug("no_previous_environment", error=str(e))
         
         # Clean up any remaining stale resources
