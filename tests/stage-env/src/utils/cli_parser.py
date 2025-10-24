@@ -49,6 +49,11 @@ class CLICommandParser:
                 for cmd, opts in data.items()
             }
             
+            # Validate cache is not empty
+            if not self.commands:
+                logger.warning("Cache file exists but is empty - will reparse")
+                return False
+            
             self._parsed = True
             logger.info(f"Loaded CLI commands from cache: {len(self.commands)} commands")
             return True
