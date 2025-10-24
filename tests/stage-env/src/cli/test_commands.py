@@ -226,6 +226,19 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                     print_info(f"   Scenarios: {len(suite_scenarios)}")
                     print_info(f"{'═' * 60}")
                     
+                    # Clean test data before each suite (if network is running)
+                    if network_mgr:
+                        print_info("🧹 Cleaning test data for fresh suite state...")
+                        
+                        async def _clean_data():
+                            await network_mgr.clean_test_data()
+                        
+                        try:
+                            asyncio.run(_clean_data())
+                            print_success("✓ Test data cleaned")
+                        except Exception as e:
+                            print_warning(f"Failed to clean test data: {e}")
+                    
                     # Filter scenarios if needed
                     if filter:
                         suite_scenarios = [f for f in suite_scenarios if filter.lower() in f.name.lower()]

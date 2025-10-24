@@ -176,47 +176,10 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Clean node data directories BEFORE stopping containers
-        # Files are owned by root inside containers, so we need docker exec
-        logger.info("cleaning_node_data_from_previous_run")
-        try:
-            # Get running containers
-            running_containers = self.compose.client.containers.list(
-                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
-            )
-            
-            if running_containers:
-                logger.info("cleaning_data_via_docker_exec", count=len(running_containers))
-                for container in running_containers:
-                    try:
-                        # Clean specific data dirs, but keep system wallets for node operations
-                        # Only clean: lib/wallet/*.dwallet (user wallets), lib/chains/*, lib/gdb/*
-                        # Keep: lib/wallet/node_wallet.dwallet (system wallet for CLI auth)
-                        clean_script = """
-                        cd /opt/cellframe-node/var || exit 0
-                        # Clean user wallets only (not node_wallet.dwallet)
-                        find lib/wallet -type f -name '*.dwallet' ! -name 'node_wallet.dwallet' -delete 2>/dev/null || true
-                        # Clean chains data
-                        rm -rf lib/chains/* 2>/dev/null || true
-                        # Clean GDB
-                        rm -rf lib/gdb/* 2>/dev/null || true
-                        """
-                        result = container.exec_run(
-                            ["sh", "-c", clean_script],
-                            user="root"
-                        )
-                        logger.debug("cleaned_container_data", container=container.name)
-                    except Exception as e:
-                        logger.warning("failed_to_clean_container", container=container.name, error=str(e))
-                
-                logger.info("node_data_cleaned_via_exec")
-        except Exception as e:
-            logger.debug("no_containers_to_clean", error=str(e))
-        
-        # Now stop and remove containers
+        # Stop and remove previous environment
         logger.info("stopping_previous_environment")
         try:
-            self.compose.down(volumes=False, remove_images=False)
+            self.compose.down(volumes=True, remove_images=False)
             logger.info("previous_environment_stopped")
         except Exception as e:
             logger.debug("no_previous_environment", error=str(e))
@@ -255,6 +218,47 @@ class NetworkManager:
         logger.info("network_started",
                    nodes=len(self.nodes),
                    topology=self.topology.network.name)
+    
+    async def clean_test_data(self) -> None:
+        """
+        Clean user test data (wallets, chains) while keeping system files.
+        
+        Safe to call on running network - cleans only user-created data.
+        """
+        logger.info("cleaning_test_data")
+        
+        try:
+            # Get running containers
+            running_containers = self.compose.client.containers.list(
+                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
+            )
+            
+            if not running_containers:
+                logger.warning("no_running_containers_to_clean")
+                return
+            
+            logger.info("cleaning_user_data_via_exec", count=len(running_containers))
+            for container in running_containers:
+                try:
+                    # Clean only user data, keep system files
+                    clean_script = """
+                    cd /opt/cellframe-node/var || exit 0
+                    # Clean user wallets (NOT node_wallet.dwallet - system wallet for CLI)
+                    find lib/wallet -type f -name '*.dwallet' ! -name 'node_wallet.dwallet' -delete 2>/dev/null || true
+                    # Clean chains
+                    rm -rf lib/chains/* 2>/dev/null || true
+                    # Clean GDB
+                    rm -rf lib/gdb/* 2>/dev/null || true
+                    """
+                    container.exec_run(["sh", "-c", clean_script], user="root")
+                    logger.debug("cleaned_user_data", container=container.name)
+                except Exception as e:
+                    logger.warning("failed_to_clean_container_data", container=container.name, error=str(e))
+            
+            logger.info("test_data_cleaned")
+            
+        except Exception as e:
+            logger.warning("failed_to_clean_test_data", error=str(e))
     
     async def stop(self, remove_volumes: bool = False) -> None:
         """
