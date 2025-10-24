@@ -37,13 +37,16 @@ setup:
   
   # Emit tokens
   - cli: token_emit -net stagenet -token ARBCMD -value 10000 -addr {{wallet_addr}}
-    description: "Emit tokens"
+    save: emission_tx
+  
+  - wait_for_datum: "{{emission_tx}}"
 
 test:
   # Test: Create arbitrage transaction
   - cli: tx_create -net stagenet -token ARBCMD -value 1000 -fee 0.1 -arbitrage
     save: arb_tx
-    description: "Create arbitrage transaction"
+  
+  - wait_for_datum: "{{arb_tx}}"
 
 check:
   # Verify transaction exists
