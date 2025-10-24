@@ -22,10 +22,12 @@ defaults:
 test:
   # Test: Create token with specific flags
   - cli: token_decl -net stagenet -token FLAGTEST1 -total 1000000 -flags ALL_ALLOWED_FOR_ALL
+    wait: 8s
   # Test: Create another token
   - cli: token_decl -net stagenet -token FLAGTEST2 -total 2000000
-  # Wait for tokens to sync
-  - wait: 5s
+    wait: 8s
+  # Wait for tokens to sync and propagate
+  - wait: 10s
   
   # Verify both tokens exist
   - cli: token list -net stagenet

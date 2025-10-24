@@ -69,10 +69,10 @@ check:
     contains: "arbitrage"
   
   # Verify blocked UTXO still in history
-  - cli: token info -net stagenet -token ARBTEST -history_limit 20
+  - cli: token info -net stagenet -name ARBTEST -history_limit 20
     contains: "{{utxo_tx}}"
   
   # Verify token still has blocking enabled
-  - cli: token info -net stagenet -token ARBTEST
+  - cli: token info -net stagenet -name ARBTEST
     contains: "UTXO_BLOCKING_ENABLED"
 
