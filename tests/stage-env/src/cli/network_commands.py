@@ -311,13 +311,25 @@ def _print_status_table(status_data):
     
     console = Console()
     
+    # Check if status_data has required fields
+    if not isinstance(status_data, dict):
+        print_warning(f"Invalid status data: expected dict, got {type(status_data)}")
+        return
+    
+    # Print basic info
     print_panel(
         title="📊 Network Status",
-        content=f"Network: {status_data['network_name']}\n"
-                f"Topology: {status_data['topology']}\n"
-                f"Total Nodes: {status_data['total_nodes']}",
+        content=f"Network: {status_data.get('network_name', 'N/A')}\n"
+                f"Topology: {status_data.get('topology', 'N/A')}\n"
+                f"Total Nodes: {status_data.get('total_nodes', 0)}",
         style="cyan"
     )
+    
+    # Check if nodes data is available
+    nodes = status_data.get('nodes', [])
+    if not nodes:
+        print_warning("No node status information available")
+        return
     
     table = Table(title="🖥️  Nodes")
     table.add_column("Node", style="cyan", no_wrap=True)
@@ -326,16 +338,16 @@ def _print_status_table(status_data):
     table.add_column("Status", style="green")
     table.add_column("Response", style="blue")
     
-    for node in status_data['nodes']:
-        status_emoji = "🟢" if node['is_master'] else "🔵"
-        status_text = f"{status_emoji} {node['status']}"
+    for node in nodes:
+        status_emoji = "🟢" if node.get('is_master', False) else "🔵"
+        status_text = f"{status_emoji} {node.get('status', 'unknown')}"
         
         table.add_row(
-            node['node_id'],
-            "Master" if node['is_master'] else "Regular",
-            node['container'],
+            node.get('node_id', 'N/A'),
+            "Master" if node.get('is_master', False) else "Regular",
+            node.get('container', 'N/A'),
             status_text,
-            node['response']
+            node.get('response', 'N/A')
         )
     
     console.print(table)
