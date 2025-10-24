@@ -44,8 +44,9 @@ test:
 check:
   # Verify wallet info contains address
   - python: |
-      addr = ctx.get_variable('wallet_addr', None)
-      assert addr is not None, "Wallet address should be extracted"
+      # Check if variable exists
+      assert 'wallet_addr' in ctx.variables, "Wallet address should be extracted from wallet info"
+      addr = ctx.get_variable('wallet_addr')
       assert addr, "Wallet address should not be empty"
       assert '::' in addr, "Address should contain :: separator"
   
