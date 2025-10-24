@@ -309,6 +309,19 @@ class DatumMonitor:
             # Still in mempool, continue monitoring
             return None
         
+        # CRITICAL: Check if datum NEVER appeared in mempool
+        # This likely means the datum wasn't created (CLI command failed)
+        if not req.was_in_mempool and elapsed > 30:  # Give it 30 seconds to appear
+            error = f"Datum never appeared in mempool after {elapsed:.1f}s - likely not created (check CLI command output for errors)"
+            self._log(f"  ❌ {error}")
+            self._log(f"  💡 Datum hash received: {req.datum_hash[:50]}...")
+            return DatumMonitorResult(
+                status=DatumStatus.REJECTED,
+                datum_hash=req.datum_hash,
+                elapsed_time=elapsed,
+                error_message=error
+            )
+        
         # Stage 2: Datum left mempool - check if verified
         if req.was_in_mempool and not req.was_verified and req.check_master_nodes:
             master_nodes = ["node1", "node2", "node3"]  # Standard stagenet
