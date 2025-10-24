@@ -17,8 +17,8 @@ tags: [e2e, utxo-blocking, arbitrage, critical]
 version: "1.0"
 
 includes:
-  - ../../common/networks/single_node.yml
-  - ../../common/wallets/create_wallet.yml
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
 
 setup:
   # Create token with UTXO blocking feature

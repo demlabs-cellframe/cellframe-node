@@ -17,7 +17,7 @@ tags: [e2e, utxo-blocking, transfer, critical]
 version: "1.0"
 
 includes:
-  - ../../common/networks/single_node.yml
+  - common/networks/single_node.yml
 
 setup:
   # Create two wallets for testing
