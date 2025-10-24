@@ -103,19 +103,20 @@ class DatumMonitor:
         """
         self.node_cli_path = node_cli_path
         
-        # Create separate datum monitor log in monitoring logs directory
+        # Create separate datum monitor log
         if log_file:
-            # If log_file is a directory or ends with artifacts, use it as base
             log_path = Path(log_file)
-            if log_path.is_dir() or 'artifacts' in str(log_path):
-                # Use artifacts/run_XXX/test_type/health-logs/datum-monitor.log
-                parent = log_path.parent if log_path.is_file() else log_path
-                health_logs = parent / "health-logs"
+            
+            # If it's a directory, create health-logs inside it
+            if log_path.is_dir():
+                health_logs = log_path / "health-logs"
                 health_logs.mkdir(parents=True, exist_ok=True)
                 self.log_file = health_logs / "datum-monitor.log"
             else:
-                # Fallback: use scenario log directory
-                self.log_file = log_path.parent / "datum-monitor.log"
+                # It's a file path, use its parent directory
+                health_logs = log_path.parent / "health-logs"
+                health_logs.mkdir(parents=True, exist_ok=True)
+                self.log_file = health_logs / "datum-monitor.log"
         else:
             self.log_file = None
         
