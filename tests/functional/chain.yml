@@ -1,7 +1,7 @@
 # Functional Test Suite: Chain Features
 # Functional testing of chain operations
 
-name: Chain Features Suite
+suite: "Chain Features Suite"  # Suite name (this field marks it as suite descriptor)
 description: Functional testing of chain atom operations and inspection
 tags: [functional, chain, blockchain]
 version: "1.0"
@@ -9,6 +9,5 @@ version: "1.0"
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the chain/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the chain/ subdirectory

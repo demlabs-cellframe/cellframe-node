@@ -1,7 +1,7 @@
 # E2E Test Suite: Network Operations
 # Complete network connectivity and management testing
 
-name: Network Operations Suite
+suite: "Network Operations Suite"  # Suite name (this field marks it as suite descriptor)
 description: End-to-end testing of network status, sync, and connectivity
 tags: [e2e, network, connectivity]
 version: "1.0"
@@ -9,6 +9,5 @@ version: "1.0"
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the net/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the net/ subdirectory

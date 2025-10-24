@@ -1,7 +1,7 @@
 # Functional Test Suite: Mempool Features
 # Functional testing of mempool operations
 
-name: Mempool Features Suite
+suite: "Mempool Features Suite"  # Suite name (this field marks it as suite descriptor)
 description: Functional testing of mempool transaction processing and management
 tags: [functional, mempool, transactions]
 version: "1.0"
@@ -9,6 +9,5 @@ version: "1.0"
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the mempool/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the mempool/ subdirectory

@@ -1,7 +1,7 @@
 # Functional Test Suite: Wallet Features
 # Functional testing of advanced wallet features
 
-name: Wallet Features Suite
+suite: "Wallet Features Suite"  # Suite name (this field marks it as suite descriptor)
 description: Functional testing of wallet export, backup, and recovery
 tags: [functional, wallet, features]
 version: "1.0"
@@ -9,6 +9,5 @@ version: "1.0"
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the wallet/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the wallet/ subdirectory

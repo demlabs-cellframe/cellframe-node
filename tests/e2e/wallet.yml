@@ -1,7 +1,7 @@
 # E2E Test Suite: Wallet Operations
 # Complete wallet lifecycle testing
 
-name: Wallet Operations Suite
+suite: "Wallet Operations Suite"  # Suite name (this field marks it as suite descriptor)
 description: End-to-end testing of wallet creation, management, and operations
 tags: [e2e, wallet, critical]
 version: "1.0"
@@ -9,6 +9,5 @@ version: "1.0"
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the wallet/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the wallet/ subdirectory
