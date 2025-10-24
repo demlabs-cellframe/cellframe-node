@@ -42,18 +42,14 @@ setup:
       group: 1
       variable: wallet2_addr
   
-  # Token setup group
-  - name: "Token setup"
-    description: "Create token and emit to wallet1"
-    defaults:
-      wait: 3s
-    steps:
-      - cli: token_decl -net stagenet -token XFERTEST -total 1000000
-        description: "Create token"
-      
-      - cli: token_emit -net stagenet -token XFERTEST -value 10000 -addr {{wallet1_addr}}
-        save: emit_tx
-        description: "Emit to wallet1"
+  # Create token
+  - cli: token_decl -net stagenet -token XFERTEST -total 1000000
+    wait: 3s
+  
+  # Emit tokens to wallet1
+  - cli: token_emit -net stagenet -token XFERTEST -value 10000 -addr {{wallet1_addr}}
+    save: emit_tx
+    wait: 3s
 
 test:
   # Test: Transfer tokens to wallet2

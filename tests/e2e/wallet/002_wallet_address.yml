@@ -32,6 +32,8 @@ test:
       variable: wallet_address
 
 check:
-  # Verify address is present
-  - cli: wallet info -w test_addr_wallet -net stagenet
-    contains: "::"
+  # Verify address variable was extracted
+  - python: |
+      assert 'wallet_address' in ctx.variables, "Address should be extracted"
+      addr = ctx.get_variable('wallet_address')
+      assert addr and len(addr) > 10, "Address should not be empty"

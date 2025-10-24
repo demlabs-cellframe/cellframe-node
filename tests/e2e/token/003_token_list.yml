@@ -25,12 +25,14 @@ setup:
     wait: 2s
 
 test:
+  # Wait for tokens to sync
+  - wait: 3s
+  
   # Test: List tokens
   - cli: token list -net stagenet
     node: node1
     expect: success
     save: token_list
-    description: "List all tokens"
 
 check:
   # Verify our tokens are in the list

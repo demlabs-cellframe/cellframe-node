@@ -31,6 +31,6 @@ test:
 
 check:
   # Verify emission (inherits node from global defaults)
-  - cli: token info -net stagenet -token EMITTEST -history_limit 10
+  - cli: token info -net stagenet -name EMITTEST -history_limit 10
     contains: "EMITTEST"
     description: "Token history contains emission"
