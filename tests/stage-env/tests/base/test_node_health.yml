@@ -6,59 +6,50 @@ description: Verify that all nodes are healthy and responding
 tags: [e2e, basic, health, monitoring]
 version: "1.0"
 
+defaults:
+  wait: 0.5s
+
 setup:
-  # Wait for full node initialization
   - wait: 5s
 
 test:
-  # Check validator nodes (node1, node2, node3)
-  - cli: version
-    node: node1
-    expect: success
-    description: "Validator node1 is responding"
+  # Validators
+  - name: "Validator nodes health"
+    defaults:
+      wait: 0.3s
+    steps:
+      - cli: version
+        node: node1
+      
+      - cli: version
+        node: node2
+      
+      - cli: version
+        node: node3
   
-  - cli: version
-    node: node2
-    expect: success
-    description: "Validator node2 is responding"
-  
-  - cli: version
-    node: node3
-    expect: success
-    description: "Validator node3 is responding"
-  
-  # Check regular nodes (node4-7)
-  - cli: version
-    node: node4
-    expect: success
-    description: "Regular node4 is responding"
-  
-  - cli: version
-    node: node5
-    expect: success
-    description: "Regular node5 is responding"
-  
-  - cli: version
-    node: node6
-    expect: success
-    description: "Regular node6 is responding"
-  
-  - cli: version
-    node: node7
-    expect: success
-    description: "Regular node7 is responding"
+  # Regular nodes
+  - name: "Regular nodes health"
+    defaults:
+      wait: 0.3s
+    steps:
+      - cli: version
+        node: node4
+      
+      - cli: version
+        node: node5
+      
+      - cli: version
+        node: node6
+      
+      - cli: version
+        node: node7
 
 check:
-  # Check node info on each node
   - cli: node dump
     node: node1
-    expect: success
     contains: "node"
-    description: "Node1 info is available"
   
   - cli: node dump
     node: node4
-    expect: success
     contains: "node"
-    description: "Node4 info is available"
 

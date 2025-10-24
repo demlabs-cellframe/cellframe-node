@@ -9,41 +9,29 @@ version: "1.0"
 network:
   topology: default
 
+defaults:
+  node: node1
+  wait: 1s
+
 setup:
-  # Create test wallet
   - cli: wallet new -w test_wallet
-    node: node1
-    expect: success
-    description: "Create new wallet"
     wait: 2s
 
 test:
-  # Get wallet info
   - cli: wallet info -w test_wallet
-    node: node1
-    expect: success
     save: wallet_info
-    description: "Get wallet info"
   
-  # List wallets
   - cli: wallet list
-    node: node1
-    expect: success
     save: wallet_list
-    description: "List all wallets"
 
 check:
-  # Verify wallet appears in list
   - python: |
       wallet_list = ctx.get_variable('wallet_list')
       assert 'test_wallet' in wallet_list, \
         "Created wallet should appear in wallet list"
-    description: "Wallet appears in list"
   
-  # Verify wallet info contains expected fields
   - python: |
       wallet_info = ctx.get_variable('wallet_info')
       assert 'test_wallet' in wallet_info, \
         "Wallet info should contain wallet name"
-    description: "Wallet info is valid"
 

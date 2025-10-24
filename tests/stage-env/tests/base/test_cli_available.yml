@@ -14,29 +14,25 @@ defaults:
   wait: 1s
 
 setup:
-  # Wait for nodes to be fully ready
   - wait: 5s
 
 test:
-  # Test CLI on multiple nodes using group
-  - name: "CLI availability on key nodes"
+  # Test CLI on multiple nodes
+  - name: "CLI availability on nodes"
+    defaults:
+      wait: 0.5s
     steps:
       - cli: version
         node: node1
-        description: "Check CLI works on validator node1"
       
       - cli: version
         node: node4
-        description: "Check CLI works on regular node4"
       
       - cli: help
         node: node1
-        description: "Check help command works"
 
 check:
-  # Verify version output contains expected info
   - cli: version
     node: node1
     contains: "cellframe"
-    description: "Version output contains 'cellframe'"
 
