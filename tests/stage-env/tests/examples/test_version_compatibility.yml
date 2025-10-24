@@ -100,7 +100,7 @@ test:
         node: node1
         save: wallet_info
         extract:
-          pattern: "addr:\\s+([A-Za-z0-9:]+)"
+          pattern: "addr:\\s+(\\S+)"
           group: 1
           variable: wallet_addr
       

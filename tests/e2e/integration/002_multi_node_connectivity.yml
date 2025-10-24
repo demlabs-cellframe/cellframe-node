@@ -27,21 +27,21 @@ test:
     contains: "NET_STATE_ONLINE"
 
 check:
-  # Verify links on node1
+  # Verify node1 has links
   - cli: net -net stagenet link list
     node: node1
     save: node1_links
   
-  # Verify links on node2
+  # Verify node2 has links
   - cli: net -net stagenet link list
     node: node2
     save: node2_links
   
-  # Verify at least some links exist
+  # Verify links exist (check saved output is not empty)
   - python: |
       links1 = ctx.get_variable('node1_links')
       links2 = ctx.get_variable('node2_links')
-      assert links1, "Node1 should have link info"
-      assert links2, "Node2 should have link info"
-    description: "Nodes have established links"
+      # Check that output contains some data (not just empty or error)
+      assert len(links1) > 20, f"Node1 should have link info, got: {links1[:100]}"
+      assert len(links2) > 20, f"Node2 should have link info, got: {links2[:100]}"
 

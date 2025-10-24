@@ -26,14 +26,15 @@ test:
   - cli: token_decl -net stagenet -token FLAGTEST2 -total 2000000
 
 check:
+  # Wait for tokens to sync
+  - wait: 3s
+  
   # Verify both tokens exist
   - cli: token list -net stagenet
     save: token_list
-    wait: 0s 
      
   - python: |
       tokens = ctx.get_variable('token_list')
       assert 'FLAGTEST1' in tokens, "FLAGTEST1 should be in list"
       assert 'FLAGTEST2' in tokens, "FLAGTEST2 should be in list"
-    description: "Both tokens are in list"
 
