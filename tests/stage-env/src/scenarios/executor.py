@@ -318,7 +318,7 @@ class ScenarioExecutor:
             step = self._apply_defaults(step, defaults)
             
             if isinstance(step, CLIStep):
-                await self._execute_cli_step(step, ctx)
+                await self._execute_cli_step(step, ctx, defaults)
             elif isinstance(step, RPCStep):
                 await self._execute_rpc_step(step, ctx)
             elif isinstance(step, WaitStep):
@@ -334,10 +334,24 @@ class ScenarioExecutor:
             else:
                 raise ScenarioExecutionError(f"Unknown step type: {type(step)}")
     
-    async def _execute_cli_step(self, step: CLIStep, ctx: RuntimeContext):
+    async def _execute_cli_step(self, step: CLIStep, ctx: RuntimeContext, defaults: Optional[StepDefaults] = None):
         """Execute CLI command step."""
         # Substitute variables in command
         cmd = ctx.substitute(step.cli)
+        
+        # Apply CLI defaults if present
+        if defaults and defaults.cli:
+            from ..utils.cli_parser import get_cli_parser
+            cli_parser = get_cli_parser()
+            
+            # Substitute variables in CLI defaults
+            cli_defaults = {
+                key: ctx.substitute(value) 
+                for key, value in defaults.cli.items()
+            }
+            
+            # Apply defaults to command
+            cmd = cli_parser.apply_cli_defaults(cmd, cli_defaults)
         
         logger.debug(f"Executing CLI: {cmd} on {step.node}")
         
