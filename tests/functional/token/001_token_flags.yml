@@ -34,16 +34,14 @@ test:
 
 check:
   # Verify frozen token info
-  - cli: token info -net stagenet -token FROZEN
+  - cli: token info -net stagenet -name FROZEN
     node: node1
     expect: success
     contains: "FROZEN"
-    description: "Frozen token is accessible"
   
   # Verify allowed token info
-  - cli: token info -net stagenet -token ALLOWED
+  - cli: token info -net stagenet -name ALLOWED
     node: node1
     expect: success
     contains: "ALLOWED"
-    description: "Allowed token is accessible"
 

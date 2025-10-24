@@ -44,10 +44,10 @@ test:
 check:
   # Verify wallet info contains address
   - python: |
-      addr = ctx.get_variable('wallet_addr')
+      addr = ctx.get_variable('wallet_addr', None)
+      assert addr is not None, "Wallet address should be extracted"
       assert addr, "Wallet address should not be empty"
       assert '::' in addr, "Address should contain :: separator"
-    description: "Wallet address format is valid"
   
   # Verify wallet in list
   - python: |
