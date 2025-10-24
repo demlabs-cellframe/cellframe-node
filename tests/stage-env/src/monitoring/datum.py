@@ -311,7 +311,8 @@ class DatumMonitor:
         
         # CRITICAL: Check if datum NEVER appeared in mempool
         # This likely means the datum wasn't created (CLI command failed)
-        if not req.was_in_mempool and elapsed > 30:  # Give it 30 seconds to appear
+        # Datums are created locally and appear in mempool almost instantly (<1s)
+        if not req.was_in_mempool and elapsed > 0.5:  # Give it 0.5 seconds max
             error = f"Datum never appeared in mempool after {elapsed:.1f}s - likely not created (check CLI command output for errors)"
             self._log(f"  ❌ {error}")
             self._log(f"  💡 Datum hash received: {req.datum_hash[:50]}...")
