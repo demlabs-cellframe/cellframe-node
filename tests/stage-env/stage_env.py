@@ -588,11 +588,11 @@ def run_tests(
         for test_dir in test_dirs:
             test_path = Path(test_dir).resolve()
         
-        if not test_path.exists():
-            print_warning(f"Directory not found: {test_path}")
-            continue
-        
-            # Find all YAML scenario files (including suite descriptors)
+            if not test_path.exists():
+                print_warning(f"Directory not found: {test_path}")
+                continue
+            
+                # Find all YAML scenario files (including suite descriptors)
             yml_files = list(test_path.glob("**/*.yml")) + list(test_path.glob("**/*.yaml"))
             
             if not yml_files:
@@ -824,8 +824,8 @@ def run_tests(
                         
                         print_error(f"  ❌ Scenario failed: {str(e)}")
                         logger.error("scenario_execution_failed", 
-                                   scenario=str(scenario_file),
-                                   error=str(e))
+                                    scenario=str(scenario_file),
+                                    error=str(e))
                         
                         # Extract last 30 lines of log for error report
                         error_log_excerpt = ""
@@ -863,7 +863,7 @@ def run_tests(
                         
                         print_error(f"  ❌ Unexpected error: {str(e)}")
                         logger.exception("scenario_unexpected_error", 
-                                       scenario=str(scenario_file))
+                                        scenario=str(scenario_file))
                         
                         # Extract last 30 lines of log for error report
                         error_log_excerpt = ""
@@ -918,8 +918,8 @@ def run_tests(
                                     collected_logs += 1
                             except Exception as e:
                                 logger.warning("failed_to_collect_container_log",
-                                             container=container.name,
-                                             error=str(e))
+                                                container=container.name,
+                                                error=str(e))
                         
                         if collected_logs > 0:
                             print_success(f"  Collected {collected_logs} node logs")
@@ -931,17 +931,17 @@ def run_tests(
                     except Exception as e:
                         print_warning(f"  Failed to collect suite artifacts: {e}")
         
-        # Print summary
-        print_info(f"\n{'═' * 60}")
-        print_info(f"📊 Scenario Test Summary")
-        print_info(f"{'═' * 60}")
-        print_info(f"Total scenarios: {total_scenarios}")
-        if passed_scenarios > 0:
-            print_success(f"✅ Passed: {passed_scenarios}")
-        if failed_scenarios > 0:
-            print_error(f"❌ Failed: {failed_scenarios}")
-        print_info(f"{'═' * 60}")
-        
+            # Print summary
+            print_info(f"\n{'═' * 60}")
+            print_info(f"📊 Scenario Test Summary")
+            print_info(f"{'═' * 60}")
+            print_info(f"Total scenarios: {total_scenarios}")
+            if passed_scenarios > 0:
+                print_success(f"✅ Passed: {passed_scenarios}")
+            if failed_scenarios > 0:
+                print_error(f"❌ Failed: {failed_scenarios}")
+            print_info(f"{'═' * 60}")
+            
     finally:
         # Collect final artifacts
         print_info("\n📦 Finalizing artifacts...")
@@ -958,8 +958,8 @@ def run_tests(
             
             if log_dir.exists():
                 log_files = sorted(log_dir.glob("stage-env_*.log"), 
-                                  key=lambda p: p.stat().st_mtime, 
-                                  reverse=True)
+                                key=lambda p: p.stat().st_mtime, 
+                                reverse=True)
                 if log_files:
                     artifacts_manager.collect_stage_env_log(run_dir_base, log_files[0])
                     print_success(f"Collected stage-env log")

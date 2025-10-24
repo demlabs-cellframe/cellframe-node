@@ -42,7 +42,7 @@ setup:
   
   # Verify UTXO is in blocklist
   - cli: token info -net stagenet -token ARBTEST -history_limit 10
-    contains: {{utxo_tx}}
+    contains: "{{utxo_tx}}"
 
 test:
   # Step 1: Regular transaction should FAIL (UTXO is blocked)
@@ -59,7 +59,7 @@ test:
 check:
   # Verify arbitrage transaction was created
   - cli: tx_history -net stagenet -tx {{arb_tx}}
-    contains: {{arb_tx}}
+    contains: "{{arb_tx}}"
   
   # Verify arbitrage marker is present in transaction
   - cli: tx_info -net stagenet -tx {{arb_tx}}
@@ -67,7 +67,7 @@ check:
   
   # Verify blocked UTXO still in history
   - cli: token info -net stagenet -token ARBTEST -history_limit 20
-    contains: {{utxo_tx}}
+    contains: "{{utxo_tx}}"
   
   # Verify token still has blocking enabled
   - cli: token info -net stagenet -token ARBTEST

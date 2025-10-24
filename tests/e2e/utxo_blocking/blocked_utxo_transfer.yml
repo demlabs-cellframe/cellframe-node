@@ -72,7 +72,7 @@ check:
   
   # Verify unblocked UTXO WAS spent
   - cli: tx_history -tx {{transfer_tx}}
-    contains: {{transfer_tx}}
+    contains: "{{transfer_tx}}"
   
   # Verify receiver got tokens from unblocked UTXO
   - cli: balance -addr {{receiver_addr}} -token BLOCKTEST
@@ -80,5 +80,5 @@ check:
   
   # Verify blocklist still contains blocked UTXO
   - cli: token info -net stagenet -token BLOCKTEST -history_limit 10
-    contains: {{utxo1}}
+    contains: "{{utxo1}}"
 
