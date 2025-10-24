@@ -240,6 +240,12 @@ class ScenarioExecutor:
             # Global defaults (applied to all phases)
             global_defaults = scenario.defaults
             
+            # Debug: log defaults
+            if self.debug and global_defaults:
+                self._log_to_file(f"\n[DEBUG] Global defaults: {global_defaults}")
+                if global_defaults.cli:
+                    self._log_to_file(f"[DEBUG] CLI defaults: {global_defaults.cli}")
+            
             # Setup phase
             if scenario.setup:
                 logger.info("Executing setup phase...")
@@ -351,21 +357,41 @@ class ScenarioExecutor:
             from ..utils.cli_parser import get_cli_parser
             cli_parser = get_cli_parser()
             
+            if self.debug:
+                self._log_to_file(f"[DEBUG] Applying CLI defaults: {defaults.cli}")
+                self._log_to_file(f"[DEBUG] Original command: {cmd}")
+                self._log_to_file(f"[DEBUG] Parser state: parsed={cli_parser._parsed}, commands_count={len(cli_parser.commands)}")
+            
             # Substitute variables in CLI defaults
             cli_defaults = {
                 key: ctx.substitute(value) 
                 for key, value in defaults.cli.items()
             }
             
+            if self.debug:
+                self._log_to_file(f"[DEBUG] CLI defaults after substitution: {cli_defaults}")
+            
             # Apply defaults to command
             cmd_with_defaults = cli_parser.apply_cli_defaults(cmd, cli_defaults)
+            
+            if self.debug:
+                self._log_to_file(f"[DEBUG] Command after defaults: {cmd_with_defaults}")
+                # Extract command name to check available options
+                cmd_parts = cmd.split()
+                if cmd_parts:
+                    cmd_name = cmd_parts[0]
+                    available_opts = cli_parser.get_command_options(cmd_name)
+                    self._log_to_file(f"[DEBUG] Command '{cmd_name}' available options: {available_opts}")
             
             # Ensure result is a string
             if cmd_with_defaults and isinstance(cmd_with_defaults, str):
                 cmd = cmd_with_defaults
             else:
                 if self.debug:
-                    logger.warning(f"apply_cli_defaults returned invalid result: {type(cmd_with_defaults)}")
+                    self._log_to_file(f"[DEBUG] apply_cli_defaults returned invalid result: {type(cmd_with_defaults)}")
+        else:
+            if self.debug:
+                self._log_to_file(f"[DEBUG] No CLI defaults to apply (defaults={defaults}, cli={defaults.cli if defaults else 'N/A'})")
         
         logger.debug(f"Executing CLI: {cmd} on {step.node}")
         
@@ -1073,24 +1099,24 @@ class ScenarioExecutor:
                 yaml_response = yaml.safe_load(stdout)
                 
                 if self.debug:
-                    logger.debug(f"YAML parsed: type={type(yaml_response)}, value={yaml_response}")
+                    self._log_to_file(f"[DEBUG] YAML parsed: type={type(yaml_response)}, value={yaml_response}")
                 
                 if isinstance(yaml_response, dict):
                     # Check for 'errors' key
                     if "errors" in yaml_response:
                         errors = yaml_response["errors"]
                         if self.debug:
-                            logger.debug(f"Found 'errors' in YAML: type={type(errors)}, value={errors}")
+                            self._log_to_file(f"[DEBUG] Found 'errors' in YAML: type={type(errors)}, value={errors}")
                         # Consider it an error if errors field is not empty
                         if errors:
                             if isinstance(errors, dict) and errors:
                                 has_error = True
                                 if self.debug:
-                                    logger.debug("Detected error: errors is non-empty dict")
+                                    self._log_to_file("[DEBUG] Detected error: errors is non-empty dict")
                             elif isinstance(errors, list) and len(errors) > 0:
                                 has_error = True
                                 if self.debug:
-                                    logger.debug("Detected error: errors is non-empty list")
+                                    self._log_to_file("[DEBUG] Detected error: errors is non-empty list")
             except (yaml.YAMLError, ValueError, AttributeError) as e:
                 # Try JSON format
                 try:

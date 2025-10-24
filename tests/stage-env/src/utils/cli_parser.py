@@ -124,7 +124,8 @@ class CLICommandParser:
             
             # Parse help for each command
             for cmd in commands:
-                cmd_help = await self._exec_cli_help(node_container, [cmd, "-h"])
+                # Cellframe CLI format: "help <command>" not "<command> -h"
+                cmd_help = await self._exec_cli_help(node_container, ["help", cmd])
                 if cmd_help:
                     options = self._extract_options(cmd_help)
                     self.commands[cmd] = options
@@ -175,15 +176,16 @@ class CLICommandParser:
         commands = []
         
         # Look for lines that look like commands
-        # Format: "  command_name         Description"
-        pattern = r'^\s{2,}(\w+)\s+'
+        # Cellframe CLI format: "command_name:\t\t\tDescription"
+        # Example: "token_decl:\t\t\tToken declaration"
+        pattern = r'^([a-zA-Z_][a-zA-Z0-9_]*):\s+'
         
         for line in help_text.split('\n'):
             match = re.match(pattern, line)
             if match:
                 cmd = match.group(1)
-                # Filter out common help keywords
-                if cmd not in ['help', 'version', 'exit', 'quit']:
+                # Filter out common help keywords and special commands
+                if cmd not in ['help', 'version', 'exit', 'quit', '?']:
                     commands.append(cmd)
         
         return commands
@@ -192,24 +194,23 @@ class CLICommandParser:
         """Extract option names from command help output."""
         options = set()
         
-        # Look for option patterns: -option, --option, -option <value>
-        # Common formats in cellframe-node-cli:
-        # -net <network>
-        # -token <token_name>
-        # -addr <address>
+        # Cellframe CLI format: -net <net_name> or [-chain <chain_name>]
+        # Extract all -option patterns
         
-        patterns = [
-            r'-(\w+)\s+<',      # -net <network>
-            r'-(\w+)\s+\[',     # -net [network]
-            r'-(\w+)(?:\s|$)',  # -flag or -flag\n
-        ]
+        # Pattern 1: -option <value> or -option [value]
+        pattern = r'-([a-zA-Z_]\w+)\s+[<\[]'
+        for match in re.finditer(pattern, help_text):
+            option = match.group(1)
+            options.add(option)
         
-        for pattern in patterns:
-            for match in re.finditer(pattern, help_text):
-                option = match.group(1)
-                # Skip common single-letter flags
-                if len(option) > 1:
-                    options.add(option)
+        # Pattern 2: -flag (standalone flags without values)
+        # Look for -flag in description lines
+        flag_pattern = r'\s-([a-zA-Z_]\w+)(?:\s|$|,)'
+        for match in re.finditer(flag_pattern, help_text):
+            option = match.group(1)
+            # Skip very short (likely not real options)
+            if len(option) > 1:
+                options.add(option)
         
         return options
     
@@ -266,6 +267,9 @@ class CLICommandParser:
         
         # Get available options for this command
         available_options = self.get_command_options(command)
+        
+        # Debug logging
+        logger.debug(f"apply_cli_defaults: command='{command}', available_options={available_options}, defaults={defaults}")
         
         # Build list of options to add
         options_to_add = []
