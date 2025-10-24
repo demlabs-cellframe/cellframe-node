@@ -49,6 +49,12 @@ class RuntimeContext:
         """Initialize runtime context."""
         self.scenario = scenario
         self.variables: Dict[str, Any] = scenario.variables.copy()
+        
+        # Add network_name from network configuration
+        if hasattr(scenario, 'network') and scenario.network:
+            if hasattr(scenario.network, 'name') and scenario.network.name:
+                self.variables['network_name'] = scenario.network.name
+        
         self.step_results: List[Dict[str, Any]] = []
         self.start_time = time.time()
         self.parser = ScenarioParser(Path.cwd())
@@ -372,7 +378,41 @@ class ScenarioExecutor:
             
             # Save result to variable if requested
             if step.save:
-                ctx.set_variable(step.save, result["stdout"].strip())
+                output = result["stdout"].strip()
+                
+                # Try to extract hash from output for common commands
+                # token_decl, token_emit, tx_create, etc. return hash
+                saved_value = output
+                
+                # Check if this looks like a command that returns a hash
+                hash_commands = ['token_decl', 'token_emit', 'token_update', 'tx_create', 
+                                'tx_send', 'wallet_new', 'cert_create']
+                cmd_lower = step.cli.lower()
+                
+                if any(cmd in cmd_lower for cmd in hash_commands):
+                    # Try to parse output and extract hash
+                    try:
+                        import yaml
+                        parsed = yaml.safe_load(output)
+                        
+                        # Look for common hash field names
+                        if isinstance(parsed, dict):
+                            for key in ['hash', 'tx_hash', 'datum_hash', 'token_hash', 
+                                       'emission_hash', 'cert_hash', 'wallet_addr']:
+                                if key in parsed and parsed[key]:
+                                    saved_value = parsed[key]
+                                    self._log_to_file(f"✓ Extracted {key}: {saved_value}")
+                                    break
+                    except:
+                        # Fallback: look for hash pattern in output (0x[hex])
+                        import re
+                        hash_pattern = r'0x[0-9a-fA-F]{64,}'
+                        match = re.search(hash_pattern, output)
+                        if match:
+                            saved_value = match.group(0)
+                            self._log_to_file(f"✓ Extracted hash from output: {saved_value}")
+                
+                ctx.set_variable(step.save, saved_value)
                 self._log_to_file(f"✓ Saved to variable: {step.save}")
             
             # Extract and validate specific values if requested
@@ -982,42 +1022,59 @@ class ScenarioExecutor:
     ) -> bool:
         """Check if result matches expectation."""
         import json
+        import yaml
         
-        # Cellframe CLI always returns exit code 0, but puts errors in JSON
-        # Try to parse JSON response to check for errors
-        has_json_error = False
+        # Cellframe CLI always returns exit code 0, but puts errors in output
+        # Output can be JSON or YAML format
+        has_error = False
         stdout = result["stdout"].strip()
         
         if stdout:
+            # Try to parse as YAML first (Cellframe CLI default format)
             try:
-                # Try to parse as JSON
-                json_response = json.loads(stdout)
+                yaml_response = yaml.safe_load(stdout)
                 
-                # Check if response contains errors field
-                if isinstance(json_response, dict):
-                    # Check for 'errors' key (can be dict or list)
-                    if "errors" in json_response:
-                        errors = json_response["errors"]
+                if isinstance(yaml_response, dict):
+                    # Check for 'errors' key
+                    if "errors" in yaml_response:
+                        errors = yaml_response["errors"]
                         # Consider it an error if errors field is not empty
                         if errors:
-                            if isinstance(errors, dict):
-                                has_json_error = True
+                            if isinstance(errors, dict) and errors:
+                                has_error = True
                             elif isinstance(errors, list) and len(errors) > 0:
-                                has_json_error = True
-            except (json.JSONDecodeError, ValueError):
-                # Not JSON or invalid JSON - fallback to returncode check
-                pass
+                                has_error = True
+            except (yaml.YAMLError, ValueError, AttributeError):
+                # Try JSON format
+                try:
+                    json_response = json.loads(stdout)
+                    
+                    if isinstance(json_response, dict):
+                        # Check for 'errors' key (can be dict or list)
+                        if "errors" in json_response:
+                            errors = json_response["errors"]
+                            # Consider it an error if errors field is not empty
+                            if errors:
+                                if isinstance(errors, dict) and errors:
+                                    has_error = True
+                                elif isinstance(errors, list) and len(errors) > 0:
+                                    has_error = True
+                except (json.JSONDecodeError, ValueError):
+                    # Not JSON or YAML - check for text error patterns
+                    error_patterns = ["error:", "Error:", "ERROR:", "failed", "Failed"]
+                    if any(pattern in stdout for pattern in error_patterns):
+                        has_error = True
         
         # Check expectation
         if expect == "success":
-            # Success means: returncode 0 AND no JSON errors
+            # Success means: returncode 0 AND no errors
             if result["returncode"] != 0:
                 return False
-            if has_json_error:
+            if has_error:
                 return False
         elif expect == "error":
-            # Error means: returncode != 0 OR has JSON errors
-            if result["returncode"] == 0 and not has_json_error:
+            # Error means: returncode != 0 OR has errors
+            if result["returncode"] == 0 and not has_error:
                 return False
         
         # Check contains if specified

@@ -221,6 +221,15 @@ class DatumMonitor:
             start_time=asyncio.get_event_loop().time()
         )
         
+        # Validate datum hash format
+        import re
+        hash_pattern = r'^0x[0-9a-fA-F]{64,}$'
+        if not re.match(hash_pattern, datum_hash):
+            self._log(f"⚠️  WARNING: Invalid datum hash format: {datum_hash[:100]}...")
+            self._log(f"  Expected: 0x[hex] format (64+ hex chars)")
+            self._log(f"  This likely means the CLI command failed and returned error output instead of a hash")
+            # Still register it, but log the warning
+        
         # Register for tracking
         self._tracking[datum_hash] = request
         
