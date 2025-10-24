@@ -313,7 +313,7 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             
             # Stop environment
             info "Stopping stage environment..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop --volumes || true
+            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
             success "Stage environment stopped"
         else
             error "Failed to start stage environment"

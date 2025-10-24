@@ -176,9 +176,25 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Clean up stale Docker resources before starting
+        # Clean up stale Docker resources before starting (including volumes for fresh state)
         logger.info("cleaning_up_stale_resources")
         self.compose.cleanup_stale_resources()
+        
+        # Remove stale volumes for clean slate
+        try:
+            stale_volumes = self.compose.client.volumes.list(
+                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
+            )
+            if stale_volumes:
+                logger.info("removing_stale_volumes", count=len(stale_volumes))
+                for volume in stale_volumes:
+                    try:
+                        volume.remove(force=True)
+                        logger.debug("removed_volume", name=volume.name)
+                    except Exception as e:
+                        logger.warning("failed_to_remove_volume", name=volume.name, error=str(e))
+        except Exception as e:
+            logger.warning("failed_to_list_volumes", error=str(e))
         
         # Generate dynamic docker-compose.yml for all nodes
         logger.info("generating_docker_compose")
