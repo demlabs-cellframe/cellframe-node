@@ -14,11 +14,11 @@ network:
         - openvpn
         - iproute2
       # Docker customizations for VPN
+      # Note: /dev/net/tun usually exists by default in containers
+      # Only NET_ADMIN capability is required for TUN/TAP usage
       docker_capabilities:
         - NET_ADMIN
         - NET_RAW
-      docker_devices:
-        - /dev/net/tun
       docker_extra:
         sysctls:
           net.ipv4.ip_forward: "1"
@@ -33,10 +33,9 @@ network:
         - wireguard-tools
         - iproute2
       # Docker customizations
+      # NET_ADMIN is sufficient for VPN client operations
       docker_capabilities:
         - NET_ADMIN
-      docker_devices:
-        - /dev/net/tun
     
     - name: regular_node
       role: full
