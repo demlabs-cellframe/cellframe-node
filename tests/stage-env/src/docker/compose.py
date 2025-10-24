@@ -854,33 +854,70 @@ class DockerComposeManager:
             logger.warning("no_root_nodes_found")
             return
         
-        # Each root node registers itself (self-registration)
-        # Only ROOT nodes can execute 'node add' command
+        # Wait for node-1 to become ROOT (has authorization)
+        # Then use it to register all root nodes
+        node1 = next((n for n in root_nodes if n['node_num'] == 1), None)
+        if not node1:
+            logger.warning("node_1_not_found_for_registration")
+            return
+        
+        # Wait up to 30 seconds for node-1 to have ROOT role
+        logger.info("waiting_for_node1_root_role")
+        max_wait = 30
+        wait_interval = 2
+        
+        for attempt in range(max_wait // wait_interval):
+            # Try to execute node list to check if we have ROOT rights
+            test_result = node1['container'].exec_run(
+                "/opt/cellframe-node/bin/cellframe-node-cli node list -net stagenet",
+                demux=True
+            )
+            
+            output = test_result.output[0].decode('utf-8') if test_result.output and test_result.output[0] else ""
+            
+            if "You have no access rights" not in output:
+                logger.info("node1_has_root_role", elapsed=f"{attempt * wait_interval}s")
+                break
+            
+            time.sleep(wait_interval)
+        else:
+            logger.warning("node1_root_role_timeout", waited=f"{max_wait}s")
+            # Continue anyway - balancer will handle it
+            return
+        
+        # Now register all root nodes via node-1
         for node_info in root_nodes:
             try:
-                # Node registers itself
-                exec_result = node_info['container'].exec_run(
+                exec_result = node1['container'].exec_run(
                     f"/opt/cellframe-node/bin/cellframe-node-cli node add -net stagenet -addr {node_info['addr']} -host {node_info['ip']} -port 8079",
                     demux=True
                 )
                 
                 if exec_result.exit_code == 0:
                     output = exec_result.output[0].decode('utf-8').strip() if exec_result.output[0] else ""
-                    logger.info("root_node_self_registered",
-                              node=node_info['service_name'],
-                              addr=node_info['addr'],
-                              ip=node_info['ip'],
-                              output=output)
+                    
+                    # Check if actually succeeded (not "You have no access rights")
+                    if "You have no access rights" in output:
+                        logger.debug("root_registration_no_rights",
+                                   registered_by="node-1",
+                                   target=node_info['service_name'])
+                    else:
+                        logger.info("root_node_registered",
+                                  registered_by="node-1",
+                                  target_node=node_info['service_name'],
+                                  addr=node_info['addr'],
+                                  ip=node_info['ip'],
+                                  output=output)
                 else:
                     error_msg = exec_result.output[1].decode('utf-8').strip() if exec_result.output[1] else "Unknown error"
-                    # This is OK if node is not yet fully initialized as ROOT
-                    logger.debug("root_node_registration_pending",
-                                node=node_info['service_name'],
-                                addr=node_info['addr'],
-                                error=error_msg)
+                    logger.debug("root_node_registration_failed",
+                               registered_by="node-1",
+                               target_node=node_info['service_name'],
+                               error=error_msg)
             except Exception as e:
                 logger.debug("failed_to_register_root_node",
-                           node=node_info['service_name'],
+                           registered_by="node-1",
+                           target_node=node_info['service_name'],
                            error=str(e))
     
     def wait_for_services(
