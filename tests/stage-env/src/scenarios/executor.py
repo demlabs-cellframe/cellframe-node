@@ -449,8 +449,17 @@ class ScenarioExecutor:
                         if info_result["returncode"] == 0:
                             # Try to extract address from wallet info
                             from .extractors import DataExtractor
+                            
+                            # Ensure output is a string
+                            wallet_info_output = info_result.get("stdout", "")
+                            if not isinstance(wallet_info_output, str):
+                                self._log_to_file(f"⚠️  wallet info output is not string: {type(wallet_info_output)}")
+                                wallet_info_output = str(wallet_info_output) if wallet_info_output else ""
+                            
+                            self._log_to_file(f"wallet info output (first 200 chars): {wallet_info_output[:200]}")
+                            
                             addr, error = DataExtractor.extract_and_validate(
-                                output=info_result["stdout"],
+                                output=wallet_info_output,
                                 pattern=None,  # Use default wallet address pattern
                                 extract_type="wallet_address",
                                 required=False
