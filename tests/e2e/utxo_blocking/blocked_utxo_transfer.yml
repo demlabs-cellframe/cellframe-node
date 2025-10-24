@@ -40,17 +40,26 @@ setup:
   # Emit tokens to sender
   - cli: token_emit -net stagenet -token BLOCKTEST -value 10000000 -addr {{sender_addr}}
     save: emission
-    wait: 3s
+  
+  # Wait for emission
+  - wait_for_datum: "{{emission}}"
+    timeout_total: 30
   
   # Create UTXO #1 (will be blocked)
   - cli: tx_create -net stagenet -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo1
-    wait: 3s
+  
+  # Wait for UTXO #1
+  - wait_for_datum: "{{utxo1}}"
+    timeout_total: 30
   
   # Create UTXO #2 (will remain unblocked)
   - cli: tx_create -net stagenet -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo2
-    wait: 3s
+  
+  # Wait for UTXO #2
+  - wait_for_datum: "{{utxo2}}"
+    timeout_total: 30
   
   # Block UTXO #1
   - cli: token_update -net stagenet -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
