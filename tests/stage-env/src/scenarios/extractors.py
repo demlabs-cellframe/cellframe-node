@@ -49,29 +49,53 @@ class DataExtractor:
     TOKEN_NAME_PATTERN = r'^[A-Z0-9_]{1,16}$'          # Uppercase alphanumeric
     
     # Cellframe address structure (from dap_chain_common.h)
-    # sizeof(dap_chain_addr_t) = 1 (addr_ver) + 8 (net_id) + 2 (sig_type) + 32 (hash) + 32 (checksum) = 75 bytes
-    ADDR_STRUCT_FORMAT = '<BQH32s32s'  # little-endian: byte, uint64, uint16, 32 bytes, 32 bytes
-    ADDR_SIZE = struct.calcsize(ADDR_STRUCT_FORMAT)
+    # Variable structure: 1 (addr_ver) + 8 (net_id) + 2 (sig_type) + N (hash) + 32 (checksum)
+    # Minimum size: 1 + 8 + 2 + 32 + 32 = 75 bytes (hash=32)
+    # Can be larger: 77 bytes (hash=34), 79 bytes (hash=36), etc.
+    ADDR_MIN_SIZE = 1 + 8 + 2 + 32 + 32  # 75 bytes minimum
+    CHECKSUM_SIZE = 32
+    HEADER_SIZE = 1 + 8 + 2  # addr_ver + net_id + sig_type = 11 bytes
     
     @staticmethod
     def _validate_wallet_address_checksum(address_bytes: bytes) -> Tuple[bool, Optional[WalletAddressComponents], Optional[str]]:
         """
         Validate wallet address structure and checksum (Cellframe format).
         
+        Address structure (variable length):
+        - addr_ver: 1 byte
+        - net_id: 8 bytes (uint64)
+        - sig_type: 2 bytes (uint16)
+        - key_hash: variable length (32-64 bytes typically)
+        - checksum: 32 bytes (SHA3-256)
+        
         Returns:
             Tuple of (is_valid, components_or_None, error_message_or_None)
         """
-        if len(address_bytes) != DataExtractor.ADDR_SIZE:
-            return (False, None, f"Invalid address size: {len(address_bytes)} bytes (expected {DataExtractor.ADDR_SIZE})")
+        addr_len = len(address_bytes)
+        
+        # Validate minimum size
+        if addr_len < DataExtractor.ADDR_MIN_SIZE:
+            return (False, None, f"Address too short: {addr_len} bytes (minimum {DataExtractor.ADDR_MIN_SIZE})")
+        
+        # Validate that checksum is present (must have at least CHECKSUM_SIZE bytes at end)
+        if addr_len < DataExtractor.CHECKSUM_SIZE:
+            return (False, None, f"Address too short for checksum: {addr_len} bytes")
         
         try:
-            # Unpack address components
-            addr_ver, net_id, sig_type_raw, key_hash, stored_checksum = struct.unpack(
-                DataExtractor.ADDR_STRUCT_FORMAT, address_bytes
-            )
+            # Parse fixed header: addr_ver (1) + net_id (8) + sig_type (2) = 11 bytes
+            header_format = '<BQH'
+            addr_ver, net_id, sig_type_raw = struct.unpack(header_format, address_bytes[:DataExtractor.HEADER_SIZE])
             
-            # Calculate checksum (SHA3-256 of first 43 bytes: everything except checksum)
-            data_to_hash = address_bytes[:-32]  # All except last 32 bytes (checksum)
+            # Extract variable-length key_hash (everything between header and checksum)
+            hash_start = DataExtractor.HEADER_SIZE
+            hash_end = addr_len - DataExtractor.CHECKSUM_SIZE
+            key_hash = address_bytes[hash_start:hash_end]
+            
+            # Extract checksum (last 32 bytes)
+            stored_checksum = address_bytes[-DataExtractor.CHECKSUM_SIZE:]
+            
+            # Calculate checksum (SHA3-256 of everything except checksum)
+            data_to_hash = address_bytes[:-DataExtractor.CHECKSUM_SIZE]
             calculated_checksum = hashlib.sha3_256(data_to_hash).digest()
             
             # Compare checksums
@@ -89,6 +113,8 @@ class DataExtractor:
                 key_hash=key_hash,
                 checksum=stored_checksum
             )
+            
+            print(f"[WALLET_ADDR_DEBUG] ✓ Address structure: header={DataExtractor.HEADER_SIZE}B, hash={len(key_hash)}B, checksum={DataExtractor.CHECKSUM_SIZE}B, total={addr_len}B")
             
             return (True, components, None)
             
