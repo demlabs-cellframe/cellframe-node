@@ -189,9 +189,20 @@ class NetworkManager:
                 logger.info("cleaning_data_via_docker_exec", count=len(running_containers))
                 for container in running_containers:
                     try:
-                        # Clean /opt/cellframe-node/var/* (wallets, chains, GDB)
+                        # Clean specific data dirs, but keep system wallets for node operations
+                        # Only clean: lib/wallet/*.dwallet (user wallets), lib/chains/*, lib/gdb/*
+                        # Keep: lib/wallet/node_wallet.dwallet (system wallet for CLI auth)
+                        clean_script = """
+                        cd /opt/cellframe-node/var || exit 0
+                        # Clean user wallets only (not node_wallet.dwallet)
+                        find lib/wallet -type f -name '*.dwallet' ! -name 'node_wallet.dwallet' -delete 2>/dev/null || true
+                        # Clean chains data
+                        rm -rf lib/chains/* 2>/dev/null || true
+                        # Clean GDB
+                        rm -rf lib/gdb/* 2>/dev/null || true
+                        """
                         result = container.exec_run(
-                            "sh -c 'rm -rf /opt/cellframe-node/var/* 2>/dev/null || true'",
+                            ["sh", "-c", clean_script],
                             user="root"
                         )
                         logger.debug("cleaned_container_data", container=container.name)
