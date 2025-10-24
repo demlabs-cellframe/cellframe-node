@@ -1,0 +1,47 @@
+# Temporary and generated files
+cache/*
+!cache/.gitkeep
+!cache/*/gitkeep
+
+# Configuration (user-specific, generated from .default)
+config/stage-env.cfg
+
+# Old structure (being migrated)
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+monitoring/*
+!monitoring/.gitkeep
+results/*
+!results/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Docker
+.env
+
+# Build artifacts
+*.o
+*.a
+*.deb
+*.rpm

@@ -1,0 +1,36 @@
+# Token Operations Test Suite
+# Группа тестов для операций с токенами
+# 
+# Эта группа поднимает сеть один раз и выполняет все сценарии с токенами
+
+name: Token Operations Suite
+description: Complete test suite for CF20 token operations including creation, emission, transfer, and permissions
+author: Stage-Env Team
+tags: [tokens, cf20, critical]
+version: "1.0"
+
+# Network topology - используется для всех сценариев в группе
+network_topology: default
+
+# Список сценариев для выполнения
+scenarios:
+  - suites/token_operations/01_token_creation.yml
+  - suites/token_operations/02_token_emission.yml
+  - suites/token_operations/03_token_transfer.yml
+  - suites/token_operations/04_token_permissions.yml
+  - suites/token_operations/05_token_utxo_blocking.yml
+
+# Общий setup (выполняется один раз перед всеми сценариями)
+common_setup: suites/token_operations/common_setup.yml
+
+# Общий cleanup (выполняется один раз после всех сценариев)
+common_cleanup: suites/token_operations/common_cleanup.yml
+
+# Опции выполнения группы
+options:
+  stop_on_failure: false           # Продолжать даже если один сценарий упал
+  rebuild_network: false            # Не пересобирать сеть (используем существующую)
+  cleanup_between_scenarios: true   # Очищать состояние между сценариями
+  parallel_execution: false         # Последовательное выполнение
+  timeout_per_scenario: 300         # 5 минут на каждый сценарий
+

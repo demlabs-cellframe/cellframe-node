@@ -1,0 +1,10 @@
+# Minimal Network Template
+# Single root node for basic testing
+
+network:
+  topology: minimal
+  nodes:
+    - name: node1
+      role: root
+      validator: true
+

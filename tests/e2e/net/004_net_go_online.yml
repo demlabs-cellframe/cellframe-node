@@ -19,7 +19,6 @@ test:
   # Test: Check initial status
   - cli: net -net stagenet get status
     node: node1
-    expect: success
     save: status_initial
     description: "Get initial status"
 

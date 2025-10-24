@@ -30,10 +30,8 @@ test:
       pattern: "addr:\\s+([A-Za-z0-9:]+)"
       group: 1
       variable: wallet_address
-    description: "Extract wallet address"
 
 check:
   # Verify address is present
   - cli: wallet info -w test_addr_wallet -net stagenet
     contains: "::"
-    description: "Wallet address format is valid (contains ::)"

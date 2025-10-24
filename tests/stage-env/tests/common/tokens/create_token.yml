@@ -1,0 +1,17 @@
+# Common: Create Test Token
+# Shared component for creating a test token
+
+setup:
+  - cli: token_decl -net stagenet -token TESTTOKEN -total 1000000
+    node: node1
+    expect: success
+    save: token_created
+    wait: 3s
+    description: "Create TESTTOKEN"
+  
+  - cli: token info -net stagenet -token TESTTOKEN
+    node: node1
+    expect: success
+    save: token_info
+    description: "Get token info"
+

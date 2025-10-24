@@ -13,27 +13,23 @@ includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
+defaults:
+  node: node1
+  wait: 3s
+
 setup:
-  - wait: 5s
-  
+ 
   # Create token to generate some chain activity
   - cli: token_decl -net stagenet -token ATOMTEST -total 1000000
-    node: node1
-    expect: success
-    wait: 3s
-  
+ 
   - cli: token_emit -net stagenet -token ATOMTEST -value 5000 -addr {{wallet_addr}}
-    node: node1
-    expect: success
     wait: 5s
 
 test:
   # Test: List chains
   - cli: net list chains -net stagenet
-    node: node1
-    expect: success
     save: chain_list
-    description: "List chains"
+    wait: 0s
 
 check:
   # Verify chains exist

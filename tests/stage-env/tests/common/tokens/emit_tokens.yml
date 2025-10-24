@@ -1,0 +1,12 @@
+# Common: Emit Tokens to Wallet
+# Shared component for emitting tokens to a wallet
+# Requires: token_name variable, wallet_addr variable
+
+setup:
+  - cli: token_emit -net stagenet -token {{token_name}} -value {{emit_amount|10000}} -addr {{wallet_addr}}
+    node: node1
+    expect: success
+    save: emit_tx
+    wait: 3s
+    description: "Emit {{emit_amount|10000}} {{token_name}} to wallet"
+

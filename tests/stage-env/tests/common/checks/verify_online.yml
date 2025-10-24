@@ -1,0 +1,10 @@
+# Common: Verify Node Online
+# Shared component for checking if node is online
+
+check:
+  - cli: net -net stagenet get status
+    node: "{{target_node|node1}}"
+    expect: success
+    contains: "NET_STATE_ONLINE"
+    description: "Verify {{target_node|node1}} is online"
+

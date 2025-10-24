@@ -1,0 +1,12 @@
+# Common: Create Simple Transaction
+# Shared component for creating a simple transaction
+# Requires: token_name, emission_tx, value
+
+setup:
+  - cli: tx_create -net stagenet -token {{token_name}} -from_emission {{emission_tx}} -value {{tx_value|100}}
+    node: node1
+    expect: success
+    save: tx_hash
+    wait: 3s
+    description: "Create transaction with {{tx_value|100}} {{token_name}}"
+

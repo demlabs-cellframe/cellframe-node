@@ -1,0 +1,14 @@
+# Common: Minimal network setup
+# Basic network readiness check
+
+setup:
+  # Ensure network is online
+  - wait: 3s
+    description: "Wait for network to come online"
+  
+  - cli: net -net stagenet get status
+    node: node1
+    expect: success
+    save: network_status
+    description: "Check network status"
+

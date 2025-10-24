@@ -1,0 +1,31 @@
+# ============================================================================
+# Stage Environment Dependencies - Optimized for E2E Testing
+# ============================================================================
+
+# CLI Framework - typer is faster and simpler than click for our use case
+typer>=0.9.0          # Modern CLI framework (built on click, but simpler API)
+rich>=13.0.0          # Terminal formatting, progress bars, tables
+
+# Configuration & Data
+pyyaml>=6.0.0         # YAML parsing (configs, topologies, scenarios)
+pydantic>=2.0.0       # Data validation (better than jsonschema for Python)
+jinja2>=3.1.0         # Config templating
+
+# Docker Integration - docker SDK handles compose v2 natively
+docker>=7.0.0         # Docker SDK (includes compose v2 support via docker.from_env())
+# Note: docker-compose library is deprecated, use docker.compose APIs instead
+
+# System & Monitoring
+psutil>=5.9.0         # Process/system monitoring (CPU, memory, network)
+httpx>=0.25.0         # Modern HTTP client (async support, better than requests)
+
+# Logging - structlog is more powerful for structured logging
+structlog>=23.2.0     # Structured logging (better than colorlog)
+
+# Development & Testing (optional, not runtime deps)
+pytest>=7.4.0         # Testing framework
+pytest-asyncio>=0.21  # Async test support
+black>=23.0.0         # Code formatting
+mypy>=1.7.0           # Type checking
+ruff>=0.0.260         # Fast linter (replaces pylint, much faster)
+

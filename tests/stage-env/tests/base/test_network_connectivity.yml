@@ -1,0 +1,51 @@
+# Stage Environment - Network Connectivity Test
+# Проверка сетевой связности между нодами
+
+name: Network Connectivity Test
+description: Verify that nodes can connect to each other and form a network
+tags: [e2e, basic, network, connectivity]
+version: "1.0"
+
+network:
+  topology: default
+
+setup:
+  # Wait for nodes to establish connections
+  - wait: 10s
+
+test:
+  # Check that seed nodes are connected
+  - cli: net -net stagenet link list
+    node: node1
+    expect: success
+    description: "List network links on validator node1"
+    save: node1_links
+  
+  # Check connections on another validator
+  - cli: net -net stagenet link list
+    node: node2
+    expect: success
+    description: "List network links on validator node2"
+    save: node2_links
+  
+  # Check regular node connectivity
+  - cli: net -net stagenet link list
+    node: node4
+    expect: success
+    description: "List network links on regular node4"
+    save: node4_links
+
+check:
+  # Verify that nodes have established links
+  - python: |
+      links = ctx.get_variable('node1_links')
+      assert 'active' in links.lower() or 'established' in links.lower(), \
+        "Node1 should have active connections"
+    description: "Node1 has active network links"
+  
+  # Check network status
+  - cli: net -net stagenet get status
+    node: node1
+    contains: "online"
+    description: "Network status is online"
+

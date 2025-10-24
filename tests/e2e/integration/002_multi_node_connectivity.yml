@@ -11,42 +11,31 @@ network:
 
 setup:
   - wait: 15s
-    description: "Wait for network to establish"
 
 test:
   # Check all nodes are online
   - cli: net -net stagenet get status
     node: node1
-    expect: success
     contains: "NET_STATE_ONLINE"
-    description: "Node1 is online"
   
   - cli: net -net stagenet get status
     node: node2
-    expect: success
     contains: "NET_STATE_ONLINE"
-    description: "Node2 is online"
   
   - cli: net -net stagenet get status
     node: node3
-    expect: success
     contains: "NET_STATE_ONLINE"
-    description: "Node3 is online"
 
 check:
   # Verify links on node1
   - cli: net -net stagenet link list
     node: node1
-    expect: success
     save: node1_links
-    description: "Get node1 links"
   
   # Verify links on node2
   - cli: net -net stagenet link list
     node: node2
-    expect: success
     save: node2_links
-    description: "Get node2 links"
   
   # Verify at least some links exist
   - python: |

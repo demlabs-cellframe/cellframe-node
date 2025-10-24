@@ -1,0 +1,7 @@
+# Common: Single node environment
+# Minimal network configuration for basic tests
+
+setup:
+  # Wait for network to be ready
+  - wait: 2s
+    description: "Wait for network initialization"

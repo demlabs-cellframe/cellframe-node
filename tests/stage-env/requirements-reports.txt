@@ -1,0 +1,12 @@
+# Optional dependencies for report generation
+# Install with: pip install -r requirements-reports.txt
+
+# For Markdown to HTML conversion (weasyprint method)
+markdown2>=2.4.0
+
+# For PDF generation (weasyprint method)
+weasyprint>=60.0
+
+# Alternative: use system pandoc instead
+# sudo apt-get install pandoc texlive-xetex
+

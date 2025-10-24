@@ -24,23 +24,20 @@ test:
   - loop: 3
     steps:
       - cli: wallet new -w multi_wallet_{{iteration}}
-        description: "Create wallet {{iteration}}"
   
   # List all wallets
   - cli: wallet list
     save: wallet_list
-    description: "List all wallets"
 
 check:
   # Verify all wallets are in list
   - cli: wallet list
     contains: "multi_wallet_1"
-    description: "Wallet 1 appears in list"
   
+  # Wallet 2 appears in list
   - cli: wallet list
     contains: "multi_wallet_2"
-    description: "Wallet 2 appears in list"
   
+  # Wallet 3 appears in list
   - cli: wallet list
     contains: "multi_wallet_3"
-    description: "Wallet 3 appears in list"

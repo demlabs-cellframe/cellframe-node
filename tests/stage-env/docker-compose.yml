@@ -1,0 +1,147 @@
+# Cellframe Node Staging Testing Environment - Universal Node Template
+# Fully dynamic configuration without hardcoded node numbers
+# Supports unlimited nodes of any type through environment variables
+# 
+# Environment Variables:
+#   CELLFRAME_VERSION: Cellframe Node version (default: latest)
+#   BUILD_TYPE: Build configuration - debug (default) or release
+#             - Controls both Cellframe Node and Cellframe Node plugin build type
+#             - debug: includes debug symbols, tools (gdb, valgrind, strace)
+#             - release: optimized version for performance/load testing
+#   NODE_ID: Unique node identifier (1, 2, 3, ...)
+#   NODE_ROLE: Node role (root, master, full, validator, observer, ...)
+#   NODE_TYPE: Node type for grouping (master, full, custom, ...)
+#   RPC_PORT: RPC port for this node (8545, 8546, ...)
+#   P2P_PORT: P2P port for this node (31337, 31338, ...)
+#   CF_PORT: Cellframe port for this node (7007, 7008, ...)
+#   NODE_IP: IP address in docker network (172.20.0.10, 172.20.0.11, ...)
+#
+# Usage Examples:
+#   Single node: NODE_ID=1 NODE_ROLE=root docker-compose up cf-node
+#   Custom network: Use network-manager.sh for complex topologies
+#   Any node type: NODE_ROLE=validator NODE_TYPE=custom docker-compose up cf-node
+#   Performance testing: BUILD_TYPE=release docker-compose up cf-node
+
+# Universal Node Template - works for ANY node configuration and architecture
+# Uses shared builder image with Cellframe Node plugin and utilities
+x-cf-node-template: &cf-node-template
+  build:
+    context: .
+    dockerfile: Dockerfile.cellframe
+    args:
+      CELLFRAME_VERSION: ${CELLFRAME_VERSION:-latest}
+      BUILD_TYPE: ${BUILD_TYPE:-debug}
+  image: cf-node:${BUILD_TYPE:-debug}-${CELLFRAME_VERSION:-latest}
+  container_name: ${COMPOSE_PROJECT_NAME:-cellframe}-${NODE_TYPE:-node}-${NODE_ID:-1}
+  hostname: ${COMPOSE_PROJECT_NAME:-cellframe}-${NODE_TYPE:-node}-${NODE_ID:-1}
+  networks:
+    stagenet:
+      ipv4_address: ${NODE_IP:-172.20.0.10}
+  ports:
+    - "${HTTP_PORT:-8079}:8079"  # Cellframe HTTP/JSON-RPC/P2P port
+  volumes:
+    # Mount main config file (generated per node with HTTP settings, etc)
+    - ./cache/configs/node${NODE_ID:-1}/cellframe-node.cfg:/opt/cellframe-node/etc/cellframe-node.cfg
+    # Mount cellframe-node.cfg.d as rw so init-node.sh can create node-specific config
+    - ./cache/configs/node${NODE_ID:-1}/cellframe-node.cfg.d:/opt/cellframe-node/etc/cellframe-node.cfg.d
+    - ./cache/configs/node${NODE_ID:-1}/network:/opt/cellframe-node/etc/network
+    - ./cache/data/node${NODE_ID:-1}:/opt/cellframe-node/var
+    - ./cache/configs/shared/ca:/opt/cellframe-node/share/ca:ro
+    - ./cache/crash-artifacts/node${NODE_ID:-1}:/crash-artifacts/node-${NODE_ID:-1}
+    - ./cache/cellframe-packages:/var/cache/cellframe-packages
+    # Note: private certs copied to /var/lib/ca at init, shared public certs mounted to /share/ca
+  # Core dump configuration - allows crash-handler to collect core dumps
+  ulimits:
+    core: -1
+  environment:
+    NODE_ID: ${NODE_ID:-1}
+    NODE_ROLE: ${NODE_ROLE:-root}
+    NODE_TYPE: ${NODE_TYPE:-node}
+    NODE_IP: ${NODE_IP:-172.20.0.10}
+    NETWORK_NAME: ${NETWORK_NAME:-stagenet}
+    DAP_DEBUG: ${DAP_DEBUG:-1}
+    CELLFRAME_DEBUG: ${CELLFRAME_DEBUG:-1}
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "sh", "-c", "pgrep -f cellframe-node > /dev/null"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+
+services:
+  # Universal CF Node - configurable through environment variables
+  # Can be any type: master, full, validator, observer, custom, etc.
+  # Usage: NODE_ID=X NODE_ROLE=Y NODE_TYPE=Z docker-compose up cf-node
+  cf-node:
+    <<: *cf-node-template
+
+  # Мониторинг и утилиты
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cf-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - stagenet
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: stagenet-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - stagenet
+    profiles:
+      - monitoring
+
+  # Test runner - discovers nodes dynamically via Docker network
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    container_name: stagenet-runner
+    volumes:
+      - ./tests:/tests:ro
+      - ./results:/results
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NETWORK_NAME=${NETWORK_NAME:-stagenet}
+      - NODE_DISCOVERY=docker
+      - COMPOSE_PROJECT=${COMPOSE_PROJECT_NAME:-stagenet}
+    networks:
+      - stagenet
+    profiles:
+      - tests
+    command: ["sh", "-c", "python3 /tests/discover_nodes.py && python3 /tests/run_all.py"]
+
+networks:
+  stagenet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+volumes:
+  prometheus-data:
+  grafana-data:

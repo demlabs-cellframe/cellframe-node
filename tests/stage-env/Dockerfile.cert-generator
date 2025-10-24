@@ -1,0 +1,106 @@
+# Dockerfile for Certificate Generator
+# 
+# Builds cf-cert-generator utility for generating Cellframe certificates
+# Uses DAP SDK crypto libraries for post-quantum certificate generation
+#
+# Build Strategy:
+#   1. Copies entire cellframe-sdk source tree
+#   2. Builds Cellframe SDK libraries (in-container build)
+#   3. Builds cf-cert-generator utility linking against built libraries
+#   4. Creates minimal runtime image with only the binary
+#
+# Usage:
+#   Build image (from cellframe-node root):
+#     docker build -f tests/stage-env/Dockerfile.cert-generator -t cf-cert-generator:latest .
+#   
+#   Run certificate generation:
+#     docker run --rm -u $(id -u):$(id -g) \
+#       -v $(pwd)/tests/stage-env/cache/certs:/output \
+#       cf-cert-generator:latest \
+#       /output 6 stagenet 0x1234
+#
+# =============================================================================
+FROM debian:bookworm-slim AS builder
+
+# Install build dependencies (same as cellframe-sdk needs)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    libssl-dev \
+    libsqlite3-dev \
+    python3 \
+    python3-dev \
+    libpq-dev \
+    zlib1g-dev \
+    libzip-dev \
+    xsltproc \
+    file \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# Copy entire cellframe-sdk source tree (excluding build dirs via .dockerignore)
+COPY cellframe-sdk /project/cellframe-sdk
+
+# Ensure no CMake cache from host system
+RUN rm -rf /project/cellframe-sdk/build/* \
+           /project/cellframe-sdk/build-test/* || true
+
+# Build Cellframe SDK libraries first
+# Build all necessary DAP SDK modules for dap_stream dependency tree
+WORKDIR /project/cellframe-sdk/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) \
+        dap_core \
+        dap_crypto \
+        dap_chain_common \
+        dap_io \
+        dap_global_db \
+        dap_session \
+        dap_http_common \
+        dap_client \
+        dap_http_server \
+        dap_enc_server \
+        dap_link_manager \
+        dap_stream_ch \
+        dap_stream
+
+# Now copy cert-generator source
+COPY tests/stage-env/src/certs /project/cert-generator
+
+# Build cert-generator utility
+WORKDIR /project/cert-generator/build
+RUN cmake -DCELLFRAME_SDK_BUILD=/project/cellframe-sdk/build \
+          -DCELLFRAME_SDK_SRC=/project/cellframe-sdk \
+          .. && \
+    make -j$(nproc) cf-cert-generator && \
+    strip cf-cert-generator
+
+# =============================================================================
+# Runtime image - minimal with only the binary
+FROM debian:bookworm-slim
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy built binary from builder stage
+COPY --from=builder /project/cert-generator/build/cf-cert-generator /usr/local/bin/
+
+# Set working directory
+WORKDIR /output
+
+# Default entrypoint
+ENTRYPOINT ["/usr/local/bin/cf-cert-generator"]
+
+# Default command (shows usage)
+CMD ["--help"]
+
+# Labels
+LABEL maintainer="Cellframe Team"
+LABEL description="Certificate generator for Cellframe network with post-quantum crypto"
+LABEL version="1.0"
+
