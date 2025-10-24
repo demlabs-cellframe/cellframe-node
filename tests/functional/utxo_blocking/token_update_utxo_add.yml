@@ -28,7 +28,7 @@ setup:
     save: emission
   
   # Create UTXO
-  - cli: tx_create -net stagenet -token ADDTEST -from_emission {{emission}} -value 500
+  - cli: tx_create -net stagenet -token ADDTEST -from_emission {{emission}} -value 500 -fee 0.1
     save: utxo
 
 test:
@@ -41,7 +41,7 @@ check:
     contains: "ADDTEST"
   
   # Verify UTXO is actually blocked - try to use it
-  - cli: tx_create -net stagenet -token ADDTEST -from {{utxo}}:0 -value 100
+  - cli: tx_create -net stagenet -token ADDTEST -from {{utxo}}:0 -value 100 -fee 0.1
     expect: error
     contains: "blocked"
 

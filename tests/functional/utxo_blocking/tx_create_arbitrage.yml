@@ -41,7 +41,7 @@ setup:
 
 test:
   # Test: Create arbitrage transaction
-  - cli: tx_create -net stagenet -token ARBCMD -value 1000 -arbitrage
+  - cli: tx_create -net stagenet -token ARBCMD -value 1000 -fee 0.1 -arbitrage
     save: arb_tx
     description: "Create arbitrage transaction"
 

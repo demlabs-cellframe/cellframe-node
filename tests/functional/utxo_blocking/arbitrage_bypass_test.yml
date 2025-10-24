@@ -31,7 +31,7 @@ setup:
     save: emission_tx
   
   # Create transaction from emission
-  - cli: tx_create -net stagenet -token ARBTEST -from_emission {{emission_tx}} -value 500
+  - cli: tx_create -net stagenet -token ARBTEST -from_emission {{emission_tx}} -value 500 -fee 0.1
     save: tx_hash
     wait: 5s
   
@@ -41,12 +41,12 @@ setup:
 # Test phase: verify blocking and arbitrage bypass
 test:
   # Regular transaction FROM BLOCKED UTXO should fail
-  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100
+  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1
     expect: error
     contains: "blocked"
   
   # Arbitrage transaction FROM BLOCKED UTXO should succeed
-  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -arbitrage
+  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1 -arbitrage
     save: arb_tx
 
 # Check phase: verify results
