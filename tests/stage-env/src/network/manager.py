@@ -221,7 +221,7 @@ class NetworkManager:
     
     async def clean_test_data(self) -> None:
         """
-        Clean user test data (wallets, chains) while keeping system files.
+        Clean user test data (wallets, chains, logs) while keeping system files.
         
         Safe to call on running network - cleans only user-created data.
         """
@@ -243,12 +243,14 @@ class NetworkManager:
                     # Clean only user data, keep system files
                     clean_script = """
                     cd /opt/cellframe-node/var || exit 0
-                    # Clean user wallets (NOT node_wallet.dwallet - system wallet for CLI)
-                    find lib/wallet -type f -name '*.dwallet' ! -name 'node_wallet.dwallet' -delete 2>/dev/null || true
+                    # Clean user wallets (all *.dwallet files - no system wallet in stagenet)
+                    rm -f lib/wallet/*.dwallet 2>/dev/null || true
                     # Clean chains
                     rm -rf lib/chains/* 2>/dev/null || true
                     # Clean GDB
                     rm -rf lib/gdb/* 2>/dev/null || true
+                    # Clean logs (will be collected by artifacts before cleaning)
+                    rm -f log/*.log 2>/dev/null || true
                     """
                     container.exec_run(["sh", "-c", clean_script], user="root")
                     logger.debug("cleaned_user_data", container=container.name)
