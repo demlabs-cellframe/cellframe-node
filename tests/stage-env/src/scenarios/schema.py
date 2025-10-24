@@ -155,7 +155,7 @@ class ExtractType(str, Enum):
 
 class ExtractSpec(BaseModel):
     """Specification for extracting and validating data from command output."""
-    pattern: str = Field(..., description="Regex pattern to extract data")
+    pattern: Optional[str] = Field(None, description="Regex pattern to extract data (auto-detected if not specified)")
     type: ExtractType = Field(ExtractType.RAW, description="Type of extracted data for validation")
     group: int = Field(1, description="Regex capture group number (default: 1)")
     required: bool = Field(True, description="Whether extraction failure should fail the test")

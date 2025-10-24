@@ -31,14 +31,12 @@ setup:
   - cli: wallet info -w wallet1 -net stagenet
     extract_to:
       wallet1_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address
+        type: wallet_address  # Auto-pattern!
   
   - cli: wallet info -w wallet2 -net stagenet
     extract_to:
       wallet2_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address
+        type: wallet_address  # Auto-pattern!
   
   # Create token
   - cli: token_decl -net stagenet -token XFERTEST -total 1000000

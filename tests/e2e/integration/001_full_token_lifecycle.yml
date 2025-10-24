@@ -27,15 +27,13 @@ setup:
     wait: 1s
     extract_to:
       wallet1_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address
+        type: wallet_address  # Auto-pattern!
   
   - cli: wallet info -w lifecycle_wallet2 -net stagenet
     wait: 1s
     extract_to:
       wallet2_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address
+        type: wallet_address  # Auto-pattern!
 
 test:
   - wait: 3s

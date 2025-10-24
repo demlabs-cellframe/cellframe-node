@@ -29,8 +29,7 @@ test:
     expect: success
     extract_to:
       wallet_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address  # Automatic validation!
+        type: wallet_address  # Auto-pattern + validation!
     description: "Get wallet info and validate address"
   
   # Test: List wallets

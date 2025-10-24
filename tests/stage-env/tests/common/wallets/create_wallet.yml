@@ -15,7 +15,5 @@ setup:
     expect: success
     extract_to:
       wallet_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address  # Automatic base58 decode + checksum validation!
-        group: 1
+        type: wallet_address  # Auto-pattern + checksum validation!
     description: "Get wallet address with validation"

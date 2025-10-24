@@ -358,9 +358,15 @@ class ScenarioExecutor:
                 self._log_to_file(f"\n--- Extracting Values ---")
                 for var_name, extract_spec in step.extract_to.items():
                     try:
+                        # Use default pattern for type if not specified
+                        pattern = extract_spec.pattern
+                        if not pattern:
+                            pattern = DataExtractor.get_default_pattern(extract_spec.type)
+                            self._log_to_file(f"Using default pattern for {extract_spec.type}: {pattern}")
+                        
                         extracted_value, error = DataExtractor.extract_and_validate(
                             output=result["stdout"],
-                            pattern=extract_spec.pattern,
+                            pattern=pattern,
                             extract_type=extract_spec.type,
                             group=extract_spec.group,
                             required=extract_spec.required,

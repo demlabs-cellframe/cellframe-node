@@ -27,8 +27,7 @@ test:
   - cli: wallet info -w test_addr_wallet -net stagenet
     extract_to:
       wallet_addr:
-        pattern: "addr:\\s+(\\S+)"
-        type: wallet_address  # Automatic validation!
+        type: wallet_address  # Auto-pattern + validation!
 
 check:
   # Address is already validated by extract helper
