@@ -176,10 +176,10 @@ class NetworkManager:
             force=rebuild
         )
         
-        # Stop and remove previous environment
+        # Stop previous environment (keep volumes - they contain certs!)
         logger.info("stopping_previous_environment")
         try:
-            self.compose.down(volumes=True, remove_images=False)
+            self.compose.down(volumes=False, remove_images=False)
             logger.info("previous_environment_stopped")
         except Exception as e:
             logger.debug("no_previous_environment", error=str(e))
@@ -251,6 +251,7 @@ class NetworkManager:
                     rm -rf lib/gdb/* 2>/dev/null || true
                     # Clean logs (will be collected by artifacts before cleaning)
                     rm -f log/*.log 2>/dev/null || true
+                    # DON'T clean lib/ca/ - it contains validator certificates!
                     """
                     container.exec_run(["sh", "-c", clean_script], user="root")
                     logger.debug("cleaned_user_data", container=container.name)
