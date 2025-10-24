@@ -1,0 +1,137 @@
+# Version Compatibility Test
+# Test compatibility between different cellframe-node versions
+
+name: Version Compatibility Test  
+description: Test network with mixed versions - current vs latest stable
+tags: [e2e, compatibility, versions, mixed-network]
+version: "1.0"
+
+# Network with custom node packages
+network:
+  topology: minimal
+  nodes:
+    # Node 1: Current development build (local)
+    - name: node1
+      role: root
+      validator: true
+      package:
+        type: local
+        local_path: ../build/cellframe-node-5.6-LOCALBUILD-dbg-amd64.deb
+    
+    # Node 2: Latest stable from master
+    - name: node2
+      role: master
+      validator: true
+      package:
+        type: url
+        url: https://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.6-master-amd64.deb
+    
+    # Node 3: Specific older version for regression testing
+    - name: node3
+      role: full
+      package:
+        type: url
+        url: https://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-master-amd64.deb
+    
+    # Node 4: Build from specific commit (for bisecting)
+    - name: node4
+      role: full
+      package:
+        type: repository
+        git_url: https://gitlab.demlabs.net/cellframe/cellframe-node.git
+        commit: abc123def456
+        build_type: Release
+
+defaults:
+  node: node1
+  wait: 2s
+
+setup:
+  # Wait for all nodes to start with different versions
+  - wait: 10s
+
+test:
+  # Check network connectivity - all versions can connect
+  - name: "Check network connectivity"
+    steps:
+      - loop:
+          over: [node1, node2, node3, node4]
+          variable: node_id
+          steps:
+            # Check links on each node
+            - cli: net -net stagenet link list
+              node: "{{node_id}}"
+              save: "{{node_id}}_links"
+  
+  # Check version status - each node reports correct version
+  - name: "Check version status"
+    steps:
+      # Node1 should be development build
+      - cli: version
+        node: node1
+        contains: "LOCALBUILD"
+      
+      # Node2 should be latest stable
+      - cli: version
+        node: node2
+        contains: "5.6-master"
+      
+      # Node3 should be older version
+      - cli: version
+        node: node3
+        contains: "5.5"
+      
+      # Node4 custom build works
+      - cli: version
+        node: node4
+        contains: "cellframe"
+  
+  # Test cross-version transaction
+  - name: "Cross-version transaction test"
+    defaults:
+      wait: 3s
+    steps:
+      # Create wallet on node1 (dev)
+      - cli: wallet new -w test_compat
+        node: node1
+      
+      # Get address
+      - cli: wallet info -w test_compat -net stagenet
+        node: node1
+        save: wallet_info
+        extract:
+          pattern: "addr:\\s+([A-Za-z0-9:]+)"
+          group: 1
+          variable: wallet_addr
+      
+      # Create token on node2 (stable)
+      - cli: token_decl -net stagenet -token COMPAT -total 1000000
+        node: node2
+        save: token_hash
+      
+      # Emit from node2 to node1 wallet (cross-version)
+      - cli: token_emit -net stagenet -token COMPAT -value 10000 -addr {{wallet_addr}}
+        node: node2
+        save: emit_tx
+        wait: 5s
+
+check:
+  # Transaction visible on dev node
+  - cli: tx_history -net stagenet -tx {{emit_tx}}
+    node: node1
+    contains: "{{emit_tx}}"
+  
+  # Transaction visible on stable node
+  - cli: tx_history -net stagenet -tx {{emit_tx}}
+    node: node2
+    contains: "{{emit_tx}}"
+  
+  # All nodes are connected
+  - python: |
+      import re
+      for node_id in ['node1', 'node2', 'node3', 'node4']:
+          links = ctx.get_variable(f'{node_id}_links')
+          # Should have at least one active connection
+          assert 'active' in links.lower() or 'established' in links.lower(), \
+            f"{node_id} should have active connections"
+
