@@ -465,4 +465,39 @@ class ConfigLoader:
         
         logger.debug("logging_config_loaded", **logging)
         return logging
+    
+    def get_scenarios_config(self) -> Dict[str, any]:
+        """
+        Load scenarios configuration from stage-env.cfg.
+        
+        Returns:
+            Dictionary with scenarios configuration:
+            - debug: Enable detailed extraction/validation debug output (default: False)
+        """
+        # Use custom config path if provided, otherwise use default
+        if self.custom_config_path:
+            config_file = self.custom_config_path
+        else:
+            config_file = self.config_dir / "stage-env.cfg"
+        
+        # Default scenarios config
+        scenarios = {
+            'debug': False,
+        }
+        
+        if not config_file.exists():
+            logger.warning("config_not_found_using_defaults", path=str(config_file))
+            return scenarios
+        
+        # Load config
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        
+        # Read scenarios section if exists
+        if config.has_section('scenarios'):
+            if config.has_option('scenarios', 'debug'):
+                scenarios['debug'] = config.getboolean('scenarios', 'debug')
+        
+        logger.debug("scenarios_config_loaded", **scenarios)
+        return scenarios
 

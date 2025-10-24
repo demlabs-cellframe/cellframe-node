@@ -547,6 +547,17 @@ def run_tests(
     artifacts_config = config_loader.get_artifacts_config()
     artifacts_manager = ArtifactsManager(BASE_PATH, artifacts_config)
     
+    # Load scenarios config and set debug mode
+    scenarios_config = config_loader.get_scenarios_config()
+    debug_mode = scenarios_config.get('debug', False)
+    
+    # Import and set debug mode for extractors
+    from src.scenarios.extractors import set_debug_mode
+    set_debug_mode(debug_mode)
+    
+    if debug_mode:
+        print_info("🐛 Debug mode enabled for scenario extraction")
+    
     # Create run ID - one timestamp for entire test session
     timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     run_id = timestamp_str

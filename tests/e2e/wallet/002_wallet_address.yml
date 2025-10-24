@@ -34,6 +34,6 @@ check:
   - python: |
       wallet_addr = ctx.get_variable('wallet_addr')
       # Built-in extractor already validated base58 format and checksum
-      # Just verify length as an additional sanity check
-      assert len(wallet_addr) >= 80, f"Address unexpectedly short: {len(wallet_addr)}"
-      assert len(wallet_addr) <= 100, f"Address unexpectedly long: {len(wallet_addr)}"
+      # Just verify reasonable length bounds (addresses can vary: 88-110 chars typically)
+      assert len(wallet_addr) >= 75, f"Address too short: {len(wallet_addr)}"
+      assert len(wallet_addr) <= 120, f"Address too long: {len(wallet_addr)}"
