@@ -144,7 +144,7 @@ FileSpec = Union[FileFromSource, FileFromContent]
 
 class ExtractType(str, Enum):
     """Type of data to extract and validate."""
-    WALLET_ADDRESS = "wallet_address"  # Wallet address (base58, ~88 chars)
+    WALLET_ADDRESS = "wallet_address"  # Wallet address (base58, 75-105 chars)
     NODE_ADDRESS = "node_address"      # Node address (hex with :: separators, e.g., A1B2::C3D4::E5F6)
     HASH = "hash"                      # Transaction/block hash (0x... hex)
     NUMBER = "number"                  # Numeric value

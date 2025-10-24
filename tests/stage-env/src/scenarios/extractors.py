@@ -43,7 +43,7 @@ class DataExtractor:
     """Built-in data extractors with type validation."""
     
     # Validation patterns
-    WALLET_ADDRESS_PATTERN = r'^[A-Za-z0-9]{80,100}$'  # Base58, ~88 chars
+    WALLET_ADDRESS_PATTERN = r'^[A-Za-z0-9]{75,105}$'  # Base58, variable length
     NODE_ADDRESS_PATTERN = r'^[A-Fa-f0-9:]{10,}$'      # Hex with :: separators (e.g., A1B2::C3D4::E5F6)
     HASH_PATTERN = r'^(0x)?[A-Fa-f0-9]{64}$'           # Optional 0x prefix
     TOKEN_NAME_PATTERN = r'^[A-Z0-9_]{1,16}$'          # Uppercase alphanumeric
@@ -166,7 +166,7 @@ class DataExtractor:
             if not re.match(DataExtractor.WALLET_ADDRESS_PATTERN, value):
                 return (
                     f"Invalid wallet address format: '{value}' "
-                    f"(expected base58, ~88 characters)"
+                    f"(expected base58, 75-105 characters, got {len(value)})"
                 )
             
             # Decode base58 and validate structure + checksum
@@ -184,8 +184,9 @@ class DataExtractor:
                 # print(f"✓ Valid wallet address: {components.to_dict()}")
                 
             except Exception as e:
+                # base58 decoding can fail for invalid characters
                 return (
-                    f"Failed to decode wallet address: {e}\n"
+                    f"Failed to decode wallet address (invalid base58): {str(e)}\n"
                     f"Address: {value}"
                 )
         
