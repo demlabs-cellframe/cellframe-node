@@ -17,16 +17,16 @@ setup:
   - cli: token_decl -net stagenet -token LIST1 -total 1000000
     node: node1
     expect: success
-    wait: 6s
+    wait: 8s
   
   - cli: token_decl -net stagenet -token LIST2 -total 2000000
     node: node1
     expect: success
-    wait: 6s
+    wait: 8s
 
 test:
-  # Wait for tokens to sync
-  - wait: 7s
+  # Wait for tokens to sync and propagate
+  - wait: 10s
   
   # Test: List tokens
   - cli: token list -net stagenet
