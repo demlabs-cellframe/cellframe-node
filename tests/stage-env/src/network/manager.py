@@ -308,10 +308,29 @@ class NetworkManager:
                     "response_time_ms": 0,
                 }
         
+        # Build nodes array with combined info
+        nodes_data = []
+        for node_name, config in self.nodes.items():
+            # Get container status
+            container_status = service_status.get(node_name, {})
+            # Get health status
+            health = health_status.get(node_name, {})
+            
+            nodes_data.append({
+                "name": node_name,
+                "role": config.role,
+                "container_status": container_status.get("status", "unknown"),
+                "health_status": health.get("state", "unknown"),
+                "healthy": health.get("healthy", False),
+                "rpc_port": config.rpc_port,
+                "p2p_port": config.p2p_port,
+            })
+        
         return {
             "topology": self.topology_name,
             "network_name": self.topology.network.name,
             "total_nodes": len(self.nodes),
+            "nodes": nodes_data,
             "containers": service_status,
             "health": health_status,
         }

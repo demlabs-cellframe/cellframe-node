@@ -335,19 +335,36 @@ def _print_status_table(status_data):
     table.add_column("Node", style="cyan", no_wrap=True)
     table.add_column("Role", style="yellow")
     table.add_column("Container", style="magenta")
-    table.add_column("Status", style="green")
-    table.add_column("Response", style="blue")
+    table.add_column("Health", style="green")
+    table.add_column("Ports", style="blue")
     
     for node in nodes:
-        status_emoji = "🟢" if node.get('is_master', False) else "🔵"
-        status_text = f"{status_emoji} {node.get('status', 'unknown')}"
+        # Determine status emoji and text
+        healthy = node.get('healthy', False)
+        health_status = node.get('health_status', 'unknown')
+        container_status = node.get('container_status', 'unknown')
+        
+        if healthy and health_status == "NET_STATE_ONLINE":
+            status_emoji = "🟢"
+            status_text = "Online"
+        elif container_status == "running":
+            status_emoji = "🟡"
+            status_text = health_status
+        else:
+            status_emoji = "🔴"
+            status_text = container_status
+        
+        # Format ports
+        rpc_port = node.get('rpc_port', 'N/A')
+        p2p_port = node.get('p2p_port', 'N/A')
+        ports_text = f"RPC:{rpc_port}, P2P:{p2p_port}"
         
         table.add_row(
-            node.get('node_id', 'N/A'),
-            "Master" if node.get('is_master', False) else "Regular",
-            node.get('container', 'N/A'),
-            status_text,
-            node.get('response', 'N/A')
+            node.get('name', 'N/A'),
+            node.get('role', 'N/A'),
+            container_status,
+            f"{status_emoji} {status_text}",
+            ports_text
         )
     
     console.print(table)
