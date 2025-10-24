@@ -19,6 +19,17 @@ defaults:
   wait: 3s
 
 setup:
+  # Get wallet address
+  - cli: wallet info -w test_wallet -net stagenet
+    save: wallet_info
+  
+  - python: |
+      import re
+      wallet_info = ctx.get_variable('wallet_info')
+      match = re.search(r'addr:\s+(\S+)', wallet_info)
+      assert match, f"Failed to extract address from: {wallet_info}"
+      ctx.set_variable('wallet_addr', match.group(1))
+  
   # Create token
   - cli: token_decl -net stagenet -token ARBCMD -total 1000000
     save: token

@@ -40,7 +40,7 @@ check:
   - cli: token info -net stagenet -name ADDTEST
     contains: "ADDTEST"
   
-  # Verify UTXO is actually blocked
+  # Verify UTXO is actually blocked - try to use it
   - cli: tx_create -net stagenet -token ADDTEST -from {{utxo}}:0 -value 100
     expect: error
     contains: "blocked"

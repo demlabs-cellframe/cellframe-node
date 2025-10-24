@@ -587,11 +587,11 @@ def run_tests(
     try:
         for test_dir in test_dirs:
             test_path = Path(test_dir).resolve()
-            
-            if not test_path.exists():
-                print_warning(f"Directory not found: {test_path}")
-                continue
-            
+        
+        if not test_path.exists():
+            print_warning(f"Directory not found: {test_path}")
+            continue
+        
             # Find all YAML scenario files (including suite descriptors)
             yml_files = list(test_path.glob("**/*.yml")) + list(test_path.glob("**/*.yaml"))
             

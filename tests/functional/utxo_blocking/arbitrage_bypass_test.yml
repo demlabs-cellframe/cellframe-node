@@ -40,13 +40,13 @@ setup:
 
 # Test phase: verify blocking and arbitrage bypass
 test:
-  # Regular transaction should fail
-  - cli: tx_create -net stagenet -token ARBTEST -value 100
+  # Regular transaction FROM BLOCKED UTXO should fail
+  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100
     expect: error
     contains: "blocked"
   
-  # Arbitrage transaction should succeed (if -arbitrage flag exists)
-  - cli: tx_create -net stagenet -token ARBTEST -value 100 -arbitrage
+  # Arbitrage transaction FROM BLOCKED UTXO should succeed
+  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -arbitrage
     save: arb_tx
 
 # Check phase: verify results
