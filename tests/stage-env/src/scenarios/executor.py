@@ -351,7 +351,13 @@ class ScenarioExecutor:
             }
             
             # Apply defaults to command
-            cmd = cli_parser.apply_cli_defaults(cmd, cli_defaults)
+            cmd_with_defaults = cli_parser.apply_cli_defaults(cmd, cli_defaults)
+            
+            # Ensure result is a string
+            if cmd_with_defaults and isinstance(cmd_with_defaults, str):
+                cmd = cmd_with_defaults
+            else:
+                logger.warning(f"apply_cli_defaults returned invalid result: {type(cmd_with_defaults)}")
         
         logger.debug(f"Executing CLI: {cmd} on {step.node}")
         
@@ -426,6 +432,11 @@ class ScenarioExecutor:
                 if is_wallet_new and wallet_already_exists:
                     import re
                     # Extract wallet name from command
+                    # Ensure cmd is a string
+                    if not isinstance(cmd, str):
+                        self._log_to_file(f"⚠️  Command is not a string: {type(cmd)}")
+                        cmd = str(cmd)
+                    
                     wallet_match = re.search(r'-w\s+(\S+)', cmd)
                     if wallet_match:
                         wallet_name = wallet_match.group(1)
@@ -487,10 +498,13 @@ class ScenarioExecutor:
                         # Fallback: look for hash pattern in output (0x[hex])
                         import re
                         hash_pattern = r'0x[0-9a-fA-F]{64,}'
-                        match = re.search(hash_pattern, output)
-                        if match:
-                            saved_value = match.group(0)
-                            self._log_to_file(f"✓ Extracted hash from output: {saved_value}")
+                        
+                        # Ensure output is a string
+                        if isinstance(output, str):
+                            match = re.search(hash_pattern, output)
+                            if match:
+                                saved_value = match.group(0)
+                                self._log_to_file(f"✓ Extracted hash from output: {saved_value}")
                 
                 ctx.set_variable(step.save, saved_value)
                 self._log_to_file(f"✓ Saved to variable: {step.save}")
