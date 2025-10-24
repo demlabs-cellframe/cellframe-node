@@ -284,13 +284,21 @@ class ScenarioExecutor:
             defaults: Default parameters to apply
         """
         for i, step in enumerate(steps, 1):
-            logger.info(f"Step {i}/{len(steps)}: {type(step).__name__}")
+            # Generate step description for logging
+            step_type = type(step).__name__
+            step_desc = step_type
+            
+            # Add details for specific step types
+            if isinstance(step, WaitForDatumStep):
+                datum_count = len(step.wait_for_datum) if isinstance(step.wait_for_datum, list) else 1
+                step_desc = f"WaitForDatumStep ({datum_count} datum{'s' if datum_count > 1 else ''})"
+            elif isinstance(step, StepGroup) and step.name:
+                step_desc = f"StepGroup: {step.name}"
+            
+            logger.info(f"Step {i}/{len(steps)}: {step_desc}")
             
             # Handle StepGroup
             if isinstance(step, StepGroup):
-                if step.name:
-                    logger.info(f"Entering group: {step.name}")
-                
                 # Merge group defaults with section defaults
                 group_defaults = self._merge_defaults(defaults, step.defaults)
                 
