@@ -421,7 +421,11 @@ class TestScenario(BaseModel):
         """Validate scenario structure."""
         # Set default network if not specified
         if self.network is None:
-            self.network = NetworkConfig(topology="default")
+            self.network = NetworkConfig(topology="default", name="stagenet")
+        
+        # Set default network name if not specified
+        if self.network and not self.network.name:
+            self.network.name = "stagenet"
         
         # Normalize sections to SectionConfig/CheckSectionConfig format
         if isinstance(self.setup, list):

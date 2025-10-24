@@ -206,19 +206,26 @@ class ScenarioParser:
         Deep merge two dictionaries.
         
         Lists are concatenated, dicts are recursively merged.
+        Override only replaces values that are explicitly set (not None).
         """
         result = base.copy()
         
         for key, value in override.items():
             if key in result:
                 if isinstance(result[key], dict) and isinstance(value, dict):
+                    # Recursively merge dicts
                     result[key] = self._deep_merge(result[key], value)
                 elif isinstance(result[key], list) and isinstance(value, list):
+                    # Concatenate lists
                     result[key] = result[key] + value
                 else:
-                    result[key] = value
+                    # Only override if value is not None
+                    if value is not None:
+                        result[key] = value
             else:
-                result[key] = value
+                # Add new key only if value is not None
+                if value is not None:
+                    result[key] = value
         
         return result
     

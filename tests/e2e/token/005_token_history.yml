@@ -6,36 +6,34 @@ description: Test retrieving token transaction history
 tags: [e2e, token, history]
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_net_default.yml
 
 defaults:
     wait: 3s
     node: node1
 
 setup:
+  # Create test wallet
+  - cli: wallet new -w test_wallet
+    save: wallet_addr
+
   # Create and emit token
-  - cli: token_decl -net stagenet -token HISTTEST -total 1000000
-    description: "Create token"
+  - cli: token_decl -token HISTTEST -total_supply 1000000
   
-  - cli: token_emit -net stagenet -token HISTTEST -value 5000 -addr {{wallet_addr}}
+  - cli: token_emit -token HISTTEST -value 5000 -addr {{wallet_addr}}
     save: emit_tx
-    description: "Emit tokens"
   
   # Create a transaction
-  - cli: tx_create -net stagenet -token HISTTEST -from_emission {{emit_tx}} -value 1000
+  - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -value 1000 -fee 0.1
     save: tx_hash
-    description: "Create transaction"
 
 test:
   # Test: Get token history
-  - cli: token info -net stagenet -name HISTTEST -history_limit 10
+  - cli: token info -name HISTTEST -history_limit 10
     save: token_history
-    description: "Get token history"
 
 check:
   # Verify history contains transactions
@@ -43,5 +41,4 @@ check:
       history = ctx.get_variable('token_history')
       assert history, "Token history should not be empty"
       assert 'HISTTEST' in history, "History should contain token name"
-    description: "Token history is accessible"
 
