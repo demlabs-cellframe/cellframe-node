@@ -247,6 +247,11 @@ class CLICommandParser:
         if not defaults:
             return cli_command
         
+        # Ensure cli_command is a string
+        if not isinstance(cli_command, str):
+            logger.warning(f"apply_cli_defaults received non-string command: {type(cli_command)}")
+            return str(cli_command) if cli_command else ""
+        
         # Extract command name (first word)
         parts = cli_command.split()
         if not parts:
