@@ -262,8 +262,10 @@ class CLICommandParser:
         for option, value in defaults.items():
             # Check if command supports this option
             if option in available_options:
-                # Check if option is not already in command
-                if f"-{option}" not in cli_command:
+                # Check if option is not already in command (word boundary aware)
+                import re
+                pattern = rf'(^|\s)-{re.escape(option)}(\s|$)'
+                if not re.search(pattern, cli_command):
                     options_to_add.append(f"-{option} {value}")
         
         # Add options to command
