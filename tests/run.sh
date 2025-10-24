@@ -216,17 +216,18 @@ fi
 E2E_EXIT=0
 FUNCTIONAL_EXIT=0
 
-# Run E2E tests
-if $RUN_E2E; then
+# Run all tests (E2E + Functional) in a single run
+if $RUN_E2E || $RUN_FUNCTIONAL; then
     echo ""
     info "═══════════════════════════════════"
-    info "Running E2E Tests"
+    info "Running Tests"
     info "═══════════════════════════════════"
     echo ""
     
     if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
         error "stage-env wrapper not found or not executable"
         E2E_EXIT=1
+        FUNCTIONAL_EXIT=1
     else
         # Start stage environment with config
         info "Starting stage environment..."
@@ -235,26 +236,43 @@ if $RUN_E2E; then
         if [ $E2E_EXIT -eq 0 ]; then
             success "Stage environment started"
             
-            # Collect E2E test directories
+            # Collect ALL test directories for single run
             TEST_DIRS=()
             
-            # Add stage-env base tests
-            if [ -d "$STAGE_ENV_BASE_TESTS" ]; then
+            # Add stage-env base tests (if E2E enabled)
+            if $RUN_E2E && [ -d "$STAGE_ENV_BASE_TESTS" ]; then
+                info "Adding base tests: $STAGE_ENV_BASE_TESTS"
                 TEST_DIRS+=("$STAGE_ENV_BASE_TESTS")
             fi
             
-            # Add scenarios tests if exist
-            if [ -d "$SCENARIOS_TESTS" ]; then
+            # Add E2E scenarios tests (if E2E enabled)
+            if $RUN_E2E && [ -d "$SCENARIOS_TESTS" ]; then
+                info "Adding E2E tests: $SCENARIOS_TESTS"
                 TEST_DIRS+=("$SCENARIOS_TESTS")
             fi
             
-            # Run E2E tests through stage-env
+            # Add functional tests (if functional enabled)
+            if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
+                info "Adding functional tests: $FUNCTIONAL_TESTS"
+                TEST_DIRS+=("$FUNCTIONAL_TESTS")
+            fi
+            
+            # Run ALL tests in one go (single run_id, single artifacts folder)
             if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-                info "Running E2E test scenarios..."
-                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || E2E_EXIT=$?
+                info "Running ${#TEST_DIRS[@]} test suite(s) in unified run..."
+                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || TEST_EXIT=$?
+                
+                # Set individual exit codes based on result
+                if [ $TEST_EXIT -ne 0 ]; then
+                    if $RUN_E2E; then
+                        E2E_EXIT=$TEST_EXIT
+                    fi
+                    if $RUN_FUNCTIONAL; then
+                        FUNCTIONAL_EXIT=$TEST_EXIT
+                    fi
+                fi
             else
-                warning "No E2E test directories found"
-                info "Expected: $SCENARIOS_TESTS (YAML scenarios - phase 14.5.8)"
+                warning "No test directories found"
             fi
             
             # Stop environment
@@ -263,41 +281,7 @@ if $RUN_E2E; then
             success "Stage environment stopped"
         else
             error "Failed to start stage environment"
-        fi
-    fi
-fi
-
-# Run functional tests
-if $RUN_FUNCTIONAL; then
-    echo ""
-    info "═══════════════════════════════════"
-    info "Running Functional Tests"
-    info "═══════════════════════════════════"
-    echo ""
-    
-    if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
-        error "stage-env wrapper not found or not executable"
-        FUNCTIONAL_EXIT=1
-    else
-        # Collect functional test directories
-        TEST_DIRS=()
-        
-        if [ -d "$FUNCTIONAL_TESTS" ]; then
-            TEST_DIRS+=("$FUNCTIONAL_TESTS")
-        fi
-        
-        # Run functional tests through stage-env
-        if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-            info "Running functional test scenarios..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || FUNCTIONAL_EXIT=$?
-            
-            if [ $FUNCTIONAL_EXIT -eq 0 ]; then
-                success "Functional tests passed"
-            else
-                error "Functional tests failed"
-            fi
-        else
-            warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
+            FUNCTIONAL_EXIT=$E2E_EXIT
         fi
     fi
 fi
