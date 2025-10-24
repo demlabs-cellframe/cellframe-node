@@ -595,14 +595,30 @@ def run_tests(
     # Path to CLI binary inside containers
     cli_path = "cellframe-node-cli"
     
+    # Start monitoring services ONCE for entire test session
+    async def _start_monitoring():
+        from src.monitoring.manager import MonitoringManager
+        monitoring = await MonitoringManager.get_instance(
+            node_cli_path=cli_path,
+            log_file=run_dir_base,  # Will create datum-monitor.log in health-logs
+            datum_check_interval=2.0
+        )
+        await monitoring.start()
+        print_info("🔍 Monitoring services started")
+    
     try:
-        for test_dir in test_dirs:
-            test_path = Path(test_dir).resolve()
+        asyncio.run(_start_monitoring())
+    except Exception as e:
+        print_warning(f"Failed to start monitoring: {e}")
+    
+    try:
+    for test_dir in test_dirs:
+        test_path = Path(test_dir).resolve()
         
-            if not test_path.exists():
-                print_warning(f"Directory not found: {test_path}")
-                continue
-            
+        if not test_path.exists():
+            print_warning(f"Directory not found: {test_path}")
+            continue
+        
                 # Find all YAML scenario files (including suite descriptors)
             yml_files = list(test_path.glob("**/*.yml")) + list(test_path.glob("**/*.yaml"))
             
@@ -723,7 +739,7 @@ def run_tests(
                 print_info(f"{'═' * 60}")
                 
                 # Filter scenarios if needed
-                if filter:
+        if filter:
                     suite_scenarios = [f for f in suite_scenarios if filter.lower() in f.name.lower()]
                     if not suite_scenarios:
                         print_warning(f"No scenarios match filter '{filter}' in suite {suite_name}")
@@ -824,7 +840,7 @@ def run_tests(
                         
                     except ScenarioExecutionError as e:
                         failed_scenarios += 1
-                        all_passed = False
+                all_passed = False
                         
                         # Write error to scenario log
                         with open(scenario_log_file, 'a', encoding='utf-8') as log_f:
@@ -1015,6 +1031,22 @@ def run_tests(
             
         except Exception as e:
             print_warning(f"Failed to collect some artifacts: {e}")
+        
+        # Stop monitoring services
+        print_info("\n🔍 Stopping monitoring services...")
+        async def _stop_monitoring():
+            from src.monitoring.manager import MonitoringManager
+            try:
+                monitoring = await MonitoringManager.get_instance()
+                await monitoring.stop()
+                print_success("Monitoring services stopped")
+            except Exception as e:
+                print_warning(f"Failed to stop monitoring: {e}")
+        
+        try:
+            asyncio.run(_stop_monitoring())
+        except Exception as e:
+            print_warning(f"Monitoring cleanup failed: {e}")
         
         # Stop network if requested
         if stop_after and network_mgr:

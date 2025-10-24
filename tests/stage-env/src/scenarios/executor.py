@@ -216,14 +216,6 @@ class ScenarioExecutor:
         ctx = RuntimeContext(scenario)
         self._running = True
         
-        # Get monitoring manager singleton and start services
-        monitoring = await MonitoringManager.get_instance(
-            node_cli_path=self.node_cli_path,
-            log_file=self.log_file,
-            datum_check_interval=2.0
-        )
-        await monitoring.start()
-        
         try:
             # Global defaults (applied to all phases)
             global_defaults = scenario.defaults
@@ -268,12 +260,6 @@ class ScenarioExecutor:
             ) from e
         finally:
             self._running = False
-            # Stop monitoring services
-            try:
-                monitoring = await MonitoringManager.get_instance()
-                await monitoring.stop()
-            except Exception as e:
-                logger.warning(f"Failed to stop monitoring: {e}")
     
     async def _execute_steps(
         self,
