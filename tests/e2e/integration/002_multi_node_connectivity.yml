@@ -25,18 +25,17 @@ test:
   - cli: net -net stagenet get status
     node: node3
     contains: "NET_STATE_ONLINE"
-
-check:
-  # Verify node1 has links
+  
+  # Get link lists for verification
   - cli: net -net stagenet link list
     node: node1
     save: node1_links
   
-  # Verify node2 has links
   - cli: net -net stagenet link list
     node: node2
     save: node2_links
-  
+
+check:
   # Verify links exist (check saved output is not empty)
   - python: |
       links1 = ctx.get_variable('node1_links')

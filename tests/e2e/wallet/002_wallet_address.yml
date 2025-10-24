@@ -26,14 +26,16 @@ test:
   # Get wallet info with address
   - cli: wallet info -w test_addr_wallet -net stagenet
     save: wallet_info
-    extract:
-      pattern: "addr:\\s+(\\S+)"
-      group: 1
-      variable: wallet_address
 
 check:
-  # Verify address variable was extracted
+  # Verify address is present in wallet info
   - python: |
-      assert 'wallet_address' in ctx.variables, "Address should be extracted"
-      addr = ctx.get_variable('wallet_address')
-      assert addr and len(addr) > 10, "Address should not be empty"
+      wallet_info = ctx.get_variable('wallet_info')
+      # Check that wallet info contains an address (either hex or base58)
+      assert 'addr:' in wallet_info, "Wallet info should contain address"
+      # Extract address from output (works for both formats)
+      import re
+      addr_match = re.search(r'addr:\s+(\S+)', wallet_info)
+      assert addr_match, "Could not extract address from wallet info"
+      addr = addr_match.group(1)
+      assert len(addr) > 10, f"Address should not be empty, got: {addr}"

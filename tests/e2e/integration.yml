@@ -1,14 +1,13 @@
 # E2E Test Suite: Integration Tests
-# Complete integration scenarios
+# Complex multi-component integration testing
 
-name: Integration Tests Suite
-description: End-to-end integration scenarios combining multiple components
-tags: [e2e, integration, critical]
+suite: "Integration Tests Suite"
+description: Complex integration tests covering multiple components and nodes
+tags: [e2e, integration, complex]
 version: "1.0"
 
 network:
   topology: default
 
-# This is a suite description file
-# Individual tests are in the integration/ subdirectory
-
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the integration/ subdirectory
