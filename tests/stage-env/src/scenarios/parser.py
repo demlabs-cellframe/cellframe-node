@@ -78,7 +78,15 @@ class ScenarioParser:
             # Load main scenario file
             raw_data = self._load_yaml_file(full_path)
             
-            # Process includes
+            # Check if this is a suite descriptor (has 'suite: "Name"' field)
+            if 'suite' in raw_data and isinstance(raw_data['suite'], str):
+                from .schema import SuiteDescriptor
+                suite = SuiteDescriptor(**raw_data)
+                logger.info(f"Loaded suite descriptor: {suite.name} from {scenario_path}")
+                # Return suite descriptor as-is (parser will handle differently)
+                return suite
+            
+            # Process includes for regular scenarios
             if "includes" in raw_data:
                 raw_data = self._process_includes(raw_data, full_path.parent)
             

@@ -13,33 +13,24 @@ includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
+defaults:
+  node: node1
+  wait: 3s  
+
 setup:
   # Create token
   - cli: token_decl -net stagenet -token UPDTEST -total 1000000
-    node: node1
-    expect: success
-    wait: 3s
-    description: "Create UPDTEST token"
-  
   # Emit tokens
   - cli: token_emit -net stagenet -token UPDTEST -value 5000 -addr {{wallet_addr}}
-    node: node1
-    expect: success
-    wait: 3s
-    description: "Emit tokens"
 
 test:
   # Test: Get token info
   - cli: token info -net stagenet -name UPDTEST
-    node: node1
-    expect: success
     save: token_info
-    description: "Get token info"
 
 check:
   # Verify token info
   - python: |
       info = ctx.get_variable('token_info')
       assert 'UPDTEST' in info, "Token info should contain token name"
-    description: "Token info is valid"
 

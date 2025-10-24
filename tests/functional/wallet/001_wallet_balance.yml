@@ -13,23 +13,19 @@ includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
+defaults:
+  node: node1
+  wait: 3s
+  expect: success
+
 setup:
   # Create and emit tokens
   - cli: token_decl -net stagenet -token BALTEST -total 1000000
-    node: node1
-    expect: success
-    wait: 3s
-  
   - cli: token_emit -net stagenet -token BALTEST -value 5000 -addr {{wallet_addr}}
-    node: node1
-    expect: success
-    wait: 3s
 
 test:
   # Test: Check wallet balance
   - cli: wallet info -w test_wallet -net stagenet -addr {{wallet_addr}}
-    node: node1
-    expect: success
     save: balance_info
     description: "Check wallet balance"
 

@@ -15,13 +15,13 @@ includes:
 setup:
   - wait: 10s
 
+defaults:
+  node: node1
+
 test:
   # Test: Get chain list
   - cli: net list chains -net stagenet
-    node: node1
-    expect: success
     save: chains
-    description: "Get chain list"
 
 check:
   # Verify chain info

@@ -19,7 +19,6 @@ test:
   # Test: Get network stats
   - cli: net -net stagenet stats tx
     node: node1
-    expect: success
     save: net_stats
     description: "Get transaction statistics"
 

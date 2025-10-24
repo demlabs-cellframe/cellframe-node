@@ -196,7 +196,8 @@ class ScenarioExecutor:
             ScenarioExecutionError: If execution fails
         """
         logger.info(f"Starting scenario: {scenario.name}")
-        logger.info(f"Description: {scenario.description}")
+        if scenario.description:
+            logger.info(f"Description: {scenario.description}")
         
         ctx = RuntimeContext(scenario)
         self._running = True
@@ -267,8 +268,6 @@ class ScenarioExecutor:
             if isinstance(step, StepGroup):
                 if step.name:
                     logger.info(f"Entering group: {step.name}")
-                if step.description:
-                    logger.debug(f"Group description: {step.description}")
                 
                 # Merge group defaults with section defaults
                 group_defaults = self._merge_defaults(defaults, step.defaults)
@@ -311,8 +310,6 @@ class ScenarioExecutor:
         self._log_to_file(f"{'=' * 70}")
         self._log_to_file(f"Node: {step.node}")
         self._log_to_file(f"Command: {cmd}")
-        if step.description:
-            self._log_to_file(f"Description: {step.description}")
         self._log_to_file(f"Timeout: {step.timeout}s")
         self._log_to_file(f"Expected: {step.expect}")
         self._log_to_file("")
@@ -388,8 +385,6 @@ class ScenarioExecutor:
         self._log_to_file(f"Node: {step.node}")
         self._log_to_file(f"Method: {method}")
         self._log_to_file(f"Params: {params}")
-        if step.description:
-            self._log_to_file(f"Description: {step.description}")
         self._log_to_file(f"Timeout: {step.timeout}s")
         self._log_to_file(f"Expected: {step.expect}")
         self._log_to_file("")
@@ -578,7 +573,7 @@ class ScenarioExecutor:
             # Execute Python code - should raise AssertionError if check fails
             exec(check.python, namespace)
             
-            ctx.add_result("check_python", True, {"description": check.description or "Python check"})
+            ctx.add_result("check_python", True, {"check": "Python check"})
             
         except AssertionError as e:
             ctx.add_result("check_python", False, {"error": str(e)})
@@ -647,7 +642,7 @@ class ScenarioExecutor:
                     step=script[:100]
                 )
             
-            ctx.add_result("check_bash", True, {"description": check.description or "Bash check"})
+            ctx.add_result("check_bash", True, {"check": "Bash check"})
             
         except asyncio.TimeoutError:
             process.kill()
