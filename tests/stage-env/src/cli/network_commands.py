@@ -4,11 +4,12 @@ CLI commands for network management.
 import asyncio
 import typer
 from pathlib import Path
+from typing import Callable, Optional
 
 from .common import print_info, print_success, print_error, print_warning
 
 
-def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
+def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callable[[], Optional[Path]]):
     """Register network management commands."""
     
     @app.command()
@@ -71,6 +72,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
                 return
             
             print_warning("Cleaning all data...")
+            config_path = get_config_path()
             config_loader = ConfigLoader(base_path, config_path)
             paths_config = config_loader.get_paths_config()
             cache_dir_relative = paths_config.get('cache_dir', 'cache')
@@ -80,6 +82,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
             cert_gen = CertGenerator(base_path, certs_dir=certs_dir)
             cert_gen.clean()
         
+        config_path = get_config_path()
         network_mgr = NetworkManager(base_path, topology_name=topology, config_path=config_path)
         
         async def _start():
@@ -100,6 +103,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         """⏹️  Stop the test network."""
         from ..network.manager import NetworkManager
         
+        config_path = get_config_path()
         network_mgr = NetworkManager(base_path, config_path=config_path)
         
         async def _stop():
@@ -119,6 +123,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         """🔄 Restart the test network."""
         from ..network.manager import NetworkManager
         
+        config_path = get_config_path()
         network_mgr = NetworkManager(base_path, config_path=config_path)
         
         async def _restart():
@@ -137,6 +142,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         """📊 Show network status."""
         from ..network.manager import NetworkManager
         
+        config_path = get_config_path()
         network_mgr = NetworkManager(base_path, config_path=config_path)
         
         async def _get_status():
@@ -201,6 +207,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         
         # Stop network
         print_info("\n🛑 Stopping network...")
+        config_path = get_config_path()
         network_mgr = NetworkManager(base_path, config_path=config_path)
         
         async def _stop():
@@ -229,6 +236,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         
         # Clean and regenerate certs
         print_info("\n🔐 Regenerating certificates...")
+        config_path = get_config_path()
         config_loader = ConfigLoader(base_path, config_path)
         cache_config = config_loader.get_cache_config()
         cache_dir_relative = cache_config.get('cache_dir', 'cache')

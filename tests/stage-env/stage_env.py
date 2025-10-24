@@ -2,7 +2,6 @@
 """
 Stage Environment CLI - управление тестовым окружением Cellframe Node.
 
-Декомпозированная версия - команды разнесены по модулям.
 """
 
 import sys
@@ -15,7 +14,7 @@ from rich.console import Console
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.utils.logging import setup_logging, get_logger
+from src.utils.logger import setup_logging, get_logger
 
 # Initialize CLI app
 app = typer.Typer(
@@ -81,10 +80,14 @@ from src.cli import (
     snapshot_commands,
 )
 
-cert_commands.register_commands(app, BASE_PATH, CONFIG_PATH)
-network_commands.register_commands(app, BASE_PATH, CONFIG_PATH)
-test_commands.register_commands(app, BASE_PATH, CONFIG_PATH)
-snapshot_commands.register_commands(app, BASE_PATH, CONFIG_PATH)
+# Helper function to get current config path
+def get_config_path():
+    return CONFIG_PATH
+
+cert_commands.register_commands(app, BASE_PATH, get_config_path)
+network_commands.register_commands(app, BASE_PATH, get_config_path)
+test_commands.register_commands(app, BASE_PATH, get_config_path)
+snapshot_commands.register_commands(app, BASE_PATH, get_config_path)
 
 
 if __name__ == "__main__":

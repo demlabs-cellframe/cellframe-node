@@ -35,7 +35,8 @@ setup:
   # Create token with UTXO blocking
   - cli: token_decl -net stagenet -token BLOCKTEST -total 10000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
-    wait: 3s
+
+  - wait_for_datum: "{{token_hash}}"
   
   # Emit tokens to sender
   - cli: token_emit -net stagenet -token BLOCKTEST -value 10000000 -addr {{sender_addr}}
@@ -60,7 +61,9 @@ setup:
   
   # Block UTXO #1
   - cli: token_update -net stagenet -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
-    wait: 3s
+    save: block_tx
+
+  - wait_for_datum: "{{block_tx}}"
 
 test:
   # Attempt to spend blocked UTXO - should FAIL
@@ -71,8 +74,8 @@ test:
   # Attempt to spend unblocked UTXO - should SUCCESS
   - cli: tx_create -net stagenet -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
     save: transfer_tx
-    expect: success
-    wait: 3s
+
+  - wait_for_datum: "{{transfer_tx}}"
 
 check:
   # Verify blocked UTXO was NOT spent

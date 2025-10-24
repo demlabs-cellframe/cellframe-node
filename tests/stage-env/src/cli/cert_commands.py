@@ -3,11 +3,12 @@ CLI commands for certificate management.
 """
 import typer
 from pathlib import Path
+from typing import Callable, Optional
 
 from .common import print_info, print_success, print_error, confirm
 
 
-def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
+def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callable[[], Optional[Path]]):
     """Register certificate management commands."""
     
     @app.command()
@@ -22,6 +23,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         from ..config.loader import ConfigLoader
         
         # Load config to get correct cache_dir
+        config_path = get_config_path()
         config_loader = ConfigLoader(base_path, config_path)
         paths_config = config_loader.get_paths_config()
         cache_dir_relative = paths_config.get('cache_dir', 'cache')
@@ -60,6 +62,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
             print_info("Cancelled")
             return
         
+        config_path = get_config_path()
         config_loader = ConfigLoader(base_path, config_path)
         paths_config = config_loader.get_paths_config()
         cache_dir_relative = paths_config.get('cache_dir', 'cache')

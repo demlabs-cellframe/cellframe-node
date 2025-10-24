@@ -7,12 +7,12 @@ import asyncio
 import typer
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 from .common import print_info, print_success, print_error, print_warning
 
 
-def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
+def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callable[[], Optional[Path]]):
     """Register test execution commands."""
     
     @app.command()
@@ -42,6 +42,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
             print_info(f"  • {test_dir}")
         
         # Load configuration
+        config_path = get_config_path()
         config_loader = ConfigLoader(base_path, config_path)
         artifacts_config = config_loader.get_artifacts_config()
         artifacts_manager = ArtifactsManager(base_path, artifacts_config)
@@ -68,6 +69,7 @@ def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
         network_mgr = None
         if start_network:
             print_info("\n🚀 Starting test network...")
+            config_path = get_config_path()
             network_mgr = NetworkManager(base_path, topology_name="default", config_path=config_path)
             
             async def _start_network():

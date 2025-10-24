@@ -3,11 +3,12 @@ CLI commands for snapshot management.
 """
 import typer
 from pathlib import Path
+from typing import Callable, Optional
 
 from .common import print_info, print_success, print_error, print_warning
 
 
-def register_commands(app: typer.Typer, base_path: Path, config_path: Path):
+def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callable[[], Optional[Path]]):
     """Register snapshot management commands."""
     
     @app.command()
