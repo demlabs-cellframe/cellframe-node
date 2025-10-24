@@ -1148,17 +1148,26 @@ class ScenarioExecutor:
             try:
                 yaml_response = yaml.safe_load(stdout)
                 
+                if self.debug:
+                    logger.debug(f"YAML parsed: type={type(yaml_response)}, value={yaml_response}")
+                
                 if isinstance(yaml_response, dict):
                     # Check for 'errors' key
                     if "errors" in yaml_response:
                         errors = yaml_response["errors"]
+                        if self.debug:
+                            logger.debug(f"Found 'errors' in YAML: type={type(errors)}, value={errors}")
                         # Consider it an error if errors field is not empty
                         if errors:
                             if isinstance(errors, dict) and errors:
                                 has_error = True
+                                if self.debug:
+                                    logger.debug("Detected error: errors is non-empty dict")
                             elif isinstance(errors, list) and len(errors) > 0:
                                 has_error = True
-            except (yaml.YAMLError, ValueError, AttributeError):
+                                if self.debug:
+                                    logger.debug("Detected error: errors is non-empty list")
+            except (yaml.YAMLError, ValueError, AttributeError) as e:
                 # Try JSON format
                 try:
                     json_response = json.loads(stdout)

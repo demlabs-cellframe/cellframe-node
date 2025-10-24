@@ -91,6 +91,7 @@ class NodeConfig(BaseModel):
 
 class NetworkConfig(BaseModel):
     """Network topology configuration."""
+    name: Optional[str] = Field(None, description="Network name (e.g., 'stagenet')")
     topology: str = Field("default", description="Topology template name")
     nodes: List[NodeConfig] = Field(default_factory=list, description="Node configurations")
     
