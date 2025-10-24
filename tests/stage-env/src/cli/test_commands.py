@@ -102,6 +102,28 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
             except Exception as e:
                 print_error(f"Failed to start network: {e}")
                 raise typer.Exit(1)
+        else:
+            # Network already running - still need to initialize CLI parser
+            print_info("📖 Initializing CLI parser from running network...")
+            from ..utils.cli_parser import get_cli_parser
+            
+            cache_file = base_path / "cache" / "cli_commands.json"
+            cli_parser = get_cli_parser(cache_file=cache_file)
+            
+            async def _init_cli_parser():
+                container_name = "cellframe-stage-node-1"
+                success = await cli_parser.parse_cli_help(container_name, use_cache=True)
+                return success
+            
+            try:
+                parser_success = asyncio.run(_init_cli_parser())
+                if parser_success:
+                    stats = cli_parser.get_stats()
+                    print_success(f"✓ CLI parser initialized: {stats['total_commands']} commands")
+                else:
+                    print_warning("⚠️  CLI parser initialization failed - defaults will not be applied")
+            except Exception as e:
+                print_warning(f"CLI parser init failed: {e}")
         
         all_passed = True
         total_scenarios = 0
