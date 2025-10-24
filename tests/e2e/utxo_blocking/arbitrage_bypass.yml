@@ -29,7 +29,7 @@ defaults:
 
 setup:
   # Create token with UTXO blocking feature
-  - cli: token_decl -net {{network}} -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -net {{network}} -token ARBTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
     wait: 3s
   

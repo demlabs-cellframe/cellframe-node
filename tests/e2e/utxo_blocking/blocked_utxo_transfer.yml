@@ -37,7 +37,7 @@ setup:
     wait: 1s
   
   # Create token with UTXO blocking
-  - cli: token_decl -net {{network}} -token BLOCKTEST -total 10000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -net {{network}} -token BLOCKTEST -total_supply 10000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
 
   - wait_for_datum: "{{token_hash}}"
