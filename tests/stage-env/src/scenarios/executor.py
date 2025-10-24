@@ -351,6 +351,40 @@ class ScenarioExecutor:
                 ctx.set_variable(step.save, result["stdout"].strip())
                 self._log_to_file(f"✓ Saved to variable: {step.save}")
             
+            # Extract and validate specific values if requested
+            if step.extract_to:
+                from .extractors import DataExtractor, ExtractionError
+                
+                self._log_to_file(f"\n--- Extracting Values ---")
+                for var_name, extract_spec in step.extract_to.items():
+                    try:
+                        extracted_value, error = DataExtractor.extract_and_validate(
+                            output=result["stdout"],
+                            pattern=extract_spec.pattern,
+                            extract_type=extract_spec.type,
+                            group=extract_spec.group,
+                            required=extract_spec.required,
+                            default=extract_spec.default
+                        )
+                        
+                        if extracted_value is not None:
+                            ctx.set_variable(var_name, extracted_value)
+                            self._log_to_file(f"✓ Extracted '{var_name}': {extracted_value[:50]}{'...' if len(extracted_value) > 50 else ''}")
+                            self._log_to_file(f"  Type: {extract_spec.type}")
+                        elif error:
+                            self._log_to_file(f"✗ Extraction warning for '{var_name}': {error}")
+                            if extract_spec.required:
+                                raise ExtractionError(error)
+                    
+                    except ExtractionError as e:
+                        self._log_to_file(f"✗ Extraction failed for '{var_name}': {e}")
+                        ctx.add_result("extraction", False, {
+                            "variable": var_name,
+                            "error": str(e),
+                            "output": result["stdout"][:200]
+                        })
+                        raise ScenarioExecutionError(f"Failed to extract '{var_name}': {e}")
+            
             ctx.add_result("cli", True, {
                 "command": cmd,
                 "node": step.node,

@@ -23,16 +23,15 @@ setup:
     description: "Create wallet"
 
 test:
-  # Test: Get wallet info
+  # Test: Get wallet info with address extraction and validation
   - cli: wallet info -w info_test_wallet -net stagenet
     node: node1
     expect: success
-    save: wallet_info
-    extract:
-      pattern: "addr:\\s+(\\S+)"
-      group: 1
-      variable: wallet_addr
-    description: "Get wallet info"
+    extract_to:
+      wallet_addr:
+        pattern: "addr:\\s+(\\S+)"
+        type: wallet_address  # Automatic validation!
+    description: "Get wallet info and validate address"
   
   # Test: List wallets
   - cli: wallet list
@@ -42,13 +41,13 @@ test:
     description: "List wallets"
 
 check:
-  # Verify wallet info contains address
+  # Address was already validated by extract helper
   - python: |
-      # Check if variable exists
-      assert 'wallet_addr' in ctx.variables, "Wallet address should be extracted from wallet info"
-      addr = ctx.get_variable('wallet_addr')
-      assert addr, "Wallet address should not be empty"
-      assert '::' in addr, "Address should contain :: separator"
+      # Address is already validated (checksum, structure, etc.)
+      wallet_addr = ctx.get_variable('wallet_addr')
+      assert wallet_addr, "Wallet address should be extracted"
+      # Base58 addresses don't have :: separator (that's for node addresses)
+      assert len(wallet_addr) >= 80, f"Address should be at least 80 chars"
   
   # Verify wallet in list
   - python: |

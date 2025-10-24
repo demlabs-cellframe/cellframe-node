@@ -22,20 +22,20 @@ setup:
   - cli: wallet new -w lifecycle_wallet1
   - cli: wallet new -w lifecycle_wallet2
   
-  # Get addresses (base58 format now)
+  # Get addresses with built-in validation
   - cli: wallet info -w lifecycle_wallet1 -net stagenet
     wait: 1s
-    extract:
-      pattern: "addr:\\s+(\\S+)"
-      group: 1
-      variable: wallet1_addr
+    extract_to:
+      wallet1_addr:
+        pattern: "addr:\\s+(\\S+)"
+        type: wallet_address
   
   - cli: wallet info -w lifecycle_wallet2 -net stagenet
     wait: 1s
-    extract:
-      pattern: "addr:\\s+(\\S+)"
-      group: 1
-      variable: wallet2_addr
+    extract_to:
+      wallet2_addr:
+        pattern: "addr:\\s+(\\S+)"
+        type: wallet_address
 
 test:
   - wait: 3s
