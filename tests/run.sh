@@ -46,7 +46,7 @@ STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
 # Test directories
 STAGE_ENV_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/base"
 FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
-SCENARIOS_TESTS="$SCRIPT_DIR/scenarios"
+SCENARIOS_TESTS="$SCRIPT_DIR/e2e"  # E2E tests directory
 
 # Build directories
 TEST_BUILD_DIR="$PROJECT_ROOT/build"
