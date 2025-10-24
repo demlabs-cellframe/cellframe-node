@@ -45,13 +45,15 @@ setup:
   # Emit tokens to wallet1
   - cli: token_emit -net stagenet -token XFERTEST -value 10000 -addr {{wallet1_addr}}
     save: emit_tx
-    wait: 3s
+  
+  - wait_for_datum: "{{emit_tx}}"
 
 test:
   # Test: Transfer tokens to wallet2
   - cli: tx_create -net stagenet -token XFERTEST -from {{emit_tx}}:0 -to_addr {{wallet2_addr}} -value 1000 -fee 0.1
     save: transfer_tx
-    wait: 5s
+  
+  - wait_for_datum: "{{transfer_tx}}"
 
 check:
   # Verify transaction in history

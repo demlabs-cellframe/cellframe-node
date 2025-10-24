@@ -20,7 +20,6 @@ setup:
     save: list1_hash
   
   - wait_for_datum: "{{list1_hash}}"
-    timeout_total: 120
   
   - cli: token_decl -net stagenet -token LIST2 -total 2000000
     node: node1
@@ -28,7 +27,6 @@ setup:
     save: list2_hash
   
   - wait_for_datum: "{{list2_hash}}"
-    timeout_total: 120
 
 test:
   # Test: List tokens
