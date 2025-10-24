@@ -5,7 +5,7 @@ Defines common models used across network management modules.
 """
 
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 class NodePackageSource(BaseModel):
