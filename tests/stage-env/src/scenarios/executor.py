@@ -13,11 +13,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from ..utils.logger import get_logger
+from ..monitoring import MonitoringManager, DatumMonitorResult
 from .parser import ScenarioParser
 from .schema import (
-    CLIStep, RPCStep, WaitStep, PythonStep, BashStep, LoopStep, StepGroup,
+    CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep, StepGroup,
     CLICheck, RPCCheck, PythonCheck, BashCheck,
-    TestScenario, TestStep, CheckSpec, StepDefaults, SectionConfig
+    TestScenario, TestStep, CheckSpec, StepDefaults, SectionConfig, DatumStatus
 )
 
 logger = get_logger(__name__)
@@ -108,6 +109,7 @@ class ScenarioExecutor:
         self.node_cli_path = node_cli_path
         self.log_file = log_file
         self._running = False
+        # Monitoring manager будет получен через синглтон при старте сценария
     
     def _log_to_file(self, message: str):
         """Write message to log file if enabled."""
@@ -180,6 +182,18 @@ class ScenarioExecutor:
             if step.timeout == 30:  # Default value
                 step.timeout = defaults.timeout
         
+        # Special handling for WaitForDatumStep timeouts
+        if isinstance(step, WaitForDatumStep) and defaults.timeout:
+            # Apply timeout to all WaitForDatumStep timeout fields if they have default values
+            if step.timeout_total == 300:
+                step.timeout_total = defaults.timeout
+            if step.timeout_mempool == 60:
+                step.timeout_mempool = defaults.timeout
+            if step.timeout_verification == 120:
+                step.timeout_verification = defaults.timeout
+            if step.timeout_in_blocks == 180:
+                step.timeout_in_blocks = defaults.timeout
+        
         return step
     
     async def execute_scenario(self, scenario: TestScenario) -> RuntimeContext:
@@ -201,6 +215,14 @@ class ScenarioExecutor:
         
         ctx = RuntimeContext(scenario)
         self._running = True
+        
+        # Get monitoring manager singleton and start services
+        monitoring = await MonitoringManager.get_instance(
+            node_cli_path=self.node_cli_path,
+            log_file=self.log_file,
+            datum_check_interval=2.0
+        )
+        await monitoring.start()
         
         try:
             # Global defaults (applied to all phases)
@@ -288,6 +310,8 @@ class ScenarioExecutor:
                 await self._execute_rpc_step(step, ctx)
             elif isinstance(step, WaitStep):
                 await self._execute_wait_step(step, ctx)
+            elif isinstance(step, WaitForDatumStep):
+                await self._execute_wait_for_datum_step(step, ctx)
             elif isinstance(step, PythonStep):
                 await self._execute_python_step(step, ctx)
             elif isinstance(step, BashStep):
@@ -475,6 +499,95 @@ class ScenarioExecutor:
         logger.debug(f"Waiting: {step.wait}")
         await self._wait_duration(step.wait)
         ctx.add_result("wait", True, {"duration": step.wait})
+    
+    async def _execute_wait_for_datum_step(self, step: WaitForDatumStep, ctx: RuntimeContext):
+        """Execute wait-for-datum step - register datum with background monitor."""
+        # Support both single hash and list of hashes
+        datum_hashes = step.wait_for_datum if isinstance(step.wait_for_datum, list) else [step.wait_for_datum]
+        
+        # Substitute variables in hashes
+        datum_hashes = [ctx.substitute(h) for h in datum_hashes]
+        
+        logger.info(f"Registering {len(datum_hashes)} datum(s) for monitoring")
+        
+        # Get monitoring manager singleton
+        monitoring = await MonitoringManager.get_instance()
+        
+        # Register and wait for each datum
+        results = []
+        for datum_hash in datum_hashes:
+            logger.debug(f"Monitoring datum: {datum_hash[:16]}...")
+            
+            # Register datum for tracking (returns Future)
+            result_future = monitoring.datum.track_datum(
+                datum_hash=datum_hash,
+                node=step.node,
+                network=step.network,
+                chain=step.chain,
+                check_master_nodes=step.check_master_nodes,
+                timeout_total=step.timeout_total,
+                timeout_mempool=step.timeout_mempool,
+                timeout_verification=step.timeout_verification,
+                timeout_in_blocks=step.timeout_in_blocks
+            )
+            
+            # Wait for result
+            result = await result_future
+            results.append(result)
+            
+            # Check if monitoring failed
+            if result.status not in [DatumStatus.PROPAGATED, DatumStatus.IN_BLOCKS]:
+                error_msg = f"Datum monitoring failed: {result.error_message}"
+                logger.error(error_msg)
+                
+                # Log to scenario file
+                if self.log_file:
+                    self._log_to_file(f"\n{'=' * 80}\n")
+                    self._log_to_file(f"❌ WAIT_FOR_DATUM FAILED\n")
+                    self._log_to_file(f"Datum: {datum_hash}\n")
+                    self._log_to_file(f"Status: {result.status.value}\n")
+                    self._log_to_file(f"Error: {result.error_message}\n")
+                    self._log_to_file(f"Elapsed: {result.elapsed_time:.1f}s\n")
+                    self._log_to_file(f"Details: {result.details}\n")
+                    self._log_to_file(f"{'=' * 80}\n\n")
+                
+                raise ScenarioExecutionError(
+                    error_msg,
+                    step=step,
+                    context={
+                        "datum_hash": datum_hash,
+                        "status": result.status.value,
+                        "elapsed_time": result.elapsed_time,
+                        "details": result.details
+                    }
+                )
+            
+            logger.info(f"✅ Datum {datum_hash[:16]}... monitored successfully: {result.status.value} in {result.elapsed_time:.1f}s")
+        
+        # Save status to variable if requested
+        if step.save_status:
+            if len(results) == 1:
+                ctx.set_variable(step.save_status, results[0].status.value)
+            else:
+                ctx.set_variable(step.save_status, [r.status.value for r in results])
+        
+        # Add to context results
+        ctx.add_result(
+            "wait_for_datum",
+            True,
+            {
+                "datum_count": len(datum_hashes),
+                "results": [
+                    {
+                        "hash": r.datum_hash,
+                        "status": r.status.value,
+                        "elapsed": r.elapsed_time,
+                        "details": r.details
+                    }
+                    for r in results
+                ]
+            }
+        )
     
     async def _execute_loop_step(
         self,

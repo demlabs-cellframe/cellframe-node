@@ -28,6 +28,20 @@ class ExpectResult(str, Enum):
     ANY = "any"
 
 
+class DatumStatus(str, Enum):
+    """Status of datum processing through the network."""
+    NOT_FOUND = "not_found"
+    IN_MEMPOOL = "in_mempool"
+    VERIFIED = "verified"
+    IN_BLOCKS = "in_blocks"
+    PROPAGATED = "propagated"
+    REJECTED = "rejected"
+    TIMEOUT_MEMPOOL = "timeout_mempool"
+    TIMEOUT_VERIFICATION = "timeout_verification"
+    TIMEOUT_BLOCKS = "timeout_blocks"
+    TIMEOUT_TOTAL = "timeout_total"
+
+
 # ============================================================================
 # Network Configuration Models
 # ============================================================================
@@ -227,7 +241,22 @@ class LoopStep(BaseModel):
     steps: List["TestStep"] = Field(..., description="Steps to repeat")
 
 
-TestStep = Union[CLIStep, RPCStep, WaitStep, PythonStep, BashStep, LoopStep]
+class WaitForDatumStep(BaseModel):
+    """Wait for datum to be processed through mempool → verification → blocks → propagation."""
+    wait_for_datum: Union[str, List[str]] = Field(..., description="Datum hash(es) to monitor")
+    node: str = Field("node1", description="Target node to check for datum")
+    network: str = Field("stagenet", description="Network name")
+    chain: str = Field("main", description="Chain name")
+    check_master_nodes: bool = Field(True, description="Check master nodes for verification and blocks")
+    timeout_total: int = Field(300, description="Total timeout in seconds")
+    timeout_mempool: int = Field(60, description="Timeout for mempool stage")
+    timeout_verification: int = Field(120, description="Timeout after verification")
+    timeout_in_blocks: int = Field(180, description="Timeout after appearing in blocks")
+    check_interval: int = Field(2, description="Check interval in seconds")
+    save_status: Optional[str] = Field(None, description="Variable name to save final status")
+
+
+TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep]
 
 
 # ============================================================================
@@ -292,7 +321,7 @@ class StepGroup(BaseModel):
 
 
 # Update TestStep to include StepGroup
-TestStep = Union[CLIStep, RPCStep, WaitStep, PythonStep, BashStep, LoopStep, StepGroup]
+TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep, StepGroup]
 
 
 # ============================================================================
