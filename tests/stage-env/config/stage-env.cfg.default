@@ -75,6 +75,9 @@ startup = 600
 health_check = 600
 command = 30
 
+[scenarios]
+debug = false
+
 [node_source]
 # ============================================================================
 # Cellframe Node Package Source Configuration
