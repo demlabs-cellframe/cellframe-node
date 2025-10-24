@@ -24,22 +24,22 @@ network:
       validator: true
       package:
         type: url
-        url: https://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.6-master-amd64.deb
+        url: http://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-3-amd64.deb
     
-    # Node 3: Specific older version for regression testing
+    # Node 3: Same version but debug build
     - name: node3
       role: full
       package:
         type: url
-        url: https://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-master-amd64.deb
+        url: http://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.5-3-dbg-amd64.deb
     
-    # Node 4: Build from specific commit (for bisecting)
+    # Node 4: Build from specific branch (example - adjust commit hash)
     - name: node4
       role: full
       package:
         type: repository
         git_url: https://gitlab.demlabs.net/cellframe/cellframe-node.git
-        commit: abc123def456
+        branch: master
         build_type: Release
 
 defaults:

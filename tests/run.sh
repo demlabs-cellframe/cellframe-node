@@ -37,7 +37,9 @@ warning() {
 
 # Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
 STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
 
@@ -47,7 +49,7 @@ FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
 SCENARIOS_TESTS="$SCRIPT_DIR/scenarios"
 
 # Build directories
-TEST_BUILD_DIR="$PROJECT_ROOT/test_build"
+TEST_BUILD_DIR="$PROJECT_ROOT/build"
 
 # Parse arguments
 RUN_E2E=false
@@ -259,14 +261,6 @@ if $RUN_E2E; then
             info "Stopping stage environment..."
             "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
             success "Stage environment stopped"
-            
-            # Collect artifacts and generate reports
-            info "Collecting artifacts and generating reports..."
-            if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" collect-artifacts e2e --exit-code=$E2E_EXIT; then
-                success "Artifacts collected successfully"
-            else
-                warning "Failed to collect some artifacts"
-            fi
         else
             error "Failed to start stage environment"
         fi
@@ -301,14 +295,6 @@ if $RUN_FUNCTIONAL; then
                 success "Functional tests passed"
             else
                 error "Functional tests failed"
-            fi
-            
-            # Collect artifacts and generate reports
-            info "Collecting artifacts and generating reports..."
-            if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" collect-artifacts functional --exit-code=$FUNCTIONAL_EXIT; then
-                success "Artifacts collected successfully"
-            else
-                warning "Failed to collect some artifacts"
             fi
         else
             warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
