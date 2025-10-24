@@ -43,12 +43,12 @@ setup:
     wait: 3s
   
   # Create UTXO #1 (will be blocked)
-  - cli: tx_create -net stagenet -token BLOCKTEST -from_emission {{emission}} -value 1000000
+  - cli: tx_create -net stagenet -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo1
     wait: 3s
   
   # Create UTXO #2 (will remain unblocked)
-  - cli: tx_create -net stagenet -token BLOCKTEST -value 1000000
+  - cli: tx_create -net stagenet -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo2
     wait: 3s
   
@@ -58,12 +58,12 @@ setup:
 
 test:
   # Attempt to spend blocked UTXO - should FAIL
-  - cli: tx_create -net stagenet -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000
+  - cli: tx_create -net stagenet -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
     expect: error
     contains: "UTXO is blocked"
   
   # Attempt to spend unblocked UTXO - should SUCCESS
-  - cli: tx_create -net stagenet -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000
+  - cli: tx_create -net stagenet -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
     save: transfer_tx
     expect: success
     wait: 3s
