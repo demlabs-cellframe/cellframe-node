@@ -981,15 +981,48 @@ class ScenarioExecutor:
         self, result: Dict[str, Any], expect: str, contains: Optional[str]
     ) -> bool:
         """Check if result matches expectation."""
+        import json
+        
+        # Cellframe CLI always returns exit code 0, but puts errors in JSON
+        # Try to parse JSON response to check for errors
+        has_json_error = False
+        stdout = result["stdout"].strip()
+        
+        if stdout:
+            try:
+                # Try to parse as JSON
+                json_response = json.loads(stdout)
+                
+                # Check if response contains errors field
+                if isinstance(json_response, dict):
+                    # Check for 'errors' key (can be dict or list)
+                    if "errors" in json_response:
+                        errors = json_response["errors"]
+                        # Consider it an error if errors field is not empty
+                        if errors:
+                            if isinstance(errors, dict):
+                                has_json_error = True
+                            elif isinstance(errors, list) and len(errors) > 0:
+                                has_json_error = True
+            except (json.JSONDecodeError, ValueError):
+                # Not JSON or invalid JSON - fallback to returncode check
+                pass
+        
+        # Check expectation
         if expect == "success":
+            # Success means: returncode 0 AND no JSON errors
             if result["returncode"] != 0:
                 return False
+            if has_json_error:
+                return False
         elif expect == "error":
-            if result["returncode"] == 0:
+            # Error means: returncode != 0 OR has JSON errors
+            if result["returncode"] == 0 and not has_json_error:
                 return False
         
+        # Check contains if specified
         if contains:
-            if contains not in result["stdout"]:
+            if contains not in stdout:
                 return False
         
         return True
