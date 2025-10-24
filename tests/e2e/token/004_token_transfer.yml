@@ -20,36 +20,27 @@ defaults:
 setup:
   - wait: 3s
   
-  # Wallet setup group
-  - name: "Wallet setup"
-    description: "Create wallets and get their addresses"
-    steps:
-      # Create wallets
-      - loop:
-          over: [wallet1, wallet2]
-          variable: wallet_name
-          steps:
-            - cli: wallet new -w {{wallet_name}}
-              description: "Create {{wallet_name}}"
-      
-      # Get wallet addresses  
-      - name: "Get wallet addresses"
-        steps:
-          - cli: wallet info -w wallet1 -net stagenet
-            save: wallet1_info
-            extract:
-              pattern: "addr:\\s+([A-Za-z0-9:]+)"
-              group: 1
-              variable: wallet1_addr
-            description: "Get wallet1 address"
-          
-          - cli: wallet info -w wallet2 -net stagenet
-            save: wallet2_info
-            extract:
-              pattern: "addr:\\s+([A-Za-z0-9:]+)"
-              group: 1
-              variable: wallet2_addr
-            description: "Get wallet2 address"
+  # Create wallets using loop
+  - loop:
+      over: [wallet1, wallet2]
+      variable: wallet_name
+      steps:
+        - cli: wallet new -w {{wallet_name}}
+  
+  # Get wallet addresses
+  - cli: wallet info -w wallet1 -net stagenet
+    save: wallet1_info
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet1_addr
+  
+  - cli: wallet info -w wallet2 -net stagenet
+    save: wallet2_info
+    extract:
+      pattern: "addr:\\s+([A-Za-z0-9:]+)"
+      group: 1
+      variable: wallet2_addr
   
   # Token setup group
   - name: "Token setup"
