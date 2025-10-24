@@ -137,6 +137,7 @@ class ScenarioExecutor:
             Merged StepDefaults or None
         """
         merged = {}
+        merged_cli = {}
         
         for defaults in defaults_list:
             if defaults:
@@ -148,6 +149,12 @@ class ScenarioExecutor:
                     merged['expect'] = defaults.expect
                 if defaults.timeout is not None:
                     merged['timeout'] = defaults.timeout
+                if defaults.cli is not None:
+                    # Merge CLI defaults (later overrides earlier)
+                    merged_cli.update(defaults.cli)
+        
+        if merged_cli:
+            merged['cli'] = merged_cli
         
         return StepDefaults(**merged) if merged else None
     

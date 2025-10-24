@@ -308,6 +308,7 @@ class StepDefaults(BaseModel):
     wait: Optional[str] = Field(None, description="Default wait duration after each step")
     expect: Optional[ExpectResult] = Field(None, description="Default expected result")
     timeout: Optional[int] = Field(None, description="Default timeout in seconds")
+    cli: Optional[Dict[str, str]] = Field(None, description="Default CLI option prefixes (e.g., {'net': 'stagenet'})")
     
     class Config:
         use_enum_values = True

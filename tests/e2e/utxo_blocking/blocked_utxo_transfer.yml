@@ -21,10 +21,7 @@ network:
   name: stagenet
 
 includes:
-  - common/networks/single_node.yml
-
-defaults:
-  network: "{{network_name}}"
+  - common/set_net_default.yml
 
 setup:
   # Create two wallets for testing
@@ -37,64 +34,64 @@ setup:
     wait: 1s
   
   # Create token with UTXO blocking
-  - cli: token_decl -net {{network}} -token BLOCKTEST -total_supply 10000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
 
   - wait_for_datum: "{{token_hash}}"
   
   # Emit tokens to sender
-  - cli: token_emit -net {{network}} -token BLOCKTEST -value 10000000 -addr {{sender_addr}}
+  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}}
     save: emission
   
   # Wait for emission
   - wait_for_datum: "{{emission}}"
   
   # Create UTXO #1 (will be blocked)
-  - cli: tx_create -net {{network}} -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo1
   
   # Wait for UTXO #1
   - wait_for_datum: "{{utxo1}}"
   
   # Create UTXO #2 (will remain unblocked)
-  - cli: tx_create -net {{network}} -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
     save: utxo2
   
   # Wait for UTXO #2
   - wait_for_datum: "{{utxo2}}"
   
   # Block UTXO #1
-  - cli: token_update -net {{network}} -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
+  - cli: token_update -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
     save: block_tx
 
   - wait_for_datum: "{{block_tx}}"
 
 test:
   # Attempt to spend blocked UTXO - should FAIL
-  - cli: tx_create -net {{network}} -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
     expect: error
     contains: "UTXO is blocked"
   
   # Attempt to spend unblocked UTXO - should SUCCESS
-  - cli: tx_create -net {{network}} -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
     save: transfer_tx
 
   - wait_for_datum: "{{transfer_tx}}"
 
 check:
   # Verify blocked UTXO was NOT spent
-  - cli: balance -net {{network}} -addr {{sender_addr}} -token BLOCKTEST
+  - cli: balance -addr {{sender_addr}} -token BLOCKTEST
     contains: "1000000"  # Blocked UTXO still in balance
   
   # Verify unblocked UTXO WAS spent
-  - cli: tx_history -net {{network}} -tx {{transfer_tx}}
+  - cli: tx_history -tx {{transfer_tx}}
     contains: "{{transfer_tx}}"
   
   # Verify receiver got tokens from unblocked UTXO
-  - cli: balance -net {{network}} -addr {{receiver_addr}} -token BLOCKTEST
+  - cli: balance -addr {{receiver_addr}} -token BLOCKTEST
     contains: "500000"
   
   # Verify blocklist still contains blocked UTXO
-  - cli: token info -net {{network}} -name BLOCKTEST -history_limit 10
+  - cli: token info -name BLOCKTEST -history_limit 10
     contains: "{{utxo1}}"
 
