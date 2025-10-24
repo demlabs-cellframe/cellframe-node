@@ -380,8 +380,28 @@ class ScenarioExecutor:
                 self._log_to_file(result["stderr"])
             self._log_to_file(f"{'=' * 70}\n")
             
-            # Check expected result
-            success = self._check_expectation(result, step.expect, step.contains)
+            # Special handling for wallet new - "already exists" is OK
+            is_wallet_new = 'wallet' in cmd.lower() and 'new' in cmd.lower()
+            wallet_already_exists = False
+            
+            if is_wallet_new:
+                import yaml
+                try:
+                    parsed = yaml.safe_load(result["stdout"].strip())
+                    if isinstance(parsed, dict) and 'errors' in parsed:
+                        errors = parsed['errors']
+                        if isinstance(errors, dict) and 'message' in errors:
+                            if 'already exists' in errors['message'].lower():
+                                wallet_already_exists = True
+                                self._log_to_file("ℹ Wallet already exists - will extract address")
+                except:
+                    pass
+            
+            # Check expected result (skip check if wallet already exists)
+            if wallet_already_exists:
+                success = True  # Treat "wallet exists" as success
+            else:
+                success = self._check_expectation(result, step.expect, step.contains)
             
             if not success:
                 ctx.add_result("cli", False, {
@@ -400,6 +420,45 @@ class ScenarioExecutor:
             # Save result to variable if requested
             if step.save:
                 output = result["stdout"].strip()
+                
+                # Special case: wallet new when wallet already exists
+                # Need to get wallet address via wallet info
+                if is_wallet_new and wallet_already_exists:
+                    import re
+                    # Extract wallet name from command
+                    wallet_match = re.search(r'-w\s+(\S+)', cmd)
+                    if wallet_match:
+                        wallet_name = wallet_match.group(1)
+                        self._log_to_file(f"Getting address for existing wallet: {wallet_name}")
+                        
+                        # Execute wallet info to get address
+                        info_cmd = f"wallet info -w {wallet_name}"
+                        info_result = await self._run_cli_command(info_cmd, step.node, step.timeout)
+                        
+                        if info_result["returncode"] == 0:
+                            # Try to extract address from wallet info
+                            from .extractors import DataExtractor
+                            addr, error = DataExtractor.extract_and_validate(
+                                output=info_result["stdout"],
+                                pattern=None,  # Use default wallet address pattern
+                                extract_type="wallet_address",
+                                required=False
+                            )
+                            
+                            if addr:
+                                ctx.set_variable(step.save, addr)
+                                self._log_to_file(f"✓ Extracted wallet address: {addr[:20]}...")
+                                # Continue to next step
+                                ctx.add_result("cli", True, {
+                                    "command": cmd,
+                                    "node": step.node,
+                                    "note": "Wallet already exists, address extracted"
+                                })
+                                
+                                if step.wait:
+                                    await self._wait_duration(step.wait)
+                                
+                                return
                 
                 # Try to extract hash from output for common commands
                 # token_decl, token_emit, tx_create, etc. return hash
