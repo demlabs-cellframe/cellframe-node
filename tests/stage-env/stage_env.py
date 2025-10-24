@@ -356,6 +356,140 @@ def exec(
 
 
 @app.command()
+def rebuild(
+    skip_confirm: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
+):
+    """🔨 Rebuild everything from scratch (cert-generator + cellframe images + network).
+    
+    This command will:
+    1. Stop the network
+    2. Rebuild cert-generator Docker image
+    3. Rebuild all cellframe-node Docker images
+    4. Clean and regenerate certificates
+    5. Regenerate configurations
+    6. Start the network
+    """
+    import subprocess
+    
+    if not skip_confirm:
+        print_warning("This will:")
+        print_warning("  • Stop the network")
+        print_warning("  • Rebuild cert-generator Docker image (may take 5-10 min)")
+        print_warning("  • Rebuild all cellframe-node images (no-cache)")
+        print_warning("  • Clean and regenerate certificates")
+        print_warning("  • Regenerate configurations")
+        print_warning("  • Start the network")
+        
+        if not confirm("Continue?"):
+            print_info("Rebuild cancelled")
+            raise typer.Exit(0)
+    
+    # Step 1: Stop network
+    print_info("\n📛 Step 1/6: Stopping network...")
+    try:
+        network_mgr = NetworkManager(BASE_PATH, config_path=CONFIG_PATH)
+        
+        async def _stop():
+            await network_mgr.stop()
+        
+        asyncio.run(_stop())
+        print_success("Network stopped")
+    except Exception as e:
+        print_warning(f"Network stop failed (maybe not running): {e}")
+    
+    # Step 2: Rebuild cert-generator image
+    print_info("\n🔧 Step 2/6: Rebuilding cert-generator Docker image...")
+    print_info("This may take 5-10 minutes...")
+    
+    try:
+        # Remove old image
+        subprocess.run(
+            ["docker", "rmi", "-f", "cf-cert-generator:latest"],
+            capture_output=True,
+            check=False
+        )
+        
+        # Find cellframe-node root (parent of tests/)
+        root_dir = BASE_PATH.parent.parent
+        
+        # Build new image
+        result = subprocess.run(
+            [
+                "docker", "build",
+                "--no-cache",
+                "-f", str(BASE_PATH / "Dockerfile.cert-generator"),
+                "-t", "cf-cert-generator:latest",
+                str(root_dir)
+            ],
+            cwd=str(root_dir),
+            capture_output=False,  # Show progress
+            text=True
+        )
+        
+        if result.returncode != 0:
+            raise RuntimeError(f"cert-generator build failed with code {result.returncode}")
+        
+        print_success("cert-generator image rebuilt")
+    except Exception as e:
+        print_error(f"Failed to rebuild cert-generator: {e}")
+        raise typer.Exit(1)
+    
+    # Step 3: Clean certificates
+    print_info("\n🧹 Step 3/6: Cleaning old certificates...")
+    config_loader = ConfigLoader(BASE_PATH, CONFIG_PATH)
+    paths_config = config_loader.get_paths_config()
+    cache_dir_relative = paths_config.get('cache_dir', 'cache')
+    cache_dir = (BASE_PATH / cache_dir_relative).resolve()
+    certs_dir = cache_dir / "certs"
+    
+    cert_gen = CertGenerator(BASE_PATH, certs_dir=certs_dir)
+    cert_gen.clean()
+    print_success("Certificates cleaned")
+    
+    # Step 4: Generate new certificates
+    print_info("\n🔐 Step 4/6: Generating new certificates...")
+    try:
+        network_mgr = NetworkManager(BASE_PATH, topology_name="default", config_path=CONFIG_PATH)
+        network_mgr.generate_node_configs()  # Generate configs first
+        
+        # Get node count from topology
+        node_count = len(network_mgr.node_configs)
+        
+        # Generate certificates
+        result = cert_gen.generate_all(
+            network_name="stagenet",
+            node_count=node_count,
+            validator_count=3
+        )
+        
+        print_success(f"Generated certificates for {node_count} nodes")
+    except Exception as e:
+        print_error(f"Failed to generate certificates: {e}")
+        raise typer.Exit(1)
+    
+    # Step 5: Rebuild cellframe images and start network
+    print_info("\n🚀 Step 5/6: Rebuilding cellframe images and starting network...")
+    print_info("This may take several minutes...")
+    
+    try:
+        async def _start():
+            await network_mgr.start(rebuild=True, wait_ready=True)
+        
+        asyncio.run(_start())
+        print_success("Network started with fresh images")
+    except Exception as e:
+        print_error(f"Failed to start network: {e}")
+        raise typer.Exit(1)
+    
+    # Step 6: Show status
+    print_info("\n📊 Step 6/6: Network status...")
+    _show_status(network_mgr)
+    
+    print_success("\n✅ Full rebuild completed successfully!")
+    print_info("All images, certificates, and network are now fresh.")
+
+
+@app.command()
 def clean(
     all: bool = typer.Option(False, "--all", help="Clean everything (build + certs + cache)"),
     build: bool = typer.Option(False, "--build", help="Clean build artifacts"),
