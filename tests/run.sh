@@ -55,6 +55,7 @@ TEST_BUILD_DIR="$PROJECT_ROOT/build"
 RUN_E2E=false
 RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
+SPECIFIC_TESTS=()
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -71,7 +72,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [OPTIONS]"
+            echo "Usage: $0 [OPTIONS] [TEST_PATH...]"
             echo ""
             echo "Options:"
             echo "  --e2e           Run only E2E tests"
@@ -79,18 +80,34 @@ while [[ $# -gt 0 ]]; do
             echo "  --clean         Clean before running"
             echo "  -h, --help      Show this help message"
             echo ""
-            echo "If no test type specified, all tests will run."
+            echo "Examples:"
+            echo "  $0                                    # Run all tests"
+            echo "  $0 --e2e                              # Run all E2E tests"
+            echo "  $0 tests/e2e/token                    # Run specific test suite"
+            echo "  $0 tests/e2e/token/001_token_decl.yml # Run specific test"
+            echo "  $0 tests/functional/wallet tests/e2e/token # Run multiple suites"
+            echo ""
+            echo "If no test type or path specified, all tests will run."
             exit 0
             ;;
-        *)
+        -*)
             error "Unknown option: $1"
             exit 1
+            ;;
+        *)
+            # It's a test path
+            SPECIFIC_TESTS+=("$1")
+            shift
             ;;
     esac
 done
 
-# If neither specified, run both
-if ! $RUN_E2E && ! $RUN_FUNCTIONAL; then
+# If specific tests provided, use them directly
+if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
+    info "Specific tests requested: ${SPECIFIC_TESTS[*]}"
+    # Don't set RUN_E2E or RUN_FUNCTIONAL - we'll use SPECIFIC_TESTS directly
+elif ! $RUN_E2E && ! $RUN_FUNCTIONAL; then
+    # If neither specified and no specific tests, run both
     RUN_E2E=true
     RUN_FUNCTIONAL=true
 fi
@@ -239,22 +256,41 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             # Collect ALL test directories for single run
             TEST_DIRS=()
             
-            # Add stage-env base tests (if E2E enabled)
-            if $RUN_E2E && [ -d "$STAGE_ENV_BASE_TESTS" ]; then
-                info "Adding base tests: $STAGE_ENV_BASE_TESTS"
-                TEST_DIRS+=("$STAGE_ENV_BASE_TESTS")
-            fi
-            
-            # Add E2E scenarios tests (if E2E enabled)
-            if $RUN_E2E && [ -d "$SCENARIOS_TESTS" ]; then
-                info "Adding E2E tests: $SCENARIOS_TESTS"
-                TEST_DIRS+=("$SCENARIOS_TESTS")
-            fi
-            
-            # Add functional tests (if functional enabled)
-            if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
-                info "Adding functional tests: $FUNCTIONAL_TESTS"
-                TEST_DIRS+=("$FUNCTIONAL_TESTS")
+            # If specific tests provided, use them
+            if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
+                for test_path in "${SPECIFIC_TESTS[@]}"; do
+                    # Convert relative to absolute if needed
+                    if [[ "$test_path" == /* ]]; then
+                        abs_path="$test_path"
+                    else
+                        abs_path="$PROJECT_ROOT/$test_path"
+                    fi
+                    
+                    if [ -e "$abs_path" ]; then
+                        info "Adding specific test: $test_path"
+                        TEST_DIRS+=("$abs_path")
+                    else
+                        warning "Test path not found: $test_path (resolved to $abs_path)"
+                    fi
+                done
+            else
+                # Add stage-env base tests (if E2E enabled)
+                if $RUN_E2E && [ -d "$STAGE_ENV_BASE_TESTS" ]; then
+                    info "Adding base tests: $STAGE_ENV_BASE_TESTS"
+                    TEST_DIRS+=("$STAGE_ENV_BASE_TESTS")
+                fi
+                
+                # Add E2E scenarios tests (if E2E enabled)
+                if $RUN_E2E && [ -d "$SCENARIOS_TESTS" ]; then
+                    info "Adding E2E tests: $SCENARIOS_TESTS"
+                    TEST_DIRS+=("$SCENARIOS_TESTS")
+                fi
+                
+                # Add functional tests (if functional enabled)
+                if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
+                    info "Adding functional tests: $FUNCTIONAL_TESTS"
+                    TEST_DIRS+=("$FUNCTIONAL_TESTS")
+                fi
             fi
             
             # Run ALL tests in one go (single run_id, single artifacts folder)
