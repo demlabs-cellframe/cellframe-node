@@ -352,15 +352,6 @@ url = https://pub.cellframe.net/linux/cellframe-node/master/cellframe-node-5.6-m
 #   - Hardware access: mount specific devices (GPU, USB, serial ports)
 #   - Advanced networking: custom network modes, sysctls
 #
-# IMPORTANT: Device mappings vs Capabilities
-# -------------------------------------------
-# - /dev/net/tun: Usually NOT needed! Present by default in most images.
-#                 Only NET_ADMIN capability required for VPN/tunnels.
-#                 Add device mapping only if missing in your base image.
-#
-# - Hardware devices: Need explicit mapping (GPU, USB, serial, etc)
-#   Example: /dev/nvidia0, /dev/ttyUSB0, /dev/video0
-#
 # ============================================================================
 
 # Example configurations (commented out by default):

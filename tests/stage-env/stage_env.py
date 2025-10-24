@@ -450,10 +450,10 @@ def rebuild(
     print_info("\n🔐 Step 4/6: Generating new certificates...")
     try:
         network_mgr = NetworkManager(BASE_PATH, topology_name="default", config_path=CONFIG_PATH)
-        network_mgr.generate_node_configs()  # Generate configs first
+        node_configs = network_mgr.generate_node_configs()  # Generate configs first
         
-        # Get node count from topology
-        node_count = len(network_mgr.node_configs)
+        # Get node count from generated configs
+        node_count = len(node_configs)
         
         # Generate certificates
         result = cert_gen.generate_all(
