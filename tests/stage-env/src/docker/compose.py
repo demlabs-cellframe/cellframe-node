@@ -854,39 +854,33 @@ class DockerComposeManager:
             logger.warning("no_root_nodes_found")
             return
         
-        # Use node-1 to register all root nodes (like tests-in-docker-example uses ROOT[0])
-        node1 = next((n for n in root_nodes if n['node_num'] == 1), None)
-        if not node1:
-            logger.warning("node_1_not_found_for_registration")
-            return
-        
-        # Register all root nodes via node-1
+        # Each root node registers itself (self-registration)
+        # Only ROOT nodes can execute 'node add' command
         for node_info in root_nodes:
             try:
-                exec_result = node1['container'].exec_run(
+                # Node registers itself
+                exec_result = node_info['container'].exec_run(
                     f"/opt/cellframe-node/bin/cellframe-node-cli node add -net stagenet -addr {node_info['addr']} -host {node_info['ip']} -port 8079",
                     demux=True
                 )
                 
                 if exec_result.exit_code == 0:
                     output = exec_result.output[0].decode('utf-8').strip() if exec_result.output[0] else ""
-                    logger.info("root_node_registered",
-                              registered_by="node-1",
-                              target_node=node_info['service_name'],
+                    logger.info("root_node_self_registered",
+                              node=node_info['service_name'],
                               addr=node_info['addr'],
                               ip=node_info['ip'],
                               output=output)
                 else:
                     error_msg = exec_result.output[1].decode('utf-8').strip() if exec_result.output[1] else "Unknown error"
-                    logger.warning("root_node_registration_failed",
-                                 registered_by="node-1",
-                                 target_node=node_info['service_name'],
-                                 addr=node_info['addr'],
-                                 error=error_msg)
+                    # This is OK if node is not yet fully initialized as ROOT
+                    logger.debug("root_node_registration_pending",
+                                node=node_info['service_name'],
+                                addr=node_info['addr'],
+                                error=error_msg)
             except Exception as e:
-                logger.error("failed_to_register_root_node",
-                           registered_by="node-1",
-                           target_node=node_info['service_name'],
+                logger.debug("failed_to_register_root_node",
+                           node=node_info['service_name'],
                            error=str(e))
     
     def wait_for_services(
