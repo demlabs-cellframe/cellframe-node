@@ -12,35 +12,31 @@ network:
 includes:
   - common/networks/single_node.yml
 
+defaults:
+  node: node1
+  wait: 1s
+
 setup:
   - wait: 2s
 
 test:
-  # Test: Create wallet with default signature type
+  # Create wallet with default signature type
   - cli: wallet new -w test_wallet_default
-    node: node1
-    expect: success
     save: wallet1_result
-    wait: 1s
     description: "Create wallet with default sig type"
   
-  # Test: List wallets
+  # List wallets
   - cli: wallet list
-    node: node1
-    expect: success
     save: wallet_list
     description: "List all wallets"
 
 check:
   # Verify wallet appears in list
   - cli: wallet list
-    node: node1
     contains: "test_wallet_default"
     description: "Wallet appears in list"
   
   # Get wallet info
   - cli: wallet info -w test_wallet_default -net stagenet
-    node: node1
     contains: "test_wallet_default"
     description: "Wallet info is accessible"
-

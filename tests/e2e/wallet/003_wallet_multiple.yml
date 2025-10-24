@@ -12,50 +12,35 @@ network:
 includes:
   - common/networks/single_node.yml
 
+defaults:
+  node: node1
+  wait: 1s
+
 setup:
   - wait: 2s
 
 test:
-  # Test: Create multiple wallets
-  - cli: wallet new -w multi_wallet_1
-    node: node1
-    expect: success
-    wait: 1s
-    description: "Create wallet 1"
+  # Create multiple wallets
+  - loop: 3
+    steps:
+      - cli: wallet new -w multi_wallet_{{iteration}}
+        description: "Create wallet {{iteration}}"
   
-  - cli: wallet new -w multi_wallet_2
-    node: node1
-    expect: success
-    wait: 1s
-    description: "Create wallet 2"
-  
-  - cli: wallet new -w multi_wallet_3
-    node: node1
-    expect: success
-    wait: 1s
-    description: "Create wallet 3"
-  
-  # Test: List all wallets
+  # List all wallets
   - cli: wallet list
-    node: node1
-    expect: success
     save: wallet_list
     description: "List all wallets"
 
 check:
   # Verify all wallets are in list
   - cli: wallet list
-    node: node1
     contains: "multi_wallet_1"
     description: "Wallet 1 appears in list"
   
   - cli: wallet list
-    node: node1
     contains: "multi_wallet_2"
     description: "Wallet 2 appears in list"
   
   - cli: wallet list
-    node: node1
     contains: "multi_wallet_3"
     description: "Wallet 3 appears in list"
-
