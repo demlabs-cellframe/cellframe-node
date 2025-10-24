@@ -21,6 +21,7 @@ network:
   name: stagenet
 
 includes:
+  - common/create_test_cert.yml
   - common/set_net_default.yml
 
 setup:
@@ -33,8 +34,8 @@ setup:
     save: receiver_addr
     wait: 1s
   
-  # Create token with UTXO blocking
-  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -flags UTXO_BLOCKING_ENABLED
+  # Create token (UTXO blocking через token_update, не через флаг)
+  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1
     save: token_hash
 
   - wait_for_datum: "{{token_hash}}"

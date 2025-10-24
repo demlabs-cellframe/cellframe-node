@@ -1,14 +1,8 @@
 # E2E Test Suite: Mempool Operations
 # Complete mempool testing
 
-name: Mempool Operations Suite
+suite: "Mempool Operations Suite"
 description: End-to-end testing of mempool operations and transaction processing
 tags: [e2e, mempool, transactions]
 version: "1.0"
-
-network:
-  topology: default
-
-# This is a suite description file
-# Individual tests are in the mempool/ subdirectory
 

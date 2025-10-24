@@ -1,0 +1,12 @@
+Token declaration:
+Simple token declaration:
+token_decl -net <net_name> [-chain <chain_name>] -token <token_ticker> -total_supply <total_supply> -signs_total <sign_total> -signs_emission <signs_for_emission> -certs <certs_list>
+	  Declare new simple token for <net_name>:<chain_name> with ticker <token_ticker>
+
+Extended private token declaration
+token_decl -net <net_name> [-chain <chain_name>] -token <token_ticker> -type private -total_supply <total_supply> -decimals <18> -signs_total <sign_total> -signs_emission <signs_for_emission> -certs <certs_list> -flags [<Flag 1>][,<Flag 2>]...[,<Flag N>]...
+
+==Flags==
+	 ALL_BLOCKED:	 Blocked all permissions
+	 UTXO_BLOCKING_ENABLED:	 Enable UTXO blocking feature
+

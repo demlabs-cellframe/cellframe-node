@@ -269,6 +269,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             continue
                     
                     # Execute suite scenarios
+                    # Create fresh parser for each suite to avoid stale cache
                     parser = ScenarioParser(scenarios_root=suite_path, common_root=common_root)
                     
                     for scenario_file in suite_scenarios:

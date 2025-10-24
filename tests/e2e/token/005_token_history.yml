@@ -7,6 +7,7 @@ tags: [e2e, token, history]
 version: "1.0"
 
 includes:
+  - common/create_test_cert.yml
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
   - common/set_net_default.yml
@@ -21,7 +22,7 @@ setup:
     save: wallet_addr
 
   # Create and emit token
-  - cli: token_decl -token HISTTEST -total_supply 1000000
+  - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
   
   - cli: token_emit -token HISTTEST -value 5000 -addr {{wallet_addr}}
     save: emit_tx

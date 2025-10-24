@@ -1,14 +1,8 @@
 # E2E Test Suite: Chain Operations
 # Complete blockchain operations testing
 
-name: Chain Operations Suite
+suite: "Chain Operations Suite"
 description: End-to-end testing of chain list, info, and atom operations
 tags: [e2e, chain, blockchain]
 version: "1.0"
-
-network:
-  topology: default
-
-# This is a suite description file
-# Individual tests are in the chain/ subdirectory
 

@@ -10,6 +10,7 @@ network:
   topology: default
 
 includes:
+  - common/create_test_cert.yml
   - common/networks/single_node.yml
 
 setup:
@@ -17,7 +18,7 @@ setup:
 
 test:
   # Test: Create token with ALL_FROZEN flag
-  - cli: token_decl -net stagenet -token FROZEN -total 1000000 -flags ALL_FROZEN
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token FROZEN -total_supply 1000000 -flags ALL_FROZEN
     node: node1
     expect: success
     save: frozen_token
@@ -25,7 +26,7 @@ test:
     description: "Create token with ALL_FROZEN flag"
   
   # Test: Create token with ALL_ALLOWED_FOR_ALL flag  
-  - cli: token_decl -net stagenet -token ALLOWED -total 1000000 -flags ALL_ALLOWED_FOR_ALL
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ALLOWED -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL
     node: node1
     expect: success
     save: allowed_token

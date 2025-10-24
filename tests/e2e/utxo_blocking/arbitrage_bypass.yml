@@ -21,14 +21,15 @@ network:
   name: stagenet
 
 includes:
+  - common/create_test_cert.yml
   - common/set_net_default.yml
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
 
 setup:
-  # Create token with UTXO blocking feature
-  - cli: token_decl -token ARBTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
+  # Create token (UTXO blocking через tx_sender_blocked, не через флаг)
+  - cli: token_decl -token ARBTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
     save: token_hash
     wait: 3s
   

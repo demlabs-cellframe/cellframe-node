@@ -12,6 +12,7 @@ network:
 
 # Include common templates
 includes:
+  - common/create_test_cert.yml
   - common/networks/network_minimal.yml
   - common/wallets/create_wallet.yml
 
@@ -23,7 +24,7 @@ defaults:
 # Setup phase: create token with UTXO blocking enabled
 setup:
 # Create ARBTEST token with UTXO blocking
-  - cli: token_decl -net stagenet -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ARBTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
     save: token_hash
   
   # Emit ARBTEST tokens

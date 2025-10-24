@@ -1,14 +1,8 @@
 # Functional Test Suite: Token Features
 # Functional testing of advanced token features
 
-name: Token Features Suite
+suite: "Token Features Suite"
 description: Functional testing of token flags, updates, and special features
 tags: [functional, token, features]
 version: "1.0"
-
-network:
-  topology: default
-
-# This is a suite description file
-# Individual tests are in the token/ subdirectory
 

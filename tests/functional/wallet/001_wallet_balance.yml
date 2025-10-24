@@ -10,6 +10,7 @@ network:
   topology: default
 
 includes:
+  - common/create_test_cert.yml
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
@@ -20,8 +21,8 @@ defaults:
 
 setup:
   # Create and emit tokens
-  - cli: token_decl -net stagenet -token BALTEST -total 1000000
-  - cli: token_emit -net stagenet -token BALTEST -value 5000 -addr {{wallet_addr}}
+  - cli: token_decl -token BALTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_emit -token BALTEST -value 5000 -addr {{wallet_addr}}
 
 test:
   # Test: Check wallet balance

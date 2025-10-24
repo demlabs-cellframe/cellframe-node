@@ -112,8 +112,8 @@ class CLICommandParser:
         try:
             logger.info("Parsing CLI help from container", container=node_container)
             
-            # Get main help
-            main_help = await self._exec_cli_help(node_container, [])
+            # Get main help (use "help" command to list all commands)
+            main_help = await self._exec_cli_help(node_container, ["help"])
             if not main_help:
                 logger.warning("Failed to get main CLI help")
                 return False

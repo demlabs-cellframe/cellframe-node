@@ -1,0 +1,18 @@
+# Common: Create temporary test certificate
+# Creates a certificate for signing test transactions
+
+setup:
+  # Create temporary certificate for test operations
+  - bash: |
+      cellframe-node-tool cert create test_cert sig_dil
+    save: cert_created
+
+# Set test_cert variable for use in CLI defaults
+variables:
+  test_cert: "test_cert"
+
+# Add certs to CLI defaults
+defaults:
+  cli:
+    certs: "{{test_cert}}"
+

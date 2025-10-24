@@ -10,6 +10,7 @@ network:
   topology: default
 
 includes:
+  - common/create_test_cert.yml
   - common/networks/single_node.yml
 
 defaults:
@@ -38,10 +39,10 @@ setup:
 test:
   - wait: 3s
   # Step 1: Create token
-  - cli: token_decl -net stagenet -token LIFECYCLE -total 1000000
+  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
   
   # Step 2: Emit to wallet1
-  - cli: token_emit -net stagenet -token LIFECYCLE -value 10000 -addr {{wallet1_addr}}
+  - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}}
     save: emission_tx
   
   # Wait for emission to propagate
