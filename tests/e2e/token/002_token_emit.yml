@@ -13,28 +13,24 @@ includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
 
+# Global defaults - all commands on node1 with 3s wait
+defaults:
+  node: node1
+  wait: 3s
+
 setup:
-  # Create token
+  # Create token (inherits node and wait from global defaults)
   - cli: token_decl -net stagenet -token EMITTEST -total 1000000
-    node: node1
-    expect: success
-    wait: 3s
     description: "Declare EMITTEST token"
 
 test:
-  # Test: Emit tokens to wallet
+  # Emit tokens (inherits node and wait from global defaults)
   - cli: token_emit -net stagenet -token EMITTEST -value 10000 -addr {{wallet_addr}}
-    node: node1
-    expect: success
     save: emit_tx
-    wait: 3s
     description: "Emit tokens to wallet"
 
 check:
-  # Verify emission in token history
+  # Verify emission (inherits node from global defaults)
   - cli: token info -net stagenet -token EMITTEST -history_limit 10
-    node: node1
-    expect: success
     contains: "EMITTEST"
     description: "Token history contains emission"
-

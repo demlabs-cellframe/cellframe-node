@@ -1,0 +1,97 @@
+# Example: Using Defaults and Groups
+# Demonstrates hierarchical parameter inheritance
+
+name: Defaults and Groups Example
+description: Shows how to use defaults at different levels and group steps
+tags: [example, defaults, groups]
+version: "1.0"
+
+network:
+  topology: default
+
+# Global defaults - applied to ALL steps in ALL sections
+defaults:
+  wait: 2s
+  timeout: 60
+
+# Setup with section-level defaults
+setup:
+  defaults:
+    node: node1
+    wait: 3s  # Override global wait for setup
+  
+  steps:
+    # This step inherits: node=node1, wait=3s, timeout=60
+    - cli: wallet new -w test_wallet
+      description: "Create wallet (inherits all defaults)"
+    
+    # This step overrides node but keeps other defaults
+    - cli: wallet new -w test_wallet2
+      node: node2
+      description: "Create wallet on node2"
+
+# Test with groups
+test:
+  defaults:
+    node: node1  # Default node for test section
+  
+  steps:
+    # Group 1: Operations on node1 (inherits section default)
+    - group:
+        name: "Node1 Operations"
+        description: "All commands run on node1"
+        defaults:
+          wait: 5s  # Longer wait for this group
+        
+        steps:
+          - cli: token_decl -net stagenet -token TEST1 -total 1000000
+            description: "Declare token"
+          
+          - cli: token_emit -net stagenet -token TEST1 -value 1000 -addr {{wallet_addr}}
+            description: "Emit tokens"
+          
+          # Override wait for this specific step
+          - cli: wallet info -w test_wallet -net stagenet
+            wait: 1s
+            description: "Quick wallet check"
+    
+    # Group 2: Operations on node2
+    - group:
+        name: "Node2 Operations"
+        description: "All commands run on node2"
+        defaults:
+          node: node2
+          wait: 4s
+        
+        steps:
+          - cli: token_decl -net stagenet -token TEST2 -total 2000000
+            description: "Declare another token"
+          
+          - cli: wallet list
+            description: "List wallets on node2"
+    
+    # Single step outside groups (uses section defaults)
+    - cli: net -net stagenet get status
+      description: "Check network status on node1"
+
+# Check phase with defaults
+check:
+  defaults:
+    node: node1
+  
+  steps:
+    # All these checks run on node1
+    - cli: wallet list
+      contains: "test_wallet"
+      description: "Verify wallet exists"
+    
+    # Override to check on node2
+    - cli: wallet list
+      node: node2
+      contains: "test_wallet2"
+      description: "Verify wallet2 on node2"
+    
+    - cli: token info -net stagenet -name TEST1
+      contains: "TEST1"
+      description: "Verify token1 info"
+
