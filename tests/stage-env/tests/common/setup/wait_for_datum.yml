@@ -1,0 +1,8 @@
+# Common: Wait for Datum Propagation
+# Wait for a datum (transaction/emission) to be processed
+# Variables: datum_hash (required), network_name (default: stagenet)
+
+test:
+  - wait_for_datum: "{{datum_hash}}"
+    network: "{{network_name|stagenet}}"
+

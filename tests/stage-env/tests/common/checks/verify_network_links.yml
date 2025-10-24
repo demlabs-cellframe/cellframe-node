@@ -1,0 +1,14 @@
+# Common: Verify Network Links Active
+# Check that a node has active network links
+# Variables: target_node (default: node1), network_name (default: stagenet)
+
+check:
+  - cli: net -net {{network_name|stagenet}} link list
+    node: "{{target_node|node1}}"
+    save: links_check
+  
+  - python: |
+      links = ctx.get_variable('links_check')
+      assert 'active' in links.lower() or 'established' in links.lower(), \
+        f"Node {{target_node|node1}} should have active network connections"
+

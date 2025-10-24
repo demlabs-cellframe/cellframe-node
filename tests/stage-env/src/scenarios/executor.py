@@ -268,6 +268,12 @@ class ScenarioExecutor:
             ) from e
         finally:
             self._running = False
+            # Stop monitoring services
+            try:
+                monitoring = await MonitoringManager.get_instance()
+                await monitoring.stop()
+            except Exception as e:
+                logger.warning(f"Failed to stop monitoring: {e}")
     
     async def _execute_steps(
         self,
