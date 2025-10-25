@@ -363,6 +363,60 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             if isinstance(scenario, SuiteDescriptor):
                                 continue
                             
+                            # CRITICAL: Merge suite includes/defaults into scenario
+                            # Suite includes provide common settings (like -net stagenet)
+                            if isinstance(suite_spec, SuiteDescriptor) and suite_spec.includes:
+                                # Load suite includes and extract defaults
+                                from ..scenarios.parser import ScenarioParser as SP
+                                suite_parser = SP(scenarios_root=suite_path, common_root=common_root)
+                                
+                                # Process suite includes
+                                suite_includes_data = {}
+                                for include_path in suite_spec.includes:
+                                    search_paths = [
+                                        (suite_path / include_path).resolve(),
+                                        (base_path / "tests" / include_path).resolve(),
+                                        (common_root / include_path).resolve(),
+                                    ]
+                                    
+                                    include_full = None
+                                    for path in search_paths:
+                                        if path.exists():
+                                            include_full = path
+                                            break
+                                    
+                                    if include_full:
+                                        with open(include_full, 'r', encoding='utf-8') as f:
+                                            import yaml
+                                            include_data = yaml.safe_load(f)
+                                            if include_data and isinstance(include_data, dict):
+                                                # Merge defaults
+                                                if 'defaults' in include_data:
+                                                    if not suite_includes_data.get('defaults'):
+                                                        suite_includes_data['defaults'] = {}
+                                                    # Deep merge defaults
+                                                    for key, value in include_data['defaults'].items():
+                                                        if key not in suite_includes_data['defaults']:
+                                                            suite_includes_data['defaults'][key] = value
+                                                        elif isinstance(value, dict) and isinstance(suite_includes_data['defaults'][key], dict):
+                                                            suite_includes_data['defaults'][key].update(value)
+                                
+                                # Merge suite defaults into scenario defaults
+                                if suite_includes_data.get('defaults'):
+                                    from ..scenarios.schema import StepDefaults
+                                    if not scenario.defaults:
+                                        scenario.defaults = StepDefaults()
+                                    
+                                    suite_defaults_dict = suite_includes_data['defaults']
+                                    # Merge cli defaults
+                                    if 'cli' in suite_defaults_dict:
+                                        if not scenario.defaults.cli:
+                                            scenario.defaults.cli = {}
+                                        # Add suite CLI defaults that aren't in scenario
+                                        for opt, val in suite_defaults_dict['cli'].items():
+                                            if opt not in scenario.defaults.cli:
+                                                scenario.defaults.cli[opt] = val
+                            
                             print_info(f"  📋 Name: {scenario.name}")
                             if hasattr(scenario, 'description') and scenario.description:
                                 print_info(f"  📝 Description: {scenario.description}")
