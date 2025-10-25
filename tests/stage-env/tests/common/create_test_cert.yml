@@ -8,12 +8,7 @@ setup:
     node: node1
     save: cert_created
 
-# Set test_cert variable for use in CLI defaults
+# Set test_cert variable for use in other scenarios
 variables:
   test_cert: "test_cert"
-
-# Add certs to CLI defaults
-defaults:
-  cli:
-    certs: "{{test_cert}}"
 
