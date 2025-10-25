@@ -1196,67 +1196,89 @@ class ScenarioExecutor:
         has_error = False
         stdout = result["stdout"].strip()
         
+        # Always log output for debugging
+        self._log_to_file(f"\n[CLI OUTPUT CHECK]")
+        self._log_to_file(f"Exit code: {result['returncode']}")
+        self._log_to_file(f"Expect: {expect}")
+        self._log_to_file(f"Output length: {len(stdout)} chars")
+        if stdout:
+            self._log_to_file(f"Output preview: {stdout[:500]}")
+        
         if stdout:
             # Try to parse as YAML first (Cellframe CLI default format)
             try:
                 yaml_response = yaml.safe_load(stdout)
                 
-                if self.debug:
-                    self._log_to_file(f"[DEBUG] YAML parsed: type={type(yaml_response)}, value={yaml_response}")
+                self._log_to_file(f"[YAML PARSE] Success: type={type(yaml_response)}")
                 
                 if isinstance(yaml_response, dict):
                     # Check for 'errors' key
                     if "errors" in yaml_response:
                         errors = yaml_response["errors"]
-                        if self.debug:
-                            self._log_to_file(f"[DEBUG] Found 'errors' in YAML: type={type(errors)}, value={errors}")
+                        self._log_to_file(f"[YAML ERRORS FIELD] Found: type={type(errors)}, value={errors}")
                         # Consider it an error if errors field is not empty
                         if errors:
                             if isinstance(errors, dict) and errors:
                                 has_error = True
-                                if self.debug:
-                                    self._log_to_file("[DEBUG] Detected error: errors is non-empty dict")
+                                self._log_to_file("[ERROR DETECTED] Non-empty errors dict")
                             elif isinstance(errors, list) and len(errors) > 0:
                                 has_error = True
-                                if self.debug:
-                                    self._log_to_file("[DEBUG] Detected error: errors is non-empty list")
+                                self._log_to_file("[ERROR DETECTED] Non-empty errors list")
+                    else:
+                        self._log_to_file("[YAML] No 'errors' field found")
             except (yaml.YAMLError, ValueError, AttributeError) as e:
+                self._log_to_file(f"[YAML PARSE] Failed: {e}")
                 # Try JSON format
                 try:
                     json_response = json.loads(stdout)
+                    
+                    self._log_to_file(f"[JSON PARSE] Success: type={type(json_response)}")
                     
                     if isinstance(json_response, dict):
                         # Check for 'errors' key (can be dict or list)
                         if "errors" in json_response:
                             errors = json_response["errors"]
+                            self._log_to_file(f"[JSON ERRORS FIELD] Found: type={type(errors)}, value={errors}")
                             # Consider it an error if errors field is not empty
                             if errors:
                                 if isinstance(errors, dict) and errors:
                                     has_error = True
+                                    self._log_to_file("[ERROR DETECTED] Non-empty JSON errors dict")
                                 elif isinstance(errors, list) and len(errors) > 0:
                                     has_error = True
-                except (json.JSONDecodeError, ValueError):
+                                    self._log_to_file("[ERROR DETECTED] Non-empty JSON errors list")
+                except (json.JSONDecodeError, ValueError) as e:
+                    self._log_to_file(f"[JSON PARSE] Failed: {e}")
                     # Not JSON or YAML - check for text error patterns
                     error_patterns = ["error:", "Error:", "ERROR:", "failed", "Failed"]
                     if any(pattern in stdout for pattern in error_patterns):
                         has_error = True
+                        self._log_to_file(f"[ERROR DETECTED] Text pattern match")
+        
+        # Final decision
+        self._log_to_file(f"[DECISION] has_error={has_error}, expect={expect}")
         
         # Check expectation
         if expect == "success":
             # Success means: returncode 0 AND no errors
             if result["returncode"] != 0:
+                self._log_to_file(f"[FAIL] returncode != 0")
                 return False
             if has_error:
+                self._log_to_file(f"[FAIL] has_error=True")
                 return False
         elif expect == "error":
             # Error means: returncode != 0 OR has errors
             if result["returncode"] == 0 and not has_error:
+                self._log_to_file(f"[FAIL] No error detected but expected error")
                 return False
         
         # Check contains if specified
         if contains:
             if contains not in stdout:
+                self._log_to_file(f"[FAIL] contains check failed: '{contains}' not in output")
                 return False
         
+        self._log_to_file(f"[SUCCESS] Expectation met")
         return True
 
