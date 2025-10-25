@@ -20,13 +20,13 @@ defaults:
 
 setup:
   # Create token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token UPDTEST -total_supply 1000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token UPDTEST -total_supply 1000000 -certs test_cert
   # Emit tokens
-  - cli: token_emit -net stagenet -token UPDTEST -value 5000 -addr {{wallet_addr}}
+  - cli: token_emit -token UPDTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
 
 test:
   # Test: Get token info
-  - cli: token info -net stagenet -name UPDTEST
+  - cli: token info -name UPDTEST
     save: token_info
 
 check:

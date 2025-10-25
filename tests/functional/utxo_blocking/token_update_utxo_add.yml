@@ -21,32 +21,32 @@ defaults:
 
 setup:
   # Create token with UTXO blocking
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ADDTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ADDTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED -certs test_cert
     save: token
   
   # Emit and create UTXO
-  - cli: token_emit -net stagenet -token ADDTEST -value 1000 -addr {{wallet_addr}}
+  - cli: token_emit -token ADDTEST -value 1000 -addr {{wallet_addr}} -certs test_cert
     save: emission
   
   - wait_for_datum: "{{emission}}"
   
   # Create UTXO
-  - cli: tx_create -net stagenet -token ADDTEST -from_emission {{emission}} -value 500 -fee 0.1
+  - cli: tx_create -token ADDTEST -from_emission {{emission}} -value 500 -fee 0.1
     save: utxo
   
   - wait_for_datum: "{{utxo}}"
 
 test:
   # Test: Add UTXO to blocklist
-  - cli: token_update -net stagenet -token ADDTEST -utxo_blocked_add {{utxo}}:0
+  - cli: token_update -token ADDTEST -utxo_blocked_add {{utxo}}:0
 
 check:
   # Verify UTXO is in blocklist
-  - cli: token info -net stagenet -name ADDTEST
+  - cli: token info -name ADDTEST
     contains: "ADDTEST"
   
   # Verify UTXO is actually blocked - try to use it
-  - cli: tx_create -net stagenet -token ADDTEST -from {{utxo}}:0 -to_addr {{wallet_addr}} -value 100 -fee 0.1
+  - cli: tx_create -token ADDTEST -from {{utxo}}:0 -to_addr {{wallet_addr}} -value 100 -fee 0.1
     expect: error
     contains: "blocked"
 

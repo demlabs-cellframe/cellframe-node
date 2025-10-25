@@ -15,12 +15,12 @@ includes:
 
 setup:
   # Create test tokens
-  - cli: token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save: list1_hash
   
   - wait_for_datum: "{{list1_hash}}"
   
-  - cli: token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save: list2_hash
   
   - wait_for_datum: "{{list2_hash}}"

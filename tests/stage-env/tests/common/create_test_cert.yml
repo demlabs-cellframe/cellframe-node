@@ -1,5 +1,6 @@
 # Common: Create temporary test certificate
 # Creates a certificate for signing test transactions
+# After including this, use -certs test_cert explicitly in your commands
 
 setup:
   # Create temporary certificate for test operations
@@ -8,7 +9,7 @@ setup:
     node: node1
     save: cert_created
 
-# Set test_cert variable for use in other scenarios
+# Set test_cert variable for reference in scenarios
 variables:
   test_cert: "test_cert"
 

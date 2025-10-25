@@ -24,39 +24,39 @@ defaults:
 # Setup phase: create token with UTXO blocking enabled
 setup:
 # Create ARBTEST token with UTXO blocking
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ARBTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ARBTEST -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED -certs test_cert
     save: token_hash
   
   # Emit ARBTEST tokens
-  - cli: token_emit -net stagenet -token ARBTEST -value 1000000 -addr {{wallet_addr}}
+  - cli: token_emit -token ARBTEST -value 1000000 -addr {{wallet_addr}} -certs test_cert
     save: emission_tx
   
   # Create transaction from emission
-  - cli: tx_create -net stagenet -token ARBTEST -from_emission {{emission_tx}} -value 500 -fee 0.1
+  - cli: tx_create -token ARBTEST -from_emission {{emission_tx}} -value 500 -fee 0.1
     save: tx_hash
     wait: 5s
   
   # Block the UTXO
-  - cli: token_update -net stagenet -token ARBTEST -utxo_blocked_add {{tx_hash}}:0
+  - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash}}:0
 
 # Test phase: verify blocking and arbitrage bypass
 test:
   # Regular transaction FROM BLOCKED UTXO should fail
-  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1
+  - cli: tx_create -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1
     expect: error
     contains: "blocked"
   
   # Arbitrage transaction FROM BLOCKED UTXO should succeed
-  - cli: tx_create -net stagenet -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1 -arbitrage
+  - cli: tx_create -token ARBTEST -from {{tx_hash}}:0 -value 100 -fee 0.1 -arbitrage
     save: arb_tx
 
 # Check phase: verify results
 check:
 # Verify arbitrage tx in history
-  - cli: tx_history -net stagenet -tx {{arb_tx}}
+  - cli: tx_history -tx {{arb_tx}}
     contains: "{{arb_tx}}"
   
   # Verify token info
-  - cli: token info -net stagenet -name ARBTEST
+  - cli: token info -name ARBTEST
     contains: "ARBTEST"
 

@@ -35,13 +35,13 @@ setup:
     wait: 1s
   
   # Create token (UTXO blocking через token_update, не через флаг)
-  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save: token_hash
 
   - wait_for_datum: "{{token_hash}}"
   
   # Emit tokens to sender
-  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}}
+  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}} -certs test_cert
     save: emission
   
   # Wait for emission

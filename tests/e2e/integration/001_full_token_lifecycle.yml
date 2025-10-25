@@ -24,13 +24,13 @@ setup:
   - cli: wallet new -w lifecycle_wallet2
   
   # Get addresses with built-in validation
-  - cli: wallet info -w lifecycle_wallet1 -net stagenet
+  - cli: wallet info -w lifecycle_wallet1
     wait: 1s
     extract_to:
       wallet1_addr:
         type: wallet_address  # Auto-pattern!
   
-  - cli: wallet info -w lifecycle_wallet2 -net stagenet
+  - cli: wallet info -w lifecycle_wallet2
     wait: 1s
     extract_to:
       wallet2_addr:
@@ -39,17 +39,17 @@ setup:
 test:
   - wait: 3s
   # Step 1: Create token
-  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
   
   # Step 2: Emit to wallet1
-  - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}}
+  - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}} -certs test_cert
     save: emission_tx
   
   # Wait for emission to propagate
   - wait_for_datum: "{{emission_tx}}"
   
   # Step 3: Transfer from wallet1 to wallet2
-  - cli: tx_create -net stagenet -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
+  - cli: tx_create -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
     save: transfer_tx
   
   # Wait for transfer to propagate
@@ -57,14 +57,14 @@ test:
 
 check:
   # Verify token exists
-  - cli: token info -net stagenet -name LIFECYCLE
+  - cli: token info -name LIFECYCLE
     contains: "LIFECYCLE"
   
   # Verify transaction history
-  - cli: tx_history -net stagenet -tx {{transfer_tx}}
+  - cli: tx_history -tx {{transfer_tx}}
     contains: "{{transfer_tx}}"
   
   # Verify token history
-  - cli: token info -net stagenet -name LIFECYCLE -history_limit 10
+  - cli: token info -name LIFECYCLE -history_limit 10
     save: token_history
 

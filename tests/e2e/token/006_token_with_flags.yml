@@ -22,16 +22,16 @@ defaults:
 
 test:
   # Test: Create token with specific flags
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token FLAGTEST1 -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token FLAGTEST1 -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL -certs test_cert
     wait: 8s
   # Test: Create another token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token FLAGTEST2 -total_supply 2000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token FLAGTEST2 -total_supply 2000000 -certs test_cert
     wait: 8s
   # Wait for tokens to sync and propagate
   - wait: 10s
   
   # Verify both tokens exist
-  - cli: token list -net stagenet
+  - cli: token list
     save: token_list
 
 check:

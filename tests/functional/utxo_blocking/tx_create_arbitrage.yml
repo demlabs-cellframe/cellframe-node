@@ -21,33 +21,33 @@ defaults:
 
 setup:
   # Get wallet address
-  - cli: wallet info -w test_wallet -net stagenet
+  - cli: wallet info -w test_wallet
     extract_to:
       wallet_addr:
         type: wallet_address
   
   # Create token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ARBCMD -total_supply 1000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ARBCMD -total_supply 1000000 -certs test_cert
     save: token
   
   # Emit tokens
-  - cli: token_emit -net stagenet -token ARBCMD -value 10000 -addr {{wallet_addr}}
+  - cli: token_emit -token ARBCMD -value 10000 -addr {{wallet_addr}} -certs test_cert
     save: emission_tx
   
   - wait_for_datum: "{{emission_tx}}"
 
 test:
   # Test: Create arbitrage transaction
-  - cli: tx_create -net stagenet -token ARBCMD -value 1000 -fee 0.1 -arbitrage
+  - cli: tx_create -token ARBCMD -value 1000 -fee 0.1 -arbitrage
     save: arb_tx
   
   - wait_for_datum: "{{arb_tx}}"
 
 check:
   # Verify transaction exists
-  - cli: tx_history -net stagenet -tx {{arb_tx}}
+  - cli: tx_history -tx {{arb_tx}}
     contains: "{{arb_tx}}"
   
   # Verify arbitrage marker present (if it's in the output)
-  - cli: tx_info -net stagenet -tx {{arb_tx}}
+  - cli: tx_info -tx {{arb_tx}}
 

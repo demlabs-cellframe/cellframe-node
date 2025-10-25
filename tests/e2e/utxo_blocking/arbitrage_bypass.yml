@@ -29,12 +29,12 @@ includes:
 
 setup:
   # Create token (UTXO blocking через tx_sender_blocked, не через флаг)
-  - cli: token_decl -token ARBTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
+  - cli: token_decl -token ARBTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save: token_hash
     wait: 3s
   
   # Emit tokens to wallet
-  - cli: token_emit -token ARBTEST -value 1000000 -addr {{wallet_addr}}
+  - cli: token_emit -token ARBTEST -value 1000000 -addr {{wallet_addr}} -certs test_cert
     save: emission_tx
     wait: 3s
   

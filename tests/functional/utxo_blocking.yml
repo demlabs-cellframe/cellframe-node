@@ -7,17 +7,11 @@ author: "Cellframe Team"
 tags: [functional, utxo, blocking, arbitrage]
 version: "1.0"
 
-scenarios:
-  - arbitrage_bypass_test.yml
-  - token_update_utxo_add.yml
-  - tx_create_arbitrage.yml
-
-network:
-  topology: default
-
-# Suite-level setup: executed once before all scenarios in this suite
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
   - common/create_test_cert.yml
   - common/set_net_default.yml
 
+scenarios:
+  - arbitrage_bypass_test.yml
+  - tx_create_arbitrage.yml

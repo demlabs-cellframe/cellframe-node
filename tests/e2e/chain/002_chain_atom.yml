@@ -21,14 +21,14 @@ defaults:
 setup:
  
   # Create token to generate some chain activity
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ATOMTEST -total_supply 1000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ATOMTEST -total_supply 1000000 -certs test_cert
  
-  - cli: token_emit -net stagenet -token ATOMTEST -value 5000 -addr {{wallet_addr}}
+  - cli: token_emit -token ATOMTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
     wait: 5s
 
 test:
   # Test: List chains
-  - cli: net list chains -net stagenet
+  - cli: net list chains
     save: chain_list
     wait: 0s
 

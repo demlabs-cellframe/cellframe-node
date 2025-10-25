@@ -18,7 +18,7 @@ setup:
 
 test:
   # Test: Create token with ALL_FROZEN flag
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token FROZEN -total_supply 1000000 -flags ALL_FROZEN
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token FROZEN -total_supply 1000000 -flags ALL_FROZEN -certs test_cert
     node: node1
     expect: success
     save: frozen_token
@@ -26,7 +26,7 @@ test:
     description: "Create token with ALL_FROZEN flag"
   
   # Test: Create token with ALL_ALLOWED_FOR_ALL flag  
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token ALLOWED -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ALLOWED -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL -certs test_cert
     node: node1
     expect: success
     save: allowed_token
@@ -35,13 +35,13 @@ test:
 
 check:
   # Verify frozen token info
-  - cli: token info -net stagenet -name FROZEN
+  - cli: token info -name FROZEN
     node: node1
     expect: success
     contains: "FROZEN"
   
   # Verify allowed token info
-  - cli: token info -net stagenet -name ALLOWED
+  - cli: token info -name ALLOWED
     node: node1
     expect: success
     contains: "ALLOWED"

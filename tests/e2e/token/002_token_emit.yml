@@ -21,17 +21,17 @@ defaults:
 
 setup:
   # Create token (inherits node and wait from global defaults)
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token EMITTEST -total_supply 1000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token EMITTEST -total_supply 1000000 -certs test_cert
     description: "Declare EMITTEST token"
 
 test:
   # Emit tokens (inherits node and wait from global defaults)
-  - cli: token_emit -net stagenet -token EMITTEST -value 10000 -addr {{wallet_addr}}
+  - cli: token_emit -token EMITTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
     save: emit_tx
     description: "Emit tokens to wallet"
 
 check:
   # Verify emission (inherits node from global defaults)
-  - cli: token info -net stagenet -name EMITTEST -history_limit 10
+  - cli: token info -name EMITTEST -history_limit 10
     contains: "EMITTEST"
     description: "Token history contains emission"

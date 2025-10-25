@@ -19,7 +19,7 @@ setup:
 
 test:
   # Test: Create simple token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -net stagenet -token E2ETEST -total_supply 1000000
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token E2ETEST -total_supply 1000000 -certs test_cert
     node: node1
     expect: success
     save: token_hash
@@ -28,7 +28,7 @@ test:
 
 check:
   # Verify token info is accessible
-  - cli: token info -net stagenet -name E2ETEST
+  - cli: token info -name E2ETEST
     node: node1
     expect: success
     contains: "E2ETEST"

@@ -21,12 +21,12 @@ defaults:
 
 setup:
   # Create and emit tokens
-  - cli: token_decl -token BALTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1
-  - cli: token_emit -token BALTEST -value 5000 -addr {{wallet_addr}}
+  - cli: token_decl -token BALTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+  - cli: token_emit -token BALTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
 
 test:
   # Test: Check wallet balance
-  - cli: wallet info -w test_wallet -net stagenet -addr {{wallet_addr}}
+  - cli: wallet info -w test_wallet -addr {{wallet_addr}}
     save: balance_info
     description: "Check wallet balance"
 
