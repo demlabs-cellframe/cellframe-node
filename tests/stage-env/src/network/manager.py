@@ -274,7 +274,7 @@ class NetworkManager:
         )
         
         try:
-            await consensus_monitor.wait_for_network_ready(timeout=90.0)
+            await consensus_monitor.wait_for_network_ready(timeout=150.0)  # 150s for 8-node topology
             logger.info("network_consensus_achieved")
         except TimeoutError as e:
             logger.error("network_consensus_timeout_critical",

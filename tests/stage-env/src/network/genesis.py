@@ -464,6 +464,8 @@ class GenesisInitializer:
         This ensures all nodes immediately know about each other without waiting
         for natural P2P discovery.
         
+        Uses parallel registration for speed.
+        
         Args:
             nodes: List of all node configurations
         """
@@ -477,12 +479,12 @@ class GenesisInitializer:
             logger.error("node1_container_not_found", container=container_name)
             raise RuntimeError(f"Container {container_name} not found")
         
-        # Register each node via 'node add' command
-        registered_count = 0
-        for node in nodes:
+        # Prepare registration tasks for all nodes (except node1)
+        async def register_single_node(node: NodeConfig) -> bool:
+            """Register a single node. Returns True on success."""
             # Skip node1 itself
             if node.node_id == 1:
-                continue
+                return True
             
             # Read node address with retry logic
             node_addr = self._read_node_addr_with_retry(node.node_id)
@@ -490,7 +492,7 @@ class GenesisInitializer:
             if not node_addr:
                 logger.warning("skipping_node_registration_no_address",
                               node_id=node.node_id)
-                continue
+                return False
             
             # CLI command: node add -net <net> -addr <node_addr> -host <ip> -port <p2p_port>
             # Note: using node_port (8079) for P2P, not cf_port
@@ -521,27 +523,37 @@ class GenesisInitializer:
                     if "You have no access rights" in stdout_str:
                         logger.warning("node_add_no_rights",
                                       node_id=node.node_id)
+                        return False
                     elif "already" in stdout_str.lower():
                         logger.debug("node_already_registered",
                                     node_id=node.node_id,
                                     output=stdout_str)
-                        registered_count += 1
+                        return True
                     else:
                         logger.info("node_registered_via_cli",
                                   node_id=node.node_id,
                                   output=stdout_str if stdout_str else "success")
-                        registered_count += 1
+                        return True
                 else:
                     logger.warning("node_add_failed",
                                   node_id=node.node_id,
                                   exit_code=exit_code,
                                   stderr=stderr_str,
                                   stdout=stdout_str)
+                    return False
                     
             except Exception as e:
                 logger.exception("node_add_exception",
                                node_id=node.node_id,
                                error=str(e))
+                return False
+        
+        # Run all registrations in parallel
+        registration_tasks = [register_single_node(node) for node in nodes]
+        results = await asyncio.gather(*registration_tasks, return_exceptions=True)
+        
+        # Count successes
+        registered_count = sum(1 for r in results if r is True)
         
         logger.info("node_registration_via_cli_complete",
                    registered=registered_count,
