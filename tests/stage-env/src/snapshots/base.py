@@ -4,9 +4,11 @@ Base interface for snapshot implementations.
 Defines the common interface that all snapshot modes must implement.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from ..utils.logger import get_logger
 
@@ -86,7 +88,7 @@ class BaseSnapshot(ABC):
         pass
     
     @abstractmethod
-    async def list(self) -> list[str]:
+    async def list(self) -> List[str]:
         """
         List available snapshots.
         
@@ -117,7 +119,7 @@ class BaseSnapshot(ABC):
             "type": self.__class__.__name__,
         }
     
-    def get_data_dirs(self) -> list[Path]:
+    def get_data_dirs(self) -> List[Path]:
         """
         Get list of data directories to snapshot.
         

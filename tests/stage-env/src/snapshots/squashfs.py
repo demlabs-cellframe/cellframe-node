@@ -5,10 +5,12 @@ This mode creates compressed read-only images using squashfs and uses
 overlay filesystem for writes. Provides maximum speed with minimal overhead.
 """
 
+from __future__ import annotations
+
 import asyncio
 import shutil
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import subprocess
 
 from ..utils.logger import get_logger
@@ -258,7 +260,7 @@ class SquashfsSnapshot(BaseSnapshot):
         
         return True
     
-    async def list(self) -> list[str]:
+    async def list(self) -> List[str]:
         """
         List available squashfs snapshots.
         

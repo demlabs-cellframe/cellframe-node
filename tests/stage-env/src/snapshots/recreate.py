@@ -5,9 +5,11 @@ This is the baseline mode that provides maximum isolation by completely
 recreating the environment from scratch. Slowest but most reliable.
 """
 
+from __future__ import annotations
+
 import asyncio
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from ..utils.logger import get_logger
 from .base import BaseSnapshot
@@ -104,7 +106,7 @@ class RecreateSnapshot(BaseSnapshot):
         
         return True
     
-    async def list(self) -> list[str]:
+    async def list(self) -> List[str]:
         """
         List available snapshot markers.
         

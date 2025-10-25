@@ -4,10 +4,12 @@ Snapshot Manager - orchestrates different snapshot modes.
 Coordinates snapshot creation, restoration, and cleanup across all modes.
 """
 
+from __future__ import annotations
+
 import asyncio
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from ..utils.logger import get_logger
 from .base import BaseSnapshot
@@ -156,7 +158,7 @@ class SnapshotManager:
             logger.error("snapshot_deletion_error", name=name, error=str(e))
             return False
     
-    async def list_snapshots(self) -> list[str]:
+    async def list_snapshots(self) -> List[str]:
         """
         List available snapshots.
         

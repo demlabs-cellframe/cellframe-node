@@ -5,10 +5,12 @@ This mode creates snapshots by copying the entire data directory tree.
 Provides good balance between speed and simplicity.
 """
 
+from __future__ import annotations
+
 import asyncio
 import shutil
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 import subprocess
 
 from ..utils.logger import get_logger
@@ -203,7 +205,7 @@ class FilesystemSnapshot(BaseSnapshot):
             logger.error("filesystem_delete_failed", name=name, error=str(e))
             return False
     
-    async def list(self) -> list[str]:
+    async def list(self) -> List[str]:
         """
         List available snapshots.
         
