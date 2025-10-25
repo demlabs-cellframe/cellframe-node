@@ -250,6 +250,11 @@ class NetworkManager:
             if self.snapshot_manager.mode != SnapshotMode.DISABLED:
                 logger.info("creating_initial_clean_snapshot_with_pause")
                 try:
+                    # CRITICAL: Clean node data before snapshot to ensure pristine state
+                    # This removes wallets, chains, and other runtime data from previous runs
+                    logger.info("cleaning_node_data_for_pristine_snapshot")
+                    self._clean_node_data()
+                    
                     # Pause all containers to freeze state
                     logger.info("pausing_containers_for_snapshot")
                     self.compose.pause()
@@ -603,4 +608,44 @@ class NetworkManager:
                 logger.error("node_cleanup_error",
                             node=node_name,
                             error=str(e))
+    
+    def _clean_node_data(self):
+        """
+        Clean node data directories on host before creating pristine snapshot.
+        
+        This method removes and recreates data directories mounted into containers,
+        ensuring that wallets, chains, and other runtime data from previous runs
+        don't pollute the snapshot.
+        
+        Called before pause→snapshot→unpause to guarantee pristine state.
+        """
+        import shutil
+        
+        cache_dir = self.paths_config.get('cache_dir', '../testing/cache')
+        cache_path = (self.base_path / cache_dir).resolve()
+        data_dir = cache_path / "data"
+        
+        if not data_dir.exists():
+            logger.debug("node_data_dir_not_exists", path=str(data_dir))
+            return
+        
+        logger.info("removing_node_data_directories", path=str(data_dir))
+        
+        # Remove entire data directory tree
+        try:
+            shutil.rmtree(data_dir)
+            logger.info("node_data_removed")
+        except Exception as e:
+            logger.error("failed_to_remove_node_data", error=str(e))
+            raise
+        
+        # Recreate empty data directory structure for each node
+        data_dir.mkdir(parents=True, exist_ok=True)
+        
+        for node_id in range(1, len(self.nodes) + 1):
+            node_data_path = data_dir / f"node{node_id}"
+            node_data_path.mkdir(parents=True, exist_ok=True)
+            logger.debug("recreated_node_data_dir", node_id=node_id, path=str(node_data_path))
+        
+        logger.info("node_data_cleaned_and_recreated", nodes=len(self.nodes))
 
