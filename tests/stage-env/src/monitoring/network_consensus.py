@@ -526,14 +526,18 @@ class NetworkConsensusMonitor:
         Execute CLI command in node container.
         
         Args:
-            node_id: Node identifier
+            node_id: Node identifier (e.g., "node1")
             command: CLI command to execute
             
         Returns:
             Command output as string
         """
-        # Use docker exec to run CLI in container
-        container_name = f"cellframe-stage-{node_id}"
+        # Convert node_id to container name: node1 -> node-1
+        if node_id.startswith('node'):
+            node_number = node_id[4:]  # Extract number from "node1"
+            container_name = f"cellframe-stage-node-{node_number}"
+        else:
+            container_name = f"cellframe-stage-{node_id}"
         
         proc = await asyncio.create_subprocess_exec(
             "docker", "exec", container_name,
