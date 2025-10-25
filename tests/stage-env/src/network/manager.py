@@ -215,6 +215,13 @@ class NetworkManager:
         # Clean up any remaining stale resources
         self.compose.cleanup_stale_resources()
         
+        # CRITICAL: Clean node data BEFORE starting containers
+        # This ensures first startup is with pristine state
+        if self.suite_isolation_config.get('auto_create_on_startup', True):
+            if self.snapshot_manager.mode != SnapshotMode.DISABLED:
+                logger.info("cleaning_node_data_before_first_start")
+                self._clean_node_data()
+        
         # Generate dynamic docker-compose.yml for all nodes
         logger.info("generating_docker_compose")
         cache_dir_relative = self.paths_config.get('cache_dir', 'cache')
@@ -243,7 +250,8 @@ class NetworkManager:
             # Don't fail the whole start process, just log the error
             # Validator orders might already exist in a restarted network
         
-        # OPTIMIZATION: Pause containers → Create snapshot → Unpause
+        # OPTIMIZATION: Create pristine snapshot for fast suite isolation
+        # Pause containers → Create snapshot → Unpause
         # This way first suite can use already running network immediately
         # and snapshot remains pristine for subsequent suites
         if self.suite_isolation_config.get('auto_create_on_startup', True):
@@ -251,19 +259,6 @@ class NetworkManager:
                 logger.info("creating_initial_clean_snapshot_with_pause")
                 containers_paused = False
                 try:
-                    # CRITICAL: Stop containers before cleaning data to avoid crashes
-                    logger.info("stopping_containers_for_data_cleanup")
-                    self.compose.down(volumes=False, remove_images=False)
-                    
-                    # Clean node data to ensure pristine state (use sudo for root-owned files)
-                    logger.info("cleaning_node_data_for_pristine_snapshot")
-                    self._clean_node_data()
-                    
-                    # Restart containers with clean data
-                    logger.info("restarting_containers_with_clean_data")
-                    self.compose.up(detach=True, wait=False)
-                    await self._wait_for_network_ready()
-                    
                     # Pause all containers to freeze state
                     logger.info("pausing_containers_for_snapshot")
                     self.compose.pause()
