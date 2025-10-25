@@ -85,7 +85,7 @@ class DatumMonitor:
     
     Continuously polls network and tracks registered datums through:
     - Mempool presence
-    - Master node verification  
+    - Master node verification
     - Block inclusion
     - Block propagation to target nodes
     
@@ -255,10 +255,17 @@ class DatumMonitor:
         self._log("🔄 Monitoring loop started")
         
         try:
+            iteration = 0
             while self._running:
+                iteration += 1
+                
                 # Process all tracked datums
                 async with self._lock:
                     completed = []
+                    
+                    # Log active tracking state every 10 iterations (20 seconds)
+                    if iteration % 10 == 1 and self._tracking:
+                        self._log(f"📊 Monitoring {len(self._tracking)} datum(s) - iteration {iteration}")
                     
                     for datum_hash, req in list(self._tracking.items()):
                         if req.future.done():
@@ -318,8 +325,15 @@ class DatumMonitor:
             else:
                 # Check mempool timeout
                 mempool_time = current_time - req.mempool_start
+                
+                # Log mempool waiting state periodically
+                if int(mempool_time) % 10 == 0:  # Every 10 seconds
+                    self._log(f"  ⏳ Datum {req.datum_hash[:16]}... still in mempool ({mempool_time:.1f}s)")
+                
                 if mempool_time > req.timeout_mempool:
                     error = f"Datum stuck in mempool for {mempool_time:.1f}s (expected verification within {req.timeout_mempool}s)"
+                    self._log(f"  ❌ {error}")
+                    self._log(f"  💡 This may indicate consensus issues or insufficient validators")
                     return DatumMonitorResult(
                         status=DatumStatus.TIMEOUT_MEMPOOL,
                         datum_hash=req.datum_hash,
