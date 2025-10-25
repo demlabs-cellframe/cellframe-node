@@ -259,6 +259,14 @@ class NetworkManager:
                 logger.info("creating_initial_clean_snapshot_with_pause")
                 containers_paused = False
                 try:
+                    # CRITICAL: Wait for nodes to apply registered aliases
+                    # After genesis registration, nodes need time to process the alias list
+                    # Without this delay, node7 (and potentially others) may not have
+                    # the full node list when we create the snapshot
+                    import asyncio
+                    logger.info("waiting_for_alias_propagation")
+                    await asyncio.sleep(3)  # 3 seconds for alias propagation
+                    
                     # Pause all containers to freeze state
                     logger.info("pausing_containers_for_snapshot")
                     self.compose.pause()
