@@ -461,12 +461,25 @@ class ScenarioExecutor:
                         
                         # Look for common hash field names
                         if isinstance(parsed, dict):
+                            # First check direct fields
                             for key in ['hash', 'tx_hash', 'datum_hash', 'token_hash', 
                                        'emission_hash', 'cert_hash', 'wallet_addr']:
                                 if key in parsed and parsed[key]:
                                     saved_value = parsed[key]
                                     self._log_to_file(f"✓ Extracted {key}: {saved_value}")
                                     break
+                            
+                            # If not found, check errors.message for hash (Cellframe CLI format)
+                            if saved_value == output and 'errors' in parsed:
+                                errors = parsed['errors']
+                                if isinstance(errors, dict) and 'message' in errors:
+                                    message = errors['message']
+                                    # Extract hash from message like "Datum 0x... with token X is placed..."
+                                    import re
+                                    hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', message)
+                                    if hash_match:
+                                        saved_value = hash_match.group(1)
+                                        self._log_to_file(f"✓ Extracted hash from errors.message: {saved_value}")
                     except:
                         # Fallback: look for hash pattern in output (0x[hex])
                         import re
