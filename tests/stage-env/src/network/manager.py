@@ -243,14 +243,32 @@ class NetworkManager:
             # Don't fail the whole start process, just log the error
             # Validator orders might already exist in a restarted network
         
-        # Create initial clean snapshot if configured
+        # OPTIMIZATION: Pause containers → Create snapshot → Unpause
+        # This way first suite can use already running network immediately
+        # and snapshot remains pristine for subsequent suites
         if self.suite_isolation_config.get('auto_create_on_startup', True):
             if self.snapshot_manager.mode != SnapshotMode.DISABLED:
-                logger.info("creating_initial_clean_snapshot")
+                logger.info("creating_initial_clean_snapshot_with_pause")
                 try:
+                    # Pause all containers to freeze state
+                    logger.info("pausing_containers_for_snapshot")
+                    self.compose.pause()
+                    
+                    # Create snapshot of paused state
                     await self.create_clean_snapshot()
                     logger.info("initial_snapshot_created")
+                    
+                    # Unpause containers - ready for first suite
+                    logger.info("unpausing_containers")
+                    self.compose.unpause()
+                    logger.info("containers_unpaused_ready_for_first_suite")
+                    
                 except Exception as e:
+                    # Make sure we unpause even on error
+                    try:
+                        self.compose.unpause()
+                    except:
+                        pass
                     logger.warning("initial_snapshot_creation_failed",
                                   error=str(e),
                                   note="Will fallback to traditional cleanup")

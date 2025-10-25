@@ -343,6 +343,46 @@ class DockerComposeManager:
         run_command(cmd, cwd=self.project_dir)
         logger.info("services_stopped")
     
+    def pause(self, services: Optional[List[str]] = None) -> None:
+        """
+        Pause running containers (freeze processes).
+        
+        Args:
+            services: List of service names (None = all)
+        """
+        logger.info("pausing_services", services=services or "all")
+        
+        from ..utils.cli import run_command
+        
+        cmd = ["docker", "compose", "-f", str(self.compose_file),
+               "-p", self.project_name, "pause"]
+        
+        if services:
+            cmd.extend(services)
+        
+        run_command(cmd, cwd=self.project_dir)
+        logger.info("services_paused")
+    
+    def unpause(self, services: Optional[List[str]] = None) -> None:
+        """
+        Unpause containers (resume processes).
+        
+        Args:
+            services: List of service names (None = all)
+        """
+        logger.info("unpausing_services", services=services or "all")
+        
+        from ..utils.cli import run_command
+        
+        cmd = ["docker", "compose", "-f", str(self.compose_file),
+               "-p", self.project_name, "unpause"]
+        
+        if services:
+            cmd.extend(services)
+        
+        run_command(cmd, cwd=self.project_dir)
+        logger.info("services_unpaused")
+    
     def ps(self) -> List[Container]:
         """
         List running containers for this project.
