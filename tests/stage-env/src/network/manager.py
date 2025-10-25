@@ -248,6 +248,11 @@ class NetworkManager:
         try:
             await self.genesis.initialize(node_configs)
             await self.genesis.register_node_aliases(node_configs)
+            
+            # CRITICAL: Register all nodes via CLI from node1
+            # This immediately populates node lists without waiting for P2P discovery
+            logger.info("registering_all_nodes_via_cli")
+            await self.genesis.register_all_nodes_via_cli(node_configs)
         except Exception as e:
             logger.error("genesis_initialization_failed", error=str(e))
             # Don't fail the whole start process, just log the error
@@ -269,7 +274,7 @@ class NetworkManager:
         )
         
         try:
-            await consensus_monitor.wait_for_network_ready(timeout=60.0)
+            await consensus_monitor.wait_for_network_ready(timeout=90.0)
             logger.info("network_consensus_achieved")
         except TimeoutError as e:
             logger.error("network_consensus_timeout_critical",

@@ -456,4 +456,94 @@ class GenesisInitializer:
                 logger.warning("exception_bringing_node_online",
                               node_id=node.node_id,
                               error=str(e))
+    
+    async def register_all_nodes_via_cli(self, nodes: List[NodeConfig]) -> None:
+        """
+        Register ALL nodes in the network via CLI 'node add' command from node1.
+        
+        This ensures all nodes immediately know about each other without waiting
+        for natural P2P discovery.
+        
+        Args:
+            nodes: List of all node configurations
+        """
+        logger.info("registering_all_nodes_via_cli", total_nodes=len(nodes))
+        
+        # Get node-1 container (root node with admin rights)
+        container_name = "cellframe-stage-node-1"
+        try:
+            container = self.docker_client.containers.get(container_name)
+        except docker.errors.NotFound:
+            logger.error("node1_container_not_found", container=container_name)
+            raise RuntimeError(f"Container {container_name} not found")
+        
+        # Register each node via 'node add' command
+        registered_count = 0
+        for node in nodes:
+            # Skip node1 itself
+            if node.node_id == 1:
+                continue
+            
+            # Read node address with retry logic
+            node_addr = self._read_node_addr_with_retry(node.node_id)
+            
+            if not node_addr:
+                logger.warning("skipping_node_registration_no_address",
+                              node_id=node.node_id)
+                continue
+            
+            # CLI command: node add -net <net> -addr <node_addr> -host <ip> -port <p2p_port>
+            # Note: using node_port (8079) for P2P, not cf_port
+            cmd = [
+                "cellframe-node-cli",
+                "node", "add",
+                "-net", self.network_name,
+                "-addr", node_addr,
+                "-host", node.ip_address,
+                "-port", str(node.node_port)  # P2P port (8079)
+            ]
+            
+            logger.info("registering_node_via_cli",
+                       node_id=node.node_id,
+                       node_addr=node_addr[:20] + "...",
+                       endpoint=f"{node.ip_address}:{node.node_port}")
+            
+            try:
+                result = container.exec_run(cmd, demux=True)
+                exit_code = result.exit_code
+                stdout, stderr = result.output
+                
+                stdout_str = stdout.decode('utf-8').strip() if stdout else ""
+                stderr_str = stderr.decode('utf-8').strip() if stderr else ""
+                
+                if exit_code == 0:
+                    # Check for common success/warning messages
+                    if "You have no access rights" in stdout_str:
+                        logger.warning("node_add_no_rights",
+                                      node_id=node.node_id)
+                    elif "already" in stdout_str.lower():
+                        logger.debug("node_already_registered",
+                                    node_id=node.node_id,
+                                    output=stdout_str)
+                        registered_count += 1
+                    else:
+                        logger.info("node_registered_via_cli",
+                                  node_id=node.node_id,
+                                  output=stdout_str if stdout_str else "success")
+                        registered_count += 1
+                else:
+                    logger.warning("node_add_failed",
+                                  node_id=node.node_id,
+                                  exit_code=exit_code,
+                                  stderr=stderr_str,
+                                  stdout=stdout_str)
+                    
+            except Exception as e:
+                logger.exception("node_add_exception",
+                               node_id=node.node_id,
+                               error=str(e))
+        
+        logger.info("node_registration_via_cli_complete",
+                   registered=registered_count,
+                   total=len(nodes) - 1)  # -1 for node1 itself
 

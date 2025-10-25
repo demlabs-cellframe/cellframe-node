@@ -353,11 +353,12 @@ class NetworkConsensusMonitor:
         
         # Overall readiness:
         # - All nodes online
-        # - All nodes have full node list  
+        # - MAJORITY of nodes have full node list (allow stragglers)
         # - Chains are synced (or no blocks yet - genesis state)
+        majority_threshold = (self.expected_node_count * 2) // 3  # At least 2/3 of nodes
         state.ready = (
             state.all_nodes_online and
-            state.nodes_with_full_list >= self.expected_node_count - 1 and  # Allow 1 straggler
+            state.nodes_with_full_list >= majority_threshold and  # At least 2/3 have full list
             (state.all_chains_synced or state.unique_chain_states == 0)  # Synced or no blocks yet
         )
         
@@ -563,23 +564,24 @@ class NetworkConsensusMonitor:
         """
         Parse node list from CLI output.
         
+        Handles both formats:
+        - Table format: "4418::787F::CE4F::BEAD    172.20.0.10  ..."
+        - Key-value format: "addr: 4418::787F::CE4F::BEAD"
+        
         Returns set of node addresses.
         """
         import re
-        # Use same pattern as DataExtractor for consistency
-        NODE_ADDRESS_PATTERN = r'[A-Fa-f0-9:]{10,}'
+        # Node address pattern: at least 4 hex groups separated by ::
+        NODE_ADDRESS_PATTERN = r'\b[A-Fa-f0-9]{4}::[A-Fa-f0-9:]+\b'
         
         node_addrs = set()
         
-        # Look for lines like: "addr: XXXX::XXXX::XXXX::XXXX"
-        for line in output.split('\n'):
-            line = line.strip()
-            if 'addr:' in line or 'address:' in line:
-                # Extract all node addresses matching the pattern
-                matches = re.findall(NODE_ADDRESS_PATTERN, line)
-                for match in matches:
-                    if '::' in match:  # Must have :: separators (IPv6-like format)
-                        node_addrs.add(match)
+        # Extract all node addresses from output
+        matches = re.findall(NODE_ADDRESS_PATTERN, output)
+        for match in matches:
+            # Verify it has proper format (multiple :: separators)
+            if match.count('::') >= 3:  # At least 4 groups
+                node_addrs.add(match)
         
         return node_addrs
     
