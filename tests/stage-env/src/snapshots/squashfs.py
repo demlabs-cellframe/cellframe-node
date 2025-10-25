@@ -37,6 +37,9 @@ class SquashfsSnapshot(BaseSnapshot):
         Args:
             base_path: Base path to stage-env directory
             config: Configuration dictionary
+            
+        Raises:
+            RuntimeError: If squashfs tools are not available (fail-fast)
         """
         super().__init__(base_path, config)
         
@@ -44,6 +47,24 @@ class SquashfsSnapshot(BaseSnapshot):
         self.has_mksquashfs = self._check_tool("mksquashfs")
         self.has_unsquashfs = self._check_tool("unsquashfs")
         self.has_overlayfs = self._check_overlayfs()
+        
+        # Fail-fast: squashfs mode requires tools to be installed
+        if not self.has_mksquashfs or not self.has_unsquashfs:
+            missing = []
+            if not self.has_mksquashfs:
+                missing.append("mksquashfs")
+            if not self.has_unsquashfs:
+                missing.append("unsquashfs")
+            
+            error_msg = (
+                f"Squashfs mode selected but required tools are missing: {', '.join(missing)}. "
+                f"Install squashfs-tools package: sudo apt install squashfs-tools"
+            )
+            logger.error("squashfs_tools_missing",
+                        has_mksquashfs=self.has_mksquashfs,
+                        has_unsquashfs=self.has_unsquashfs,
+                        missing=missing)
+            raise RuntimeError(error_msg)
         
         # Compression mode from config
         compression = config.get('squashfs_compression', 'none')
@@ -53,27 +74,27 @@ class SquashfsSnapshot(BaseSnapshot):
         self.overlay_base = self.snapshots_path / ".overlays"
         self.overlay_base.mkdir(parents=True, exist_ok=True)
         
-        if not (self.has_mksquashfs and self.has_unsquashfs):
-            logger.warning("squashfs_tools_missing",
-                          has_mksquashfs=self.has_mksquashfs,
-                          has_unsquashfs=self.has_unsquashfs,
-                          note="Install squashfs-tools package")
-        
         logger.info("squashfs_mode_initialized",
-                   tools_available=self.has_mksquashfs and self.has_unsquashfs,
+                   tools_available=True,
                    overlayfs_available=self.has_overlayfs,
                    compression=self.compression or "none")
     
     def _check_tool(self, tool: str) -> bool:
         """Check if a command-line tool is available."""
         try:
+            # Try to run the tool - squashfs tools use -version (not --version)
             result = subprocess.run(
                 [tool, "-version"],
                 capture_output=True,
                 timeout=5
             )
-            return result.returncode == 0
-        except (FileNotFoundError, subprocess.TimeoutExpired):
+            # squashfs tools print version to stderr and may return 0 or 1
+            # Check if output contains version info
+            output = result.stdout.decode() + result.stderr.decode()
+            return "version" in output.lower() and tool in output.lower()
+        except FileNotFoundError:
+            return False
+        except subprocess.TimeoutExpired:
             return False
     
     def _check_overlayfs(self) -> bool:
