@@ -118,29 +118,32 @@ class ConfigLoader:
     def load_stage_config(self) -> Dict[str, Any]:
         """
         Load stage-env configuration file.
-        Creates from .default if not exists.
+        
+        Config file must exist explicitly - no auto-creation.
+        Use custom config path with ConfigLoader(base_path, config_path) or
+        ensure stage-env.cfg exists in config/ directory.
         
         Returns:
             Configuration dictionary with all default values
+            
+        Raises:
+            FileNotFoundError: If config file doesn't exist
         """
         # Use custom config path if provided, otherwise use default
         if self.custom_config_path:
             config_file = self.custom_config_path
-            default_file = None  # Don't auto-create from default for custom paths
         else:
             config_file = self.config_dir / "stage-env.cfg"
-            default_file = self.config_dir / "stage-env.cfg.default"
-            
-            # Create from default if doesn't exist
-            if not config_file.exists() and default_file and default_file.exists():
-                logger.info("creating_config_from_default")
-                import shutil
-                shutil.copy2(default_file, config_file)
         
-        # Load config
+        # Load config (no auto-creation - config must exist explicitly)
         if not config_file.exists():
+            error_msg = f"Configuration file not found: {config_file}"
+            if not self.custom_config_path:
+                error_msg += f"\n\nDefault config location: {self.config_dir / 'stage-env.cfg'}"
+                error_msg += f"\nYou can copy from template: {self.config_dir / 'stage-env.cfg.default'}"
+                error_msg += f"\nOr specify custom config with --config option"
             logger.error("config_not_found", path=str(config_file))
-            raise FileNotFoundError(f"Configuration file not found: {config_file}")
+            raise FileNotFoundError(error_msg)
         
         config = configparser.ConfigParser()
         config.read(config_file)
