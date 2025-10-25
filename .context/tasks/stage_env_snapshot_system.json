@@ -5,7 +5,7 @@
   "priority": "critical",
   "status": "active",
   "created": "2025-10-24T16:40:00Z",
-  "updated": "2025-10-24T16:40:00Z",
+  "updated": "2025-10-26T01:40:00Z",
   
   "auto_load": [
     ".context/modules/testing/stage_env_system.json",
@@ -310,14 +310,51 @@
         "Fallback cleanup на незапущенных контейнерах",
         "Валидация YAML с неправильным loop синтаксисом"
       ]
+    },
+    {
+      "timestamp": "2025-10-26T01:40:00Z",
+      "phase": "bug_fixes",
+      "status": "completed",
+      "summary": "Рефакторинг парсеров: введена иерархия наследования для устранения дублирования кода",
+      "changes": [
+        "parser.py: Создан базовый класс BaseScenarioParser с общей логикой",
+        "parser.py: ScenarioParser наследует от BaseScenarioParser",
+        "parser.py: Добавлен SuiteSetupParser для обработки suite includes",
+        "test_commands.py: Использует SuiteSetupParser вместо временных файлов",
+        "parser.py: Удалено ~200 строк дублированного кода"
+      ],
+      "problem_solved": {
+        "description": "Suite includes не обрабатывались из-за проблем с путями временных файлов",
+        "root_cause": "Временный файл создавался в suite_dir (artifacts), парсер искал в suite_path (tests/e2e/utxo_blocking)",
+        "original_error": "'tmp9kmtetps.yml' is not in the subpath of '/mnt/work/work/cellframe-node/tests/e2e/utxo_blocking'"
+      },
+      "architecture": {
+        "base_class": "BaseScenarioParser - общая логика YAML загрузки и обработки includes",
+        "scenario_parser": "ScenarioParser - парсинг тестовых сценариев (TestScenario)",
+        "suite_parser": "SuiteSetupParser - парсинг suite setup с includes (SuiteSetupScenario)",
+        "shared_methods": [
+          "_load_yaml_file(path) - кэшированная загрузка YAML",
+          "_process_includes(data, base_dir) - обработка includes с мульти-path поиском",
+          "_deep_merge(base, override) - глубокое слияние словарей",
+          "_resolve_path(path) - резолвинг относительных/абсолютных путей"
+        ]
+      },
+      "benefits": [
+        "Устранено дублирование кода (~200 строк)",
+        "Правильный path resolution для includes",
+        "Нет временных файлов (проще, быстрее)",
+        "Единый источник истины для парсинга",
+        "Расширяемость (легко добавить новые парсеры)"
+      ],
+      "testing_status": "Готово к тестированию - suite includes должны теперь корректно обрабатываться"
     }
   ],
   
   "current_phase": {
     "id": "phase_6_testing",
     "status": "in_progress",
-    "next_action": "Анализ логов тестов и исправление ошибок выполнения сценариев",
-    "validation_status": "Fail-fast логика реализована, критические баги исправлены"
+    "next_action": "Запустить тесты и проверить корректность обработки suite includes (create_test_cert.yml, set_net_default.yml)",
+    "validation_status": "Архитектурный рефакторинг завершён, awaiting integration testing"
   },
   
   "dependencies": {

@@ -257,6 +257,28 @@ class ScenarioParser(BaseScenarioParser):
             field = " → ".join(str(x) for x in err["loc"])
             lines.append(f"  {field}: {err['msg']}")
         return "\n".join(lines)
+    
+    def substitute_variables(self, text: str, variables: Dict[str, Any]) -> str:
+        """
+        Substitute {{variable}} placeholders in text.
+        
+        Args:
+            text: Text with variable placeholders
+            variables: Variable name -> value mapping
+            
+        Returns:
+            Text with variables substituted
+            
+        Raises:
+            ScenarioParseError: If undefined variable referenced
+        """
+        def replace_var(match):
+            var_name = match.group(1)
+            if var_name not in variables:
+                raise ScenarioParseError(f"Undefined variable: {var_name}")
+            return str(variables[var_name])
+        
+        return self._variable_pattern.sub(replace_var, text)
 
 
 class SuiteSetupParser(BaseScenarioParser):
