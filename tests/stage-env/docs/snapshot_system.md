@@ -70,15 +70,40 @@ snapshots_dir = ../testing/snapshots
 
 **filesystem** (recommended)
 - Best balance of speed and simplicity
-- Uses rsync for efficient copying
-- Fallback to shutil if rsync unavailable
+- **Requires rsync** (mandatory dependency)
 - ~3s per suite restoration
+- Install: `sudo apt install rsync`
 
 **squashfs** (fastest)
 - Compressed read-only images
 - Fastest restoration (~2s)
-- Requires squashfs-tools installed
+- **Requires squashfs-tools** (mandatory dependency)
 - Best for CI/CD pipelines
+- Install: `sudo apt install squashfs-tools`
+
+### Dependency Requirements
+
+Both `filesystem` and `squashfs` modes enforce **fail-fast** principle:
+
+- **Missing dependencies = immediate startup failure**
+- Clear error messages with installation instructions
+- No silent fallbacks or degraded functionality
+
+**filesystem mode requires:**
+```bash
+sudo apt install rsync
+```
+
+**squashfs mode requires:**
+```bash
+sudo apt install squashfs-tools
+```
+
+If dependencies are missing, stage-env will fail immediately with:
+```
+RuntimeError: [Mode] mode selected but [tool] is not installed.
+Install [tool]: sudo apt install [package]
+```
 
 ## Usage
 

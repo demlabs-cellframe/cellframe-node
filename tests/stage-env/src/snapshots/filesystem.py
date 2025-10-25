@@ -36,14 +36,24 @@ class FilesystemSnapshot(BaseSnapshot):
         Args:
             base_path: Base path to stage-env directory
             config: Configuration dictionary
+            
+        Raises:
+            RuntimeError: If rsync is not available (fail-fast)
         """
         super().__init__(base_path, config)
         
-        # Check if rsync is available
-        self.use_rsync = self._check_rsync()
+        # Check if rsync is available (required, not optional)
+        if not self._check_rsync():
+            error_msg = (
+                "Filesystem mode selected but rsync is not installed. "
+                "Install rsync: sudo apt install rsync"
+            )
+            logger.error("rsync_not_found", 
+                        note="rsync is required for filesystem snapshot mode")
+            raise RuntimeError(error_msg)
         
         logger.info("filesystem_mode_initialized",
-                   use_rsync=self.use_rsync,
+                   rsync_available=True,
                    snapshots_dir=str(self.snapshots_path))
     
     def _check_rsync(self) -> bool:
@@ -55,9 +65,9 @@ class FilesystemSnapshot(BaseSnapshot):
                 timeout=5
             )
             return result.returncode == 0
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            logger.warning("rsync_not_found",
-                          fallback="will use shutil.copytree")
+        except FileNotFoundError:
+            return False
+        except subprocess.TimeoutExpired:
             return False
     
     async def create(self, name: str) -> bool:
@@ -92,18 +102,8 @@ class FilesystemSnapshot(BaseSnapshot):
             for node_dir in data_dirs:
                 target_dir = snapshot_dir / node_dir.name
                 
-                if self.use_rsync:
-                    # Use rsync for efficient copying
-                    await self._rsync_copy(node_dir, target_dir)
-                else:
-                    # Fallback to shutil
-                    await asyncio.to_thread(
-                        shutil.copytree,
-                        node_dir,
-                        target_dir,
-                        symlinks=True,
-                        dirs_exist_ok=True
-                    )
+                # Use rsync for efficient copying
+                await self._rsync_copy(node_dir, target_dir)
             
             # Create metadata file
             metadata = self._create_metadata(name, data_dirs)
@@ -159,18 +159,8 @@ class FilesystemSnapshot(BaseSnapshot):
             for node_dir in node_dirs:
                 target_dir = data_path / node_dir.name
                 
-                if self.use_rsync:
-                    # Use rsync for efficient restoration
-                    await self._rsync_copy(node_dir, target_dir)
-                else:
-                    # Fallback to shutil
-                    await asyncio.to_thread(
-                        shutil.copytree,
-                        node_dir,
-                        target_dir,
-                        symlinks=True,
-                        dirs_exist_ok=True
-                    )
+                # Use rsync for efficient restoration
+                await self._rsync_copy(node_dir, target_dir)
             
             logger.info("filesystem_restore_complete",
                        name=name,
