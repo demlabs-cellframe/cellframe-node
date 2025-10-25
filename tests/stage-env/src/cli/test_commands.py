@@ -133,6 +133,17 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
         
         cli_path = "cellframe-node-cli"
         
+        # Check if we have pristine network (just started with snapshot)
+        pristine_marker = artifacts_manager.artifacts_root / ".pristine_network"
+        is_first_suite = pristine_marker.exists()
+        
+        if is_first_suite:
+            print_info("🎯 Detected pristine network - first suite will use it directly!")
+        
+        # Track if this is the first suite (to optimize snapshot creation)
+        first_suite_executed = False
+        snapshot_created = False
+        
         # Start monitoring services ONCE for entire test session
         async def _start_monitoring():
             monitoring = await MonitoringManager.get_instance(
@@ -251,16 +262,23 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                     
                     # Clean test data before each suite (if network is running)
                     if network_mgr:
-                        print_info("🧹 Restoring clean environment state...")
-                        
-                        async def _restore_state():
-                            await network_mgr.restore_clean_state()
-                        
-                        try:
-                            asyncio.run(_restore_state())
-                            print_success("✓ Environment restored from snapshot")
-                        except Exception as e:
-                            print_warning(f"Failed to restore clean state: {e}")
+                        # OPTIMIZATION: Skip restore for first suite if we have pristine network
+                        if is_first_suite:
+                            print_success("🚀 Using pristine network (no restore needed)")
+                            # Mark network as used - subsequent suites will restore
+                            pristine_marker.unlink()
+                            is_first_suite = False  # Only first suite gets this benefit
+                        else:
+                            print_info("🧹 Restoring clean environment state...")
+                            
+                            async def _restore_state():
+                                await network_mgr.restore_clean_state()
+                            
+                            try:
+                                asyncio.run(_restore_state())
+                                print_success("✓ Environment restored from snapshot")
+                            except Exception as e:
+                                print_warning(f"Failed to restore clean state: {e}")
 
                     # Execute suite-level setup (if defined)
                     if isinstance(suite_spec, SuiteDescriptor) and (suite_spec.includes or suite_spec.setup):

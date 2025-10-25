@@ -110,6 +110,17 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
             asyncio.run(_start())
             print_success("Network started successfully!")
             _show_status(network_mgr)
+            
+            # Create pristine network marker for test optimization
+            # First suite will use this network directly without restore
+            config_loader = ConfigLoader(base_path, config_path)
+            paths_config = config_loader.get_paths_config()
+            artifacts_dir = paths_config.get('artifacts_dir', '../testing/artifacts')
+            artifacts_path = (base_path / artifacts_dir).resolve()
+            artifacts_path.mkdir(parents=True, exist_ok=True)
+            pristine_marker = artifacts_path / ".pristine_network"
+            pristine_marker.touch()
+            print_info("🎯 Pristine network marker created - first suite will use it directly")
         except Exception as e:
             print_error(f"Failed to start network: {e}")
             raise typer.Exit(1)
