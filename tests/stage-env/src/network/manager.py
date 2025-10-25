@@ -249,12 +249,13 @@ class NetworkManager:
         if self.suite_isolation_config.get('auto_create_on_startup', True):
             if self.snapshot_manager.mode != SnapshotMode.DISABLED:
                 logger.info("creating_initial_clean_snapshot_with_pause")
+                containers_paused = False
                 try:
                     # CRITICAL: Stop containers before cleaning data to avoid crashes
                     logger.info("stopping_containers_for_data_cleanup")
                     self.compose.down(volumes=False, remove_images=False)
                     
-                    # Clean node data to ensure pristine state
+                    # Clean node data to ensure pristine state (use sudo for root-owned files)
                     logger.info("cleaning_node_data_for_pristine_snapshot")
                     self._clean_node_data()
                     
@@ -266,6 +267,7 @@ class NetworkManager:
                     # Pause all containers to freeze state
                     logger.info("pausing_containers_for_snapshot")
                     self.compose.pause()
+                    containers_paused = True
                     
                     # Create snapshot of paused state
                     await self.create_clean_snapshot()
@@ -274,14 +276,16 @@ class NetworkManager:
                     # Unpause containers - ready for first suite
                     logger.info("unpausing_containers")
                     self.compose.unpause()
+                    containers_paused = False
                     logger.info("containers_unpaused_ready_for_first_suite")
                     
                 except Exception as e:
-                    # Make sure we unpause even on error
-                    try:
-                        self.compose.unpause()
-                    except:
-                        pass
+                    # Only unpause if we actually paused
+                    if containers_paused:
+                        try:
+                            self.compose.unpause()
+                        except:
+                            pass
                     logger.warning("initial_snapshot_creation_failed",
                                   error=str(e),
                                   note="Will fallback to traditional cleanup")
@@ -626,8 +630,10 @@ class NetworkManager:
         don't pollute the snapshot.
         
         Called before pause→snapshot→unpause to guarantee pristine state.
+        
+        Note: Uses sudo to remove root-owned files created by containers.
         """
-        import shutil
+        import subprocess
         
         cache_dir = self.paths_config.get('cache_dir', '../testing/cache')
         cache_path = (self.base_path / cache_dir).resolve()
@@ -639,12 +645,19 @@ class NetworkManager:
         
         logger.info("removing_node_data_directories", path=str(data_dir))
         
-        # Remove entire data directory tree
+        # Use sudo to remove directory tree (may contain root-owned files from containers)
         try:
-            shutil.rmtree(data_dir)
+            subprocess.run(
+                ["sudo", "rm", "-rf", str(data_dir)],
+                check=True,
+                capture_output=True,
+                text=True
+            )
             logger.info("node_data_removed")
-        except Exception as e:
-            logger.error("failed_to_remove_node_data", error=str(e))
+        except subprocess.CalledProcessError as e:
+            logger.error("failed_to_remove_node_data", 
+                        error=str(e),
+                        stderr=e.stderr)
             raise
         
         # Recreate empty data directory structure for each node
