@@ -4,7 +4,7 @@
 setup:
   # Create temporary certificate for test operations
   - bash: |
-      cellframe-node-tool cert create test_cert sig_dil
+      cellframe-node-tool cert create test_cert sig_dil 
     save: cert_created
 
 # Set test_cert variable for use in CLI defaults
