@@ -215,11 +215,11 @@ class NetworkManager:
         # Clean up any remaining stale resources
         self.compose.cleanup_stale_resources()
         
-        # CRITICAL: Clean node data BEFORE starting containers
-        # This ensures first startup is with pristine state
+        # CRITICAL: Clean node data AFTER stopping old network, BEFORE starting new one
+        # This ensures new network starts with truly pristine state
         if self.suite_isolation_config.get('auto_create_on_startup', True):
             if self.snapshot_manager.mode != SnapshotMode.DISABLED:
-                logger.info("cleaning_node_data_before_first_start")
+                logger.info("cleaning_node_data_after_stop_before_start")
                 self._clean_node_data()
         
         # Generate dynamic docker-compose.yml for all nodes
