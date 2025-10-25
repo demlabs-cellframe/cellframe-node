@@ -296,7 +296,8 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             # Run ALL tests in one go (single run_id, single artifacts folder)
             if [ ${#TEST_DIRS[@]} -gt 0 ]; then
                 info "Running ${#TEST_DIRS[@]} test suite(s) in unified run..."
-                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || TEST_EXIT=$?
+                # Use --no-start-network since we already started it above
+                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
                 
                 # Set individual exit codes based on result
                 if [ $TEST_EXIT -ne 0 ]; then

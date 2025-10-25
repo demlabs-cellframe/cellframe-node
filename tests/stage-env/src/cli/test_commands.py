@@ -103,7 +103,12 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                 print_error(f"Failed to start network: {e}")
                 raise typer.Exit(1)
         else:
-            # Network already running - still need to initialize CLI parser
+            # Network already running - connect to it
+            print_info("🔗 Connecting to running network...")
+            config_path = get_config_path()
+            network_mgr = NetworkManager(base_path, topology_name="default", config_path=config_path)
+            
+            # Still need to initialize CLI parser
             print_info("📖 Initializing CLI parser from running network...")
             from ..utils.cli_parser import get_cli_parser
             
