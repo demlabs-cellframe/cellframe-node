@@ -272,9 +272,41 @@ class NetworkManager:
             await consensus_monitor.wait_for_network_ready(timeout=60.0)
             logger.info("network_consensus_achieved")
         except TimeoutError as e:
-            logger.warning("network_consensus_timeout",
-                          error=str(e),
-                          note="Proceeding anyway - tests may fail")
+            logger.error("network_consensus_timeout_critical",
+                        error=str(e),
+                        note="Network failed to reach consensus - stopping all containers")
+            
+            # Collect metrics for diagnosis
+            try:
+                metrics = await consensus_monitor.collect_all_metrics()
+                logger.error("final_network_state_before_shutdown",
+                           metrics={
+                               node_id: {
+                                   "online": m.is_online,
+                                   "error": m.error,
+                                   "node_list_count": m.node_list_count,
+                                   "blocks": m.main_chain_blocks,
+                               }
+                               for node_id, m in metrics.items()
+                           })
+            except Exception as diag_error:
+                logger.warning("failed_to_collect_diagnostic_metrics",
+                             error=str(diag_error))
+            
+            # Stop all containers
+            logger.info("stopping_failed_network")
+            try:
+                self.compose.down(volumes=False, remove_images=False)
+            except Exception as stop_error:
+                logger.warning("failed_to_stop_network",
+                             error=str(stop_error))
+            
+            # Re-raise with clear message
+            raise RuntimeError(
+                f"Network failed to reach consensus within 60s. "
+                f"All nodes must be online with synchronized node lists and chains. "
+                f"Check logs above for details. Network has been stopped."
+            ) from e
         
         # OPTIMIZATION: Create pristine snapshot for fast suite isolation
         # Pause containers → Create snapshot → Unpause

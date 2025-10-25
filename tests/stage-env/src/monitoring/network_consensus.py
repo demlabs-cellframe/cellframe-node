@@ -190,32 +190,60 @@ class NetworkConsensusMonitor:
         
         try:
             # Get node list
-            node_list_output = await self._exec_cli(
-                node_id,
-                f"node list -net {self.network_name}"
-            )
-            metrics.node_list = self._parse_node_list(node_list_output)
-            metrics.node_list_count = len(metrics.node_list)
+            try:
+                node_list_output = await self._exec_cli(
+                    node_id,
+                    f"node list -net {self.network_name}"
+                )
+                metrics.node_list = self._parse_node_list(node_list_output)
+                metrics.node_list_count = len(metrics.node_list)
+            except Exception as e:
+                logger.warning("failed_to_get_node_list",
+                              node=node_id,
+                              error=str(e))
+                raise
             
             # Get own node address
-            node_dump = await self._exec_cli(node_id, "node dump")
-            metrics.node_addr = self._parse_node_addr(node_dump)
+            try:
+                node_dump = await self._exec_cli(node_id, "node dump")
+                metrics.node_addr = self._parse_node_addr(node_dump)
+            except Exception as e:
+                logger.warning("failed_to_get_node_dump",
+                              node=node_id,
+                              error=str(e))
+                raise
             
             # Get chain info
-            chain_info = await self._exec_cli(
-                node_id,
-                f"chain -net {self.network_name} list"
-            )
-            blocks, last_hash = self._parse_chain_info(chain_info, "main")
-            metrics.main_chain_blocks = blocks
-            metrics.main_chain_last_hash = last_hash
+            try:
+                chain_info = await self._exec_cli(
+                    node_id,
+                    f"chain -net {self.network_name} list"
+                )
+                blocks, last_hash = self._parse_chain_info(chain_info, "main")
+                metrics.main_chain_blocks = blocks
+                metrics.main_chain_last_hash = last_hash
+            except Exception as e:
+                logger.warning("failed_to_get_chain_info",
+                              node=node_id,
+                              error=str(e))
+                raise
             
             # Check online status
-            net_get = await self._exec_cli(
-                node_id,
-                f"net -net {self.network_name} get status"
-            )
-            metrics.is_online = self._parse_online_status(net_get)
+            try:
+                net_get = await self._exec_cli(
+                    node_id,
+                    f"net -net {self.network_name} get status"
+                )
+                metrics.is_online = self._parse_online_status(net_get)
+                logger.debug("node_online_status",
+                            node=node_id,
+                            online=metrics.is_online,
+                            output_preview=net_get[:200])
+            except Exception as e:
+                logger.warning("failed_to_get_online_status",
+                              node=node_id,
+                              error=str(e))
+                raise
             
             # Collect extended metrics if node is online
             if metrics.is_online:
@@ -229,9 +257,9 @@ class NetworkConsensusMonitor:
             
         except Exception as e:
             metrics.error = str(e)
-            logger.debug("failed_to_collect_metrics",
-                        node=node_id,
-                        error=str(e))
+            logger.warning("failed_to_collect_metrics",
+                          node=node_id,
+                          error=str(e))
         
         return metrics
     
