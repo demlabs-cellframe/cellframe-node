@@ -286,7 +286,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             executor = ScenarioExecutor(
                                 node_cli_path="cellframe-node-cli",
                                 log_file=suite_dir / "suite-setup.log",
-                                debug=debug
+                                debug=debug_mode
                             )
                             
                             async def _run_suite_setup():

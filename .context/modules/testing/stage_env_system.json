@@ -209,6 +209,20 @@
             "Валидация извлеченных данных",
             "Поддержка ExtractType enum"
           ],
+          "key_methods": {
+            "extract_and_validate()": "Главный метод - извлечение и валидация (static)",
+            "_validate_wallet_address_checksum()": "Валидация wallet address (base58 + SHA3-256)",
+            "_validate_type()": "Валидация по типу (static)",
+            "get_default_pattern()": "Получение default regex для типа (static)"
+          },
+          "helper_functions": {
+            "set_debug_mode()": "Установка глобального debug режима",
+            "_debug_print()": "Вывод debug информации если debug_mode=True"
+          },
+          "models": {
+            "WalletAddressComponents": "Распарсенные компоненты wallet адреса (addr_ver, net_id, sig_type, key_hash, checksum)",
+            "ExtractionError": "Exception при ошибке извлечения"
+          },
           "extract_types": [
             "wallet_address - Cellframe wallet адрес (base58, 75-105 chars)",
             "node_address - Node адрес (0x::формат)",
@@ -222,6 +236,12 @@
             "wallet_address": "Base58 decode + SHA3-256 checksum verification",
             "node_address": "Проверка :: separator",
             "hash": "Проверка формата 0x[hex]{64}"
+          },
+          "patterns": {
+            "WALLET_ADDRESS_PATTERN": "r'^[A-Za-z0-9]{75,105}$'",
+            "NODE_ADDRESS_PATTERN": "r'^[A-Fa-f0-9:]{10,}$'",
+            "HASH_PATTERN": "r'^(0x)?[A-Fa-f0-9]{64}$'",
+            "TOKEN_NAME_PATTERN": "r'^[A-Z0-9_]{1,16}$'"
           }
         },
         "validator": {
@@ -246,8 +266,29 @@
             "Управление docker-compose файлами",
             "Выполнение docker-compose команд",
             "Генерация docker-compose.yml из топологии",
-            "Мониторинг статуса контейнеров"
-          ]
+            "Мониторинг статуса контейнеров",
+            "Health checks и диагностика нод",
+            "Регистрация root нод в сети"
+          ],
+          "key_methods": {
+            "build()": "Сборка Docker образов",
+            "generate_compose_for_nodes()": "Генерация docker-compose.yml из NodeConfig[]",
+            "up()": "Запуск docker-compose up",
+            "down()": "Остановка (с опциями volumes, images)",
+            "ps()": "Список контейнеров",
+            "logs()": "Получение логов контейнера",
+            "exec()": "Выполнение команды в контейнере",
+            "wait_for_services()": "Ожидание готовности всех нод с timeout",
+            "get_service_status()": "Статус всех сервисов",
+            "is_running()": "Проверка что сеть запущена",
+            "cleanup_stale_resources()": "Очистка старых контейнеров/сетей",
+            "_register_root_nodes()": "Регистрация root нод в сети",
+            "_check_node_online_status()": "Проверка ONLINE статуса ноды",
+            "_check_container_logs_for_errors()": "Диагностика ошибок в логах",
+            "_check_network_status()": "Проверка сетевого статуса",
+            "_check_port_listening()": "Проверка что порт слушается",
+            "_check_peer_connectivity()": "Проверка connectivity между нодами"
+          }
         },
         "dockerfiles": {
           "Dockerfile.cellframe": "Базовый образ для Cellframe Node",
@@ -270,8 +311,19 @@
             "Генерация node-addr.dcert для идентификации нод",
             "Генерация validator_addr.txt для ROOT/MASTER нод",
             "Внутреннее именование: pvt.stagenet.master.N",
-            "Использование cellframe-node-tool"
-          ]
+            "Использование cellframe-node-tool",
+            "Сборка Docker образа cert-generator"
+          ],
+          "key_methods": {
+            "build_docker_image()": "Сборка Dockerfile.cert-generator образа",
+            "generate_node_cert()": "Генерация node-addr.dcert для ноды",
+            "generate_validator_certs()": "Генерация validator сертификатов для ROOT/MASTER",
+            "generate_all()": "Генерация всех сертификатов для топологии",
+            "_generate_simple_cert()": "Создание простого сертификата через cellframe-node-tool",
+            "_get_timestamp()": "Генерация timestamp",
+            "certs_exist()": "Проверка что сертификаты уже существуют",
+            "clean()": "Очистка всех сертификатов"
+          }
         },
         "naming_convention": {
           "node_cert": "node-addr.dcert",
@@ -298,7 +350,17 @@
             "Управление lifecycle снапшотов",
             "Автоматическая очистка старых снапшотов",
             "Выбор реализации по режиму"
-          ]
+          ],
+          "key_methods": {
+            "_initialize_handler()": "Инициализация handler по режиму (recreate/filesystem/squashfs)",
+            "create_snapshot()": "Создание snapshot с именем",
+            "restore_snapshot()": "Восстановление из snapshot",
+            "delete_snapshot()": "Удаление snapshot",
+            "list_snapshots()": "Список всех snapshots",
+            "cleanup_old_snapshots()": "Удаление старых snapshots (keep N newest)",
+            "get_snapshot_info()": "Информация о snapshot (metadata)"
+          },
+          "delegation": "Делегирует операции конкретному handler (RecreateSnapshot/FilesystemSnapshot/SquashfsSnapshot)"
         },
         "implementations": {
           "base": {
@@ -319,7 +381,18 @@
             "description": "Копирование директорий через rsync",
             "speed": "~3s create/restore",
             "storage": "~500MB",
-            "dependencies": ["rsync"]
+            "dependencies": ["rsync"],
+            "key_methods": {
+              "_check_rsync()": "Проверка доступности rsync (fail-fast если нет)",
+              "create()": "Создание snapshot через rsync copy",
+              "restore()": "Восстановление через rsync copy",
+              "delete()": "Удаление snapshot директории",
+              "list()": "Список всех snapshots",
+              "_rsync_copy()": "Выполнение rsync с опциями",
+              "_create_metadata()": "Создание .metadata файла",
+              "_get_dir_size()": "Вычисление размера директории",
+              "get_info()": "Получение информации о snapshot"
+            }
           },
           "squashfs": {
             "module": "src/snapshots/squashfs.py",
@@ -332,7 +405,16 @@
               "Configurable compression (none/gzip/lzo/xz)",
               "Read-only base + writable overlay",
               "Fail-fast на отсутствие зависимостей"
-            ]
+            ],
+            "key_methods": {
+              "_check_tool()": "Проверка mksquashfs/unsquashfs availability",
+              "_check_overlayfs()": "Проверка overlayfs support (multi-method: /proc/filesystems, modprobe, lsmod)",
+              "create()": "Создание .sqfs образа через mksquashfs",
+              "restore()": "Восстановление через unsquashfs + overlay mount",
+              "delete()": "Удаление .sqfs и .metadata файлов",
+              "list()": "Список snapshots (.sqfs файлы)",
+              "get_info()": "Информация о snapshot (metadata)"
+            }
           }
         },
         "configuration": {
@@ -395,14 +477,35 @@
         },
         "artifacts": {
           "module": "src/monitoring/artifacts.py",
-          "class": "ArtifactCollector",
+          "class": "ArtifactsCollector",
           "responsibilities": [
             "Сбор логов нод",
             "Сбор health logs",
             "Сбор core dumps",
             "Сбор scenario logs",
-            "Генерация summary.json"
+            "Генерация summary.json",
+            "Сбор system info и метрик",
+            "Сжатие артефактов"
           ],
+          "key_methods": {
+            "collect_on_crash()": "Сбор всех артефактов при crash (coredumps, backtraces, logs, system info)",
+            "collect_all_logs()": "Сбор всех логов для test run",
+            "_collect_coredumps()": "Поиск и сбор core dumps из контейнеров",
+            "_collect_app_logs()": "Сбор application logs (cellframe-node логи)",
+            "_collect_backtrace()": "Извлечение backtrace из core dump через gdb",
+            "_collect_system_info()": "Сбор system info (uname, mem, disk)",
+            "_collect_monitoring_metrics()": "Сбор monitoring метрик",
+            "_create_summary()": "Генерация summary.json с результатами",
+            "_exec_in_container()": "Выполнение команды в контейнере",
+            "_copy_from_container()": "Копирование файлов из контейнера",
+            "_compress_file()": "Сжатие файла (gzip)",
+            "_get_timestamp()": "Генерация timestamp для имён файлов",
+            "list_artifacts()": "Список всех собранных артефактов",
+            "clean_old_artifacts()": "Очистка старых артефактов (keep_last N)"
+          },
+          "models": {
+            "ArtifactMetadata": "Метаданные артефакта (type, path, size, timestamp)"
+          },
           "structure": "artifacts/run_<timestamp>/<test_type>/<suite>/"
         }
       },
@@ -414,9 +517,23 @@
           "Парсинг cellframe-node-cli help",
           "Извлечение списка команд и их опций",
           "Кэширование результатов парсинга",
-          "Применение CLI defaults (автодобавление -net и т.д.)"
+          "Применение CLI defaults (автодобавление -net и т.д.)",
+          "Проверка поддержки опций командами"
         ],
+        "key_methods": {
+          "parse_cli_help()": "Парсинг help из running container",
+          "load_from_cache()": "Загрузка кэша из cache/cli_commands.json",
+          "save_to_cache()": "Сохранение кэша",
+          "_exec_cli_help()": "Выполнение cellframe-node-cli help в контейнере",
+          "_extract_commands()": "Извлечение списка команд из main help",
+          "_extract_options()": "Извлечение опций из command-specific help",
+          "get_command_options()": "Получить список опций для команды",
+          "has_option()": "Проверить поддержку опции командой",
+          "apply_cli_defaults()": "Применить defaults к CLI команде (добавление опций)",
+          "get_stats()": "Статистика (количество команд, опций)"
+        },
         "cache": "cache/cli_commands.json",
+        "cache_format": "JSON: {command_name: [option1, option2, ...]}",
         "integration": "ScenarioExecutor использует для автозаполнения CLI параметров"
       },
 
@@ -452,8 +569,11 @@
           "Вычисление портов и IP адресов для нод"
         ],
         "key_methods": {
-          "build_from_scenario_nodes()": "Построить топологию из сценария",
-          "build_node_configs()": "Генерация NodeConfig для каждой ноды"
+          "build_from_scenario_nodes()": "Построить топологию из scenario nodes",
+          "build_node_configs()": "Генерация NodeConfig[] для всех нод",
+          "load_or_build_topology()": "Загрузить топологию или построить из scenario",
+          "_count_nodes_by_role()": "Подсчёт нод по ролям",
+          "_build_topology_dict()": "Построение topology dict из role counts"
         }
       },
 
@@ -468,6 +588,35 @@
         ],
         "templates_location": "config/templates/",
         "output": "Генерируется динамически в Docker volumes"
+      },
+
+      "config_loader": {
+        "module": "src/config/loader.py",
+        "class": "ConfigLoader",
+        "responsibilities": [
+          "Загрузка stage-env.cfg",
+          "Загрузка topology файлов",
+          "Рендеринг Jinja2 шаблонов",
+          "Валидация конфигураций"
+        ],
+        "key_methods": {
+          "load_stage_config()": "Загрузка stage-env.cfg в dict",
+          "load_topology()": "Загрузка и валидация topology (template rendering)",
+          "render_template()": "Рендеринг Jinja2 шаблона с контекстом",
+          "load_yaml()": "Загрузка YAML файла",
+          "save_yaml()": "Сохранение YAML файла",
+          "get_node_count()": "Подсчёт количества нод в топологии",
+          "list_topologies()": "Список доступных топологий",
+          "get_timeouts()": "Загрузка [timeouts] секции",
+          "get_paths_config()": "Загрузка [paths] секции",
+          "get_artifacts_config()": "Загрузка [artifacts] секции",
+          "get_logging_config()": "Загрузка [logging] секции",
+          "get_scenarios_config()": "Загрузка [scenarios] секции",
+          "get_suite_isolation_config()": "Загрузка [suite_isolation] секции"
+        },
+        "models": {
+          "NetworkTopology": "Pydantic модель для топологии (network, topology, network_settings, consensus, balancer)"
+        }
       },
 
       "genesis_initializer": {
