@@ -276,7 +276,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             "network": suite_spec.network.dict() if suite_spec.network else {"topology": "default"},
                             "includes": suite_spec.includes if suite_spec.includes else [],
                             "setup": suite_spec.setup.dict() if suite_spec.setup else [],
-                            "test": [],  # Required field, but suite setup doesn't need tests
+                            "test": [{"wait": "0s"}],  # Dummy step to satisfy validation
                         }
                         
                         try:
