@@ -549,13 +549,30 @@ class GenesisInitializer:
                 return False
         
         # Run all registrations in parallel
+        logger.info("starting_parallel_node_registration", node_count=len(nodes) - 1)
         registration_tasks = [register_single_node(node) for node in nodes]
         results = await asyncio.gather(*registration_tasks, return_exceptions=True)
         
-        # Count successes
-        registered_count = sum(1 for r in results if r is True)
+        # Count successes and log details
+        registered_count = 0
+        failed_nodes = []
+        for i, (node, result) in enumerate(zip(nodes, results)):
+            if node.node_id == 1:
+                continue  # Skip node1
+            
+            if isinstance(result, Exception):
+                failed_nodes.append(f"node{node.node_id}(exception: {result})")
+                logger.error("node_registration_exception",
+                           node_id=node.node_id,
+                           error=str(result))
+            elif result is True:
+                registered_count += 1
+            else:
+                failed_nodes.append(f"node{node.node_id}(failed)")
         
         logger.info("node_registration_via_cli_complete",
                    registered=registered_count,
-                   total=len(nodes) - 1)  # -1 for node1 itself
+                   total=len(nodes) - 1,
+                   failed=len(failed_nodes),
+                   failed_nodes=", ".join(failed_nodes) if failed_nodes else "none")
 
