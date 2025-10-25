@@ -16,7 +16,7 @@ from ..utils.logger import get_logger
 from ..monitoring import MonitoringManager, DatumMonitorResult
 from .parser import ScenarioParser
 from .schema import (
-    CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep, StepGroup,
+    CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, ToolStep, LoopStep, StepGroup,
     CLICheck, RPCCheck, PythonCheck, BashCheck,
     TestScenario, TestStep, CheckSpec, StepDefaults, SectionConfig, DatumStatus
 )
@@ -342,6 +342,8 @@ class ScenarioExecutor:
                 await self._execute_python_step(step, ctx)
             elif isinstance(step, BashStep):
                 await self._execute_bash_step(step, ctx)
+            elif isinstance(step, ToolStep):
+                await self._execute_tool_step(step, ctx)
             elif isinstance(step, LoopStep):
                 await self._execute_loop_step(step, ctx, defaults)
             else:
@@ -1059,6 +1061,96 @@ class ScenarioExecutor:
             raise ScenarioExecutionError(
                 f"Bash step timed out after {step.timeout}s",
                 step=script[:100]
+            )
+    
+    async def _execute_tool_step(self, step: ToolStep, ctx: RuntimeContext):
+        """Execute cellframe-node-tool command on specified node."""
+        # Substitute variables in tool command
+        tool_cmd = ctx.substitute(step.tool)
+        
+        # Convert node ID to container name
+        if not step.node.startswith("cellframe-stage-"):
+            if step.node.startswith("node"):
+                node_num = step.node[4:]
+                container_name = f"cellframe-stage-node-{node_num}"
+            else:
+                container_name = f"cellframe-stage-{step.node}"
+        else:
+            container_name = step.node
+        
+        # Build docker exec command with cellframe-node-tool
+        full_cmd = [
+            "docker", "exec", container_name,
+            "cellframe-node-tool"
+        ] + tool_cmd.split()
+        
+        process = await asyncio.create_subprocess_exec(
+            *full_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=step.timeout
+            )
+            
+            result = {
+                "stdout": stdout.decode('utf-8', errors='replace'),
+                "stderr": stderr.decode('utf-8', errors='replace'),
+                "returncode": process.returncode
+            }
+            
+            # Log tool execution
+            self._log_to_file("\n" + "=" * 70)
+            self._log_to_file("TOOL COMMAND")
+            self._log_to_file("=" * 70)
+            self._log_to_file(f"Node: {step.node}")
+            self._log_to_file(f"Command: cellframe-node-tool {tool_cmd}")
+            self._log_to_file(f"Timeout: {step.timeout}s")
+            self._log_to_file(f"Expected: {step.expect}")
+            self._log_to_file("\n--- Tool Response ---")
+            self._log_to_file(f"Exit Code: {result['returncode']}\n")
+            if result["stdout"]:
+                self._log_to_file(f"Stdout:\n{result['stdout']}")
+            if result["stderr"]:
+                self._log_to_file(f"Stderr:\n{result['stderr']}")
+            self._log_to_file("\n" + "=" * 70 + "\n")
+            
+            # Save result if requested
+            if step.save:
+                ctx.set_variable(step.save, result["stdout"].strip())
+                self._log_to_file(f"✓ Saved to variable: {step.save}")
+                logger.debug("tool_step_saved", variable=step.save)
+            
+            # Check expectation
+            if step.expect == "success" and result["returncode"] != 0:
+                raise ScenarioExecutionError(
+                    f"Tool command failed: Expected success but got exit code {result['returncode']}",
+                    step=f"cellframe-node-tool {tool_cmd}",
+                    context=result
+                )
+            elif step.expect == "error" and result["returncode"] == 0:
+                raise ScenarioExecutionError(
+                    f"Tool command succeeded: Expected error but got exit code 0",
+                    step=f"cellframe-node-tool {tool_cmd}"
+                )
+            
+            ctx.add_result("tool_step", True, {"command": tool_cmd, "returncode": result["returncode"]})
+            
+        except asyncio.TimeoutError:
+            process.kill()
+            ctx.add_result("tool_step", False, {"error": "timeout"})
+            raise ScenarioExecutionError(
+                f"Tool command timeout after {step.timeout}s",
+                step=f"cellframe-node-tool {tool_cmd}"
+            )
+        except Exception as e:
+            ctx.add_result("tool_step", False, {"error": str(e), "returncode": getattr(process, 'returncode', -1)})
+            raise ScenarioExecutionError(
+                f"Tool command failed: {str(e)}",
+                step=f"cellframe-node-tool {tool_cmd}"
             )
     
     async def _wait_duration(self, duration_str: str):

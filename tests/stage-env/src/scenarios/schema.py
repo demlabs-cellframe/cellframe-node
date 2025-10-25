@@ -236,6 +236,18 @@ class BashStep(BaseModel):
         use_enum_values = True
 
 
+class ToolStep(BaseModel):
+    """Execute cellframe-node-tool command."""
+    tool: str = Field(..., description="Tool command (e.g., 'cert create test_cert sig_dil')")
+    node: str = Field("node1", description="Node to execute on")
+    save: Optional[str] = Field(None, description="Variable name to save result to")
+    expect: ExpectResult = Field(ExpectResult.SUCCESS, description="Expected result")
+    timeout: Optional[int] = Field(30, description="Command timeout in seconds")
+    
+    class Config:
+        use_enum_values = True
+
+
 class LoopStep(BaseModel):
     """Loop over steps multiple times."""
     loop: int = Field(..., gt=0, description="Number of iterations")
@@ -257,7 +269,7 @@ class WaitForDatumStep(BaseModel):
     save_status: Optional[str] = Field(None, description="Variable name to save final status")
 
 
-TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep]
+TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, ToolStep, LoopStep]
 
 
 # ============================================================================
@@ -323,7 +335,7 @@ class StepGroup(BaseModel):
 
 
 # Update TestStep to include StepGroup
-TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep, StepGroup]
+TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, ToolStep, LoopStep, StepGroup]
 
 
 # ============================================================================
