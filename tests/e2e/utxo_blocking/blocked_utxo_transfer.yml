@@ -15,7 +15,6 @@ description: |
 author: QA Team
 tags: [e2e, utxo-blocking, transfer, critical]
 
-
 setup:
   # Create two wallets for testing
   - cli: wallet new -w sender
@@ -29,46 +28,46 @@ setup:
     save_wallet: receiver_addr
   
   # Create token (UTXO blocking через token_update, не через флаг)
-  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert -chain main
     save_hash: token_hash
 
   - wait_for_datum: "{{token_hash}}"
   
   # Emit tokens to sender
-  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}} -certs test_cert
+  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}} -certs test_cert -chain main
     save_hash: emission
   
   # Wait for emission
   - wait_for_datum: "{{emission}}"
   
   # Create UTXO #1 (will be blocked)
-  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1 -chain main
     save_hash: utxo1
   
   # Wait for UTXO #1
   - wait_for_datum: "{{utxo1}}"
   
   # Create UTXO #2 (will remain unblocked)
-  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1 -chain main
     save_hash: utxo2
   
   # Wait for UTXO #2
   - wait_for_datum: "{{utxo2}}"
   
   # Block UTXO #1
-  - cli: token_update -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
+  - cli: token_update -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0 -chain main
     save_hash: block_tx
 
   - wait_for_datum: "{{block_tx}}"
 
 test:
   # Attempt to spend blocked UTXO - should FAIL
-  - cli: tx_create -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1 -chain main
     expect: error
     contains: "UTXO is blocked"
   
   # Attempt to spend unblocked UTXO - should SUCCESS
-  - cli: tx_create -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1 -chain main
     save_hash: transfer_tx
 
   - wait_for_datum: "{{transfer_tx}}"
