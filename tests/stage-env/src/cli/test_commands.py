@@ -290,7 +290,9 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             except Exception as e:
                                 print_warning(f"Failed to restore clean state: {e}")
 
-                    # Execute suite-level setup (if defined)
+                    # CRITICAL: Execute suite-level setup AFTER restore for EVERY suite
+                    # This ensures certificates and other ephemeral resources are created
+                    # even after snapshot restore (which doesn't include certs)
                     if isinstance(suite_spec, SuiteDescriptor) and (suite_spec.includes or suite_spec.setup):
                         print_info("🔧 Executing suite-level setup...")
                         
