@@ -297,20 +297,36 @@ class DatumMonitor:
                 "-net", network, "-chain", chain
             ]
             
+            self._log(f"  🔍 Checking mempool on {node} ({container_name})...")
+            self._log(f"     Command: {' '.join(cmd)}")
+            
             result = container.exec_run(cmd, demux=True)
             exit_code = result.exit_code
             stdout, stderr = result.output
             
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            stderr_str = stderr.decode('utf-8') if stderr else ""
+            
+            self._log(f"     Exit code: {exit_code}")
+            if stdout_str:
+                self._log(f"     Stdout preview: {stdout_str[:200]}")
+            if stderr_str:
+                self._log(f"     Stderr: {stderr_str[:200]}")
+            
             if exit_code != 0:
+                self._log(f"  ⚠️ Mempool check failed with exit code {exit_code}")
                 return False
             
-            stdout_str = stdout.decode('utf-8') if stdout else ""
-            
             # Check if our datum hash is in the output
-            return datum_hash.lower() in stdout_str.lower()
+            found = datum_hash.lower() in stdout_str.lower()
+            self._log(f"     Result: {'✓ FOUND' if found else '✗ NOT FOUND'}")
+            
+            return found
             
         except Exception as e:
             self._log(f"  ⚠️ Failed to check mempool: {e}")
+            import traceback
+            self._log(f"     Traceback: {traceback.format_exc()}")
             return False
     
     async def _check_verified_on_masters(self, node: str, network: str, chain: str, datum_hash: str) -> bool:
