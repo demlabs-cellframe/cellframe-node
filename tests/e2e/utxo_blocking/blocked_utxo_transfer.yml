@@ -14,24 +14,19 @@ description: |
   5. Verify unblocked UTXO can be spent
 author: QA Team
 tags: [e2e, utxo-blocking, transfer, critical]
-version: "1.0"
 
-network:
-  topology: default
-  name: stagenet
-
-includes:
-  - common/set_net_default.yml
 
 setup:
   # Create two wallets for testing
   - cli: wallet new -w sender
+  
+  - cli: wallet info -w sender
     save_wallet: sender_addr
-    wait: 1s
   
   - cli: wallet new -w receiver
+  
+  - cli: wallet info -w receiver
     save_wallet: receiver_addr
-    wait: 1s
   
   # Create token (UTXO blocking через token_update, не через флаг)
   - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
