@@ -99,16 +99,41 @@ class SquashfsSnapshot(BaseSnapshot):
     
     def _check_overlayfs(self) -> bool:
         """Check if overlay filesystem is available."""
-        # Check if overlay module is loaded or available
+        # Check if overlay is supported by the kernel
+        # Method 1: Check /proc/filesystems (most reliable)
+        try:
+            with open("/proc/filesystems", "r") as f:
+                filesystems = f.read()
+                if "overlay" in filesystems:
+                    return True
+        except (FileNotFoundError, PermissionError):
+            pass
+        
+        # Method 2: Try modprobe (if available)
         try:
             result = subprocess.run(
                 ["modprobe", "-n", "overlay"],
                 capture_output=True,
                 timeout=5
             )
-            return result.returncode == 0
+            if result.returncode == 0:
+                return True
         except (FileNotFoundError, subprocess.TimeoutExpired):
-            return False
+            pass
+        
+        # Method 3: Check if overlay module is loaded
+        try:
+            result = subprocess.run(
+                ["lsmod"],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode == 0 and b"overlay" in result.stdout:
+                return True
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+        
+        return False
     
     async def create(self, name: str) -> bool:
         """
