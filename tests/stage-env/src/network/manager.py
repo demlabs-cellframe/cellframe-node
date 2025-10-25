@@ -6,6 +6,7 @@ Manages the lifecycle of test network:
 - Node startup/shutdown
 - Network readiness checking
 - Node discovery and configuration
+- Snapshot-based suite isolation for fast environment restoration
 """
 
 import asyncio
@@ -18,6 +19,7 @@ from ..docker.compose import DockerComposeManager
 from ..monitoring.health import HealthChecker, HealthStatus
 from ..utils.logger import get_logger
 from ..utils.artifacts import ArtifactsManager
+from ..snapshots.manager import SnapshotManager, SnapshotMode
 from .models import NodeConfig
 from .genesis import GenesisInitializer
 
@@ -76,11 +78,37 @@ class NetworkManager:
         artifacts_config = self.config_loader.get_artifacts_config()
         self.artifacts_manager = ArtifactsManager(base_path, artifacts_config)
         
+        # Initialize snapshot manager for suite isolation
+        suite_isolation_config = self.config_loader.get_suite_isolation_config()
+        snapshot_mode_str = suite_isolation_config.get('mode', 'filesystem')
+        
+        # Convert mode string to enum
+        try:
+            snapshot_mode = SnapshotMode(snapshot_mode_str)
+        except ValueError:
+            logger.warning("invalid_snapshot_mode",
+                          mode=snapshot_mode_str,
+                          fallback="filesystem")
+            snapshot_mode = SnapshotMode.FILESYSTEM
+        
+        # Pass full config including cache_dir
+        snapshot_config = dict(suite_isolation_config)
+        snapshot_config['cache_dir'] = self.paths_config.get('cache_dir', '../testing/cache')
+        
+        self.snapshot_manager = SnapshotManager(
+            base_path,
+            mode=snapshot_mode,
+            config=snapshot_config
+        )
+        
+        self.suite_isolation_config = suite_isolation_config
+        
         logger.info("network_manager_initialized",
                    topology=topology_name,
                    network=self.topology.network.name,
                    timeouts=self.timeouts,
-                   cache_dir=self.paths_config.get('cache_dir'))
+                   cache_dir=self.paths_config.get('cache_dir'),
+                   snapshot_mode=snapshot_mode.value)
     
     def generate_node_configs(self) -> List[NodeConfig]:
         """
@@ -215,53 +243,21 @@ class NetworkManager:
             # Don't fail the whole start process, just log the error
             # Validator orders might already exist in a restarted network
         
+        # Create initial clean snapshot if configured
+        if self.suite_isolation_config.get('auto_create_on_startup', True):
+            if self.snapshot_manager.mode != SnapshotMode.DISABLED:
+                logger.info("creating_initial_clean_snapshot")
+                try:
+                    await self.create_clean_snapshot()
+                    logger.info("initial_snapshot_created")
+                except Exception as e:
+                    logger.warning("initial_snapshot_creation_failed",
+                                  error=str(e),
+                                  note="Will fallback to traditional cleanup")
+        
         logger.info("network_started",
                    nodes=len(self.nodes),
                    topology=self.topology.network.name)
-    
-    async def clean_test_data(self) -> None:
-        """
-        Clean user test data (wallets, chains, logs) while keeping system files.
-        
-        Safe to call on running network - cleans only user-created data.
-        """
-        logger.info("cleaning_test_data")
-        
-        try:
-            # Get running containers
-            running_containers = self.compose.client.containers.list(
-                filters={"label": f"com.docker.compose.project={self.compose.project_name}"}
-            )
-            
-            if not running_containers:
-                logger.warning("no_running_containers_to_clean")
-                return
-            
-            logger.info("cleaning_user_data_via_exec", count=len(running_containers))
-            for container in running_containers:
-                try:
-                    # Clean only user data, keep system files
-                    clean_script = """
-                    cd /opt/cellframe-node/var || exit 0
-                    # Clean user wallets (all *.dwallet files - no system wallet in stagenet)
-                    rm -f lib/wallet/*.dwallet 2>/dev/null || true
-                    # Clean chains
-                    rm -rf lib/chains/* 2>/dev/null || true
-                    # Clean GDB
-                    rm -rf lib/gdb/* 2>/dev/null || true
-                    # Clean logs (will be collected by artifacts before cleaning)
-                    rm -f log/*.log 2>/dev/null || true
-                    # DON'T clean lib/ca/ - it contains validator certificates!
-                    """
-                    container.exec_run(["sh", "-c", clean_script], user="root")
-                    logger.debug("cleaned_user_data", container=container.name)
-                except Exception as e:
-                    logger.warning("failed_to_clean_container_data", container=container.name, error=str(e))
-            
-            logger.info("test_data_cleaned")
-            
-        except Exception as e:
-            logger.warning("failed_to_clean_test_data", error=str(e))
     
     async def stop(self, remove_volumes: bool = False) -> None:
         """
@@ -467,4 +463,110 @@ class NetworkManager:
     async def cleanup(self) -> None:
         """Cleanup resources."""
         await self.health_checker.close()
+    
+    async def create_clean_snapshot(self, name: Optional[str] = None) -> bool:
+        """
+        Create a snapshot of current clean environment state.
+        
+        Should be called after network is fully initialized and ready,
+        before any tests are run.
+        
+        Args:
+            name: Optional snapshot name (defaults to config snapshot_name)
+            
+        Returns:
+            True if snapshot created successfully
+        """
+        snapshot_name = name or self.suite_isolation_config.get('snapshot_name', 'clean_state')
+        
+        logger.info("creating_clean_snapshot",
+                   name=snapshot_name,
+                   mode=self.snapshot_manager.mode.value)
+        
+        result = await self.snapshot_manager.create_snapshot(snapshot_name)
+        
+        if result and self.suite_isolation_config.get('auto_cleanup', True):
+            # Cleanup old snapshots
+            keep_count = self.suite_isolation_config.get('keep_snapshot_count', 5)
+            await self.snapshot_manager.cleanup_old_snapshots(keep_count)
+        
+        return result
+    
+    async def restore_clean_state(self, name: Optional[str] = None) -> bool:
+        """
+        Restore environment to clean snapshot state.
+        
+        This replaces the current clean_test_data() approach with snapshot restoration,
+        providing much faster suite isolation.
+        
+        Args:
+            name: Optional snapshot name (defaults to config snapshot_name)
+            
+        Returns:
+            True if restore successful
+        """
+        snapshot_name = name or self.suite_isolation_config.get('snapshot_name', 'clean_state')
+        
+        logger.info("restoring_clean_state",
+                   name=snapshot_name,
+                   mode=self.snapshot_manager.mode.value)
+        
+        # Special case for 'recreate' mode - use traditional cleanup
+        if self.snapshot_manager.mode == SnapshotMode.RECREATE:
+            logger.info("recreate_mode_using_clean_test_data")
+            await self.clean_test_data()
+            return True
+        
+        # For other modes, restore from snapshot
+        result = await self.snapshot_manager.restore_snapshot(snapshot_name)
+        
+        if not result:
+            logger.warning("snapshot_restore_failed_fallback_to_cleanup")
+            await self.clean_test_data()
+            return False
+        
+        return result
+    
+    async def clean_test_data(self) -> None:
+        """
+        Clean test data from all nodes (traditional approach).
+        
+        This is the original cleanup method, now used as fallback or for 'recreate' mode.
+        Removes user-generated data while preserving system files.
+        """
+        logger.info("cleaning_test_data_traditional_method")
+        
+        for node_name in self.nodes.keys():
+            try:
+                # Execute cleanup inside container to avoid permission issues
+                cleanup_script = """
+                # Clean user-generated data
+                rm -f /opt/cellframe-node/var/lib/wallet/*.dwallet 2>/dev/null || true
+                rm -rf /opt/cellframe-node/var/lib/chains/* 2>/dev/null || true
+                rm -rf /opt/cellframe-node/var/lib/gdb/* 2>/dev/null || true
+                rm -f /opt/cellframe-node/var/log/*.log 2>/dev/null || true
+                
+                # Preserve:
+                # - /opt/cellframe-node/var/lib/ca/ (validator certificates)
+                # - /opt/cellframe-node/var/run/ (PID files, sockets)
+                
+                echo "Cleanup complete for $(hostname)"
+                """
+                
+                exit_code, output = self.compose.exec(
+                    node_name,
+                    ["sh", "-c", cleanup_script]
+                )
+                
+                if exit_code == 0:
+                    logger.debug("node_data_cleaned", node=node_name)
+                else:
+                    logger.warning("node_cleanup_failed",
+                                  node=node_name,
+                                  exit_code=exit_code,
+                                  output=output)
+            except Exception as e:
+                logger.error("node_cleanup_error",
+                            node=node_name,
+                            error=str(e))
 

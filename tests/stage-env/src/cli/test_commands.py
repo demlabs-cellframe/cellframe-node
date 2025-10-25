@@ -250,16 +250,17 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                     
                     # Clean test data before each suite (if network is running)
                     if network_mgr:
-                        print_info("🧹 Cleaning test data for fresh suite state...")
+                        print_info("🧹 Restoring clean environment state...")
                         
-                        async def _clean_data():
-                            await network_mgr.clean_test_data()
+                        async def _restore_state():
+                            await network_mgr.restore_clean_state()
                         
                         try:
-                            asyncio.run(_clean_data())
-                            print_success("✓ Test data cleaned")
+                            asyncio.run(_restore_state())
+                            print_success("✓ Environment restored from snapshot")
                         except Exception as e:
-                            print_warning(f"Failed to clean test data: {e}")
+                            print_warning(f"Failed to restore clean state: {e}")
+
                     
                     # Filter scenarios if needed
                     if filter:
