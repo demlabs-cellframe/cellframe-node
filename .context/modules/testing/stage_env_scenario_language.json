@@ -1015,18 +1015,23 @@
     },
 
     "token_lifecycle": {
-      "description": "Полный жизненный цикл токена",
-      "code": "name: Token Lifecycle\ndescription: Create, emit, transfer\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\nsetup:\n  - cli: wallet new -w wallet1\n  - cli: wallet new -w wallet2\n  \n  - cli: wallet info -w wallet1\n    extract_to:\n      addr1:\n        type: wallet_address\n  \n  - cli: wallet info -w wallet2\n    extract_to:\n      addr2:\n        type: wallet_address\n\ntest:\n  - cli: token_decl -token LIFE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert\n    save: token_hash\n  \n  - cli: token_emit -token LIFE -value 10000 -addr {{addr1}} -certs test_cert\n    save: emit_tx\n  \n  - wait_for_datum: '{{emit_tx}}'\n  \n  - cli: tx_create -token LIFE -from {{emit_tx}}:0 -to_addr {{addr2}} -value 5000 -fee 0.1\n    save: transfer_tx\n  \n  - wait_for_datum: '{{transfer_tx}}'\n\ncheck:\n  - cli: token info -name LIFE\n    contains: 'LIFE'\n  \n  - cli: tx_history -tx {{transfer_tx}}\n    contains: '{{transfer_tx}}'"
+      "description": "Полный жизненный цикл токена с современным синтаксисом",
+      "code": "name: Token Lifecycle\ndescription: Create, emit, transfer\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\nsetup:\n  - cli: wallet new -w wallet1\n  - cli: wallet new -w wallet2\n  \n  - cli: wallet info -w wallet1\n    save_wallet: addr1\n  \n  - cli: wallet info -w wallet2\n    save_wallet: addr2\n\ntest:\n  - cli: token_decl -token LIFE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert\n    save_hash: token_hash\n  \n  - cli: token_emit -token LIFE -value 10000 -addr {{addr1}} -certs test_cert\n    save_hash: emit_tx\n  \n  - wait_for_datum: '{{emit_tx}}'\n  \n  - cli: tx_create -token LIFE -from {{emit_tx}}:0 -to_addr {{addr2}} -value 5000 -fee 0.1\n    save_hash: transfer_tx\n  \n  - wait_for_datum: '{{transfer_tx}}'\n\ncheck:\n  - cli: token info -name LIFE\n    contains: 'LIFE'\n  \n  - cli: tx_history -tx {{transfer_tx}}\n    contains: '{{transfer_tx}}'"
     },
 
     "using_defaults": {
       "description": "Эффективное использование defaults",
-      "code": "name: Defaults Demo\n\ndefaults:\n  node: node1\n  wait: 3s\n  cli:\n    net: '{{network_name}}'\n\ntest:\n  # node=node1, wait=3s, -net auto applied\n  - cli: token list\n  \n  # Override node\n  - cli: token list\n    node: node2\n  \n  # Override wait\n  - cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n    wait: 10s"
+      "code": "name: Defaults Demo\n\ndefaults:\n  node: node1\n  wait: 3s\n  cli:\n    net: '{{network_name}}'\n\ntest:\n  # node=node1, wait=3s, -net auto applied\n  - cli: token list\n  \n  # Override node\n  - cli: token list\n    node: node2\n  \n  # Override wait\n  - cli: token_decl -token TEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert\n    wait: 10s"
+    },
+
+    "save_helpers_demo": {
+      "description": "Демонстрация save_* хелперов",
+      "code": "name: Save Helpers\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\ntest:\n  # Extract wallet address\n  - cli: wallet new -w test\n  - cli: wallet info -w test\n    save_wallet: addr\n  \n  # Extract hash\n  - cli: token_decl -token T -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert\n    save_hash: hash\n  \n  # Extract node address\n  - cli: net get_cur_addr\n    save_node: node_addr\n  \n  # Use extracted values\n  - cli: token_emit -token T -value 1000 -addr {{addr}} -certs test_cert\n    save_hash: emit_hash\n  \n  - wait_for_datum: '{{emit_hash}}'"
     },
 
     "suite_with_setup": {
       "description": "Suite descriptor с suite-level setup",
-      "code": "# token.yml (suite descriptor)\nsuite: 'Token Operations Suite'\ndescription: 'E2E token tests'\n\nnetwork:\n  topology: default\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\n# Выполнится ОДИН раз перед всеми сценариями в token/\nsetup:\n  - wait: 5s\n  - bash: |\n      echo 'Suite initialized' > /tmp/suite.log"
+      "code": "# token.yml (suite descriptor)\nsuite: 'Token Operations Suite'\ndescription: 'E2E token tests'\n\nnetwork:\n  topology: default\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\n# Выполнится ОДИН раз перед всеми сценариями в token/\nsetup:\n  - wait: 5s"
     }
   },
 
