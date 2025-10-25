@@ -309,7 +309,7 @@ class DataExtractor:
         defaults = {
             ExtractType.WALLET_ADDRESS: r'addr:\s+(\S+)',
             ExtractType.NODE_ADDRESS: r'(?:node[_-]?addr|address):\s*([A-Fa-f0-9:]+)',
-            ExtractType.HASH: r'(?:hash|tx):\s*((?:0x)?[A-Fa-f0-9]{64})',
+            ExtractType.HASH: r'(0x[A-Fa-f0-9]{64})',  # Simplified - just match hash anywhere
             ExtractType.TOKEN_NAME: r'token:\s*([A-Z0-9_]+)',
             ExtractType.NUMBER: r'(\d+(?:\.\d+)?)',
             ExtractType.BOOL: r'(true|false|yes|no|1|0|on|off|enabled|disabled)',

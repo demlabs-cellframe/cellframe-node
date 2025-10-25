@@ -41,28 +41,28 @@ setup:
   
   # Emit tokens to sender
   - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}} -certs test_cert
-    save: emission
+    save_hash: emission
   
   # Wait for emission
   - wait_for_datum: "{{emission}}"
   
   # Create UTXO #1 (will be blocked)
   - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
-    save: utxo1
+    save_hash: utxo1
   
   # Wait for UTXO #1
   - wait_for_datum: "{{utxo1}}"
   
   # Create UTXO #2 (will remain unblocked)
   - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1
-    save: utxo2
+    save_hash: utxo2
   
   # Wait for UTXO #2
   - wait_for_datum: "{{utxo2}}"
   
   # Block UTXO #1
   - cli: token_update -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0
-    save: block_tx
+    save_hash: block_tx
 
   - wait_for_datum: "{{block_tx}}"
 
