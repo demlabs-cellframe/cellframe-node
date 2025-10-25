@@ -21,6 +21,7 @@ network:
   name: stagenet
 
 includes:
+  - common/create_test_cert.yml
   - common/set_net_default.yml
 
 setup:

@@ -12,6 +12,7 @@ network:
 
 # Include common templates
 includes:
+  - common/create_test_cert.yml
   - common/networks/network_minimal.yml
   - common/wallets/create_wallet.yml
 

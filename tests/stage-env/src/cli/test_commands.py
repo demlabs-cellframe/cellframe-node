@@ -299,7 +299,9 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             
                         except Exception as e:
                             print_error(f"Suite setup failed: {e}")
-                            print_warning("Continuing with scenarios...")
+                            print_error(f"❌ Skipping all scenarios in suite: {suite_name}")
+                            # Skip all scenarios in this suite
+                            continue
 
 
                     

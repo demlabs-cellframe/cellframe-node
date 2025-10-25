@@ -1,8 +1,7 @@
 # Default network configuration for CLI commands
-# Include this in your test to auto-populate -net option and certs
+# Include this in your test to auto-populate -net option
 
 defaults:
   cli:
     net: "{{network_name}}"
-    certs: "test_cert"
 
