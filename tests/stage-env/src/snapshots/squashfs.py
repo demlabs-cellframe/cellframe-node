@@ -157,7 +157,7 @@ class SquashfsSnapshot(BaseSnapshot):
         
         # Remove existing snapshot if present
         if snapshot_file.exists():
-            logger.warning("squashfs_overwriting_existing", name=name)
+            logger.debug("squashfs_overwriting_existing", name=name)
             snapshot_file.unlink()
         
         # Get source data directory
@@ -245,17 +245,30 @@ class SquashfsSnapshot(BaseSnapshot):
         data_path = self.cache_path / "data"
         
         try:
-            # Clean existing data
+            # Clean existing data (use sudo rm -rf for bind-mounted volumes)
             if data_path.exists():
                 logger.debug("squashfs_cleaning_existing_data")
-                await asyncio.to_thread(shutil.rmtree, data_path, ignore_errors=True)
+                # Use docker exec to clean from inside container if available
+                # Otherwise use sudo rm -rf as files are owned by root
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        "sudo", "rm", "-rf", str(data_path),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    await proc.communicate()
+                except Exception:
+                    # Fallback to shutil with ignore_errors
+                    await asyncio.to_thread(shutil.rmtree, data_path, ignore_errors=True)
             
             data_path.mkdir(parents=True, exist_ok=True)
             
-            # Extract squashfs
+            # Extract squashfs - need sudo as files are owned by root
+            # Also add -no-xattrs to avoid permission issues
             proc = await asyncio.create_subprocess_exec(
-                "unsquashfs",
+                "sudo", "unsquashfs",
                 "-f",  # force overwrite
+                "-no-xattrs",  # don't restore extended attributes
                 "-d", str(data_path),  # destination
                 str(snapshot_file),
                 stdout=asyncio.subprocess.PIPE,
@@ -269,6 +282,18 @@ class SquashfsSnapshot(BaseSnapshot):
                             name=name,
                             error=stderr.decode())
                 return False
+            
+            # Fix ownership to current user (files were extracted as root)
+            import os
+            uid = os.getuid()
+            gid = os.getgid()
+            
+            proc = await asyncio.create_subprocess_exec(
+                "sudo", "chown", "-R", f"{uid}:{gid}", str(data_path),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            await proc.communicate()
             
             logger.info("squashfs_restore_complete", name=name)
             return True

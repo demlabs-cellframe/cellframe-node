@@ -86,7 +86,7 @@ class FilesystemSnapshot(BaseSnapshot):
         
         # Remove existing snapshot if present
         if snapshot_dir.exists():
-            logger.warning("filesystem_overwriting_existing", name=name)
+            logger.debug("filesystem_overwriting_existing", name=name)
             await self.delete(name)
         
         snapshot_dir.mkdir(parents=True, exist_ok=True)

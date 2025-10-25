@@ -68,13 +68,13 @@ snapshots_dir = ../testing/snapshots
 - Use as performance baseline
 - Maximum isolation guarantee
 
-**filesystem** (recommended)
+**filesystem** (if no root access or squashfs at alll)
 - Best balance of speed and simplicity
 - **Requires rsync** (mandatory dependency)
 - ~3s per suite restoration
 - Install: `sudo apt install rsync`
 
-**squashfs** (fastest)
+**squashfs** (recommended)
 - Compressed read-only images
 - Fastest restoration (~2s)
 - **Requires squashfs-tools** (mandatory dependency)

@@ -518,12 +518,28 @@ class NetworkManager:
             return True
         
         # For other modes, restore from snapshot
+        # CRITICAL: Stop containers before restore to avoid file conflicts
+        logger.info("stopping_containers_before_snapshot_restore")
+        await self.stop(remove_volumes=False)
+        
+        # Restore snapshot with containers stopped
         result = await self.snapshot_manager.restore_snapshot(snapshot_name)
         
         if not result:
             logger.warning("snapshot_restore_failed_fallback_to_cleanup")
-            await self.clean_test_data()
+            # Restart containers even if restore failed
+            logger.info("starting_containers_after_failed_restore")
+            await self.start(rebuild=False, wait_ready=True)
+            # Only try cleanup if containers are running
+            if self.compose and self.compose.is_running():
+                await self.clean_test_data()
+            else:
+                logger.warning("containers_not_running_skipping_cleanup")
             return False
+        
+        # Restart containers with restored data
+        logger.info("starting_containers_after_snapshot_restore")
+        await self.start(rebuild=False, wait_ready=True)
         
         return result
     
