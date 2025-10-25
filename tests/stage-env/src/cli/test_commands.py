@@ -216,6 +216,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                     common_root = base_path / "tests"
                     parser = ScenarioParser(scenarios_root=suite_descriptor.parent, common_root=common_root)
                     
+                    suite_spec = None  # Initialize to None in case of parse failure
                     try:
                         suite_desc_rel = suite_descriptor.relative_to(suite_descriptor.parent)
                         suite_spec = parser.load_scenario(str(suite_desc_rel))
