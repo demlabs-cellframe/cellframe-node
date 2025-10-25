@@ -21,7 +21,7 @@ test:
   - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token E2ETEST -total_supply 1000000 -certs test_cert
     node: node1
     expect: success
-    save: token_hash
+    save_hash: token_hash
     wait: 3s
     description: "Declare E2ETEST token"
 

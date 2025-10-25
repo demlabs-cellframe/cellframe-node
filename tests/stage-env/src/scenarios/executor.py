@@ -474,12 +474,6 @@ class ScenarioExecutor:
                                 errors = parsed['errors']
                                 if isinstance(errors, dict) and 'message' in errors:
                                     message = errors['message']
-                                    # Extract hash from message like "Datum 0x... with token X is placed..."
-                                    import re
-                                    hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', message)
-                                    if hash_match:
-                                        saved_value = hash_match.group(1)
-                                        self._log_to_file(f"✓ Extracted hash from errors.message: {saved_value}")
                     except:
                         # Fallback: look for hash pattern in output (0x[hex])
                         import re

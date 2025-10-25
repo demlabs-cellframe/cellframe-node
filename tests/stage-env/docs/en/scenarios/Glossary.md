@@ -118,8 +118,8 @@ Execute `cellframe-node-cli` command.
   node: node1                    # Node to execute on (default: node1)
   save: full_output              # Save entire output
   save_hash: tx_hash             # Extract and validate hash (0x[hex])
-  save_wallet: my_address        # Extract and validate wallet address (base58 + checksum)
-  save_node: node_addr           # Extract node address (0x::format)
+  save_wallet: my_address        # Extract and validate CF wallet address 
+  save_node: node_addr           # Extract node address (AAAA::BBBB:::CCCC::DDDD format)
   wait: 3s                       # Wait after command
   expect: success                # Expected result (success/error/any)
   contains: "SUCCESS"            # Verify output contains string

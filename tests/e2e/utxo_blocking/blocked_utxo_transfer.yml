@@ -35,7 +35,7 @@ setup:
   
   # Create token (UTXO blocking через token_update, не через флаг)
   - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-    save: token_hash
+    save_hash: token_hash
 
   - wait_for_datum: "{{token_hash}}"
   

@@ -28,7 +28,7 @@ setup:
   
   # Create a transaction
   - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -value 1000 -fee 0.1
-    save: tx_hash
+    save_hash: tx_hash
 
 test:
   # Test: Get token history

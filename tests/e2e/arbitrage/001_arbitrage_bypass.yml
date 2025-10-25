@@ -12,7 +12,6 @@ network:
 
 # Include common templates
 includes:
-  - common/networks/network_minimal.yml
   - common/wallets/create_wallet.yml
 
 # Global defaults for all sections

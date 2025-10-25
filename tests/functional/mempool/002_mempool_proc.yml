@@ -26,7 +26,7 @@ setup:
 test:
   # Test: Create transaction (should go to mempool)
   - cli: tx_create -token MEMPOOLTEST -from_emission {{emit_tx}} -value 500
-    save: tx_hash
+    save_hash: tx_hash
  
   # Test: Check mempool
   - cli: mempool list
