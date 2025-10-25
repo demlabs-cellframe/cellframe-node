@@ -10,7 +10,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ..utils.logger import get_logger
 from ..monitoring import MonitoringManager, DatumMonitorResult
@@ -18,7 +18,7 @@ from .parser import ScenarioParser
 from .schema import (
     CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, ToolStep, LoopStep, StepGroup,
     CLICheck, RPCCheck, PythonCheck, BashCheck,
-    TestScenario, TestStep, CheckSpec, StepDefaults, SectionConfig, DatumStatus
+    TestScenario, SuiteSetupScenario, TestStep, CheckSpec, StepDefaults, SectionConfig, DatumStatus
 )
 
 logger = get_logger(__name__)
@@ -45,10 +45,10 @@ class ScenarioExecutionError(Exception):
 class RuntimeContext:
     """Runtime context for scenario execution."""
     
-    def __init__(self, scenario: TestScenario):
+    def __init__(self, scenario: Union[TestScenario, SuiteSetupScenario]):
         """Initialize runtime context."""
         self.scenario = scenario
-        self.variables: Dict[str, Any] = scenario.variables.copy()
+        self.variables: Dict[str, Any] = scenario.variables.copy() if hasattr(scenario, 'variables') else {}
         
         # Add network_name from network configuration
         if hasattr(scenario, 'network') and scenario.network:
@@ -216,12 +216,12 @@ class ScenarioExecutor:
         
         return step
     
-    async def execute_scenario(self, scenario: TestScenario) -> RuntimeContext:
+    async def execute_scenario(self, scenario: Union[TestScenario, SuiteSetupScenario]) -> RuntimeContext:
         """
-        Execute complete test scenario.
+        Execute complete test scenario or suite setup.
         
         Args:
-            scenario: Parsed test scenario
+            scenario: Parsed test scenario or suite setup scenario
             
         Returns:
             Runtime context with results
@@ -230,7 +230,7 @@ class ScenarioExecutor:
             ScenarioExecutionError: If execution fails
         """
         logger.info(f"Starting scenario: {scenario.name}")
-        if scenario.description:
+        if hasattr(scenario, 'description') and scenario.description:
             logger.info(f"Description: {scenario.description}")
         
         ctx = RuntimeContext(scenario)
@@ -238,7 +238,7 @@ class ScenarioExecutor:
         
         try:
             # Global defaults (applied to all phases)
-            global_defaults = scenario.defaults
+            global_defaults = scenario.defaults if hasattr(scenario, 'defaults') else None
             
             # Debug: log defaults
             if self.debug and global_defaults:
@@ -247,18 +247,19 @@ class ScenarioExecutor:
                     self._log_to_file(f"[DEBUG] CLI defaults: {global_defaults.cli}")
             
             # Setup phase
-            if scenario.setup:
+            if hasattr(scenario, 'setup') and scenario.setup:
                 logger.info("Executing setup phase...")
                 section_defaults = self._merge_defaults(global_defaults, scenario.setup.defaults)
                 await self._execute_steps(scenario.setup.steps, ctx, section_defaults)
             
-            # Test phase
-            logger.info("Executing test phase...")
-            section_defaults = self._merge_defaults(global_defaults, scenario.test.defaults)
-            await self._execute_steps(scenario.test.steps, ctx, section_defaults)
+            # Test phase (only for TestScenario, not for SuiteSetupScenario)
+            if hasattr(scenario, 'test') and scenario.test:
+                logger.info("Executing test phase...")
+                section_defaults = self._merge_defaults(global_defaults, scenario.test.defaults)
+                await self._execute_steps(scenario.test.steps, ctx, section_defaults)
             
-            # Check phase
-            if scenario.check:
+            # Check phase (only for TestScenario)
+            if hasattr(scenario, 'check') and scenario.check:
                 logger.info("Executing check phase...")
                 section_defaults = self._merge_defaults(global_defaults, scenario.check.defaults)
                 await self._execute_checks(scenario.check.steps, ctx, section_defaults)

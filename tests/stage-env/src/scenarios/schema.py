@@ -397,6 +397,48 @@ class SuiteDescriptor(BaseModel):
         return self.suite
 
 
+class SuiteSetupScenario(BaseModel):
+    """
+    Lightweight scenario model for executing suite-level setup.
+    
+    Unlike TestScenario, this doesn't require test steps,
+    only includes and setup sections.
+    """
+    
+    # Minimal metadata
+    name: str = Field(..., description="Setup scenario name")
+    description: str = Field(..., description="Setup description")
+    
+    # Network configuration (inherited from suite descriptor)
+    network: Optional[NetworkConfig] = Field(None, description="Network topology")
+    
+    # Includes for reusable configs
+    includes: List[str] = Field(default_factory=list, description="Paths to included YAML files")
+    
+    # Setup phase - this is what actually executes
+    setup: Union[List[TestStep], SectionConfig] = Field(default_factory=list, description="Setup steps")
+    
+    # Variables (runtime context)
+    variables: Dict[str, Any] = Field(default_factory=dict, description="Predefined variables")
+    
+    @model_validator(mode='after')
+    def validate_suite_setup(self) -> 'SuiteSetupScenario':
+        """Normalize setup to SectionConfig."""
+        # Set default network if not specified
+        if self.network is None:
+            self.network = NetworkConfig(topology="default", name="stagenet")
+        
+        # Set default network name if not specified
+        if self.network and not self.network.name:
+            self.network.name = "stagenet"
+        
+        # Normalize setup to SectionConfig
+        if isinstance(self.setup, list):
+            self.setup = SectionConfig(steps=self.setup)
+        
+        return self
+
+
 class TestScenario(BaseModel):
     """Complete test scenario definition."""
     

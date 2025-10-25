@@ -1,0 +1,554 @@
+{
+  "type": "slc_knowledge_module",
+  "domain": "e2e_blockchain_testing",
+  "version": "1.0",
+  "created": "2025-09-30T07:15:00Z",
+  "updated": "2025-09-30T07:15:00Z",
+  "template_source": "QEVM E2E Testing Infrastructure",
+  "module_info": {
+    "name": "E2E Blockchain Testing Infrastructure",
+    "description": "Complete infrastructure for end-to-end testing of QEVM blockchain plugin",
+    "target_projects": [
+      "Blockchain testing",
+      "QEVM plugin validation",
+      "Cellframe Node integration tests",
+      "Multi-node network testing",
+      "Performance and load testing"
+    ],
+    "applicability": "All blockchain and distributed systems requiring comprehensive e2e testing"
+  },
+  "directory_structure": {
+    "root": "testing/e2e/",
+    "structure": {
+      "build.sh": {
+        "type": "build_script",
+        "description": "Universal build script for Docker-based compilation",
+        "purpose": "Builds QEVM plugin and utilities via Docker with incremental caching",
+        "usage": [
+          "./build.sh              # Incremental build (uses cache)",
+          "./build.sh --clean      # Full rebuild from scratch",
+          "BUILD_TYPE=release ./build.sh  # Release build"
+        ],
+        "outputs": [
+          "build-docker/libcf-plugin-qevm.so - QEVM plugin",
+          "build-docker/tools/qevm-cert-generator - Certificate generator utility"
+        ]
+      },
+      "e2e_ctl.sh": {
+        "type": "control_script",
+        "description": "Universal E2E testing control utility",
+        "purpose": "Single entry point for all e2e testing operations",
+        "commands": {
+          "start": {
+            "usage": "./e2e_ctl.sh",
+            "description": "Start e2e environment (incremental - uses existing builds/images)"
+          },
+          "rebuild": {
+            "usage": "./e2e_ctl.sh --rebuild",
+            "description": "Rebuild artifacts and restart environment"
+          },
+          "clean": {
+            "usage": "./e2e_ctl.sh --clean",
+            "description": "Full clean rebuild from scratch"
+          },
+          "stop": {
+            "usage": "./e2e_ctl.sh --stop",
+            "description": "Stop all running e2e containers"
+          },
+          "status": {
+            "usage": "./e2e_ctl.sh --status",
+            "description": "Check status of e2e environment (artifacts, images, containers)"
+          }
+        },
+        "features": [
+          "Incremental builds - only rebuilds what changed",
+          "Docker image caching - builds images once",
+          "Automatic directory preparation with correct permissions",
+          "Certificate generation",
+          "Health monitoring"
+        ]
+      },
+      "Dockerfile.builder": {
+        "type": "dockerfile",
+        "description": "Build environment Docker image",
+        "purpose": "Contains all build dependencies, mounts sources as volumes",
+        "approach": "Volume mounting instead of copying for fast incremental builds",
+        "dependencies": [
+          "build-essential",
+          "cmake",
+          "git",
+          "libssl-dev",
+          "libsqlite3-dev",
+          "libzip-dev",
+          "xsltproc",
+          "python3-dev"
+        ]
+      },
+      "Dockerfile.cellframe": {
+        "type": "dockerfile",
+        "description": "Cellframe Node runtime image with QEVM plugin",
+        "architecture": "QEVM Node = Stock Cellframe Node + QEVM Plugin",
+        "features": [
+          "Multi-architecture support (amd64, arm64)",
+          "Automatic architecture detection",
+          "Package caching for efficiency",
+          "Debug/Release build support",
+          "Crash handling and core dump collection"
+        ]
+      },
+      "Dockerfile.tests": {
+        "type": "dockerfile",
+        "description": "Test runner image for executing e2e tests",
+        "features": [
+          "Dynamic node discovery via Docker network",
+          "Python-based test framework",
+          "Result collection and reporting"
+        ]
+      },
+      "docker-compose.yml": {
+        "type": "orchestration",
+        "description": "Universal Docker Compose configuration",
+        "key_features": [
+          "Dynamic node configuration via environment variables",
+          "Universal node template (supports unlimited nodes)",
+          "No hardcoded node numbers",
+          "Test runner with automatic node discovery",
+          "Optional monitoring (Prometheus, Grafana)"
+        ],
+        "services": {
+          "qevm-node": {
+            "description": "Universal QEVM node (configurable via env vars)",
+            "configuration": [
+              "NODE_ID: Node identifier (1, 2, 3, ...)",
+              "NODE_ROLE: root, master, full, validator, observer",
+              "NODE_TYPE: Grouping (master, full, custom)",
+              "NETWORK_NAME: qevm-stagenet, qevm-testnet, etc.",
+              "BUILD_TYPE: debug (default) or release"
+            ]
+          },
+          "cert-generator": {
+            "description": "Generates DAP certificates for nodes",
+            "usage": "Runs once on first start"
+          },
+          "test-runner": {
+            "description": "Executes e2e tests",
+            "profile": "tests",
+            "usage": "docker compose --profile tests up test-runner",
+            "discovery": "Discovers nodes dynamically via Docker network"
+          },
+          "prometheus": {
+            "description": "Metrics collection",
+            "profile": "monitoring",
+            "port": 9090
+          },
+          "grafana": {
+            "description": "Metrics visualization",
+            "profile": "monitoring",
+            "port": 3000
+          }
+        }
+      },
+      "directories": {
+        "scripts/": {
+          "description": "Runtime scripts for nodes",
+          "files": {
+            "node-supervisor.sh": "Process supervision with crash handling",
+            "crash-handler.sh": "Crash detection and artifact collection",
+            "docker-entrypoint.sh": "Container initialization",
+            "health-check.sh": "Node health monitoring",
+            "init-node.sh": "Node initialization and configuration",
+            "network-manager.sh": "Multi-node network management"
+          }
+        },
+        "configs/": {
+          "description": "Node configurations",
+          "structure": {
+            "templates/": "Configuration templates for all nodes",
+            "node1/": "Runtime config for node 1 (auto-created from templates)",
+            "node2/": "Runtime config for node 2 (if running)",
+            "nodeN/": "Dynamic - created per node"
+          }
+        },
+        "data/": {
+          "description": "Persistent node data (blockchain, wallets, global_db)",
+          "structure": {
+            "node1/": "Node 1 persistent data",
+            "nodeN/": "Per-node data directories"
+          }
+        },
+        "logs/": {
+          "description": "Node logs",
+          "structure": {
+            "node1/": "Node 1 logs",
+            "nodeN/": "Per-node log directories"
+          }
+        },
+        "certs/": {
+          "description": "DAP certificates for nodes",
+          "structure": {
+            "node1/": "Node 1 certificates",
+            "nodeN/": "Per-node certificate directories"
+          },
+          "generation": "Automatically generated by cert-generator service on first start"
+        },
+        "crash-artifacts/": {
+          "description": "Crash dumps and debugging artifacts",
+          "structure": {
+            "node1/": {
+              "core-dumps/": "Core dump files",
+              "stack-traces/": "Stack traces from crashes",
+              "logs/": "Crash-related logs",
+              "debug-info/": "Additional debugging information"
+            }
+          },
+          "persistence": "Mounted volumes for post-mortem analysis"
+        },
+        "cache/": {
+          "description": "Caching directory for build optimization",
+          "files": {
+            "cellframe-packages/": "Downloaded Cellframe Node .deb packages",
+            "docker-layers/": "Docker layer cache (implicit)"
+          },
+          "benefit": "Saves bandwidth and time on rebuilds"
+        },
+        "tests/": {
+          "description": "E2E test suites",
+          "files": {
+            "discover_nodes.py": "Dynamic node discovery",
+            "run_all.py": "Main test orchestrator",
+            "basic-connectivity.py": "Basic connectivity tests",
+            "*.py": "Additional test scenarios"
+          }
+        },
+        "results/": {
+          "description": "Test execution results and reports",
+          "auto_generated": true
+        },
+        "monitoring/": {
+          "description": "Monitoring configurations",
+          "files": {
+            "prometheus.yml": "Prometheus configuration",
+            "grafana/": "Grafana dashboards and datasources"
+          }
+        }
+      }
+    }
+  },
+  "incremental_workflow": {
+    "principle": "Build once, run incrementally - minimize rebuild time",
+    "stages": {
+      "1_build_artifacts": {
+        "command": "./build.sh",
+        "frequency": "Only when code changes",
+        "output": "build-docker/ directory with compiled artifacts",
+        "caching": "Docker volumes preserve CMake and Make cache",
+        "speed": "First build: ~5-10 min, Incremental: ~30 sec - 2 min"
+      },
+      "2_build_docker_images": {
+        "command": "docker compose build (called by e2e_ctl.sh)",
+        "frequency": "Only when Dockerfile or scripts change",
+        "output": "qevm-node:debug-latest Docker image",
+        "caching": "Docker layer cache + Cellframe package cache",
+        "speed": "First build: ~5-10 min, Cached: instant"
+      },
+      "3_start_environment": {
+        "command": "./e2e_ctl.sh",
+        "frequency": "Every test run",
+        "actions": [
+          "Check if artifacts exist (skip build if present)",
+          "Check if Docker images exist (skip build if present)",
+          "Prepare directories with correct permissions",
+          "Generate certificates (if not exist)",
+          "Start containers"
+        ],
+        "speed": "< 30 seconds if everything cached"
+      },
+      "4_run_tests": {
+        "command": "docker compose --profile tests up test-runner",
+        "frequency": "As needed for testing",
+        "discovery": "Automatically discovers all running nodes",
+        "reporting": "Results saved to results/ directory"
+      }
+    },
+    "optimization_strategies": {
+      "volume_mounting": {
+        "description": "Sources mounted as volumes, not copied",
+        "benefit": "No need to rebuild Docker images when code changes",
+        "implementation": "Dockerfile.builder uses WORKDIR /project with volumes"
+      },
+      "docker_layer_caching": {
+        "description": "Docker caches each layer",
+        "benefit": "Dependencies installed once, reused across builds",
+        "implementation": "Optimal layer ordering in Dockerfiles"
+      },
+      "package_caching": {
+        "description": "Cellframe Node packages cached locally",
+        "benefit": "No repeated downloads (saves 68+ MB per build)",
+        "implementation": "cache/cellframe-packages/ volume"
+      },
+      "cmake_incremental": {
+        "description": "CMake detects changes and rebuilds only modified files",
+        "benefit": "Fast incremental compilation",
+        "implementation": "build-docker/ volume persists CMake cache"
+      }
+    }
+  },
+  "e2e_ctl_reference": {
+    "description": "Complete reference for e2e_ctl.sh utility",
+    "critical_rule": "ALL e2e operations MUST go through e2e_ctl.sh",
+    "enforcement": "mandatory",
+    "commands": {
+      "start": {
+        "syntax": "./e2e_ctl.sh",
+        "description": "Start e2e environment (incremental mode)",
+        "behavior": [
+          "Checks if build artifacts exist (skips build if present)",
+          "Checks if Docker images exist (skips build if present)",
+          "Prepares directories and permissions",
+          "Generates certificates if needed",
+          "Starts containers"
+        ],
+        "when_to_use": "Daily development, running tests"
+      },
+      "rebuild": {
+        "syntax": "./e2e_ctl.sh --rebuild",
+        "description": "Rebuild artifacts and restart",
+        "behavior": [
+          "Rebuilds QEVM plugin and tools via build.sh",
+          "Uses cached Docker images",
+          "Restarts containers with new artifacts"
+        ],
+        "when_to_use": "After code changes to plugin or tools"
+      },
+      "clean": {
+        "syntax": "./e2e_ctl.sh --clean",
+        "description": "Full rebuild from scratch",
+        "behavior": [
+          "Cleans build-docker/ directory",
+          "Rebuilds everything from zero",
+          "Rebuilds Docker images if needed",
+          "Fresh start"
+        ],
+        "when_to_use": "After major changes, troubleshooting build issues"
+      },
+      "stop": {
+        "syntax": "./e2e_ctl.sh --stop",
+        "description": "Stop all e2e containers",
+        "behavior": [
+          "Stops all running containers",
+          "Removes containers",
+          "Removes networks",
+          "Preserves volumes (data, logs, etc.)"
+        ],
+        "when_to_use": "End of testing session, before rebuild"
+      },
+      "status": {
+        "syntax": "./e2e_ctl.sh --status",
+        "description": "Check e2e environment status",
+        "output": [
+          "Build artifacts status",
+          "Docker images list",
+          "Running containers status"
+        ],
+        "when_to_use": "Debugging, health checks"
+      }
+    }
+  },
+  "testing_workflow": {
+    "daily_development": {
+      "step_1": {
+        "action": "Modify code",
+        "location": "modules/, cf_plugin_qevm.c, tools/"
+      },
+      "step_2": {
+        "action": "./e2e_ctl.sh --rebuild",
+        "description": "Rebuild only changed artifacts"
+      },
+      "step_3": {
+        "action": "Wait for environment to start",
+        "duration": "< 1 minute (incremental)"
+      },
+      "step_4": {
+        "action": "docker compose --profile tests up test-runner",
+        "description": "Run e2e tests"
+      },
+      "step_5": {
+        "action": "Analyze results in results/ directory",
+        "description": "Review test outcomes"
+      }
+    },
+    "first_time_setup": {
+      "step_1": {
+        "action": "cd testing/e2e && ./e2e_ctl.sh",
+        "description": "Первый запуск автоматически соберёт всё что нужно",
+        "duration": "10-15 minutes (full build)"
+      },
+      "step_2": {
+        "action": "Wait for 'Environment started' message",
+        "description": "Ожидание завершения сборки и запуска"
+      },
+      "step_3": {
+        "action": "./e2e_ctl.sh --status",
+        "description": "Проверка статуса окружения"
+      }
+    },
+    "troubleshooting": {
+      "build_failures": {
+        "command": "./e2e_ctl.sh --clean",
+        "description": "Full rebuild solves most build issues"
+      },
+      "permission_errors": {
+        "fix": "e2e_ctl.sh automatically fixes permissions on start",
+        "manual": "sudo chown -R 1000:1000 testing/e2e/{data,logs,certs,crash-artifacts}"
+      },
+      "container_crashes": {
+        "check_logs": "docker compose logs qevm-node --tail=100",
+        "crash_artifacts": "testing/e2e/crash-artifacts/node1/",
+        "stack_traces": "testing/e2e/crash-artifacts/node1/stack-traces/"
+      }
+    }
+  },
+  "architecture": {
+    "build_system": {
+      "approach": "Two-stage Docker build",
+      "stage_1": {
+        "name": "Builder Environment (Dockerfile.builder)",
+        "contains": "Build tools and dependencies only",
+        "no_sources": "Sources mounted as volumes at runtime",
+        "benefit": "Fast incremental builds without image rebuild"
+      },
+      "stage_2": {
+        "name": "Runtime Environment (Dockerfile.cellframe)",
+        "contains": "Cellframe Node + QEVM plugin + runtime scripts",
+        "mounts": "Configurations, data, logs from host",
+        "benefit": "Production-like environment"
+      }
+    },
+    "networking": {
+      "network_name": "qevm-stagenet",
+      "driver": "bridge",
+      "subnet": "172.20.0.0/16",
+      "gateway": "172.20.0.1",
+      "node_ips": "172.20.0.10, 172.20.0.11, 172.20.0.12, ... (dynamic)"
+    },
+    "universal_node_template": {
+      "description": "Single Docker Compose template for ANY number of nodes",
+      "dynamic_configuration": [
+        "NODE_ID=${NODE_ID:-1} - unique identifier",
+        "NODE_ROLE=${NODE_ROLE:-root} - node role",
+        "NODE_TYPE=${NODE_TYPE:-node} - node grouping",
+        "RPC_PORT=${RPC_PORT:-8545} - QEVM RPC port",
+        "P2P_PORT=${P2P_PORT:-31337} - P2P port",
+        "CF_PORT=${CF_PORT:-7007} - Cellframe port",
+        "NODE_IP=${NODE_IP:-172.20.0.10} - Container IP"
+      ],
+      "usage_examples": [
+        "NODE_ID=1 docker compose up qevm-node  # First node",
+        "NODE_ID=2 NODE_IP=172.20.0.11 RPC_PORT=8546 docker compose up qevm-node  # Second node",
+        "NODE_ROLE=validator NODE_TYPE=custom docker compose up qevm-node  # Custom role"
+      ]
+    }
+  },
+  "best_practices": {
+    "development": [
+      "Always use e2e_ctl.sh for e2e operations",
+      "Never manually run docker build/docker-compose - use e2e_ctl.sh",
+      "Use --rebuild for code changes, not --clean",
+      "Keep incremental builds - only --clean when necessary",
+      "Check ./e2e_ctl.sh --status before starting work"
+    ],
+    "testing": [
+      "Start environment once: ./e2e_ctl.sh",
+      "Run tests multiple times without restart",
+      "Use test-runner profile for automated tests",
+      "Check crash-artifacts/ for debugging failures",
+      "Monitor logs: docker compose logs -f qevm-node"
+    ],
+    "debugging": [
+      "Shell access: docker compose exec qevm-node bash",
+      "Logs: docker compose logs qevm-node",
+      "Crash artifacts: testing/e2e/crash-artifacts/node1/",
+      "GDB debugging: Container has gdb if BUILD_TYPE=debug",
+      "Valgrind: Available in debug containers"
+    ]
+  },
+  "integration_with_ci_cd": {
+    "gitlab_ci": {
+      "build_job": {
+        "script": "cd testing/e2e && ./build.sh",
+        "artifacts": [
+          "build-docker/libcf-plugin-qevm.so",
+          "build-docker/tools/qevm-cert-generator"
+        ]
+      },
+      "e2e_test_job": {
+        "script": [
+          "cd testing/e2e",
+          "./e2e_ctl.sh",
+          "docker compose --profile tests up test-runner"
+        ],
+        "artifacts": ["testing/e2e/results/"]
+      }
+    }
+  },
+  "performance_metrics": {
+    "build_times": {
+      "first_build": "10-15 minutes (full compilation)",
+      "incremental_build": "30 seconds - 2 minutes (changed files only)",
+      "docker_image_build": "5-10 minutes first time",
+      "docker_image_cached": "< 5 seconds (layer cache)",
+      "environment_start": "< 30 seconds (with cache)"
+    },
+    "resource_usage": {
+      "disk_space": {
+        "build_artifacts": "~50 MB",
+        "docker_images": "~800 MB (builder + node)",
+        "cellframe_cache": "~70 MB per architecture",
+        "total": "~1 GB for full setup"
+      },
+      "memory": {
+        "builder_container": "~500 MB during build",
+        "node_container": "~200-300 MB runtime",
+        "test_runner": "~100 MB"
+      }
+    }
+  },
+  "success_criteria": {
+    "build": [
+      "✅ libcf-plugin-qevm.so compiled successfully",
+      "✅ qevm-cert-generator utility built",
+      "✅ No compilation errors or warnings"
+    ],
+    "environment": [
+      "✅ All containers start without errors",
+      "✅ Crash handler initialized",
+      "✅ Node supervisor running",
+      "✅ Health check passing"
+    ],
+    "testing": [
+      "✅ Test runner discovers all nodes",
+      "✅ Basic connectivity tests pass",
+      "✅ RPC endpoints respond",
+      "✅ Block creation and propagation working"
+    ]
+  },
+  "navigation_system": {
+    "purpose": "E2E Testing Infrastructure Module",
+    "file_role": "E2E_TESTING_DOCUMENTATION",
+    "usage": "Reference for all e2e testing operations",
+    "primary_tool": "testing/e2e/e2e_ctl.sh",
+    "related_files": {
+      "build_system": "testing/e2e/build.sh",
+      "docker_configs": "testing/e2e/docker-compose.yml",
+      "dockerfiles": [
+        "testing/e2e/Dockerfile.builder",
+        "testing/e2e/Dockerfile.cellframe",
+        "testing/e2e/Dockerfile.tests"
+      ]
+    },
+    "ai_context": "Complete E2E testing infrastructure for QEVM blockchain"
+  }
+}
+
+
+

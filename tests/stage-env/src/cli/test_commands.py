@@ -267,21 +267,20 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                         print_info("🔧 Executing suite-level setup...")
                         
                         from ..scenarios.executor import ScenarioExecutor
-                        from ..scenarios.schema import TestScenario
+                        from ..scenarios.schema import SuiteSetupScenario
                         
-                        # Create a temporary scenario for suite setup
+                        # Create a lightweight scenario for suite setup (no test steps required)
                         suite_setup_data = {
                             "name": f"{suite_name} - Suite Setup",
                             "description": "Suite-level initialization",
                             "network": suite_spec.network.dict() if suite_spec.network else {"topology": "default"},
                             "includes": suite_spec.includes if suite_spec.includes else [],
                             "setup": suite_spec.setup.dict() if suite_spec.setup else [],
-                            "test": [{"wait": "0s"}],  # Dummy step to satisfy validation
                         }
                         
                         try:
-                            # Parse suite setup as a scenario
-                            suite_setup_scenario = TestScenario(**suite_setup_data)
+                            # Parse suite setup using SuiteSetupScenario (no test steps required)
+                            suite_setup_scenario = SuiteSetupScenario(**suite_setup_data)
                             
                             # Execute setup
                             executor = ScenarioExecutor(

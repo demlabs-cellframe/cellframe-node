@@ -1,0 +1,737 @@
+{
+  "type": "testing_infrastructure_module",
+  "domain": "stage_env",
+  "version": "1.0.0",
+  "created": "2025-10-25",
+  "updated": "2025-10-25",
+  
+  "module_info": {
+    "name": "Stage Environment Testing System",
+    "description": "Автономная система для E2E тестирования Cellframe Node в изолированной Docker среде",
+    "purpose": "Предоставляет полное понимание архитектуры, компонентов и принципов работы stage-env",
+    "target_audience": [
+      "Разработчики расширяющие stage-env",
+      "QA инженеры изучающие систему",
+      "DevOps настраивающие CI/CD",
+      "AI системы работающие с кодом stage-env"
+    ]
+  },
+
+  "architecture": {
+    "overview": {
+      "description": "Stage Environment - это Python-based CLI система для управления Docker-изолированными тестовыми средами Cellframe Node",
+      "key_principles": [
+        "Автономность - полностью самодостаточная система",
+        "Портируемость - легко переносится между окружениями",
+        "Декларативность - тесты пишутся на YAML без программирования",
+        "Изоляция - каждый тест/suite в чистом Docker окружении"
+      ],
+      "technology_stack": {
+        "language": "Python 3.13+",
+        "cli_framework": "Typer (на базе Click)",
+        "containerization": "Docker + Docker Compose V2",
+        "validation": "Pydantic 2.x",
+        "logging": "structlog",
+        "async": "asyncio для асинхронных операций",
+        "http_client": "httpx для RPC вызовов"
+      }
+    },
+
+    "entry_points": {
+      "bash_wrapper": {
+        "path": "stage-env/stage-env",
+        "description": "Bash-обёртка для Python CLI",
+        "purpose": "Активирует venv, устанавливает зависимости, запускает Python CLI",
+        "features": [
+          "Автоматическая установка зависимостей",
+          "Управление виртуальным окружением",
+          "Передача аргументов в Python CLI"
+        ]
+      },
+      "python_cli": {
+        "path": "stage-env/stage_env.py",
+        "description": "Главная точка входа Python CLI",
+        "framework": "Typer",
+        "commands": [
+          "start - запуск тестовой сети",
+          "stop - остановка сети",
+          "status - статус сети",
+          "run-tests - запуск тестов",
+          "build - сборка Docker образов",
+          "clean - очистка артефактов",
+          "rebuild - полная пересборка окружения",
+          "create-snapshot - создание снапшота",
+          "restore-snapshot - восстановление снапшота"
+        ],
+        "command_modules": {
+          "network_commands": "src/cli/network_commands.py",
+          "test_commands": "src/cli/test_commands.py",
+          "cert_commands": "src/cli/cert_commands.py",
+          "snapshot_commands": "src/cli/snapshot_commands.py",
+          "common": "src/cli/common.py"
+        }
+      },
+      "configuration": {
+        "path": "tests/stage-env.cfg",
+        "default_template": "stage-env/config/stage-env.cfg.default",
+        "loader": "src/config/loader.py",
+        "format": "INI-подобный формат",
+        "sections": [
+          "[network] - сетевая идентификация",
+          "[topology] - количество нод",
+          "[build] - настройки сборки",
+          "[network_settings] - порты и адресация",
+          "[consensus] - параметры консенсуса",
+          "[logging] - логирование",
+          "[paths] - пути к директориям",
+          "[artifacts] - сбор артефактов",
+          "[suite_isolation] - система снапшотов"
+        ]
+      }
+    },
+
+    "core_components": {
+      "network_management": {
+        "module": "src/network/manager.py",
+        "class": "NetworkManager",
+        "responsibilities": [
+          "Управление жизненным циклом Docker Compose",
+          "Создание и удаление сетевых топологий",
+          "Генерация конфигураций для нод",
+          "Health-check monitoring нод",
+          "Интеграция с SnapshotManager"
+        ],
+        "key_methods": {
+          "start()": "Запуск Docker Compose сети",
+          "stop()": "Остановка сети",
+          "rebuild()": "Полная пересборка",
+          "create_clean_snapshot()": "Создание снапшота чистого состояния",
+          "restore_clean_state()": "Восстановление из снапшота",
+          "get_status()": "Получение статуса сети"
+        },
+        "dependencies": [
+          "DockerComposeManager (src/docker/compose.py)",
+          "TopologyBuilder (src/network/topology_builder.py)",
+          "SnapshotManager (src/snapshots/manager.py)",
+          "CertGenerator (src/certs/generator.py)"
+        ]
+      },
+
+      "scenario_execution": {
+        "parser": {
+          "module": "src/scenarios/parser.py",
+          "class": "ScenarioParser",
+          "responsibilities": [
+            "Парсинг YAML сценариев",
+            "Обработка includes (вложенных шаблонов)",
+            "Валидация через Pydantic схемы",
+            "Подстановка переменных"
+          ]
+        },
+        "executor": {
+          "module": "src/scenarios/executor.py",
+          "class": "ScenarioExecutor",
+          "responsibilities": [
+            "Выполнение CLI команд в Docker контейнерах",
+            "Выполнение RPC вызовов",
+            "Выполнение Python/Bash кода",
+            "Управление RuntimeContext (переменные)",
+            "Применение defaults (node, wait, expect, cli)",
+            "Экстракция данных из вывода команд"
+          ],
+          "step_types": [
+            "CLIStep - команды cellframe-node-cli",
+            "ToolStep - команды cellframe-node-tool",
+            "RPCStep - JSON-RPC вызовы",
+            "PythonStep/PythonCheck - Python код",
+            "BashStep/BashCheck - Bash скрипты",
+            "WaitStep - ожидание",
+            "WaitForDatumStep - мониторинг датумов"
+          ]
+        },
+        "schema": {
+          "module": "src/scenarios/schema.py",
+          "models": [
+            "TestScenario - полный сценарий теста",
+            "SuiteDescriptor - описание test suite",
+            "NetworkConfig - конфигурация сети",
+            "SectionConfig - setup/test секции",
+            "CheckSectionConfig - check секция",
+            "CLIStep, ToolStep, RPCStep, etc. - типы шагов",
+            "StepDefaults - иерархические defaults"
+          ],
+          "validation": "Pydantic model_validator для сложных проверок"
+        },
+        "extractors": {
+          "module": "src/scenarios/extractors.py",
+          "class": "DataExtractor",
+          "responsibilities": [
+            "Экстракция wallet_address из вывода CLI",
+            "Экстракция node_address",
+            "Экстракция hash (0x[hex])",
+            "Валидация извлеченных данных",
+            "Поддержка custom regex паттернов"
+          ],
+          "extract_types": [
+            "wallet_address - Cellframe wallet адрес (base58)",
+            "node_address - Node адрес (0x::)",
+            "hash - Хэш (0x[hex])",
+            "number - Числовые значения",
+            "token_name - Имя токена",
+            "bool - Булевы значения",
+            "raw - Произвольный regex"
+          ]
+        }
+      },
+
+      "docker_integration": {
+        "compose_manager": {
+          "module": "src/docker/compose.py",
+          "class": "DockerComposeManager",
+          "responsibilities": [
+            "Управление docker-compose файлами",
+            "Выполнение docker-compose команд",
+            "Генерация docker-compose.yml из топологии",
+            "Мониторинг статуса контейнеров"
+          ]
+        },
+        "dockerfiles": {
+          "Dockerfile.cellframe": "Базовый образ для Cellframe Node",
+          "Dockerfile.builder": "Образ для сборки из исходников",
+          "Dockerfile.cert-generator": "Генерация сертификатов",
+          "Dockerfile.tests": "Окружение для запуска тестов"
+        },
+        "networking": {
+          "default_subnet": "172.20.0.0/16",
+          "base_ip": "172.20.0.10",
+          "ip_allocation": "Последовательное выделение IP для каждой ноды"
+        }
+      },
+
+      "certificate_management": {
+        "generator": {
+          "module": "src/certs/generator.py",
+          "class": "CertGenerator",
+          "responsibilities": [
+            "Генерация node-addr.dcert для идентификации нод",
+            "Генерация validator_addr.txt для ROOT/MASTER нод",
+            "Внутреннее именование: pvt.stagenet.master.N",
+            "Использование cellframe-node-tool"
+          ]
+        },
+        "naming_convention": {
+          "node_cert": "node-addr.dcert",
+          "validator_cert": "pvt.{network}.master.{index}.dcert",
+          "validator_addr": "validator_addr.txt"
+        },
+        "storage": {
+          "path": "/opt/cellframe-node/var/lib/ca/",
+          "persistence": "Bind-mount volume для сохранения между перезапусками"
+        }
+      },
+
+      "snapshot_system": {
+        "overview": {
+          "description": "Система быстрой изоляции test suites через снапшоты",
+          "benefit": "Сокращение времени между suites с ~40s до 2-3s",
+          "documentation": "docs/snapshot_system.md"
+        },
+        "manager": {
+          "module": "src/snapshots/manager.py",
+          "class": "SnapshotManager",
+          "responsibilities": [
+            "Оркестрация создания/восстановления/очистки",
+            "Управление lifecycle снапшотов",
+            "Автоматическая очистка старых снапшотов",
+            "Выбор реализации по режиму"
+          ]
+        },
+        "implementations": {
+          "base": {
+            "module": "src/snapshots/base.py",
+            "class": "BaseSnapshot",
+            "description": "Абстрактный базовый класс"
+          },
+          "recreate": {
+            "module": "src/snapshots/recreate.py",
+            "class": "RecreateSnapshot",
+            "description": "Полная очистка и пересоздание (baseline)",
+            "speed": "~40s restore",
+            "storage": "Минимальное"
+          },
+          "filesystem": {
+            "module": "src/snapshots/filesystem.py",
+            "class": "FilesystemSnapshot",
+            "description": "Копирование директорий через rsync",
+            "speed": "~3s create/restore",
+            "storage": "~500MB",
+            "dependencies": ["rsync"]
+          },
+          "squashfs": {
+            "module": "src/snapshots/squashfs.py",
+            "class": "SquashfsSnapshot",
+            "description": "Сжатые read-only образы с overlay",
+            "speed": "~2s restore, ~5s create",
+            "storage": "~100MB compressed",
+            "dependencies": ["squashfs-tools", "overlayfs kernel support"],
+            "features": [
+              "Configurable compression (none/gzip/lzo/xz)",
+              "Read-only base + writable overlay",
+              "Fail-fast на отсутствие зависимостей"
+            ]
+          }
+        },
+        "configuration": {
+          "mode": "disabled/recreate/filesystem/squashfs",
+          "auto_create_on_startup": "Автосоздание при старте сети",
+          "auto_cleanup": "Автоудаление старых снапшотов",
+          "keep_snapshot_count": "Сколько снапшотов хранить"
+        }
+      },
+
+      "monitoring_and_health": {
+        "health_monitor": {
+          "module": "src/monitoring/health.py",
+          "class": "HealthMonitor",
+          "responsibilities": [
+            "Проверка доступности нод (ping)",
+            "Проверка CLI socket доступности",
+            "Проверка RPC endpoint",
+            "Логирование health events"
+          ]
+        },
+        "datum_monitor": {
+          "module": "src/monitoring/datum.py",
+          "class": "DatumMonitor",
+          "responsibilities": [
+            "Мониторинг жизненного цикла датумов",
+            "Отслеживание: mempool → block → propagation",
+            "Fail-fast валидация hash формата",
+            "Таймауты: 0.5s mempool, 30s block, 60s propagation"
+          ],
+          "usage": "WaitForDatumStep в сценариях"
+        },
+        "monitoring_manager": {
+          "module": "src/monitoring/manager.py",
+          "class": "MonitoringManager",
+          "description": "Singleton для управления всеми мониторами",
+          "pattern": "Centralized monitoring service management"
+        },
+        "artifacts": {
+          "module": "src/monitoring/artifacts.py",
+          "class": "ArtifactCollector",
+          "responsibilities": [
+            "Сбор логов нод",
+            "Сбор health logs",
+            "Сбор core dumps",
+            "Сбор scenario logs",
+            "Генерация summary.json"
+          ],
+          "structure": "artifacts/run_<timestamp>/<test_type>/<suite>/"
+        }
+      },
+
+      "cli_parser": {
+        "module": "src/utils/cli_parser.py",
+        "class": "CLICommandParser",
+        "responsibilities": [
+          "Парсинг cellframe-node-cli help",
+          "Извлечение списка команд и их опций",
+          "Кэширование результатов парсинга",
+          "Применение CLI defaults (автодобавление -net и т.д.)"
+        ],
+        "cache": "cache/cli_commands.json",
+        "integration": "ScenarioExecutor использует для автозаполнения CLI параметров"
+      },
+
+      "report_generation": {
+        "module": "src/utils/report_generator.py",
+        "class": "ReportGenerator",
+        "output_formats": ["JSON summary", "HTML report (planned)", "PDF report (planned)"],
+        "content": [
+          "Test execution statistics",
+          "Pass/fail counts",
+          "Error logs for failed tests",
+          "Performance metrics"
+        ]
+      },
+
+      "topology_builder": {
+        "module": "src/network/topology_builder.py",
+        "class": "TopologyBuilder",
+        "responsibilities": [
+          "Построение топологии из scenario node спецификаций",
+          "Группировка нод по ролям (root/master/full)",
+          "Генерация NetworkTopology объектов",
+          "Вычисление портов и IP адресов для нод"
+        ],
+        "key_methods": {
+          "build_from_scenario_nodes()": "Построить топологию из сценария",
+          "build_node_configs()": "Генерация NodeConfig для каждой ноды"
+        }
+      },
+
+      "config_generator": {
+        "module": "src/config/generator.py",
+        "class": "ConfigGenerator",
+        "responsibilities": [
+          "Генерация cellframe-node.cfg для каждой ноды",
+          "Применение шаблонов из config/templates/",
+          "Подстановка сетевых параметров",
+          "Генерация chain configs (main.cfg, zerochain.cfg)"
+        ],
+        "templates_location": "config/templates/",
+        "output": "Генерируется динамически в Docker volumes"
+      },
+
+      "genesis_initializer": {
+        "module": "src/network/genesis.py",
+        "class": "GenesisInitializer",
+        "responsibilities": [
+          "Инициализация genesis блоков для chains",
+          "Настройка начального состояния сети",
+          "Конфигурация консенсуса"
+        ]
+      },
+
+      "node_configuration": {
+        "models": {
+          "module": "src/network/models.py",
+          "NodeConfig": {
+            "description": "Конфигурация отдельной ноды",
+            "fields": [
+              "node_id - уникальный ID",
+              "role - роль (root/master/full/validator)",
+              "ip_address - IP адрес в Docker сети",
+              "ports - rpc_port, p2p_port, cf_port, http_port, node_port",
+              "is_seed_node - флаг seed ноды",
+              "balancer_enabled - HTTP balancer",
+              "consensus_participation - участие в консенсусе"
+            ]
+          },
+          "NodePackageSource": {
+            "description": "Источник пакета cellframe-node для ноды",
+            "types": {
+              "url": "Скачивание .deb из HTTP/HTTPS",
+              "repository": "Сборка из git репозитория",
+              "local": "Локальный .deb файл"
+            },
+            "use_cases": [
+              "Тестирование совместимости версий",
+              "Тестирование custom builds",
+              "Тестирование latest vs stable"
+            ]
+          }
+        },
+        "customizations": {
+          "per_node_packages": "custom_packages - дополнительные APT пакеты",
+          "per_node_scripts": "custom_post_script - пост-установочный скрипт",
+          "per_node_env": "custom_env_vars - переменные окружения",
+          "docker_volumes": "Дополнительные volume mounts",
+          "docker_capabilities": "Linux capabilities (e.g., NET_ADMIN)",
+          "docker_devices": "Device mappings (e.g., /dev/net/tun)",
+          "docker_extra_config": "Произвольные docker-compose секции"
+        }
+      }
+    },
+
+    "data_flow": {
+      "run_sh_workflow": {
+        "description": "Полный цикл тестирования через run.sh",
+        "entry_point": "tests/run.sh",
+        "steps": [
+          "1. Проверка prerequisites (Python3, Docker)",
+          "2. Обнаружение cellframe-node repo и сборка локального пакета (если в repo)",
+          "3. Обновление stage-env.cfg с путём к локальному пакету",
+          "4. Опциональная очистка (--clean)",
+          "5. Запуск stage-env start --wait",
+          "6. Сбор test директорий (base, e2e, functional)",
+          "7. Запуск run-tests с ВСЕМИ директориями (unified run)",
+          "8. Остановка stage-env stop",
+          "9. Вывод summary"
+        ],
+        "test_types": {
+          "base": "stage-env/tests/base/ - базовые проверки (connectivity, health)",
+          "e2e": "tests/e2e/ - end-to-end scenarios",
+          "functional": "tests/functional/ - функциональные тесты команд"
+        },
+        "unified_run": "Все test types выполняются в одном run с одним run_id и одной artifacts/ директорией"
+      },
+
+      "test_execution_lifecycle": {
+        "step_1_network_start": {
+          "trigger": "stage-env start",
+          "actions": [
+            "Загрузка конфигурации (stage-env.cfg)",
+            "Построение топологии (TopologyBuilder)",
+            "Генерация docker-compose.yml",
+            "Генерация конфигов для нод",
+            "Генерация сертификатов (CertGenerator)",
+            "Запуск Docker Compose",
+            "Health-check всех нод",
+            "Создание clean_state снапшота (если auto_create_on_startup)"
+          ]
+        },
+        "step_2_test_execution": {
+          "trigger": "stage-env run-tests",
+          "actions": [
+            "Обнаружение test suites (по директориям)",
+            "Для каждого suite:",
+            "  - Восстановление clean_state (restore_clean_state)",
+            "  - Парсинг suite descriptor",
+            "  - Выполнение suite-level setup (includes + setup)",
+            "  - Обнаружение сценариев в suite",
+            "  - Для каждого сценария:",
+            "    - Парсинг YAML (ScenarioParser)",
+            "    - Валидация (Pydantic)",
+            "    - Выполнение setup секции",
+            "    - Выполнение test секции",
+            "    - Выполнение check секции",
+            "    - Логирование результатов",
+            "  - Сбор артефактов для suite",
+            "- Генерация финального отчёта"
+          ]
+        },
+        "step_3_cleanup": {
+          "trigger": "stage-env stop",
+          "actions": [
+            "Сбор артефактов (если не собрано)",
+            "Остановка Docker Compose",
+            "Опциональное удаление volumes",
+            "Очистка старых снапшотов (auto_cleanup)"
+          ]
+        }
+      }
+    },
+
+    "key_patterns_and_principles": {
+      "fail_fast": {
+        "description": "Никаких fallback'ов - ошибки должны быть явными",
+        "examples": [
+          "Отсутствие rsync → RuntimeError",
+          "Отсутствие squashfs-tools → RuntimeError",
+          "Невалидный hash в wait_for_datum → немедленная ошибка"
+        ]
+      },
+      "hierarchical_defaults": {
+        "description": "Система наследования defaults на уровнях: global → section → group → step",
+        "fields": ["node", "wait", "expect", "timeout", "cli.*"],
+        "merge_strategy": "Более конкретные уровни переопределяют общие"
+      },
+      "docker_isolation": {
+        "description": "Каждый тест/suite выполняется в изолированном Docker окружении",
+        "benefits": [
+          "Чистое состояние для каждого теста",
+          "Предсказуемые результаты",
+          "Параллельное выполнение (potential)"
+        ]
+      },
+      "suite_based_organization": {
+        "description": "Тесты организованы в suites - группы связанных сценариев",
+        "suite_descriptor": "YAML файл с полем 'suite:' на том же уровне что и директория с тестами",
+        "suite_setup": "Выполняется один раз перед всеми сценариями suite (includes + setup секции)",
+        "benefits": [
+          "Общая инициализация (например, создание сертификата)",
+          "Логическая группировка",
+          "Изолированное окружение через snapshots"
+        ]
+      }
+    },
+
+    "common_workflows": {
+      "adding_new_test": {
+        "steps": [
+          "1. Определить к какому suite относится тест",
+          "2. Создать YAML файл в соответствующей директории",
+          "3. Использовать includes для общих компонентов (common/*)",
+          "4. Определить test steps используя доступные step types",
+          "5. Добавить check assertions",
+          "6. Запустить тест локально: stage-env run-tests --filter <test_name>"
+        ]
+      },
+      "debugging_failed_test": {
+        "steps": [
+          "1. Проверить artifacts/<run_id>/<suite>/scenario-logs/",
+          "2. Проверить artifacts/<run_id>/<suite>/node-logs/",
+          "3. Проверить artifacts/<run_id>/<suite>/health-logs/",
+          "4. Посмотреть summary.json для общей картины",
+          "5. Запустить тест с --verbose для детального вывода",
+          "6. Использовать docker logs для живых контейнеров"
+        ]
+      },
+      "extending_scenario_language": {
+        "steps": [
+          "1. Добавить новую модель в src/scenarios/schema.py",
+          "2. Добавить обработку в ScenarioExecutor._execute_step()",
+          "3. Обновить TestStep Union type",
+          "4. Добавить документацию в docs/",
+          "5. Добавить примеры в tests/examples/",
+          "6. Добавить unit тесты"
+        ]
+      }
+    }
+  },
+
+  "troubleshooting": {
+    "common_issues": {
+      "docker_compose_not_found": {
+        "symptom": "Missing required tools: docker-compose",
+        "cause": "Система ищет docker-compose V1, но установлен V2",
+        "solution": "Обновлён check_prerequisites для поддержки обоих версий"
+      },
+      "certificate_creation_failed": {
+        "symptom": "File already exists! или exit code 12",
+        "cause": "Сертификат уже существует или неправильный путь",
+        "solution": "Использовать только имя сертификата без пути/расширения"
+      },
+      "snapshot_restore_failed": {
+        "symptom": "Operation not permitted",
+        "cause": "Попытка восстановить на работающие контейнеры",
+        "solution": "Контейнеры должны быть остановлены перед restore"
+      },
+      "cli_server_unavailable": {
+        "symptom": "Exit code 253",
+        "cause": "cellframe-node process не готов после restore",
+        "solution": "NetworkManager теперь перезапускает контейнеры после restore"
+      },
+      "suite_setup_failed": {
+        "symptom": "1 validation error for TestScenario: test Field required",
+        "cause": "Suite descriptor пытается выполниться как обычный сценарий",
+        "solution": "Используется dummy test step для обхода валидации (TODO: отдельная схема)"
+      }
+    }
+  },
+
+  "directory_structure": {
+    "stage-env/": {
+      "src/": "Python source code",
+      "config/": "Шаблоны конфигураций и топологий",
+      "docs/": "Документация (en/ и ru/)",
+      "tests/": {
+        "base/": "Базовые проверки системы",
+        "common/": "Переиспользуемые компоненты",
+        "examples/": "Примеры продвинутых возможностей",
+        "unit/": "Unit тесты для stage-env компонентов"
+      },
+      "cache/": "Кэш (cli_commands.json)",
+      "docker-compose.yml": "Docker Compose конфигурация",
+      "Dockerfile.*": "Docker образы",
+      "stage_env.py": "Главная точка входа CLI",
+      "stage-env": "Bash wrapper",
+      "requirements.txt": "Python зависимости"
+    },
+    "tests/": {
+      "e2e/": "End-to-end тесты (token/, chain/, wallet/, и т.д.)",
+      "functional/": "Функциональные тесты команд",
+      "stage-env.cfg": "Конфигурация stage-env"
+    },
+    "tests/testing/": {
+      "artifacts/": "run_<timestamp>/<test_type>/<suite>/",
+      "logs/": "Общие логи stage-env",
+      "cache/": "Кэш данных",
+      "snapshots/": "Snapshot файлы (.sqfs, .metadata)"
+    }
+  },
+
+  "dependencies": {
+    "python_packages": {
+      "core": [
+        "typer - CLI framework",
+        "pydantic - схема валидация",
+        "structlog - структурированное логирование",
+        "httpx - async HTTP client для RPC",
+        "docker - Docker SDK для Python",
+        "PyYAML - YAML парсинг",
+        "base58 - wallet address декодирование"
+      ],
+      "optional": [
+        "reportlab - PDF report generation (planned)"
+      ]
+    },
+    "system_tools": {
+      "mandatory": [
+        "docker - контейнеризация",
+        "docker compose (V2) или docker-compose (V1)"
+      ],
+      "conditional": {
+        "rsync": "Обязателен для filesystem snapshot mode",
+        "squashfs-tools": "Обязателен для squashfs snapshot mode (mksquashfs, unsquashfs)",
+        "overlayfs": "Kernel feature для squashfs mode"
+      }
+    },
+    "runtime": {
+      "cellframe-node package": "Требуется для Docker образов (из url/local/repository)",
+      "cellframe-node-cli": "Включён в cellframe-node package",
+      "cellframe-node-tool": "Включён в cellframe-node package"
+    }
+  },
+
+  "best_practices": {
+    "scenario_writing": [
+      "Использовать includes для переиспользования компонентов",
+      "Группировать связанные тесты в suites",
+      "Использовать extract_to для надёжной экстракции данных",
+      "Предпочитать wait_for_datum вместо фиксированных wait",
+      "Использовать иерархические defaults для сокращения дублирования"
+    ],
+    "code_development": [
+      "Следовать fail-fast принципу",
+      "Добавлять type hints везде",
+      "Использовать Pydantic для валидации",
+      "Логировать через structlog с контекстом",
+      "Писать unit тесты для новой функциональности"
+    ],
+    "performance": [
+      "Использовать squashfs snapshots для CI/CD",
+      "Использовать filesystem snapshots для development",
+      "Минимизировать количество CLI вызовов в тестах",
+      "Группировать assertions в одном check step где возможно"
+    ]
+  },
+
+  "cli_commands_reference": {
+    "network_management": {
+      "start": "Запуск тестовой сети (Docker Compose + health checks)",
+      "stop": "Остановка сети",
+      "restart": "Перезапуск сети",
+      "status": "Показать статус нод",
+      "rebuild": "Полная пересборка окружения"
+    },
+    "testing": {
+      "run-tests": "Запуск тестовых сценариев (с поддержкой suites)",
+      "run-tests --filter NAME": "Фильтрация сценариев по имени",
+      "run-tests --no-start-network": "Запуск без старта сети (если уже running)",
+      "run-tests --stop-after": "Остановить сеть после тестов"
+    },
+    "snapshots": {
+      "create-snapshot": "Создать snapshot текущего состояния",
+      "restore-snapshot": "Восстановить из snapshot",
+      "list-snapshots": "Список доступных snapshots",
+      "delete-snapshot": "Удалить snapshot"
+    },
+    "certificates": {
+      "generate-certs": "Генерация сертификатов для нод"
+    },
+    "utilities": {
+      "build": "Сборка Docker образов",
+      "clean": "Очистка артефактов и кэша",
+      "clean --all": "Полная очистка включая volumes"
+    }
+  },
+
+  "navigation_system": {
+    "purpose": "Модуль тестовой инфраструктуры Stage Environment",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/testing/stage_env_system.json",
+    "file_role": "TESTING_INFRASTRUCTURE_MODULE",
+    "related_files": {
+      ".context/manifest.json": "Главный манифест СЛК системы",
+      ".context/modules/testing/stage_env_scenario_language.json": "Модуль языка сценариев stage-env (создаётся следующим)",
+      ".context/tasks/active.json": "Текущая активная задача",
+      ".context/tasks/stage_env_snapshot_system.json": "Задача по snapshot системе"
+    },
+    "usage_hint": "./slc info modules/testing/stage_env_system.json для подробной информации",
+    "ai_context": "Файл СЛК системы: stage_env_system.json - архитектура и компоненты stage-env"
+  }
+}
+

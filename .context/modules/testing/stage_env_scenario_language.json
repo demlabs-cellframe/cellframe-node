@@ -1,0 +1,963 @@
+{
+  "type": "domain_specific_language_module",
+  "domain": "stage_env_scenarios",
+  "version": "1.0.0",
+  "created": "2025-10-25",
+  "updated": "2025-10-25",
+  
+  "module_info": {
+    "name": "Stage Environment Scenario Language",
+    "description": "Полное описание YAML-based DSL для написания E2E тестов Cellframe Node",
+    "purpose": "Декларативный язык для тестирования без необходимости программирования",
+    "target_audience": [
+      "QA инженеры пишущие тесты",
+      "Разработчики расширяющие язык",
+      "AI системы генерирующие тесты",
+      "Tech writers обновляющие документацию"
+    ]
+  },
+
+  "language_fundamentals": {
+    "philosophy": {
+      "declarative": "Описываете ЧТО хотите протестировать, а не КАК это делать",
+      "readable": "YAML синтаксис понятен без изучения программирования",
+      "composable": "Переиспользование через includes",
+      "extensible": "Легко добавлять новые типы шагов"
+    },
+    
+    "file_types": {
+      "test_scenario": {
+        "marker": "Наличие поля 'test:' с шагами",
+        "purpose": "Отдельный тестовый сценарий",
+        "required_fields": ["name", "description", "test"],
+        "optional_fields": ["network", "includes", "setup", "check", "variables", "defaults"]
+      },
+      "suite_descriptor": {
+        "marker": "Наличие поля 'suite:' с названием",
+        "purpose": "Описание test suite с метаданными",
+        "required_fields": ["suite"],
+        "optional_fields": ["description", "tags", "network", "includes", "setup"],
+        "location": "На том же уровне что и директория suite (e.g., token.yml рядом с token/)"
+      },
+      "include_template": {
+        "marker": "Файл в tests/common/ без 'test:' и без 'suite:'",
+        "purpose": "Переиспользуемый компонент",
+        "can_contain": ["setup steps", "defaults", "variables", "network config"],
+        "examples": ["common/create_test_cert.yml", "common/set_net_default.yml"]
+      }
+    }
+  },
+
+  "scenario_structure": {
+    "metadata": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "Название сценария",
+        "example": "Token Declaration Test"
+      },
+      "description": {
+        "type": "string",
+        "required": true,
+        "description": "Описание что делает тест",
+        "example": "Test creating new tokens with various parameters"
+      },
+      "author": {
+        "type": "string",
+        "required": false,
+        "example": "QA Team"
+      },
+      "tags": {
+        "type": "list[string]",
+        "required": false,
+        "description": "Теги для фильтрации и группировки",
+        "example": ["e2e", "token", "critical"]
+      },
+      "version": {
+        "type": "string",
+        "required": false,
+        "default": "1.0"
+      }
+    },
+
+    "network": {
+      "type": "NetworkConfig",
+      "required": false,
+      "default": "topology: default, name: stagenet",
+      "fields": {
+        "topology": {
+          "type": "string",
+          "description": "Название топологии из config/topologies/",
+          "example": "default",
+          "custom": "Можно указать custom топологию с нодами"
+        },
+        "name": {
+          "type": "string",
+          "description": "Имя сети (доступно как {{network_name}})",
+          "default": "stagenet"
+        }
+      },
+      "example": "network:\n  topology: default\n  name: stagenet"
+    },
+
+    "includes": {
+      "type": "list[string]",
+      "required": false,
+      "description": "Пути к общим YAML компонентам (относительно tests/common/)",
+      "merge_strategy": "Deep merge - вложенные defaults объединяются, списки конкатенируются",
+      "example": "includes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml",
+      "search_paths": [
+        "tests/common/ - общие компоненты",
+        "tests/common/networks/ - сетевые топологии",
+        "tests/common/wallets/ - setup кошельков",
+        "tests/common/tokens/ - token операции",
+        "tests/common/setup/ - общая инициализация"
+      ]
+    },
+
+    "variables": {
+      "type": "dict[string, any]",
+      "required": false,
+      "description": "Предопределённые переменные доступные в {{variable_name}}",
+      "builtin_variables": {
+        "network_name": "Имя сети из network.name",
+        "network": "Алиас для network_name (deprecated - use network_name)"
+      },
+      "example": "variables:\n  test_cert: test_cert\n  expected_value: 1000"
+    },
+
+    "defaults": {
+      "type": "StepDefaults",
+      "required": false,
+      "description": "Глобальные defaults для всех секций и шагов",
+      "hierarchy": "global defaults → section defaults → group defaults → step params",
+      "fields": {
+        "node": {
+          "type": "string",
+          "description": "Нода по умолчанию для выполнения",
+          "default": "node1",
+          "example": "node: node2"
+        },
+        "wait": {
+          "type": "string",
+          "description": "Задержка после шага",
+          "format": "Ns, Nms (e.g., '3s', '500ms', '0s')",
+          "example": "wait: 3s"
+        },
+        "expect": {
+          "type": "success | error | any",
+          "description": "Ожидаемый результат",
+          "default": "success",
+          "example": "expect: error"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Таймаут команды в секундах",
+          "default": 30,
+          "example": "timeout: 60"
+        },
+        "cli": {
+          "type": "dict[string, string]",
+          "description": "CLI префиксы - автоматически добавляются к CLI командам через CLICommandParser",
+          "mechanism": "Parser проверяет что команда поддерживает опцию и добавляет её если отсутствует",
+          "example": "cli:\n  net: '{{network_name}}'\n  token: MYTOKEN",
+          "typical_use": "Через common includes (e.g., set_net_default.yml)"
+        }
+      },
+      "merge_rules": {
+        "scalar_override": "Более конкретный уровень полностью переопределяет",
+        "cli_deep_merge": "CLI dict объединяется (ключи добавляются/переопределяются)",
+        "none_ignored": "None значения в includes не переопределяют существующие"
+      },
+      "example": "defaults:\n  node: node1\n  wait: 3s\n  cli:\n    net: '{{network_name}}'\n    token: TESTTOKEN"
+    },
+
+    "sections": {
+      "setup": {
+        "type": "SectionConfig | list[TestStep]",
+        "required": false,
+        "description": "Подготовительные шаги перед тестом",
+        "execution": "Выполняется перед test секцией",
+        "typical_use": [
+          "Создание кошельков",
+          "Создание токенов",
+          "Генерация тестовых данных",
+          "Ожидание синхронизации сети"
+        ]
+      },
+      "test": {
+        "type": "SectionConfig | list[TestStep]",
+        "required": true,
+        "description": "Основные тестовые шаги",
+        "execution": "Выполняется после setup",
+        "typical_use": [
+          "Выполнение тестируемой операции",
+          "Вызов API/CLI команд",
+          "Создание транзакций"
+        ]
+      },
+      "check": {
+        "type": "CheckSectionConfig | list[CheckSpec]",
+        "required": false,
+        "description": "Assertions и проверки результатов",
+        "execution": "Выполняется после test",
+        "typical_use": [
+          "Проверка что операция выполнилась",
+          "Валидация данных",
+          "Проверка состояния системы"
+        ]
+      }
+    }
+  },
+
+  "step_types": {
+    "CLIStep": {
+      "description": "Выполнение команды cellframe-node-cli",
+      "syntax": {
+        "cli": {
+          "type": "string",
+          "required": true,
+          "description": "CLI команда (без 'cellframe-node-cli' префикса)",
+          "example": "token_decl -token TEST -total_supply 1000000 -certs test_cert"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1",
+          "description": "Нода для выполнения"
+        },
+        "save": {
+          "type": "string",
+          "required": false,
+          "description": "Сохранить весь вывод в переменную",
+          "auto_extract": "Для token_decl/token_emit/tx_create автоматически извлекается hash"
+        },
+        "extract_to": {
+          "type": "dict[string, ExtractSpec]",
+          "required": false,
+          "description": "Извлечь конкретные значения из вывода",
+          "example": "extract_to:\n  wallet_addr:\n    type: wallet_address"
+        },
+        "wait": {
+          "type": "string",
+          "required": false,
+          "description": "Ожидание после команды",
+          "format": "Ns, Nms (e.g., '3s', '500ms')"
+        },
+        "expect": {
+          "type": "success | error",
+          "required": false,
+          "default": "success"
+        },
+        "contains": {
+          "type": "string",
+          "required": false,
+          "description": "Проверка что вывод содержит подстроку"
+        },
+        "timeout": {
+          "type": "integer",
+          "required": false,
+          "default": 30,
+          "unit": "seconds"
+        }
+      },
+      "examples": [
+        {
+          "description": "Простая команда",
+          "code": "- cli: token list\n  node: node1"
+        },
+        {
+          "description": "С сохранением результата",
+          "code": "- cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n  save: token_hash"
+        },
+        {
+          "description": "С экстракцией wallet адреса",
+          "code": "- cli: wallet info -w my_wallet\n  extract_to:\n    wallet_addr:\n      type: wallet_address"
+        }
+      ],
+      "cli_auto_defaults": {
+        "description": "CLI параметры могут автодобавляться через defaults.cli",
+        "mechanism": "CLICommandParser парсит help и применяет префиксы",
+        "example": "defaults:\n  cli:\n    net: '{{network_name}}'\n# Теперь 'token list' → 'token list -net stagenet'"
+      }
+    },
+
+    "ToolStep": {
+      "description": "Выполнение команды cellframe-node-tool",
+      "purpose": "Упрощённый helper для tool команд (например, создание сертификатов)",
+      "syntax": {
+        "tool": {
+          "type": "string",
+          "required": true,
+          "description": "Tool команда (без 'cellframe-node-tool' префикса)",
+          "example": "cert create test_cert sig_dil"
+        },
+        "node": {
+          "type": "string",
+          "default": "node1"
+        },
+        "save": {
+          "type": "string",
+          "required": false
+        },
+        "expect": {
+          "type": "success | error",
+          "default": "success"
+        },
+        "timeout": {
+          "type": "integer",
+          "default": 30
+        }
+      },
+      "examples": [
+        {
+          "description": "Создание сертификата",
+          "code": "- tool: cert create test_cert sig_dil\n  node: node1"
+        }
+      ]
+    },
+
+    "RPCStep": {
+      "description": "JSON-RPC вызов к ноде",
+      "purpose": "Прямой вызов JSON-RPC API для низкоуровневого тестирования",
+      "syntax": {
+        "rpc": {
+          "type": "string",
+          "required": true,
+          "description": "Имя JSON-RPC метода",
+          "example": "net_get_cur_addr"
+        },
+        "params": {
+          "type": "list[any]",
+          "required": false,
+          "default": "[]",
+          "description": "Параметры RPC вызова"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1",
+          "description": "Нода для вызова"
+        },
+        "save": {
+          "type": "string",
+          "required": false,
+          "description": "Сохранить результат"
+        },
+        "wait": {
+          "type": "string",
+          "required": false,
+          "description": "Ожидание после вызова"
+        },
+        "expect": {
+          "type": "success | error | any",
+          "required": false,
+          "default": "success"
+        },
+        "timeout": {
+          "type": "integer",
+          "required": false,
+          "default": 30,
+          "unit": "seconds"
+        }
+      },
+      "endpoint": "http://<node_ip>:8545 (base_rpc_port из config)",
+      "example": "- rpc: net_get_cur_addr\n  params: []\n  node: node1\n  save: node_address"
+    },
+
+    "WaitStep": {
+      "description": "Простое ожидание",
+      "syntax": {
+        "wait": {
+          "type": "string",
+          "required": true,
+          "format": "Ns, Nms",
+          "example": "3s, 500ms, 0s"
+        }
+      },
+      "example": "- wait: 5s"
+    },
+
+    "WaitForDatumStep": {
+      "description": "Ожидание обработки датума через всю сеть (mempool → block → propagation)",
+      "purpose": "Надёжное ожидание вместо фиксированных таймаутов",
+      "syntax": {
+        "wait_for_datum": {
+          "type": "string | list[string]",
+          "required": true,
+          "description": "Hash датума или список хэшей",
+          "example": "'{{emission_tx}}' или ['{{tx1}}', '{{tx2}}']"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1",
+          "description": "Целевая нода для проверки датума"
+        },
+        "network": {
+          "type": "string",
+          "required": false,
+          "default": "stagenet",
+          "description": "Имя сети"
+        },
+        "chain": {
+          "type": "string",
+          "required": false,
+          "default": "main",
+          "description": "Имя chain"
+        },
+        "check_master_nodes": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "Проверять master ноды для verification и blocks"
+        },
+        "timeout_total": {
+          "type": "integer",
+          "required": false,
+          "default": 300,
+          "unit": "seconds",
+          "description": "Общий таймаут (рекомендуется использовать default)"
+        },
+        "timeout_mempool": {
+          "type": "integer",
+          "required": false,
+          "default": 60,
+          "unit": "seconds",
+          "description": "Таймаут стадии mempool (DEPRECATED - используется 0.5s hardcoded)"
+        },
+        "timeout_verification": {
+          "type": "integer",
+          "required": false,
+          "default": 120,
+          "unit": "seconds",
+          "description": "Таймаут после verification"
+        },
+        "timeout_in_blocks": {
+          "type": "integer",
+          "required": false,
+          "default": 180,
+          "unit": "seconds",
+          "description": "Таймаут после появления в блоках"
+        },
+        "check_interval": {
+          "type": "integer",
+          "required": false,
+          "default": 2,
+          "unit": "seconds",
+          "description": "Интервал проверки статуса"
+        },
+        "save_status": {
+          "type": "string",
+          "required": false,
+          "description": "Переменная для сохранения финального статуса"
+        }
+      },
+      "lifecycle_phases": [
+        "1. Rejected - датум не появился в mempool за 0.5s (скорее всего CLI команда упала)",
+        "2. Mempool - датум в mempool, ожидает включения в блок",
+        "3. InBlock - датум включён в блок",
+        "4. Propagated - блок распространился по всей сети"
+      ],
+      "fail_fast_detection": {
+        "immediate_rejection": "Если датум не появился в mempool за 0.5s → REJECTED",
+        "invalid_hash": "Если hash не формата 0x[hex] → немедленная ошибка",
+        "benefit": "Быстро обнаруживает проблемы с CLI командами"
+      },
+      "examples": [
+        {
+          "description": "Минимальное использование (рекомендуется)",
+          "code": "- cli: token_emit -token TEST -value 1000 -addr {{addr}} -certs test_cert\n  save: tx_hash\n\n- wait_for_datum: '{{tx_hash}}'\n  # Все defaults оптимальны - не нужно переопределять!"
+        },
+        {
+          "description": "Ожидание нескольких датумов",
+          "code": "- wait_for_datum:\n    - '{{tx1}}'\n    - '{{tx2}}'\n    - '{{tx3}}'"
+        },
+        {
+          "description": "С сохранением статуса",
+          "code": "- wait_for_datum: '{{tx_hash}}'\n  save_status: datum_final_state"
+        }
+      ],
+      "best_practices": [
+        "НЕ переопределяйте timeout_total без необходимости - default 300s достаточно",
+        "Используйте минимальный синтаксис: wait_for_datum: '{{hash}}'",
+        "Не добавляйте wait: после wait_for_datum - это уже ожидание"
+      ]
+    },
+
+    "PythonStep": {
+      "description": "Выполнение Python кода",
+      "syntax": {
+        "python": {
+          "type": "string (multiline)",
+          "required": true,
+          "description": "Python код для выполнения",
+          "context_api": [
+            "ctx.get_variable('name') - получить переменную",
+            "ctx.set_variable('name', value) - установить переменную",
+            "print() - вывод в лог"
+          ]
+        },
+        "save": {
+          "type": "string",
+          "required": false,
+          "description": "Сохранить результат (return value)"
+        }
+      },
+      "example": "- python: |\n    addr = ctx.get_variable('wallet_addr')\n    assert addr.startswith('W'), 'Invalid wallet address'\n    print(f'Validated: {addr}')"
+    },
+
+    "BashStep": {
+      "description": "Выполнение Bash скрипта",
+      "syntax": {
+        "bash": {
+          "type": "string (multiline)",
+          "required": true,
+          "description": "Bash скрипт для выполнения"
+        },
+        "node": {
+          "type": "string",
+          "default": "node1"
+        },
+        "save": {
+          "type": "string",
+          "description": "Сохранить stdout"
+        },
+        "expect": {
+          "type": "success | error",
+          "default": "success"
+        }
+      },
+      "example": "- bash: |\n    echo 'Test data' > /tmp/test.txt\n    cat /tmp/test.txt\n  save: file_content"
+    },
+
+    "LoopStep": {
+      "description": "Цикл for для повторения шагов (DEPRECATED - use explicit steps)",
+      "status": "deprecated",
+      "alternative": "Использовать явные шаги вместо циклов"
+    },
+
+    "StepGroup": {
+      "description": "Группировка шагов с локальными defaults",
+      "syntax": {
+        "group": {
+          "type": "string",
+          "required": true,
+          "description": "Название группы"
+        },
+        "defaults": {
+          "type": "StepDefaults",
+          "description": "Defaults для этой группы"
+        },
+        "steps": {
+          "type": "list[TestStep]",
+          "required": true
+        }
+      },
+      "example": "- group: 'Wallet Operations'\n  defaults:\n    node: node2\n    wait: 1s\n  steps:\n    - cli: wallet new -w test1\n    - cli: wallet new -w test2"
+    }
+  },
+
+  "check_types": {
+    "overview": {
+      "description": "Check секция выполняется после test для проверки результатов",
+      "execution": "Все checks должны пройти успешно, иначе сценарий считается failed",
+      "fail_fast": "Выполнение прерывается при первом failed check"
+    },
+
+    "CLICheck": {
+      "description": "Проверка через CLI команду",
+      "syntax": {
+        "cli": {
+          "type": "string",
+          "required": true,
+          "description": "CLI команда для выполнения"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1"
+        },
+        "contains": {
+          "type": "string",
+          "required": false,
+          "description": "Вывод должен содержать эту подстроку"
+        },
+        "not_contains": {
+          "type": "string",
+          "required": false,
+          "description": "Вывод НЕ должен содержать эту подстроку"
+        },
+        "equals": {
+          "type": "string",
+          "required": false,
+          "description": "Точное совпадение вывода"
+        },
+        "timeout": {
+          "type": "integer",
+          "required": false,
+          "default": 30
+        }
+      },
+      "example": "check:\n  - cli: token info -name TEST\n    contains: 'TEST'\n    not_contains: 'ERROR'"
+    },
+
+    "RPCCheck": {
+      "description": "Проверка через RPC вызов",
+      "syntax": {
+        "rpc": {
+          "type": "string",
+          "required": true,
+          "description": "RPC метод"
+        },
+        "params": {
+          "type": "list[any]",
+          "required": false,
+          "default": "[]"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1"
+        },
+        "result_contains": {
+          "type": "any",
+          "required": false,
+          "description": "Результат должен содержать это значение"
+        },
+        "result_equals": {
+          "type": "any",
+          "required": false,
+          "description": "Точное совпадение результата"
+        },
+        "timeout": {
+          "type": "integer",
+          "required": false,
+          "default": 30
+        }
+      },
+      "example": "check:\n  - rpc: net_get_cur_addr\n    result_contains: '0x'"
+    },
+
+    "PythonCheck": {
+      "description": "Проверка через Python код с assertions",
+      "syntax": {
+        "python": {
+          "type": "string (multiline)",
+          "required": true,
+          "description": "Python код с assert statements",
+          "context_api": "ctx.get_variable() для доступа к переменным"
+        }
+      },
+      "success_condition": "Код выполняется без AssertionError или других исключений",
+      "example": "check:\n  - python: |\n      balance = ctx.get_variable('balance')\n      assert int(balance) > 0, 'Balance должен быть положительным'\n      assert int(balance) < 1000000, 'Balance не должен превышать миллион'"
+    },
+
+    "BashCheck": {
+      "description": "Проверка через Bash скрипт",
+      "syntax": {
+        "bash": {
+          "type": "string (multiline)",
+          "required": true,
+          "description": "Bash скрипт"
+        },
+        "node": {
+          "type": "string",
+          "required": false,
+          "default": "node1"
+        },
+        "timeout": {
+          "type": "integer",
+          "required": false,
+          "default": 30
+        }
+      },
+      "success_condition": "Скрипт завершается с exit code 0",
+      "example": "check:\n  - bash: |\n      test -f /tmp/output.txt\n      grep -q 'SUCCESS' /tmp/output.txt\n      [ $(wc -l < /tmp/output.txt) -gt 10 ]"
+    }
+  },
+
+  "advanced_features": {
+    "data_extraction": {
+      "description": "Встроенная система экстракции и валидации данных",
+      "extract_types": {
+        "wallet_address": {
+          "description": "Cellframe wallet адрес (base58)",
+          "auto_pattern": "Автоматический regex + валидация",
+          "validation": [
+            "Base58 декодирование",
+            "Структура: addr_ver + net_id + sig_type + key_hash + checksum",
+            "SHA3-256 checksum verification"
+          ],
+          "example": "extract_to:\n  my_addr:\n    type: wallet_address"
+        },
+        "node_address": {
+          "description": "Node адрес (с :: separator)",
+          "format": "0x[hex]::0x[hex]::...",
+          "example": "extract_to:\n  node_addr:\n    type: node_address"
+        },
+        "hash": {
+          "description": "Общий hash (0x[hex])",
+          "format": "0x + 64+ hex символов",
+          "example": "extract_to:\n  tx_hash:\n    type: hash"
+        },
+        "custom": {
+          "description": "Произвольный regex pattern",
+          "syntax": "extract_to:\n  my_var:\n    type: raw\n    pattern: 'Balance: (\\d+)'"
+        }
+      },
+      "auto_extraction": {
+        "description": "Для команд token_decl/token_emit/tx_create hash извлекается автоматически при save:",
+        "example": "- cli: token_decl -token TEST ... -certs test_cert\n  save: token_hash  # Автоматически извлечёт hash"
+      }
+    },
+
+    "variable_substitution": {
+      "syntax": "{{variable_name}}",
+      "description": "Подстановка переменных в любом текстовом поле",
+      "scope": [
+        "CLI команды",
+        "RPC параметры",
+        "Python/Bash код",
+        "Contains/equals проверки",
+        "Defaults значения"
+      ],
+      "builtin_variables": ["network_name"],
+      "runtime_variables": "Любые переменные установленные через save: или ctx.set_variable()",
+      "example": "- cli: token_emit -token {{token_name}} -addr {{wallet_addr}} -certs test_cert"
+    },
+
+    "hierarchical_defaults": {
+      "description": "Многоуровневая система defaults с наследованием",
+      "levels": {
+        "1_global": {
+          "location": "Верхний уровень сценария",
+          "scope": "Все секции и шаги",
+          "example": "defaults:\n  node: node1\n  wait: 3s"
+        },
+        "2_section": {
+          "location": "Внутри setup/test/check",
+          "scope": "Все шаги в секции",
+          "example": "test:\n  defaults:\n    node: node2\n  steps:\n    - cli: ..."
+        },
+        "3_group": {
+          "location": "Внутри StepGroup",
+          "scope": "Шаги в группе",
+          "example": "- group: 'My Group'\n  defaults:\n    wait: 1s\n  steps: ..."
+        },
+        "4_step": {
+          "location": "Параметры конкретного шага",
+          "scope": "Только этот шаг",
+          "priority": "Highest - переопределяет все defaults"
+        }
+      },
+      "merge_rules": {
+        "scalar_values": "Более конкретный уровень переопределяет",
+        "cli_dict": "Deep merge - объединение ключей",
+        "none_values": "None в include НЕ переопределяет существующие значения"
+      }
+    },
+
+    "includes_system": {
+      "description": "Система переиспользования компонентов",
+      "search_path": "tests/common/",
+      "merge_strategy": "Deep merge с приоритетом основного файла",
+      "common_includes": {
+        "create_test_cert.yml": "Создание временного сертификата для подписи",
+        "set_net_default.yml": "Автодобавление -net {{network_name}}",
+        "networks/single_node.yml": "Минимальная топология",
+        "wallets/create_wallet.yml": "Создание test кошелька"
+      },
+      "best_practices": [
+        "Включать только то что действительно нужно",
+        "Избегать циркулярных зависимостей",
+        "Документировать назначение каждого include"
+      ]
+    },
+
+    "suite_system": {
+      "description": "Организация тестов в suites",
+      "suite_descriptor": {
+        "marker": "suite: 'Suite Name'",
+        "location": "token.yml на уровне token/ директории",
+        "purpose": "Метаданные + suite-level setup",
+        "fields": {
+          "suite": "Название suite (обязательно)",
+          "description": "Описание",
+          "tags": "Теги",
+          "network": "Default топология для всех сценариев",
+          "includes": "Общие includes для всех сценариев",
+          "setup": "Suite-level setup (выполняется ОДИН раз перед всеми сценариями)"
+        }
+      },
+      "execution_flow": {
+        "1_suite_discovery": "По директориям с .yml файлами",
+        "2_suite_setup": "Выполнение suite descriptor includes + setup",
+        "3_scenario_execution": "Последовательное выполнение всех .yml в директории",
+        "4_suite_isolation": "Восстановление clean_state между suites"
+      },
+      "example": "# token.yml\nsuite: 'Token Operations Suite'\ndescription: 'E2E token tests'\n\nnetwork:\n  topology: default\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml"
+    }
+  },
+
+  "runtime_context": {
+    "RuntimeContext": {
+      "module": "src/scenarios/executor.py (embedded)",
+      "description": "Управление переменными во время выполнения",
+      "methods": {
+        "get_variable(name)": "Получить значение переменной",
+        "set_variable(name, value)": "Установить переменную",
+        "has_variable(name)": "Проверить существование"
+      },
+      "variable_lifecycle": {
+        "predefined": "Из scenario.variables",
+        "builtin": "network_name автоматически",
+        "runtime": "Установленные через save: или ctx.set_variable()",
+        "scope": "Глобальный - доступны во всех секциях сценария"
+      }
+    }
+  },
+
+  "error_handling": {
+    "cli_errors": {
+      "description": "Cellframe CLI возвращает exit code 0 даже при ошибках",
+      "detection": "Парсинг JSON/YAML вывода на наличие 'errors:' поля",
+      "expect_error": "expect: error для ожидаемых ошибок",
+      "example": "- cli: tx_create -token TEST -from {{blocked_utxo}}:0 -value 100\n  expect: error\n  contains: 'UTXO is blocked'"
+    },
+    "scenario_validation": {
+      "when": "При парсинге YAML файла",
+      "validator": "Pydantic schema validation",
+      "common_errors": [
+        "Field required - отсутствует обязательное поле",
+        "Invalid type - неправильный тип данных",
+        "Unknown step type - неизвестный тип шага"
+      ]
+    },
+    "execution_errors": {
+      "types": [
+        "CommandTimeout - команда превысила timeout",
+        "UnexpectedExitCode - неожиданный exit code",
+        "AssertionFailed - check не прошёл",
+        "VariableNotFound - переменная не найдена"
+      ],
+      "handling": "Сценарий прерывается при первой ошибке (fail-fast)"
+    }
+  },
+
+  "practical_examples": {
+    "minimal_test": {
+      "description": "Минимальный работающий тест",
+      "code": "name: Minimal Test\ndescription: Check CLI is available\n\nnetwork:\n  topology: default\n\ntest:\n  - cli: version\n    contains: 'Cellframe'"
+    },
+
+    "token_lifecycle": {
+      "description": "Полный жизненный цикл токена",
+      "code": "name: Token Lifecycle\ndescription: Create, emit, transfer\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\nsetup:\n  - cli: wallet new -w wallet1\n  - cli: wallet new -w wallet2\n  \n  - cli: wallet info -w wallet1\n    extract_to:\n      addr1:\n        type: wallet_address\n  \n  - cli: wallet info -w wallet2\n    extract_to:\n      addr2:\n        type: wallet_address\n\ntest:\n  - cli: token_decl -token LIFE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert\n    save: token_hash\n  \n  - cli: token_emit -token LIFE -value 10000 -addr {{addr1}} -certs test_cert\n    save: emit_tx\n  \n  - wait_for_datum: '{{emit_tx}}'\n  \n  - cli: tx_create -token LIFE -from {{emit_tx}}:0 -to_addr {{addr2}} -value 5000 -fee 0.1\n    save: transfer_tx\n  \n  - wait_for_datum: '{{transfer_tx}}'\n\ncheck:\n  - cli: token info -name LIFE\n    contains: 'LIFE'\n  \n  - cli: tx_history -tx {{transfer_tx}}\n    contains: '{{transfer_tx}}'"
+    },
+
+    "using_defaults": {
+      "description": "Эффективное использование defaults",
+      "code": "name: Defaults Demo\n\ndefaults:\n  node: node1\n  wait: 3s\n  cli:\n    net: '{{network_name}}'\n\ntest:\n  # node=node1, wait=3s, -net auto applied\n  - cli: token list\n  \n  # Override node\n  - cli: token list\n    node: node2\n  \n  # Override wait\n  - cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n    wait: 10s"
+    },
+
+    "suite_with_setup": {
+      "description": "Suite descriptor с suite-level setup",
+      "code": "# token.yml (suite descriptor)\nsuite: 'Token Operations Suite'\ndescription: 'E2E token tests'\n\nnetwork:\n  topology: default\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\n# Выполнится ОДИН раз перед всеми сценариями в token/\nsetup:\n  - wait: 5s\n  - bash: |\n      echo 'Suite initialized' > /tmp/suite.log"
+    }
+  },
+
+  "migration_guide": {
+    "deprecated_features": {
+      "loop": {
+        "old": "- loop: 5\n  steps: ...",
+        "new": "Использовать явные шаги",
+        "reason": "Сложность валидации, unclear intent"
+      },
+      "network_alias": {
+        "old": "{{network}}",
+        "new": "{{network_name}}",
+        "reason": "Более явное именование"
+      },
+      "hardcoded_net": {
+        "old": "- cli: token list -net stagenet",
+        "new": "- cli: token list\n# -net добавится автоматически через defaults.cli",
+        "reason": "CLI parser + set_net_default.yml"
+      }
+    },
+
+    "new_features_since_v1": [
+      "✅ ToolStep для cellframe-node-tool команд",
+      "✅ WaitForDatumStep для надёжного ожидания датумов",
+      "✅ Extract helpers с типами (wallet_address, node_address, hash)",
+      "✅ Hierarchical defaults (global → section → group → step)",
+      "✅ StepGroup для локальных defaults",
+      "✅ CLI auto-defaults через parser",
+      "✅ Suite descriptors с suite-level setup",
+      "✅ Snapshot system для suite isolation"
+    ]
+  },
+
+  "integration_points": {
+    "with_cellframe_cli": {
+      "description": "Прямое взаимодействие с cellframe-node-cli через Docker exec",
+      "error_handling": "CLI возвращает exit 0 даже при ошибках - парсим JSON/YAML вывод",
+      "auto_defaults": "CLI parser извлекает доступные опции из help"
+    },
+    "with_cellframe_tool": {
+      "description": "Использование cellframe-node-tool для административных операций",
+      "typical_use": "Создание сертификатов (cert create)"
+    },
+    "with_json_rpc": {
+      "description": "JSON-RPC вызовы к ноде через HTTP",
+      "endpoint": "http://<node_ip>:8545",
+      "client": "httpx.AsyncClient"
+    },
+    "with_docker": {
+      "description": "Выполнение команд внутри Docker контейнеров",
+      "exec_format": "docker exec <container> cellframe-node-cli <command>"
+    }
+  },
+
+  "reference_documentation": {
+    "official_docs": {
+      "en": "tests/stage-env/docs/en/scenarios/",
+      "ru": "tests/stage-env/docs/ru/scenarios/",
+      "files": [
+        "Tutorial.md - пошаговое обучение",
+        "Cookbook.md - готовые рецепты",
+        "Glossary.md - полный справочник"
+      ],
+      "status": "Требует обновления (устаревшие конструкции)"
+    },
+    "examples": {
+      "location": "tests/stage-env/tests/examples/",
+      "files": [
+        "test_extract_helpers.yml - примеры extract_to",
+        "test_wait_for_datum.yml - примеры datum monitoring",
+        "test_version_compatibility.yml - multi-version testing"
+      ]
+    },
+    "real_tests": {
+      "e2e": "tests/e2e/ - полноценные E2E тесты",
+      "functional": "tests/functional/ - функциональные тесты",
+      "base": "tests/stage-env/tests/base/ - базовые проверки"
+    }
+  },
+
+  "navigation_system": {
+    "purpose": "Модуль языка сценариев Stage Environment DSL",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/testing/stage_env_scenario_language.json",
+    "file_role": "DSL_LANGUAGE_MODULE",
+    "related_files": {
+      ".context/manifest.json": "Главный манифест СЛК системы",
+      ".context/modules/testing/stage_env_system.json": "Архитектура stage-env",
+      ".context/modules/languages/python/python_development.json": "Python для расширения executor",
+      ".context/tasks/active.json": "Текущая активная задача"
+    },
+    "usage_hint": "./slc info modules/testing/stage_env_scenario_language.json для подробной информации",
+    "ai_context": "Файл СЛК системы: stage_env_scenario_language.json - DSL для stage-env тестов"
+  }
+}
+
