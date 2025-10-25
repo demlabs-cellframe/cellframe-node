@@ -1,0 +1,61 @@
+{
+  "task_id": "cellframe_plugin_cmake_build",
+  "title": "Исправление CMake сборки Cellframe плагина",
+  "status": "ARCHIVED",
+  "priority": "high",
+  "created": "2025-01-21T10:30:00Z",
+  "updated": "2025-09-18T15:25:00Z",
+  "description": "Исправление проблем сборки CMake для cf-plugin-qevm проекта с уточненными ограничениями",
+  "context": {
+    "project_type": "cellframe_plugin",
+    "build_system": "cmake",
+    "language": "c",
+    "dependencies": [
+      "dap-sdk",
+      "cellframe-sdk",
+      "ethash",
+      "intx",
+      "evmone"
+    ]
+  },
+  "requirements": [
+    "Проект должен собираться командой: cmake .. -DCMAKE_BUILD_TYPE=Debug",
+    "Все зависимости должны собираться автоматически",
+    "КРИТИЧНО: НЕ ТРОГАТЬ субмодули: deps/ethash/, deps/intx/, deps/evmone/ а так же сабмодули cellframe-sdk и dap-sdk",
+    "КРИТИЧНО: Ничего не упрощать и не выкидывать - все должно работать полностью",
+    "МОЖНО править файлы в папке deps/ (например deps/CMakeLists.txt)",
+    "Все изменения в основном проекте и допустимых файлах deps/"
+  ],
+  "restrictions": [
+    "ЗАПРЕЩЕНО изменять файлы в dap-sdk/ директории",
+    "ЗАПРЕЩЕНО изменять файлы в cellframe-sdk/ директории",
+    "ЗАПРЕЩЕНО изменять субмодули: deps/ethash/, deps/intx/, deps/evmone/",
+    "ЗАПРЕЩЕНО упрощать или удалять функциональность",
+    "РАЗРЕШЕНО изменять: CMakeLists.txt, modules/, deps/CMakeLists.txt, другие файлы в deps/ (кроме субмодулей)"
+  ],
+  "current_issues": [
+    "CMake не может найти ethashTargets.cmake",
+    "Отсутствуют конфигурационные файлы для intx",
+    "EVMone не может найти зависимости через find_package",
+    "Система сборки зависимостей работает неправильно"
+  ],
+  "approach": "Исправить deps/CMakeLists.txt для правильной сборки зависимостей + использовать wrapper конфигурационные файлы в основном проекте",
+  "files_allowed_to_modify": [
+    "CMakeLists.txt (основной)",
+    "modules/CMakeLists.txt",
+    "modules/*/*.cmake (новые файлы)",
+    "deps/CMakeLists.txt",
+    "deps/*.cmake (новые файлы)",
+    "cmake/ (новая директория)",
+    "cf_plugin_qevm.c"
+  ],
+  "files_forbidden_to_modify": [
+    "dap-sdk/**/*",
+    "cellframe-sdk/**/*",
+    "deps/ethash/**/*",
+    "deps/intx/**/*",
+    "deps/evmone/**/*"
+  ],
+  "memory_reference": "8977631",
+  "completion_date": "2025-09-19T18:04:44.600424"
+}

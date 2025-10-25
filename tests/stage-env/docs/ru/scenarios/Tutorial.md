@@ -161,7 +161,7 @@ test:
 
 **Задача:** Извлечь адрес кошелька и использовать в последующих шагах.
 
-**Современный подход с extract_to:**
+**Современный подход с save_wallet:**
 
 ```yaml
 name: Урок 3 - Извлечение данных
@@ -176,9 +176,8 @@ test:
   
   # Шаг 2: Получить адрес с автоматической валидацией
   - cli: wallet info -w test_wallet
-    extract_to:
-      my_address:
-        type: wallet_address  # Автоматический pattern + валидация!
+    save_wallet: my_address
+    # Одна строка! Авто-извлечение и валидация base58 + checksum
   
   # Шаг 3: Использовать извлечённый адрес
   - cli: balance -addr {{my_address}}
@@ -191,13 +190,25 @@ check:
       assert addr.startswith('W'), "Адреса Cellframe начинаются с 'W'"
 ```
 
-**Типы извлечения:**
-- `wallet_address` - Cellframe кошелёк (base58, авто-валидация)
-- `node_address` - Адрес ноды (0x::формат)
-- `hash` - Хэш транзакции/токена (0x[hex])
-- `number` - Числовые значения
-- `token_name` - Идентификатор токена
-- `raw` - Произвольный regex pattern
+**Save хелперы:**
+- `save_wallet: var` - извлекает wallet address (base58 + checksum валидация)
+- `save_hash: var` - извлекает hash (0x[hex]{64})
+- `save_node: var` - извлекает node address (0x::формат)
+- `save: var` - сохраняет весь вывод
+
+**Сравнение:**
+
+```yaml
+# ✅ Современный - чисто и понятно
+- cli: wallet info -w test
+  save_wallet: addr
+
+# ❌ Старый - verbose (устарел)
+- cli: wallet info -w test
+  extract_to:
+    addr:
+      type: wallet_address
+```
 
 ---
 
@@ -219,9 +230,7 @@ setup:
   - cli: wallet new -w my_wallet
   
   - cli: wallet info -w my_wallet
-    extract_to:
-      wallet_addr:
-        type: wallet_address
+    save_wallet: wallet_addr
 
 test:
   # Шаг 1: Объявить токен
@@ -458,16 +467,14 @@ test:
 ### 3. Правильно извлекайте данные
 
 ```yaml
-# ✅ Хорошо - типобезопасно с валидацией
+# ✅ Хорошо - короткий save helper
 - cli: wallet info -w my_wallet
-  extract_to:
-    addr:
-      type: wallet_address  # Автовалидация!
+  save_wallet: addr
 
 # ❌ Плохо - сохраняет весь вывод
 - cli: wallet info -w my_wallet
   save: wallet_output
-  # Теперь нужно парсить вручную в Python
+  # Теперь нужно парсить вручную
 ```
 
 ### 4. Используйте includes для общего setup

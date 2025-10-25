@@ -5,15 +5,9 @@ suite: "Wallet Features Suite"  # Suite name (this field marks it as suite descr
 description: Functional testing of wallet export, backup, and recovery
 tags: [functional, wallet, features]
 version: "1.0"
-
-network:
-  topology: default
-
-# Suite-level setup: executed once before all scenarios in this suite
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
-  - common/create_test_cert.yml
   - common/set_net_default.yml
+  - common/wallets/create_wallet.yml
+  - common/create_test_cert.yml
 
-# This is a suite descriptor file (metadata only, no executable steps)
-# Individual test scenarios are in the wallet/ subdirectory

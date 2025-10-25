@@ -27,14 +27,10 @@ setup:
   
   # Get wallet addresses with validation
   - cli: wallet info -w wallet1
-    extract_to:
-      wallet1_addr:
-        type: wallet_address  # Auto-pattern!
+    save_wallet: wallet1_addr
   
   - cli: wallet info -w wallet2
-    extract_to:
-      wallet2_addr:
-        type: wallet_address  # Auto-pattern!
+    save_wallet: wallet2_addr
   
   # Create token
   - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token XFERTEST -total_supply 1000000 -certs test_cert

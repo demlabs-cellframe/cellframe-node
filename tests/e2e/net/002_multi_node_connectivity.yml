@@ -1,0 +1,41 @@
+# Test: Multi-Node Connectivity
+# Test connectivity between multiple nodes
+name: Multi-Node Connectivity Test
+description: Test that multiple nodes can connect and stay online
+tags: [e2e, integration, network, connectivity]
+
+setup:
+  - wait: 15s
+
+test:
+  # Check all nodes are online
+  - cli: net -net stagenet get status
+    node: node1
+    contains: "NET_STATE_ONLINE"
+  
+  - cli: net -net stagenet get status
+    node: node2
+    contains: "NET_STATE_ONLINE"
+  
+  - cli: net -net stagenet get status
+    node: node3
+    contains: "NET_STATE_ONLINE"
+  
+  # Get link lists for verification
+  - cli: net -net stagenet link list
+    node: node1
+    save: node1_links
+  
+  - cli: net -net stagenet link list
+    node: node2
+    save: node2_links
+
+check:
+  # Verify links exist (check saved output is not empty)
+  - python: |
+      links1 = ctx.get_variable('node1_links')
+      links2 = ctx.get_variable('node2_links')
+      # Check that output contains some data (not just empty or error)
+      assert len(links1) > 20, f"Node1 should have link info, got: {links1[:100]}"
+      assert len(links2) > 20, f"Node2 should have link info, got: {links2[:100]}"
+

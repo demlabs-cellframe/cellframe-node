@@ -161,7 +161,7 @@ test:
 
 **Task:** Extract wallet address and use it in later steps.
 
-**Modern approach with extract_to:**
+**Modern approach with save_wallet:**
 
 ```yaml
 name: Lesson 3 - Data Extraction
@@ -176,9 +176,8 @@ test:
   
   # Step 2: Get wallet address with automatic validation
   - cli: wallet info -w test_wallet
-    extract_to:
-      my_address:
-        type: wallet_address  # Auto-pattern + validation!
+    save_wallet: my_address
+    # One line! Auto-extracts and validates base58 + checksum
   
   # Step 3: Use extracted address
   - cli: balance -addr {{my_address}}
@@ -191,13 +190,25 @@ check:
       assert addr.startswith('W'), "Cellframe addresses start with 'W'"
 ```
 
-**Extract Types:**
-- `wallet_address` - Cellframe wallet (base58, auto-validated)
-- `node_address` - Node address (0x::format)
-- `hash` - Transaction/token hash (0x[hex])
-- `number` - Numeric values
-- `token_name` - Token identifier
-- `raw` - Custom regex pattern
+**Save Helpers:**
+- `save_wallet: var` - extracts wallet address (base58 + checksum validation)
+- `save_hash: var` - extracts hash (0x[hex]{64})
+- `save_node: var` - extracts node address (0x::format)
+- `save: var` - saves entire output
+
+**Comparison:**
+
+```yaml
+# ✅ Modern - clean and clear
+- cli: wallet info -w test
+  save_wallet: addr
+
+# ❌ Old - verbose (deprecated)
+- cli: wallet info -w test
+  extract_to:
+    addr:
+      type: wallet_address
+```
 
 ---
 
@@ -219,9 +230,7 @@ setup:
   - cli: wallet new -w my_wallet
   
   - cli: wallet info -w my_wallet
-    extract_to:
-      wallet_addr:
-        type: wallet_address
+    save_wallet: wallet_addr
 
 test:
   # Step 1: Declare token
@@ -458,16 +467,14 @@ test:
 ### 3. Extract Data Properly
 
 ```yaml
-# ✅ Good - type-safe with validation
+# ✅ Good - concise save helper
 - cli: wallet info -w my_wallet
-  extract_to:
-    addr:
-      type: wallet_address  # Auto-validates!
+  save_wallet: addr
 
 # ❌ Bad - saves entire output
 - cli: wallet info -w my_wallet
   save: wallet_output
-  # Now you need to parse it manually in Python
+  # Now you need to parse it manually
 ```
 
 ### 4. Use Includes for Common Setup

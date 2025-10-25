@@ -1,18 +1,11 @@
 # E2E Test Suite: Token Operations
 # Complete token lifecycle testing
-
 suite: "Token Operations Suite"  # Suite name (this field marks it as suite descriptor)
 description: End-to-end testing of token creation, emission, transfers, and updates
 tags: [e2e, token, economics]
-version: "1.0"
-
-network:
-  topology: default
 
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
-  - common/create_test_cert.yml
   - common/set_net_default.yml
+  - common/create_test_cert.yml
 
-# This is a suite descriptor file (metadata only, no executable steps)
-# Individual test scenarios are in the token/ subdirectory

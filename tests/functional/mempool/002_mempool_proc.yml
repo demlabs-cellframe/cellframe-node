@@ -1,0 +1,40 @@
+# Test: Mempool Processing
+# Test mempool transaction processing
+
+name: Mempool Processing Test
+description: Test creating transaction and checking mempool
+tags: [functional, mempool, processing]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+
+defaults:
+  node: node1
+  wait: 3s
+
+setup:
+  # Create and emit token
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token MEMPOOLTEST -total_supply 1000000 -certs test_cert
+  - cli: token_emit -token MEMPOOLTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
+    save: emit_tx
+
+test:
+  # Test: Create transaction (should go to mempool)
+  - cli: tx_create -token MEMPOOLTEST -from_emission {{emit_tx}} -value 500
+    save: tx_hash
+ 
+  # Test: Check mempool
+  - cli: mempool list
+    save: mempool
+
+check:
+  # Verify mempool response
+  - python: |
+      mempool = ctx.get_variable('mempool')
+      assert mempool is not None, "Mempool should return data"
+

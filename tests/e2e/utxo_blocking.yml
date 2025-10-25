@@ -5,18 +5,8 @@ suite: "UTXO Blocking E2E Suite"
 description: "E2E tests for UTXO blocking and transfer scenarios"
 author: "Cellframe Team"
 tags: [e2e, utxo, blocking]
-version: "1.0"
 
-scenarios:
-  - arbitrage_bypass.yml
-  - blocked_utxo_transfer.yml
-
-network:
-  topology: default
-
-# Suite-level setup: executed once before all scenarios in this suite
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
-  - common/create_test_cert.yml
   - common/set_net_default.yml
-
+  - common/create_test_cert.yml

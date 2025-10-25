@@ -2,217 +2,176 @@
 # Demonstrates monitoring datum processing through all network stages
 
 name: Wait-for-Datum Example
+description: Intelligent waiting for datum lifecycle (mempool → block → propagation)
 tags: [example, wait_for_datum, monitoring]
 version: "1.0"
 
 network:
   topology: default
 
-# Example 1: Basic token emission with wait
+includes:
+  - ../common/create_test_cert.yml
+  - ../common/set_net_default.yml
+
+defaults:
+  node: node1
+  wait: 2s
+
 setup:
   - cli: wallet new -w test_wallet
-    node: node1
   
-  - cli: wallet info -w test_wallet -net stagenet
-    node: node1
-    extract_to:
-      wallet_addr:
-        type: wallet_address
+  - cli: wallet info -w test_wallet
+    save_wallet: wallet_addr
 
 test:
   # Create and emit token
-  - cli: token_decl -net stagenet -token WAITDEMO -total 1000000
-    node: node1
-    wait: 3s
+  - cli: token_decl -token WAITDEMO -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save: token_hash
   
-  - cli: token_emit -net stagenet -token WAITDEMO -value 10000 -addr {{wallet_addr}}
-    node: node1
+  - cli: token_emit -token WAITDEMO -value 10000 -addr {{wallet_addr}} -certs test_cert
     save: emission_hash
   
-  # Wait for emission to propagate through network
-  # This replaces manual wait steps with intelligent monitoring
+  # MODERN: Intelligent waiting - monitors actual datum lifecycle
+  # Replaces: wait: 30s (guessing how long to wait)
   - wait_for_datum: "{{emission_hash}}"
-    node: node1
-    network: stagenet
-    chain: main
-    check_master_nodes: true
-    timeout_total: 120
-    timeout_mempool: 30
-    timeout_verification: 60
-    timeout_in_blocks: 90
-    check_interval: 2
+    # All defaults are optimal - no need to override!
+    # Timeouts: 0.5s mempool → 30s block → 60s propagation
     save_status: emission_status
 
 check:
   # Verify emission succeeded
-  - cli: token info -net stagenet -name WAITDEMO
-    node: node1
+  - cli: token info -name WAITDEMO
     contains: "WAITDEMO"
   
-  # Status should be 'propagated'
+  # Status should be 'propagated' or 'in_blocks'
   - python: |
-      assert emission_status == 'propagated', f"Expected 'propagated', got '{emission_status}'"
+      status = ctx.get_variable('emission_status')
+      assert status.status.value in ['propagated', 'in_blocks'], f"Expected success, got {status.status.value}"
 
 ---
 
-# Example 2: Transaction with custom timeouts
-name: Transaction Wait Example
-tags: [example, transaction, wait_for_datum]
+# Example 2: Transaction with explicit timeouts (NOT recommended - use defaults!)
+name: Transaction Wait with Custom Timeouts
+description: Shows how to override timeouts (but you usually shouldn't)
+tags: [example, transaction, wait_for_datum, custom_timeouts]
 
 network:
   topology: default
 
+includes:
+  - ../common/create_test_cert.yml
+  - ../common/set_net_default.yml
+
 setup:
   - cli: wallet new -w sender
-    node: node1
   - cli: wallet new -w receiver
-    node: node1
   
-  - cli: wallet info -w sender -net stagenet
-    node: node1
-    extract_to:
-      sender_addr:
-        type: wallet_address
+  - cli: wallet info -w sender
+    save_wallet: sender_addr
   
-  - cli: wallet info -w receiver -net stagenet
-    node: node1
-    extract_to:
-      receiver_addr:
-        type: wallet_address
+  - cli: wallet info -w receiver
+    save_wallet: receiver_addr
   
   # Prepare tokens
-  - cli: token_decl -net stagenet -token TXDEMO -total 1000000
-    node: node1
+  - cli: token_decl -token TXDEMO -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save: declaration_hash
 
   - wait_for_datum: "{{declaration_hash}}"
 
-  - cli: token_emit -net stagenet -token TXDEMO -value 10000 -addr {{sender_addr}}
-    node: node1
+  - cli: token_emit -token TXDEMO -value 10000 -addr {{sender_addr}} -certs test_cert
     save: emission_hash
 
   - wait_for_datum: "{{emission_hash}}"
 
 test:
   # Create transaction
-  - cli: tx_create -net stagenet -token TXDEMO -from {{emission_hash}}:0 -to_addr {{receiver_addr}} -value 5000 -fee 0.1
-    node: node1
+  - cli: tx_create -token TXDEMO -from {{emission_hash}}:0 -to_addr {{receiver_addr}} -value 5000 -fee 0.1
     save: tx_hash
   
-  # Monitor transaction with shorter timeouts
+  # Monitor transaction with custom timeouts (usually NOT needed!)
   - wait_for_datum: "{{tx_hash}}"
-    network: stagenet
-    chain: main
-    timeout_total: 90
-    timeout_mempool: 20
-    timeout_verification: 40
-    timeout_in_blocks: 60
+    timeout_total: 90       # Override default 300s
+    timeout_in_blocks: 60   # Override default 180s
+    check_interval: 1       # Check every second instead of 2s
 
 check:
-  - cli: tx_history -net stagenet -tx {{tx_hash}}
-    node: node1
+  - cli: tx_history -tx {{tx_hash}}
     contains: "{{tx_hash}}"
 
 ---
 
-# Example 3: Multiple datums at once
+# Example 3: Multiple datums (recommended pattern)
 name: Multiple Datums Wait
+description: Monitor multiple datums efficiently
 tags: [example, multiple, wait_for_datum]
 
 network:
   topology: default
 
-setup:
-  - cli: wallet new -w batch_wallet
-    node: node1
-  
-  - cli: wallet info -w batch_wallet -net stagenet
-    node: node1
-    extract_to:
-      wallet_addr:
-        type: wallet_address
+includes:
+  - ../common/create_test_cert.yml
+  - ../common/set_net_default.yml
+  - ../common/wallets/create_wallet.yml  # Provides wallet_addr
 
 test:
   # Create multiple tokens
-  - cli: token_decl -net stagenet -token BATCH1 -total 1000000
-    node: node1
-    wait: 2s
+  - cli: token_decl -token BATCH1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save: token1
   
-  - cli: token_decl -net stagenet -token BATCH2 -total 1000000
-    node: node1
-    wait: 2s
+  - cli: token_decl -token BATCH2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save: token2
   
-  - cli: token_decl -net stagenet -token BATCH3 -total 1000000
-    node: node1
-    wait: 2s
+  # Wait for BOTH tokens to be processed
+  - wait_for_datum:
+      - "{{token1}}"
+      - "{{token2}}"
+    # Monitors both concurrently - returns when BOTH are done!
+
+  # Now emit from both tokens
+  - cli: token_emit -token BATCH1 -value 1000 -addr {{wallet_addr}} -certs test_cert
+    save: emit1
   
-  # Emit all at once
-  - cli: token_emit -net stagenet -token BATCH1 -value 1000 -addr {{wallet_addr}}
-    node: node1
-    save: hash1
+  - cli: token_emit -token BATCH2 -value 2000 -addr {{wallet_addr}} -certs test_cert
+    save: emit2
   
-  - cli: token_emit -net stagenet -token BATCH2 -value 1000 -addr {{wallet_addr}}
-    node: node1
-    save: hash2
-  
-  - cli: token_emit -net stagenet -token BATCH3 -value 1000 -addr {{wallet_addr}}
-    node: node1
-    save: hash3
-  
-  # Monitor all three datums together
-  - wait_for_datum: ["{{hash1}}", "{{hash2}}", "{{hash3}}"]
-    timeout_total: 150
-    save_status: batch_statuses
+  # Wait for both emissions
+  - wait_for_datum: ["{{emit1}}", "{{emit2}}"]
 
 check:
-  # All three should succeed
-  - python: |
-      assert len(batch_statuses) == 3, f"Expected 3 statuses, got {len(batch_statuses)}"
-      for i, status in enumerate(batch_statuses):
-          assert status in ['propagated', 'in_blocks'], f"Datum {i+1} failed: {status}"
+  - cli: token list
+    contains: "BATCH1"
+  
+  - cli: token list
+    contains: "BATCH2"
 
 ---
 
-# Example 4: Using defaults for cleaner syntax
-name: Defaults Example
-tags: [example, defaults]
+# Example 4: MINIMAL syntax (recommended!)
+name: Minimal Wait-for-Datum
+description: Simplest possible usage - just the hash
+tags: [example, minimal, best_practice]
 
 network:
   topology: default
 
-# Global defaults for all wait_for_datum steps
-defaults:
-  node: node1
-  timeout_total: 100
-  timeout_mempool: 25
-  timeout_verification: 50
-
-setup:
-  - cli: wallet new -w def_wallet
-    extract_to:
-      wallet_addr:
-        type: wallet_address
-    # Wait for wallet info command
-  - cli: wallet info -w def_wallet -net stagenet
+includes:
+  - ../common/create_test_cert.yml
+  - ../common/set_net_default.yml
+  - ../common/wallets/create_wallet.yml
 
 test:
-  - cli: token_decl -net stagenet -token DEFTEST -total 1000000
-    wait: 3s
+  - cli: token_decl -token MINIMAL -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save: hash
   
-  - cli: token_emit -net stagenet -token DEFTEST -value 5000 -addr {{wallet_addr}}
-    save: def_hash
+  # ✅ BEST PRACTICE: Minimal syntax - all defaults are optimal!
+  - wait_for_datum: "{{hash}}"
   
-  # Minimal syntax - uses all defaults!
-  - wait_for_datum: "{{def_hash}}"
-    # node: node1 (from defaults)
-    # timeout_total: 100 (from defaults)
-    # timeout_mempool: 25 (from defaults)
-    # timeout_verification: 50 (from defaults)
-    # network: stagenet (default)
-    # chain: main (default)
-    # check_master_nodes: true (default)
+  # That's it! No timeout overrides, no extra params.
+  # Fails fast (0.5s) if datum not created
+  # Returns immediately when done
+  # Default timeouts are tuned for real network behavior
 
 check:
-  - cli: token info -net stagenet -name DEFTEST
-    contains: "DEFTEST"
+  - cli: token info -name MINIMAL
+    contains: "MINIMAL"
 

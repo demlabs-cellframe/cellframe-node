@@ -1,0 +1,102 @@
+# Arbitrage Bypass Test
+# Verifies that arbitrage transactions can bypass blocked UTXO
+
+name: Arbitrage Bypass Test
+description: Arbitrage transactions should bypass UTXO blocklist
+author: QA Team
+tags: [arbitrage, utxo-blocking, critical]
+version: "1.0"
+
+network:
+  topology: default
+
+# Include common templates
+includes:
+  - common/networks/network_minimal.yml
+  - common/wallets/create_wallet.yml
+
+# Global defaults for all sections
+defaults:
+  node: node1
+  certs: test_cert 
+  fee: 0.1
+
+# Setup phase: create token with UTXO blocking enabled
+setup:
+# Create ARBTEST token with UTXO blocking
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ARBTEST -total_supply 1000000 
+    save_hash: token_hash
+
+  - wait_for_datum: "{{token_hash}}"
+  
+  # Emit ARBTEST tokens
+  - cli: token_emit -token ARBTEST -value 1000000 -addr {{wallet_addr}}
+    save_hash: emission_tx
+
+  - wait_for_datum: "{{emission_hash}}"
+  
+  # Create transaction from emission
+  - cli: tx_create -token ARBTEST -from_emission {{emission_tx}} -value 500
+    save: tx_hash
+
+  - wait_for_datum: "{{tx_hash}}"
+  
+  # Block the UTXO
+  - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash}}:0
+
+# Test phase: verify blocking and arbitrage bypass
+test:
+  # Regular transaction FROM BLOCKED UTXO should fail
+  - cli: tx_create -token ARBTEST -from {{tx_hash}}:0 -value 100
+    expect: error
+    contains: "blocked"
+  
+  # Arbitrage transaction FROM BLOCKED UTXO should succeed
+  - cli: tx_create -token ARBTEST -from {{tx_hash}}:0 -value 100 -arbitrage
+    save_hash: arb_tx
+
+  - wait_for_datum: "{{arb_tx}}"
+
+# Check phase: verify results
+check:
+# Verify arbitrage tx in history
+  - cli: tx_history -tx {{arb_tx}}
+    contains: "{{arb_tx}}"
+  
+  # Verify token info
+  - cli: token info -name ARBTEST
+    contains: "ARBTEST"
+  
+  # Verify UTXO is in blocklist
+  - cli: token info -name ARBTEST -history_limit 10
+    contains: "{{tx_hash}}"
+
+test:
+  # Step 1: Regular transaction should FAIL (UTXO is blocked)
+  - cli: tx_create -token ARBTEST -value 100000
+    expect: error
+    contains: "UTXO is blocked"
+  
+  # Step 2: Arbitrage transaction should SUCCESS (bypasses block)
+  - cli: tx_create -token ARBTEST -value 100000 -arbitrage
+    save: arb_tx
+    expect: success
+    wait: 3s
+
+check:
+  # Verify arbitrage transaction was created
+  - cli: tx_history -tx {{arb_tx}}
+    contains: "{{arb_tx}}"
+  
+  # Verify arbitrage marker is present in transaction
+  - cli: tx_info -tx {{arb_tx}}
+    contains: "arbitrage"
+  
+  # Verify blocked UTXO still in history
+  - cli: token info -name ARBTEST -history_limit 20
+    contains: "{{utxo_tx}}"
+  
+  # Verify token still has blocking enabled
+  - cli: token info -name ARBTEST
+    contains: "UTXO_BLOCKING_ENABLED"
+

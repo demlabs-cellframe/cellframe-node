@@ -1,12 +1,10 @@
 # Common: Get Wallet Address
-# Extract wallet address using built-in extract helper
+# Extract wallet address using built-in save helper
 # Variables: wallet_name (required), target_node (default: node1)
 # Output: wallet_addr variable
 
 test:
-  - cli: wallet info -w {{wallet_name}} -net {{network_name|stagenet}}
+  - cli: wallet info -w {{wallet_name}}
     node: "{{target_node|node1}}"
-    extract_to:
-      wallet_addr:
-        type: wallet_address
+    save_wallet: wallet_addr
 

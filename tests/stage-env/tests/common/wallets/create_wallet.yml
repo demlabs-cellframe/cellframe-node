@@ -10,10 +10,8 @@ setup:
     description: "Create test wallet"
   
   # Extract wallet address with built-in validation
-  - cli: wallet info -w test_wallet -net stagenet
+  - cli: wallet info -w test_wallet
     node: node1
     expect: success
-    extract_to:
-      wallet_addr:
-        type: wallet_address  # Auto-pattern + checksum validation!
+    save_wallet: wallet_addr
     description: "Get wallet address with validation"

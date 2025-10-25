@@ -1,53 +1,25 @@
 # Test: Wallet Info Detailed
 # Test detailed wallet information retrieval
-
 name: Wallet Info Detailed Test
 description: Test retrieving detailed wallet information
 tags: [functional, wallet, info]
-version: "1.0"
 
-network:
-  topology: default
-
-includes:
-  - common/networks/single_node.yml
-
+defaults: 
+  node: node1
 setup:
-  - wait: 2s
-  
   # Create test wallet
   - cli: wallet new -w info_test_wallet
-    node: node1
-    expect: success
-    wait: 1s
-    description: "Create wallet"
 
 test:
   # Test: Get wallet info with address extraction and validation
-  - cli: wallet info -w info_test_wallet -net stagenet
-    node: node1
-    expect: success
-    extract_to:
-      wallet_addr:
-        type: wallet_address  # Auto-pattern + validation!
-    description: "Get wallet info and validate address"
+  - cli: wallet info -w info_test_wallet
+    save_wallet: wallet_addr
   
   # Test: List wallets
   - cli: wallet list
-    node: node1
-    expect: success
     save: wallet_list
-    description: "List wallets"
 
 check:
-  # Address was already validated by extract helper
-  - python: |
-      # Address is already validated (checksum, structure, etc.)
-      wallet_addr = ctx.get_variable('wallet_addr')
-      assert wallet_addr, "Wallet address should be extracted"
-      # Base58 addresses don't have :: separator (that's for node addresses)
-      assert len(wallet_addr) >= 80, f"Address should be at least 80 chars"
-  
   # Verify wallet in list
   - python: |
       wallet_list = ctx.get_variable('wallet_list')

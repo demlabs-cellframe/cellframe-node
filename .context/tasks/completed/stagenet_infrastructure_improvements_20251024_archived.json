@@ -1,0 +1,720 @@
+{
+  "task_id": "stagenet_infrastructure_improvements_20251023",
+  "type": "infrastructure",
+  "domain": "testing_infrastructure",
+  "priority": "high",
+  "status": "in_progress",
+  "created": "2025-10-23T12:50:00Z",
+  "updated": "2025-10-23T14:35:00Z",
+  
+  "auto_load": [
+    ".context/modules/standards/dap_sdk_coding_standards.json",
+    ".context/modules/projects/cellframe_sdk.json"
+  ],
+  
+  "title": "Stagenet Infrastructure Improvements",
+  "description": "Improve stagenet testing infrastructure: health check visibility, configuration management, local build integration, and SquashFS optimization",
+  
+  "objectives": [
+    "Enhance health check to track node loading process with detailed status",
+    "Externalize stage-env configuration for better accessibility",
+    "Add flexible cellframe-node source management (URL/repo/local)",
+    "Integrate local .deb package build into test workflow",
+    "Implement SquashFS + OverlayFS optimization for 10x faster test execution"
+  ],
+  
+  "phases": [
+    {
+      "id": "phase_1_health_check_enhancement",
+      "name": "Health Check Process Visibility Enhancement",
+      "status": "pending",
+      "description": "Extend health check to track and report detailed node loading progress",
+      "tasks": [
+        {
+          "id": "1.1",
+          "description": "Add node loading stage tracking (startup → init → network → consensus → online)",
+          "status": "pending",
+          "files": [
+            "tests/stage-env/src/docker/compose.py::wait_for_services",
+            "tests/stage-env/src/docker/compose.py::_check_node_online_status"
+          ]
+        },
+        {
+          "id": "1.2",
+          "description": "Parse and display current loading phase from node logs",
+          "status": "pending",
+          "details": "Extract: 'Initializing X', 'Loading Y', 'Connecting to Z'"
+        },
+        {
+          "id": "1.3",
+          "description": "Add progress indicators for each node (not just 'waiting for ONLINE')",
+          "status": "pending",
+          "output_example": "node-1 (NET_STATE_LINKS_CONNECTING: 2/3 links), node-2 (Consensus init), ..."
+        },
+        {
+          "id": "1.4",
+          "description": "Differentiate between 'stuck/hanging' vs 'still loading'",
+          "status": "pending",
+          "criteria": "If no log activity for 30s → stuck, else → loading"
+        }
+      ]
+    },
+    {
+      "id": "phase_2_config_externalization",
+      "name": "Configuration Externalization",
+      "status": "pending",
+      "description": "Move stage-env.cfg to tests/ level and add config path parameter",
+      "tasks": [
+        {
+          "id": "2.1",
+          "description": "Move stage-env.cfg from tests/stage-env/config/ to tests/",
+          "status": "pending",
+          "before": "tests/stage-env/config/stage-env.cfg",
+          "after": "tests/stage-env.cfg"
+        },
+        {
+          "id": "2.2",
+          "description": "Add --config parameter to stage-env wrapper script",
+          "status": "pending",
+          "usage": "./stage-env --config ../stage-env.cfg start"
+        },
+        {
+          "id": "2.3",
+          "description": "Add --config parameter to tests/run.sh",
+          "status": "pending",
+          "usage": "./tests/run.sh --config tests/stage-env.cfg --e2e"
+        },
+        {
+          "id": "2.4",
+          "description": "Update default config path resolution",
+          "status": "pending",
+          "priority_order": [
+            "1. --config CLI argument",
+            "2. STAGE_ENV_CONFIG environment variable",
+            "3. ../stage-env.cfg (relative to stage-env/)",
+            "4. stage-env/config/stage-env.cfg (fallback)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase_3_node_source_management",
+      "name": "Flexible Cellframe Node Source Management",
+      "status": "pending",
+      "description": "Add configuration for cellframe-node source: URL, repository, or local file",
+      "tasks": [
+        {
+          "id": "3.1",
+          "description": "Add [node_source] section to stage-env.cfg",
+          "status": "pending",
+          "config_spec": {
+            "type": "url | repository | local",
+            "url": "https://pub.cellframe.net/linux/cellframe-node/...",
+            "repository_url": "https://gitlab.demlabs.net/cellframe/cellframe-node.git",
+            "repository_branch": "master | develop | feature/xyz",
+            "local_path": "/path/to/cellframe-node_X.Y.Z.deb",
+            "build_type": "release | debug | asan"
+          }
+        },
+        {
+          "id": "3.2",
+          "description": "Implement source type detection and validation",
+          "status": "pending",
+          "file": "tests/stage-env/src/build/builder.py"
+        },
+        {
+          "id": "3.3",
+          "description": "Add URL download handler (existing functionality)",
+          "status": "completed",
+          "note": "Already implemented in Dockerfile"
+        },
+        {
+          "id": "3.4",
+          "description": "Add repository clone and build handler",
+          "status": "pending",
+          "workflow": [
+            "Clone repository to build_cache/",
+            "Checkout specified branch",
+            "Run cmake build in builder Docker",
+            "Create .deb package with cpack",
+            "Use generated .deb for nodes"
+          ]
+        },
+        {
+          "id": "3.5",
+          "description": "Add local file handler (copy to build cache)",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase_4_local_build_integration",
+      "name": "Local Build Integration for tests/run.sh",
+      "status": "pending",
+      "description": "Integrate local cellframe-node build into test workflow",
+      "tasks": [
+        {
+          "id": "4.1",
+          "description": "Detect if running in cellframe-node repository",
+          "status": "pending",
+          "file": "tests/run.sh",
+          "check": "if [ -f ../CMakeLists.txt ] && grep -q 'cellframe-node' ../CMakeLists.txt"
+        },
+        {
+          "id": "4.2",
+          "description": "Create test_build/ directory for debug builds",
+          "status": "pending",
+          "location": "cellframe-node/test_build/"
+        },
+        {
+          "id": "4.3",
+          "description": "Run CMake configuration for debug build",
+          "status": "pending",
+          "command": "cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .."
+        },
+        {
+          "id": "4.4",
+          "description": "Build cellframe-node with make",
+          "status": "pending",
+          "command": "make -j$(nproc) cellframe-node"
+        },
+        {
+          "id": "4.5",
+          "description": "Package with cpack to create .deb",
+          "status": "pending",
+          "command": "cpack -G DEB",
+          "output": "cellframe-node_X.Y.Z_amd64.deb"
+        },
+        {
+          "id": "4.6",
+          "description": "Update stage-env.cfg with local package path",
+          "status": "pending",
+          "config_update": {
+            "type": "local",
+            "local_path": "../test_build/cellframe-node_X.Y.Z.deb"
+          }
+        },
+        {
+          "id": "4.7",
+          "description": "Pass config to stage-env in run.sh",
+          "status": "pending",
+          "command": "\"$STAGE_ENV_WRAPPER\" --config tests/stage-env.cfg start"
+        }
+      ]
+    },
+    {
+      "id": "phase_5_squashfs_optimization",
+      "name": "SquashFS + OverlayFS Optimization for Fast Startup",
+      "status": "pending",
+      "description": "Implement base core + topology snapshots using SquashFS for 10x faster test suite execution",
+      "estimated_gain": "70 seconds → 7 seconds startup time (10x improvement)",
+      "architecture": {
+        "layer_1": {
+          "name": "Base Core (SquashFS)",
+          "description": "Read-only compressed foundation created once",
+          "file": "cache/base-core.sqfs",
+          "size": "~7 MB (compressed from 30 MB)",
+          "compression": "zstd level 19",
+          "contains": [
+            "Docker image: cf-node:debug-latest",
+            "Pool of 20 pre-generated certificates",
+            "Base config templates (Jinja2)",
+            "Clean initialized GDB + empty chains"
+          ],
+          "immutable": true
+        },
+        "layer_2": {
+          "name": "Topology Snapshots (SquashFS per topology)",
+          "description": "Cached ready-to-use states for specific topologies",
+          "pattern": "cache/snapshots/{topology_hash}.sqfs",
+          "size": "~60 MB per topology (compressed from 245 MB)",
+          "compression": "zstd level 15",
+          "contains": [
+            "configs/ - ready configs for this topology",
+            "data/ - snapshot after first successful start (all nodes ONLINE + synced)"
+          ],
+          "create_when": "First time topology is used",
+          "reuse": "All subsequent runs of same topology"
+        },
+        "layer_3": {
+          "name": "Active Run (OverlayFS)",
+          "description": "Fast CoW from snapshot using OverlayFS",
+          "mount_point": "cache/active/",
+          "overlay_config": {
+            "lowerdir": "/mnt/{topology}.sqfs (read-only)",
+            "upperdir": "/tmp/cf-overlay-{run-id} (tmpfs, writable)",
+            "workdir": "/tmp/cf-work-{run-id}",
+            "target": "cache/active/"
+          },
+          "performance": {
+            "mount_time": "~100ms",
+            "changes_storage": "tmpfs (RAM only, 5-10 MB)",
+            "disk_io": "zero (all reads from memory-cached squashfs)"
+          }
+        }
+      },
+      "tasks": [
+        {
+          "id": "5.1",
+          "name": "Base Core Infrastructure",
+          "description": "Implement base-core.sqfs creation and management",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.1.1",
+              "description": "Create BaseCoreManager class",
+              "file": "tests/stage-env/src/snapshots/base_core.py",
+              "methods": [
+                "create_base_core() - build and compress base core",
+                "is_base_core_valid() - check version, integrity, age",
+                "mount_base_core() - mount squashfs read-only",
+                "unmount_base_core() - cleanup mount"
+              ]
+            },
+            {
+              "id": "5.1.2",
+              "description": "Generate base components",
+              "actions": [
+                "Build Docker image cf-node:debug-latest",
+                "Generate pool of 20 certificates",
+                "Create base config templates",
+                "Initialize minimal GDB + chains"
+              ],
+              "output_dir": "/tmp/base-core-build/"
+            },
+            {
+              "id": "5.1.3",
+              "description": "Create SquashFS with optimal compression",
+              "command": "mksquashfs /tmp/base-core-build cache/base-core.sqfs -comp zstd -Xcompression-level 19 -b 1M -noappend -no-duplicates",
+              "validation": "unsquashfs -ll cache/base-core.sqfs"
+            },
+            {
+              "id": "5.1.4",
+              "description": "Add metadata and versioning",
+              "metadata_file": "cache/base-core.sqfs.json",
+              "fields": {
+                "version": "cellframe-node version",
+                "created": "ISO timestamp",
+                "size_uncompressed": "bytes",
+                "size_compressed": "bytes",
+                "compression_ratio": "float",
+                "checksum": "sha256"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5.2",
+          "name": "Topology Snapshot Manager",
+          "description": "Implement topology-specific snapshot creation and management",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.2.1",
+              "description": "Create TopologySnapshotManager class",
+              "file": "tests/stage-env/src/snapshots/topology_snapshot.py",
+              "methods": [
+                "get_snapshot(topology_hash) - find existing snapshot or None",
+                "create_snapshot(topology) - create after successful start",
+                "is_snapshot_valid(snapshot_path) - check version, hash, age",
+                "delete_snapshot(topology_hash) - cleanup",
+                "list_snapshots() - all available snapshots with metadata"
+              ]
+            },
+            {
+              "id": "5.2.2",
+              "description": "Calculate topology hash",
+              "algorithm": "SHA256 of normalized topology JSON",
+              "includes": [
+                "node_count",
+                "node_roles (root, master, full)",
+                "network_type (esbocs, dag-poa, etc)",
+                "chain_configs"
+              ],
+              "excludes": [
+                "timestamps",
+                "runtime IPs/ports",
+                "temporary settings"
+              ]
+            },
+            {
+              "id": "5.2.3",
+              "description": "Snapshot creation workflow",
+              "steps": [
+                "1. Mount base-core.sqfs read-only",
+                "2. Create OverlayFS for topology",
+                "3. Generate configs for this topology",
+                "4. Start all nodes",
+                "5. Wait for ALL nodes ONLINE",
+                "6. Wait for full GDB synchronization",
+                "7. Stop nodes gracefully",
+                "8. Create SquashFS from upperdir",
+                "9. Save metadata",
+                "10. Cleanup overlay"
+              ],
+              "time_estimate": "~50 seconds first time"
+            },
+            {
+              "id": "5.2.4",
+              "description": "Snapshot compression",
+              "command": "mksquashfs /tmp/cf-overlay-upper cache/snapshots/{topology_hash}.sqfs -comp zstd -Xcompression-level 15 -b 1M -noappend",
+              "compression_level": "15 (balance speed/ratio)",
+              "quick_mode": "Use -comp lzo -b 256K for dev snapshots"
+            },
+            {
+              "id": "5.2.5",
+              "description": "Snapshot metadata",
+              "metadata_file": "cache/snapshots/{topology_hash}.sqfs.json",
+              "fields": {
+                "topology_hash": "SHA256",
+                "node_count": "integer",
+                "consensus_type": "esbocs | dag-poa | etc",
+                "cellframe_version": "X.Y.Z",
+                "created": "ISO timestamp",
+                "size_compressed": "bytes",
+                "valid_until": "ISO timestamp (30 days)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "5.3",
+          "name": "Fast Start from Snapshot",
+          "description": "Implement rapid startup using OverlayFS over SquashFS snapshot",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.3.1",
+              "description": "Create FastStartManager class",
+              "file": "tests/stage-env/src/snapshots/fast_start.py",
+              "methods": [
+                "start_from_snapshot(snapshot_path) - mount and start",
+                "prepare_overlay() - create upperdir/workdir in tmpfs",
+                "mount_overlay() - mount overlay filesystem",
+                "cleanup_overlay() - unmount and remove tmpfs"
+              ]
+            },
+            {
+              "id": "5.3.2",
+              "description": "OverlayFS mount implementation",
+              "script": "tests/stage-env/src/snapshots/mount_overlay.sh",
+              "steps": [
+                "1. Create mount point /mnt/cf-snapshot-{run-id}",
+                "2. Mount snapshot.sqfs: mount -t squashfs -o loop,ro {snapshot} /mnt/cf-snapshot-{run-id}",
+                "3. Create tmpfs dirs: mkdir -p /tmp/cf-overlay-{run-id}/{upper,work}",
+                "4. Mount overlay: mount -t overlay overlay -o lowerdir=/mnt/cf-snapshot-{run-id},upperdir=/tmp/cf-overlay-{run-id}/upper,workdir=/tmp/cf-overlay-{run-id}/work cache/active"
+              ],
+              "time_estimate": "~1 second"
+            },
+            {
+              "id": "5.3.3",
+              "description": "Runtime config patching",
+              "description_detail": "Minimal patches for runtime-specific settings",
+              "patches": [
+                "IP addresses (if changed)",
+                "Exposed ports (if changed)",
+                "Run-specific identifiers"
+              ],
+              "time_estimate": "~0.5 seconds",
+              "note": "Most configs are already correct from snapshot"
+            },
+            {
+              "id": "5.3.4",
+              "description": "Docker Compose integration",
+              "changes": [
+                "Bind cache/active/ to containers (already using overlay)",
+                "Skip full initialization (already done in snapshot)",
+                "Minimal health check (just process alive, not full ONLINE wait)"
+              ],
+              "time_estimate": "~5 seconds"
+            },
+            {
+              "id": "5.3.5",
+              "description": "Cleanup on stop",
+              "actions": [
+                "Stop Docker containers",
+                "Unmount overlay: umount cache/active",
+                "Unmount squashfs: umount /mnt/cf-snapshot-{run-id}",
+                "Remove tmpfs: rm -rf /tmp/cf-overlay-{run-id}",
+                "Remove mount point: rmdir /mnt/cf-snapshot-{run-id}"
+              ],
+              "preserve_snapshot": true,
+              "note": "Snapshot .sqfs remains for next use"
+            }
+          ]
+        },
+        {
+          "id": "5.4",
+          "name": "CLI Integration",
+          "description": "Add snapshot management commands to stage-env CLI",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.4.1",
+              "description": "Add init-base-core command",
+              "command": "./stage-env init-base-core",
+              "action": "Create or rebuild base-core.sqfs",
+              "force_flag": "--force to rebuild existing"
+            },
+            {
+              "id": "5.4.2",
+              "description": "Add snapshots list command",
+              "command": "./stage-env snapshots list",
+              "output": [
+                "Topology          | Nodes | Size   | Age       | Version",
+                "3root-3master-1f  | 7     | 60 MB  | 2 days    | v5.4-28",
+                "custom-utxo-test  | 5     | 45 MB  | 5 days    | v5.4-28"
+              ]
+            },
+            {
+              "id": "5.4.3",
+              "description": "Add snapshots delete command",
+              "command": "./stage-env snapshots delete {topology_hash}",
+              "action": "Remove snapshot .sqfs and metadata"
+            },
+            {
+              "id": "5.4.4",
+              "description": "Add --rebuild-snapshot flag to start",
+              "command": "./stage-env start --topology {name} --rebuild-snapshot",
+              "action": "Force snapshot recreation even if exists"
+            },
+            {
+              "id": "5.4.5",
+              "description": "Add clean command enhancements",
+              "commands": [
+                "./stage-env clean --snapshots - remove all topology snapshots",
+                "./stage-env clean --base-core - remove base-core.sqfs",
+                "./stage-env clean --all - remove everything including snapshots"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "5.5",
+          "name": "Automatic Snapshot Management",
+          "description": "Implement intelligent snapshot creation and reuse",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.5.1",
+              "description": "Auto-create snapshot on first topology use",
+              "logic": [
+                "1. User runs: ./stage-env start --topology 3root-3master",
+                "2. Calculate topology hash",
+                "3. Check if snapshot exists for this hash",
+                "4. If NO: Start normally + create snapshot after ONLINE",
+                "5. If YES: Use fast start from snapshot"
+              ]
+            },
+            {
+              "id": "5.5.2",
+              "description": "Snapshot invalidation detection",
+              "invalidate_when": [
+                "Cellframe-node version changed",
+                "Topology definition changed (hash mismatch)",
+                "Snapshot older than 30 days",
+                "Snapshot corruption detected"
+              ],
+              "action": "Automatically rebuild snapshot"
+            },
+            {
+              "id": "5.5.3",
+              "description": "Disk space monitoring",
+              "warning_threshold": "Snapshots > 1 GB total",
+              "suggestion": "Run './stage-env snapshots list' and delete old snapshots"
+            },
+            {
+              "id": "5.5.4",
+              "description": "CI/CD artifact integration",
+              "workflow": [
+                "1. Check if base-core.sqfs exists locally",
+                "2. If NO: Try download from artifacts server",
+                "3. If download fails: Create locally",
+                "4. Validate checksum",
+                "5. Use for snapshot creation"
+              ],
+              "artifact_url": "https://artifacts.cellframe.net/stage-env/base-core-{version}.sqfs"
+            }
+          ]
+        },
+        {
+          "id": "5.6",
+          "name": "Performance Metrics and Validation",
+          "description": "Measure and validate performance improvements",
+          "status": "pending",
+          "subtasks": [
+            {
+              "id": "5.6.1",
+              "description": "Add startup time measurement",
+              "metrics": [
+                "base_core_mount_time",
+                "snapshot_mount_time",
+                "overlay_creation_time",
+                "docker_compose_up_time",
+                "total_startup_time"
+              ],
+              "output": "Log to stage-env.log and display summary"
+            },
+            {
+              "id": "5.6.2",
+              "description": "Compare before/after performance",
+              "benchmarks": {
+                "current_system": {
+                  "first_start": "~70-100 seconds",
+                  "subsequent_starts": "~70-100 seconds (no caching)",
+                  "test_suite_10_tests": "~700-1000 seconds"
+                },
+                "with_squashfs": {
+                  "first_start_with_snapshot_creation": "~50 seconds",
+                  "subsequent_starts": "~7 seconds",
+                  "test_suite_10_tests": "~100 seconds"
+                },
+                "improvement": {
+                  "startup": "10x faster (70s → 7s)",
+                  "test_suite": "~90% time reduction"
+                }
+              }
+            },
+            {
+              "id": "5.6.3",
+              "description": "Validate snapshot integrity",
+              "checks": [
+                "All nodes start successfully from snapshot",
+                "GDB data is consistent",
+                "Network topology is correct",
+                "No missing certificates or configs"
+              ]
+            },
+            {
+              "id": "5.6.4",
+              "description": "Stress testing",
+              "scenarios": [
+                "Run same topology 10 times in a row",
+                "Switch between 3 different topologies",
+                "Run full test suite with snapshots",
+                "Concurrent snapshot creation (if needed)"
+              ]
+            }
+          ]
+        }
+      ],
+      "file_structure": {
+        "new_files": [
+          "tests/stage-env/src/snapshots/__init__.py",
+          "tests/stage-env/src/snapshots/base_core.py - BaseCoreManager",
+          "tests/stage-env/src/snapshots/topology_snapshot.py - TopologySnapshotManager",
+          "tests/stage-env/src/snapshots/fast_start.py - FastStartManager",
+          "tests/stage-env/src/snapshots/mount_overlay.sh - OverlayFS mount script",
+          "tests/stage-env/src/snapshots/utils.py - Common utilities"
+        ],
+        "modified_files": [
+          "tests/stage-env/stage_env.py - Add snapshot CLI commands",
+          "tests/stage-env/src/network/manager.py - Integrate snapshot system",
+          "tests/stage-env/src/docker/compose.py - Use fast start when snapshot available"
+        ],
+        "cache_structure": [
+          "cache/",
+          "  base-core.sqfs - Base core SquashFS (~7 MB)",
+          "  base-core.sqfs.json - Metadata",
+          "  snapshots/",
+          "    {topology_hash_1}.sqfs - Topology snapshot (~60 MB)",
+          "    {topology_hash_1}.sqfs.json - Metadata",
+          "    {topology_hash_2}.sqfs",
+          "    {topology_hash_2}.sqfs.json",
+          "    ...",
+          "  active/ - Current run (OverlayFS mount point)"
+        ]
+      },
+      "expected_results": {
+        "startup_time": {
+          "before": "70-100 seconds",
+          "after": "7-8 seconds",
+          "improvement": "10x faster"
+        },
+        "disk_space": {
+          "base_core": "30 MB → 7 MB (4x compression)",
+          "topology_snapshot": "245 MB → 60 MB (4x compression)",
+          "active_run": "5-10 MB in RAM (tmpfs only)"
+        },
+        "test_suite_execution": {
+          "10_tests_before": "700-1000 seconds (11-16 minutes)",
+          "10_tests_after": "100 seconds (1.6 minutes)",
+          "improvement": "88% time reduction"
+        },
+        "ci_cd_benefits": [
+          "Faster CI pipeline execution",
+          "Reduced artifact download time (7 MB vs 100+ MB)",
+          "Parallel test execution with snapshot reuse"
+        ]
+      },
+      "dependencies": [
+        "squashfs-tools package (mksquashfs, unsquashfs)",
+        "OverlayFS kernel support (available in modern Linux)",
+        "zstd compression (part of squashfs-tools)",
+        "tmpfs support (standard Linux)"
+      ],
+      "risks_and_mitigations": {
+        "risk_1": {
+          "description": "OverlayFS requires root/sudo for mount",
+          "mitigation": "Use fuse-overlayfs for userspace overlay, or run stage-env with appropriate permissions"
+        },
+        "risk_2": {
+          "description": "Snapshot invalidation on version updates",
+          "mitigation": "Automatic detection and rebuild, version tracking in metadata"
+        },
+        "risk_3": {
+          "description": "Disk space growth with many snapshots",
+          "mitigation": "Monitoring, cleanup commands, automatic old snapshot removal"
+        },
+        "risk_4": {
+          "description": "Snapshot corruption",
+          "mitigation": "Checksum validation, automatic rebuild on corruption detection"
+        }
+      }
+    }
+  ],
+  
+  "completed_work": [
+    "✅ Stagenet fully functional - all 7 nodes ONLINE",
+    "✅ Certificate generation fixed (node-addr + validator separation)",
+    "✅ node-addr.dcert copying to prevent SDK regeneration",
+    "✅ authorized_nodes_addrs correctly populated",
+    "✅ ROOT node authorization working",
+    "✅ Health check refactored to use JSON-RPC API",
+    "✅ All changes committed and pushed to main"
+  ],
+  
+  "current_issues": [
+    "⚠️ Health check times out despite nodes being ONLINE",
+    "⚠️ Possible Python caching or async execution issue",
+    "⚠️ Debug logging added but not showing expected output"
+  ],
+  
+  "files_modified": [
+    "tests/stage-env/src/certs/cert-generator.c",
+    "tests/stage-env/src/config/generator.py",
+    "tests/stage-env/src/docker/compose.py",
+    "tests/stage-env/config/templates/base/cellframe-node.cfg.template",
+    "tests/stage-env/config/templates/chains/zerochain.cfg"
+  ],
+  
+  "commits": [
+    "03cb7fa Add debug logging to health check API calls",
+    "3e2afb5 Fix: restore except block after return statement",
+    "0789a9f Remove unreachable code after return",
+    "6be3fba Remove dead code from health check after refactoring",
+    "152a40b Fix: check LAST network state occurrence",
+    "44aa1f0 Use unique validator cert names",
+    "7b1f449 Copy node-addr.dcert to var/lib/ca",
+    "a1ad36a Restore authorized_nodes_addrs",
+    "c1786bd Add allowed_cmd",
+    "1643e16 Add ext_port=8079"
+  ],
+  
+  "next_actions": [
+    "Start phase 1: Health check enhancement",
+    "Start phase 2: Config externalization",
+    "Start phase 3: Node source management",
+    "Start phase 4: Local build integration"
+  ]
+}

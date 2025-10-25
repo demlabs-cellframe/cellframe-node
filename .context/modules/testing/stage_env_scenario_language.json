@@ -232,11 +232,26 @@
           "description": "Сохранить весь вывод в переменную",
           "auto_extract": "Для token_decl/token_emit/tx_create автоматически извлекается hash"
         },
-        "extract_to": {
-          "type": "dict[string, ExtractSpec]",
+        "save_hash": {
+          "type": "string",
           "required": false,
-          "description": "Извлечь конкретные значения из вывода",
-          "example": "extract_to:\n  wallet_addr:\n    type: wallet_address"
+          "description": "Извлечь и сохранить hash (0x[hex]{64})",
+          "validation": "Автоматическая валидация формата",
+          "example": "save_hash: tx_hash"
+        },
+        "save_wallet": {
+          "type": "string",
+          "required": false,
+          "description": "Извлечь и валидировать wallet address (base58)",
+          "validation": "Base58 декодирование + SHA3-256 checksum verification",
+          "example": "save_wallet: my_address"
+        },
+        "save_node": {
+          "type": "string",
+          "required": false,
+          "description": "Извлечь node address (0x::формат)",
+          "validation": "Проверка формата с :: separator",
+          "example": "save_node: node_addr"
         },
         "wait": {
           "type": "string",
@@ -267,12 +282,20 @@
           "code": "- cli: token list\n  node: node1"
         },
         {
-          "description": "С сохранением результата",
-          "code": "- cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n  save: token_hash"
+          "description": "С сохранением hash (современный способ)",
+          "code": "- cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n  save_hash: token_hash"
         },
         {
-          "description": "С экстракцией wallet адреса",
-          "code": "- cli: wallet info -w my_wallet\n  extract_to:\n    wallet_addr:\n      type: wallet_address"
+          "description": "С извлечением wallet адреса",
+          "code": "- cli: wallet info -w my_wallet\n  save_wallet: my_address"
+        },
+        {
+          "description": "С извлечением node адреса",
+          "code": "- cli: net get_cur_addr\n  save_node: node_addr"
+        },
+        {
+          "description": "Сохранение всего вывода",
+          "code": "- cli: token info -name TEST\n  save: full_output"
         }
       ],
       "cli_auto_defaults": {
@@ -679,36 +702,74 @@
 
   "advanced_features": {
     "data_extraction": {
-      "description": "Встроенная система экстракции и валидации данных",
-      "extract_types": {
-        "wallet_address": {
-          "description": "Cellframe wallet адрес (base58)",
-          "auto_pattern": "Автоматический regex + валидация",
+      "description": "Удобные save_* хелперы для извлечения и валидации данных",
+      "philosophy": "Вместо verbose extract_to используются краткие и наглядные save_* поля",
+      
+      "save_helpers": {
+        "save_hash": {
+          "description": "Извлекает и валидирует hash (0x[hex]{64})",
+          "auto_pattern": "0x[A-Fa-f0-9]{64}",
+          "validation": "Формат проверяется автоматически",
+          "use_case": "Для token_decl, token_emit, tx_create когда нужен только hash",
+          "example": "- cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n  save_hash: my_hash"
+        },
+        "save_wallet": {
+          "description": "Извлекает и валидирует Cellframe wallet address",
+          "auto_pattern": "Base58 строка",
           "validation": [
             "Base58 декодирование",
             "Структура: addr_ver + net_id + sig_type + key_hash + checksum",
             "SHA3-256 checksum verification"
           ],
-          "example": "extract_to:\n  my_addr:\n    type: wallet_address"
+          "use_case": "Для wallet info когда нужен адрес кошелька",
+          "example": "- cli: wallet info -w my_wallet\n  save_wallet: my_address"
         },
-        "node_address": {
-          "description": "Node адрес (с :: separator)",
-          "format": "0x[hex]::0x[hex]::...",
-          "example": "extract_to:\n  node_addr:\n    type: node_address"
+        "save_node": {
+          "description": "Извлекает node address (0x::формат)",
+          "auto_pattern": "0x[hex]::[hex]::...",
+          "validation": "Проверка формата с :: separator",
+          "use_case": "Для net get_cur_addr и подобных команд",
+          "example": "- cli: net get_cur_addr\n  save_node: node_addr"
         },
-        "hash": {
-          "description": "Общий hash (0x[hex])",
-          "format": "0x + 64+ hex символов",
-          "example": "extract_to:\n  tx_hash:\n    type: hash"
-        },
-        "custom": {
-          "description": "Произвольный regex pattern",
-          "syntax": "extract_to:\n  my_var:\n    type: raw\n    pattern: 'Balance: (\\d+)'"
+        "save": {
+          "description": "Сохраняет весь вывод без извлечения",
+          "auto_extract": "Для token_decl/token_emit/tx_create пытается извлечь hash",
+          "use_case": "Когда нужен полный вывод или автоэкстракция hash",
+          "example": "- cli: token info -name TEST\n  save: full_info"
         }
       },
-      "auto_extraction": {
-        "description": "Для команд token_decl/token_emit/tx_create hash извлекается автоматически при save:",
-        "example": "- cli: token_decl -token TEST ... -certs test_cert\n  save: token_hash  # Автоматически извлечёт hash"
+      
+      "comparison": {
+        "old_way_extract_to": {
+          "syntax": "extract_to:\n  my_addr:\n    type: wallet_address",
+          "verbosity": "3 строки для одной экстракции",
+          "clarity": "Требует знание типов"
+        },
+        "new_way_save_wallet": {
+          "syntax": "save_wallet: my_addr",
+          "verbosity": "1 строка",
+          "clarity": "Название поля говорит что извлекается",
+          "benefit": "Проще, короче, понятнее"
+        }
+      },
+      
+      "examples": {
+        "wallet_extraction": {
+          "code": "- cli: wallet info -w test\n  save_wallet: addr",
+          "description": "Извлекает и валидирует wallet address в одну строку"
+        },
+        "hash_extraction": {
+          "code": "- cli: token_decl -token TEST -total_supply 1000000 -certs test_cert\n  save_hash: hash",
+          "description": "Извлекает hash токена"
+        },
+        "node_extraction": {
+          "code": "- cli: net get_cur_addr\n  save_node: node_addr",
+          "description": "Извлекает адрес ноды"
+        },
+        "multiple_in_sequence": {
+          "code": "- cli: wallet new -w w1\n- cli: wallet info -w w1\n  save_wallet: addr1\n  \n- cli: wallet new -w w2\n- cli: wallet info -w w2\n  save_wallet: addr2",
+          "description": "Несколько экстракций подряд"
+        }
       }
     },
 
@@ -865,37 +926,6 @@
       "description": "Suite descriptor с suite-level setup",
       "code": "# token.yml (suite descriptor)\nsuite: 'Token Operations Suite'\ndescription: 'E2E token tests'\n\nnetwork:\n  topology: default\n\nincludes:\n  - common/create_test_cert.yml\n  - common/set_net_default.yml\n\n# Выполнится ОДИН раз перед всеми сценариями в token/\nsetup:\n  - wait: 5s\n  - bash: |\n      echo 'Suite initialized' > /tmp/suite.log"
     }
-  },
-
-  "migration_guide": {
-    "deprecated_features": {
-      "loop": {
-        "old": "- loop: 5\n  steps: ...",
-        "new": "Использовать явные шаги",
-        "reason": "Сложность валидации, unclear intent"
-      },
-      "network_alias": {
-        "old": "{{network}}",
-        "new": "{{network_name}}",
-        "reason": "Более явное именование"
-      },
-      "hardcoded_net": {
-        "old": "- cli: token list -net stagenet",
-        "new": "- cli: token list\n# -net добавится автоматически через defaults.cli",
-        "reason": "CLI parser + set_net_default.yml"
-      }
-    },
-
-    "new_features_since_v1": [
-      "✅ ToolStep для cellframe-node-tool команд",
-      "✅ WaitForDatumStep для надёжного ожидания датумов",
-      "✅ Extract helpers с типами (wallet_address, node_address, hash)",
-      "✅ Hierarchical defaults (global → section → group → step)",
-      "✅ StepGroup для локальных defaults",
-      "✅ CLI auto-defaults через parser",
-      "✅ Suite descriptors с suite-level setup",
-      "✅ Snapshot system для suite isolation"
-    ]
   },
 
   "integration_points": {

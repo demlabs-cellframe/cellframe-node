@@ -1,13 +1,11 @@
 # E2E Test Suite: Network Operations
-# Complete network connectivity and management testing
+# Complete blockchain operations testing
 
-suite: "Network Operations Suite"  # Suite name (this field marks it as suite descriptor)
-description: End-to-end testing of network status, sync, and connectivity
-tags: [e2e, network, connectivity]
+suite: "Network Operations Suite"
+description: End-to-end testing of different network situations
+tags: [e2e, chain, blockchain]
 version: "1.0"
 
-network:
-  topology: default
+includes:
+  - common/set_net_default.yml
 
-# This is a suite descriptor file (metadata only, no executable steps)
-# Individual test scenarios are in the net/ subdirectory

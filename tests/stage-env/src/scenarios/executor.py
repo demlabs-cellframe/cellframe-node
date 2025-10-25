@@ -482,36 +482,46 @@ class ScenarioExecutor:
                 ctx.set_variable(step.save, saved_value)
                 self._log_to_file(f"✓ Saved to variable: {step.save}")
             
-            # Extract and validate specific values if requested
-            if step.extract_to:
-                from .extractors import DataExtractor, ExtractionError
+            # Extract and validate specific values using new save_* helpers
+            if step.save_hash or step.save_wallet or step.save_node:
+                from .extractors import DataExtractor, ExtractionError, ExtractType
                 
                 self._log_to_file(f"\n--- Extracting Values ---")
-                for var_name, extract_spec in step.extract_to.items():
+                
+                # Map of save_* field → (variable_name, extract_type)
+                extractions = []
+                if step.save_hash:
+                    extractions.append((step.save_hash, ExtractType.HASH))
+                if step.save_wallet:
+                    extractions.append((step.save_wallet, ExtractType.WALLET_ADDRESS))
+                if step.save_node:
+                    extractions.append((step.save_node, ExtractType.NODE_ADDRESS))
+                
+                for var_name, extract_type in extractions:
                     try:
-                        # Use default pattern for type if not specified
-                        pattern = extract_spec.pattern
-                        if not pattern:
-                            pattern = DataExtractor.get_default_pattern(extract_spec.type)
-                            self._log_to_file(f"Using default pattern for {extract_spec.type}: {pattern}")
+                        # Get default pattern for type
+                        pattern = DataExtractor.get_default_pattern(extract_type)
+                        self._log_to_file(f"Extracting {extract_type.value} as '{var_name}' using pattern: {pattern}")
                         
                         extracted_value, error = DataExtractor.extract_and_validate(
                             output=result["stdout"],
                             pattern=pattern,
-                            extract_type=extract_spec.type,
-                            group=extract_spec.group,
-                            required=extract_spec.required,
-                            default=extract_spec.default
+                            extract_type=extract_type,
+                            group=1,
+                            required=True,
+                            default=None
                         )
                         
                         if extracted_value is not None:
                             ctx.set_variable(var_name, extracted_value)
                             self._log_to_file(f"✓ Extracted '{var_name}': {extracted_value[:50]}{'...' if len(extracted_value) > 50 else ''}")
-                            self._log_to_file(f"  Type: {extract_spec.type}")
-                        elif error:
-                            self._log_to_file(f"✗ Extraction warning for '{var_name}': {error}")
-                            if extract_spec.required:
-                                raise ExtractionError(error)
+                            self._log_to_file(f"  Type: {extract_type.value}")
+                        else:
+                            raise ScenarioExecutionError(
+                                f"Failed to extract '{var_name}': {error}",
+                                step=step,
+                                context={"command": step.cli, "output": result["stdout"][:200]}
+                            )
                     
                     except ExtractionError as e:
                         self._log_to_file(f"✗ Extraction failed for '{var_name}': {e}")

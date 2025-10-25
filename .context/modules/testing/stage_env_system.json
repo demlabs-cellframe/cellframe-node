@@ -356,6 +356,16 @@
         ]
       },
 
+      "cli_utilities": {
+        "module": "src/utils/cli.py",
+        "key_functions": {
+          "run_command()": "Выполнение shell команд с логированием",
+          "print_info/success/error/warning()": "Форматированный вывод в консоль (через rich)",
+          "DualOutputConsole": "Console wrapper для вывода в терминал и лог одновременно"
+        },
+        "rich_integration": "Использует rich library для красивого вывода (Panel, Table, Progress)"
+      },
+
       "topology_builder": {
         "module": "src/network/topology_builder.py",
         "class": "TopologyBuilder",
@@ -392,6 +402,24 @@
           "Настройка начального состояния сети",
           "Конфигурация консенсуса"
         ]
+      },
+
+      "build_manager": {
+        "module": "src/build/builder.py",
+        "class": "BuildManager",
+        "responsibilities": [
+          "Сборка cellframe-node из исходников",
+          "Управление build cache",
+          "Верификация артефактов сборки",
+          "Управление node source (URL, repository, local)"
+        ],
+        "key_methods": {
+          "build()": "Сборка cellframe-node (CMake + make + cpack)",
+          "get_package_path()": "Получить путь к .deb пакету",
+          "download_package()": "Скачать пакет по URL",
+          "clone_and_build()": "Клонировать repo и собрать"
+        },
+        "cache": "cache/build/ для кэширования артефактов"
       },
 
       "node_configuration": {
@@ -691,31 +719,34 @@
 
   "cli_commands_reference": {
     "network_management": {
-      "start": "Запуск тестовой сети (Docker Compose + health checks)",
-      "stop": "Остановка сети",
+      "build": "Сборка Docker образов (с опцией --clean)",
+      "start": "Запуск тестовой сети (Docker Compose + health checks + snapshot создание)",
+      "stop": "Остановка сети (с опцией --volumes для удаления volumes)",
       "restart": "Перезапуск сети",
-      "status": "Показать статус нод",
-      "rebuild": "Полная пересборка окружения"
+      "status": "Показать статус нод (таблица с health, ports, roles)",
+      "rebuild": "Полная пересборка окружения (build + start)",
+      "logs": "Просмотр логов конкретной ноды (logs <node_id>)",
+      "exec": "Выполнить команду в контейнере (exec <node_id> <command>)"
     },
     "testing": {
-      "run-tests": "Запуск тестовых сценариев (с поддержкой suites)",
+      "run-tests": "Запуск тестовых сценариев (поддержка suites, директорий, отдельных файлов)",
       "run-tests --filter NAME": "Фильтрация сценариев по имени",
       "run-tests --no-start-network": "Запуск без старта сети (если уже running)",
-      "run-tests --stop-after": "Остановить сеть после тестов"
+      "run-tests --stop-after": "Остановить сеть после тестов",
+      "run-tests --parallel": "Параллельное выполнение сценариев (experimental)",
+      "run-tests --debug": "Детальное логирование для отладки"
     },
     "snapshots": {
-      "create-snapshot": "Создать snapshot текущего состояния",
-      "restore-snapshot": "Восстановить из snapshot",
-      "list-snapshots": "Список доступных snapshots",
-      "delete-snapshot": "Удалить snapshot"
+      "snapshots-list": "Список доступных snapshots",
+      "snapshots-delete": "Удалить snapshot по hash",
+      "snapshots-info": "Информация о snapshot",
+      "snapshots-clean": "Удалить старые snapshots (--older-than дней)"
     },
     "certificates": {
-      "generate-certs": "Генерация сертификатов для нод"
+      "certs": "Генерация сертификатов для нод (по умолчанию для stagenet)"
     },
     "utilities": {
-      "build": "Сборка Docker образов",
-      "clean": "Очистка артефактов и кэша",
-      "clean --all": "Полная очистка включая volumes"
+      "clean": "Очистка артефактов и кэша (с опцией --all для полной очистки)"
     }
   },
 
