@@ -1,0 +1,471 @@
+{
+  "type": "slc_knowledge_module",
+  "domain": "cellframe_rpc_protocol",
+  "version": "1.0",
+  "created": "2025-09-19T18:30:00Z",
+  "updated": "2025-09-19T18:30:00Z",
+  "template_source": "Analysis of Cellframe SDK source code",
+  "module_info": {
+    "name": "Cellframe Node RPC Protocol",
+    "description": "Complete documentation of built-in Cellframe Node RPC protocol and CLI commands",
+    "target_projects": [
+      "Cellframe Node integration",
+      "QEVM plugin development", 
+      "CF20 token operations",
+      "Blockchain applications",
+      "DAP SDK projects"
+    ],
+    "applicability": "All Cellframe-based projects requiring RPC integration"
+  },
+  "rpc_protocol": {
+    "overview": {
+      "protocol": "JSON-RPC 2.0",
+      "default_port": 8079,
+      "transport": "HTTP/HTTPS",
+      "authentication": "Certificate-based (DAP certificates)",
+      "format": "JSON"
+    },
+    "request_format": {
+      "structure": {
+        "method": "command_name",
+        "params": ["command", "subcommand", "-param", "value"],
+        "id": "request_id",
+        "version": "2"
+      },
+      "example": {
+        "method": "net",
+        "params": ["net", "-net", "qevm-testnet", "get", "status"],
+        "id": "1",
+        "version": "2"
+      }
+    },
+    "response_format": {
+      "success": {
+        "id": "request_id",
+        "result": {
+          "status": "success",
+          "data": "command_specific_data"
+        }
+      },
+      "error": {
+        "id": "request_id", 
+        "error": {
+          "code": "error_code",
+          "message": "error_description",
+          "data": "additional_error_info"
+        }
+      }
+    }
+  },
+  "command_categories": {
+    "network_management": {
+      "command": "net",
+      "description": "Network operations and status management",
+      "subcommands": {
+        "list": {
+          "syntax": "net list [chains -net <net_name>]",
+          "description": "List all networks or chains in selected network",
+          "examples": [
+            "net list",
+            "net list chains -net qevm-testnet"
+          ]
+        },
+        "go": {
+          "syntax": "net -net <net_name> [-mode {update | all}] go {online | offline | sync}",
+          "description": "Network state management",
+          "parameters": {
+            "mode": {
+              "update": "Only new chains and gdb updated (default)",
+              "all": "Updates everything from zero"
+            }
+          },
+          "examples": [
+            "net -net qevm-testnet go online",
+            "net -net qevm-testnet -mode all go sync"
+          ]
+        },
+        "get": {
+          "syntax": "net -net <net_name> get {status | fee | id}",
+          "description": "Display current status, fee, or network ID",
+          "examples": [
+            "net -net qevm-testnet get status",
+            "net -net qevm-testnet get fee"
+          ]
+        },
+        "stats": {
+          "syntax": "net -net <net_name> stats {tx | tps} [-from <time>] [-to <time>] [-prev_sec <seconds>]",
+          "description": "Transaction statistics",
+          "time_format": "<Year>-<Month>-<Day>_<Hours>:<Minutes>:<Seconds> or <Seconds>",
+          "examples": [
+            "net -net qevm-testnet stats tx",
+            "net -net qevm-testnet stats tps -prev_sec 3600"
+          ]
+        },
+        "sync": {
+          "syntax": "net -net <net_name> [-mode {update | all}] sync {all | gdb | chains}",
+          "description": "Synchronize global database, chains, or everything",
+          "examples": [
+            "net -net qevm-testnet sync all",
+            "net -net qevm-testnet sync gdb"
+          ]
+        },
+        "link": {
+          "syntax": "net -net <net_name> link {list | add | del | info [-addr] | disconnect_all}",
+          "description": "Manage network links",
+          "examples": [
+            "net -net qevm-testnet link list",
+            "net -net qevm-testnet link disconnect_all"
+          ]
+        },
+        "ca": {
+          "syntax": "net -net <net_name> ca {add | list | del} [-cert <cert_name>] [-hash <cert_hash>]",
+          "description": "Manage authority certificates",
+          "examples": [
+            "net -net qevm-testnet ca list",
+            "net -net qevm-testnet ca add -cert my-cert"
+          ]
+        }
+      }
+    },
+    "wallet_operations": {
+      "command": "wallet",
+      "description": "Wallet management and CF20 token operations",
+      "subcommands": {
+        "list": {
+          "syntax": "wallet list",
+          "description": "List all available wallets"
+        },
+        "new": {
+          "syntax": "wallet new -w <wallet_name> [-sign <sign_type>] [-restore <hex_value>] [-net <net_name>] [-force] [-password <password>]",
+          "description": "Create new wallet",
+          "parameters": {
+            "sign_type": "Signature algorithm (dilithium, falcon, etc.)",
+            "restore": "Restore from hex seed",
+            "force": "Overwrite existing wallet"
+          }
+        },
+        "info": {
+          "syntax": "wallet info {-addr <addr> | -w <wallet_name>} -net <net_name>",
+          "description": "Get wallet information including CF20 balances"
+        },
+        "activate": {
+          "syntax": "wallet activate -w <wallet_name> -password <password> [-ttl <ttl_minutes>]",
+          "description": "Activate wallet with password"
+        },
+        "outputs": {
+          "syntax": "wallet outputs {-addr <addr> | -w <wallet_name>} -net <net_name> -token <token_ticker> [{-cond [-type <cond_type>] | -value <value>}]",
+          "description": "List wallet outputs",
+          "conditional_types": [
+            "srv_pay",
+            "srv_xchange", 
+            "srv_stake_pos_delegate",
+            "srv_stake_lock",
+            "fee"
+          ]
+        },
+        "shared": {
+          "description": "Shared funds operations",
+          "operations": {
+            "hold": "Create shared funds transaction",
+            "refill": "Add funds to shared transaction",
+            "take": "Withdraw from shared funds",
+            "sign": "Sign shared funds transaction",
+            "info": "Get shared funds info"
+          }
+        }
+      }
+    },
+    "token_management": {
+      "command": "token",
+      "description": "CF20 token operations",
+      "subcommands": {
+        "list": {
+          "syntax": "token list -net <net_name>",
+          "description": "List all CF20 tokens in network"
+        },
+        "info": {
+          "syntax": "token info -net <net_name> -name <token_ticker>",
+          "description": "Get detailed CF20 token information"
+        }
+      },
+      "declaration": {
+        "command": "token_decl",
+        "syntax": "token_decl -net <net_name> -token <ticker> -type {private | CF20} -total_supply <supply> -decimals <decimals> -certs <certs>",
+        "description": "Declare new CF20 token"
+      },
+      "emission": {
+        "command": "token_emit", 
+        "syntax": "token_emit -net <net_name> -token <ticker> -emission_value <value> -addr <wallet_addr> -certs <certs>",
+        "description": "Emit CF20 tokens to address"
+      }
+    },
+    "transaction_operations": {
+      "command": "tx_create",
+      "description": "Transaction creation and management",
+      "subcommands": {
+        "create": {
+          "syntax": "tx_create -net <net_name> -w <wallet_name> -to_addr <addr> -token <ticker> -value <value> [-fee <fee>]",
+          "description": "Create CF20 token transfer transaction"
+        },
+        "create_json": {
+          "syntax": "tx_create_json -net <net_name> -json <json_data>",
+          "description": "Create transaction from JSON data"
+        },
+        "cond_create": {
+          "syntax": "tx_cond_create -net <net_name> -w <wallet_name> -to_addr <addr> -token <ticker> -value <value> -fee <fee>",
+          "description": "Create conditional transaction"
+        },
+        "verify": {
+          "syntax": "tx_verify -net <net_name> -tx <tx_hash>",
+          "description": "Verify transaction in mempool"
+        }
+      },
+      "history": {
+        "command": "tx_history",
+        "syntax": "tx_history {-addr <addr> | -w <wallet_name> | -tx <tx_hash>} -net <net_name> [-chain <chain_name>] [-limit] [-offset]",
+        "description": "Get transaction history"
+      }
+    },
+    "consensus_operations": {
+      "dag": {
+        "command": "dag",
+        "description": "DAG consensus and event management",
+        "subcommands": {
+          "event_sign": "Add signature to event",
+          "event_dump": "Dump event information", 
+          "event_list": "List events",
+          "round_complete": "Complete current round",
+          "round_find": "Find rounds containing datum"
+        }
+      },
+      "block": {
+        "command": "block",
+        "description": "Block consensus operations",
+        "subcommands": {
+          "new": "Create new block",
+          "list": "List blocks",
+          "dump": "Dump block information",
+          "autocollect": "Enable/disable automatic block collection"
+        }
+      }
+    },
+    "node_management": {
+      "command": "node",
+      "description": "Node operations and network connectivity",
+      "subcommands": {
+        "add": "Add node to network",
+        "del": "Delete node from network",
+        "connect": "Connect to node",
+        "list": "List network nodes",
+        "dump": "Dump node information",
+        "ban": "Ban node",
+        "unban": "Unban node",
+        "connections": "List active connections"
+      }
+    },
+    "database_operations": {
+      "command": "global_db",
+      "description": "Global database operations",
+      "subcommands": {
+        "flush": "Flush database state to disk",
+        "write": "Write key-value to group",
+        "read": "Read value by key from group", 
+        "delete": "Delete key from group",
+        "group_list": "List all groups",
+        "drop_table": "Delete entire group",
+        "get_keys": "Get all keys from group"
+      }
+    },
+    "service_management": {
+      "net_srv": {
+        "command": "net_srv",
+        "description": "Network services management",
+        "operations": ["order find", "order create", "order delete", "order dump"]
+      },
+      "srv_stake": {
+        "command": "srv_stake", 
+        "description": "Staking service operations",
+        "operations": ["delegate", "undelegate", "list delegated", "list keys"]
+      }
+    }
+  },
+  "cf20_integration": {
+    "description": "CF20 token standard integration with Cellframe RPC",
+    "key_differences_from_erc20": [
+      "Uses DAP SDK cryptography instead of Ethereum secp256k1",
+      "Integrates with Cellframe consensus (DAG/ESBocs)",
+      "Native support for post-quantum signatures",
+      "Built-in staking and delegation mechanisms",
+      "Global database storage instead of Ethereum state trie"
+    ],
+    "cf20_specific_operations": {
+      "token_declaration": "Declare new CF20 token with supply and decimals",
+      "token_emission": "Emit tokens to specific addresses",
+      "wallet_operations": "Native wallet integration with CF20 balances",
+      "staking_integration": "Built-in PoS staking with CF20 tokens",
+      "cross_chain": "Native cross-chain CF20 token transfers"
+    }
+  },
+  "qevm_extensions": {
+    "description": "QEVM plugin extends Cellframe RPC with Ethereum-compatible methods",
+    "additional_rpc_port": 8545,
+    "ethereum_compatibility": {
+      "eth_blockNumber": "Get current block number",
+      "eth_getBalance": "Get CF20 token balance (not ETH)",
+      "eth_sendTransaction": "Send CF20 transaction",
+      "eth_call": "Call smart contract method",
+      "eth_getCode": "Get contract bytecode",
+      "net_version": "Get network version",
+      "eth_chainId": "Get chain ID"
+    },
+    "qevm_specific_methods": {
+      "qevm_getBalance": "Get CF20 token balance by ticker",
+      "qevm_getNodeInfo": "Get QEVM node information",
+      "qevm_sendTransaction": "Send CF20 transaction with gas",
+      "qevm_getAccount": "Get account state",
+      "qevm_getBlock": "Get block information",
+      "qevm_getTransaction": "Get transaction details"
+    }
+  },
+  "authentication": {
+    "certificate_types": {
+      "node_addr": {
+        "purpose": "Node address identification",
+        "format": "DAP certificate (.dcert)",
+        "algorithm": "Dilithium (post-quantum)"
+      },
+      "esbocs_consensus": {
+        "purpose": "ESBocs consensus participation",
+        "format": "qevm.master.pvt.{0,1,2}",
+        "algorithm": "Dilithium",
+        "usage": "Block signing and validation"
+      },
+      "custom_certs": {
+        "purpose": "Application-specific operations",
+        "format": "User-defined names",
+        "algorithms": ["Dilithium", "Falcon", "SPHINCS+"]
+      }
+    },
+    "access_control": {
+      "read_operations": "Generally public, no authentication required",
+      "write_operations": "Require valid DAP certificates",
+      "network_operations": "Require network-specific certificates",
+      "consensus_operations": "Require validator certificates"
+    }
+  },
+  "network_configuration": {
+    "known_networks": {
+      "backbone": {
+        "id": "0x0404202200000000",
+        "token": "CELL",
+        "rpc_endpoint": "http://rpc.cellframe.net:8081",
+        "type": "production"
+      },
+      "kelvpn": {
+        "id": "0x1807202300000000", 
+        "token": "KEL",
+        "rpc_endpoint": "http://rpc.cellframe.net:8081",
+        "type": "production"
+      },
+      "raiden": {
+        "id": "0x000000000000bbbb",
+        "token": "tCELL", 
+        "rpc_endpoint": "http://rpc.cellframe.net:8081",
+        "type": "testnet"
+      },
+      "qevm_testnet": {
+        "id": "0x1234",
+        "token": "QEVM",
+        "rpc_endpoint": "http://localhost:8079",
+        "type": "development"
+      }
+    }
+  },
+  "integration_examples": {
+    "basic_status_check": {
+      "description": "Check network status",
+      "curl_example": "curl -X POST http://localhost:8079 -H \"Content-Type: application/json\" -d '{\"method\": \"net\", \"params\": [\"net\", \"-net\", \"qevm-testnet\", \"get\", \"status\"], \"id\": \"1\", \"version\": \"2\"}'"
+    },
+    "wallet_balance": {
+      "description": "Get CF20 token balance",
+      "curl_example": "curl -X POST http://localhost:8079 -H \"Content-Type: application/json\" -d '{\"method\": \"wallet\", \"params\": [\"wallet\", \"info\", \"-addr\", \"<wallet_address>\", \"-net\", \"qevm-testnet\"], \"id\": \"1\", \"version\": \"2\"}'"
+    },
+    "create_transaction": {
+      "description": "Create CF20 token transfer",
+      "curl_example": "curl -X POST http://localhost:8079 -H \"Content-Type: application/json\" -d '{\"method\": \"tx_create\", \"params\": [\"tx_create\", \"-net\", \"qevm-testnet\", \"-w\", \"wallet_name\", \"-to_addr\", \"<recipient>\", \"-token\", \"QEVM\", \"-value\", \"1.0\"], \"id\": \"1\", \"version\": \"2\"}'"
+    },
+    "token_list": {
+      "description": "List all CF20 tokens",
+      "curl_example": "curl -X POST http://localhost:8079 -H \"Content-Type: application/json\" -d '{\"method\": \"token\", \"params\": [\"token\", \"list\", \"-net\", \"qevm-testnet\"], \"id\": \"1\", \"version\": \"2\"}'"
+    }
+  },
+  "error_handling": {
+    "common_errors": {
+      "invalid_network": {
+        "code": -1,
+        "message": "Network not found",
+        "solution": "Check network name and ensure network is configured"
+      },
+      "invalid_certificate": {
+        "code": -2,
+        "message": "Certificate not found or invalid",
+        "solution": "Ensure certificate is properly installed and accessible"
+      },
+      "insufficient_balance": {
+        "code": -3,
+        "message": "Insufficient balance for transaction",
+        "solution": "Check wallet balance and ensure sufficient CF20 tokens"
+      },
+      "network_offline": {
+        "code": -4,
+        "message": "Network is offline",
+        "solution": "Use 'net go online' command to bring network online"
+      }
+    }
+  },
+  "development_guidelines": {
+    "best_practices": [
+      "Always specify network name (-net parameter) for network-specific operations",
+      "Use appropriate certificate for operations requiring authentication", 
+      "Handle both success and error responses in client code",
+      "Implement proper timeout handling for RPC calls",
+      "Use pagination (limit/offset) for large data queries"
+    ],
+    "testing_approach": [
+      "Test with development networks before production",
+      "Verify certificate authentication works correctly",
+      "Test error scenarios and edge cases",
+      "Monitor RPC performance under load",
+      "Validate CF20 token operations thoroughly"
+    ]
+  },
+  "usage_patterns": {
+    "typical_workflows": {
+      "wallet_setup": [
+        "1. wallet new -w my_wallet -password secret",
+        "2. wallet activate -w my_wallet -password secret", 
+        "3. wallet info -w my_wallet -net qevm-testnet"
+      ],
+      "token_transfer": [
+        "1. wallet info -w sender_wallet -net qevm-testnet",
+        "2. tx_create -net qevm-testnet -w sender_wallet -to_addr <recipient> -token QEVM -value 1.0",
+        "3. tx_history -w sender_wallet -net qevm-testnet"
+      ],
+      "network_monitoring": [
+        "1. net -net qevm-testnet get status",
+        "2. net -net qevm-testnet stats tx",
+        "3. node connections -net qevm-testnet"
+      ]
+    }
+  },
+  "navigation_system": {
+    "purpose": "Cellframe Node RPC Protocol Knowledge Module",
+    "file_role": "RPC_PROTOCOL_DOCUMENTATION",
+    "usage": "Reference for Cellframe Node RPC integration",
+    "related_files": {
+      "CELLFRAME_RPC_PROTOCOL.md": "Detailed RPC documentation",
+      "CF20_COMPATIBILITY_UPDATE.md": "CF20 migration information"
+    },
+    "ai_context": "Complete Cellframe Node RPC protocol reference"
+  }
+}

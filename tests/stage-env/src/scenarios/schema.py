@@ -168,18 +168,6 @@ class ExtractType(str, Enum):
     RAW = "raw"                        # Raw string (no validation)
 
 
-class ExtractSpec(BaseModel):
-    """Specification for extracting and validating data from command output."""
-    pattern: Optional[str] = Field(None, description="Regex pattern to extract data (auto-detected if not specified)")
-    type: ExtractType = Field(ExtractType.RAW, description="Type of extracted data for validation")
-    group: int = Field(1, description="Regex capture group number (default: 1)")
-    required: bool = Field(True, description="Whether extraction failure should fail the test")
-    default: Optional[str] = Field(None, description="Default value if extraction fails (only if not required)")
-    
-    class Config:
-        use_enum_values = True
-
-
 # ============================================================================
 # Test Step Models
 # ============================================================================
@@ -269,9 +257,6 @@ class WaitForDatumStep(BaseModel):
     timeout_in_blocks: int = Field(180, description="Timeout after appearing in blocks")
     check_interval: int = Field(2, description="Check interval in seconds")
     save_status: Optional[str] = Field(None, description="Variable name to save final status")
-
-
-TestStep = Union[CLIStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, ToolStep, LoopStep]
 
 
 # ============================================================================

@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "source_version": "2.1.0",
+  "evolution_id": "d8fd0f96-fe76-42dd-9d87-535e8c98a096",
+  "timestamp": "2025-06-08T16:44:05.300685",
+  "summary": {
+    "files_added": 2,
+    "files_modified": 0,
+    "files_deleted": 0,
+    "files_renamed": 0
+  },
+  "changes": [
+    {
+      "type": "added",
+      "path": ".slc/evolution_state.json",
+      "content_type": "json",
+      "size": 39439,
+      "hash": "f17061f1506ce034ef30de6110a468a657848b91c6ead1f2731305e4e5f4c9ce"
+    },
+    {
+      "type": "added",
+      "path": "test_change.md",
+      "content_type": "markdown",
+      "size": 387,
+      "hash": "c4de02b01933fdb5350c584310e64e72ecb22b4fc7e78d2f631c71c434a3f050"
+    }
+  ],
+  "navigation_system": {
+    "purpose": "Файл СЛК: changes.json",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/.slc/changes.json",
+    "file_role": "UNKNOWN",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info .slc/changes.json для подробной информации",
+    "ai_context": "Файл СЛК системы: changes.json"
+  }
+}

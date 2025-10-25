@@ -1,0 +1,102 @@
+{
+  "benchmark_timestamp": "2025-06-08T17:29:46.272077",
+  "test_results": {
+    "module_loading": {
+      "module_tests": [
+        {
+          "module": "modules/ai_ml/prompt_engineering.json",
+          "loading_time": 0.16,
+          "file_size": 17572,
+          "success": true
+        },
+        {
+          "module": "modules/languages/python/python_development.json",
+          "loading_time": 0.16,
+          "file_size": 18713,
+          "success": true
+        },
+        {
+          "module": "modules/methodologies/defi_security_audit.json",
+          "loading_time": 0.2,
+          "file_size": 20497,
+          "success": true
+        }
+      ],
+      "average_loading_time_ms": 0.17,
+      "target_met": true
+    },
+    "search_performance": {
+      "search_tests": [
+        {
+          "query": "python",
+          "search_time": 4.88,
+          "results_count": 1,
+          "success": true
+        },
+        {
+          "query": "ai",
+          "search_time": 4.66,
+          "results_count": 9,
+          "success": true
+        },
+        {
+          "query": "defi",
+          "search_time": 4.44,
+          "results_count": 0,
+          "success": true
+        },
+        {
+          "query": "security",
+          "search_time": 4.4,
+          "results_count": 1,
+          "success": true
+        },
+        {
+          "query": "blockchain",
+          "search_time": 4.88,
+          "results_count": 5,
+          "success": true
+        }
+      ],
+      "average_search_time_ms": 4.65,
+      "target_met": true
+    },
+    "command_execution": {
+      "command_tests": [
+        {
+          "command": "list",
+          "execution_time": 70.95,
+          "success": true,
+          "output_length": 945
+        },
+        {
+          "command": "validate",
+          "execution_time": 71.39,
+          "success": true,
+          "output_length": 197
+        },
+        {
+          "command": "search python",
+          "execution_time": 75.51,
+          "success": true,
+          "output_length": 164
+        }
+      ]
+    }
+  },
+  "navigation_system": {
+    "purpose": "Файл СЛК: benchmark_20250608_172946.json",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/.slc/analytics/benchmark_20250608_172946.json",
+    "file_role": "UNKNOWN",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info .slc/analytics/benchmark_20250608_172946.json для подробной информации",
+    "ai_context": "Файл СЛК системы: benchmark_20250608_172946.json"
+  }
+}

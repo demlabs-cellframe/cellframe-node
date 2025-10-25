@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "templates": {},
+  "queries": [
+    {
+      "timestamp": "2025-06-08T23:07:13.843569",
+      "query": "финальная проверка СЛК v4.0",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-08T23:07:13.844019",
+      "query": "финальная проверка СЛК v4.0",
+      "selected_template": null
+    },
+    {
+      "timestamp": "2025-06-08T23:10:17.968652",
+      "query": "полный контекст СЛК v4.0.0 для архитектурного улучшения",
+      "selected_template": null
+    }
+  ],
+  "sessions": [],
+  "navigation_system": {
+    "purpose": "Файл СЛК: .slc_usage_stats.json",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/.slc/.slc_usage_stats.json",
+    "file_role": "UNKNOWN",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info .slc/.slc_usage_stats.json для подробной информации",
+    "ai_context": "Файл СЛК системы: .slc_usage_stats.json"
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "name": "Anthropic API Knowledge Base",
+  "description": "Полная база знаний по Anthropic Claude API для интеграции с SLC Agent v3.0",
+  "version": "1.0.0",
+  "created_at": "2025-01-27T19:30:00Z",
+  "category": "knowledge_base",
+  "tags": [
+    "anthropic",
+    "claude-4",
+    "api",
+    "integration",
+    "slc-agent"
+  ],
+  "api_overview": {
+    "base_url": "https://api.anthropic.com",
+    "version": "2023-06-01",
+    "authentication": {
+      "method": "API Key",
+      "header": "x-api-key",
+      "env_var": "ANTHROPIC_API_KEY"
+    },
+    "primary_endpoint": "/v1/messages"
+  },
+  "models": {
+    "claude_4": {
+      "opus": {
+        "model_id": "claude-opus-4-20250514",
+        "alias": "claude-opus-4-0",
+        "description": "Самая мощная модель Claude 4, лучшая для сложных задач",
+        "context_window": "200k tokens",
+        "max_output": "8192 tokens"
+      },
+      "sonnet": {
+        "model_id": "claude-sonnet-4-20250514",
+        "alias": "claude-sonnet-4-0",
+        "description": "Оптимальный баланс производительности и скорости",
+        "context_window": "200k tokens",
+        "max_output": "8192 tokens",
+        "recommended": true,
+        "reason": "Лучший выбор для SLC Agent - высокое качество при хорошей скорости"
+      }
+    },
+    "fallback_models": {
+      "claude_3_5_sonnet": "claude-3-5-sonnet-20241022",
+      "claude_3_5_haiku": "claude-3-5-haiku-20241022"
+    }
+  },
+  "python_sdk": {
+    "installation": "pip install anthropic",
+    "import": "from anthropic import Anthropic, AsyncAnthropic",
+    "basic_usage": {
+      "sync": {
+        "client_init": "client = Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))",
+        "message_create": "message = client.messages.create(model='claude-sonnet-4-0', max_tokens=1024, messages=[{'role': 'user', 'content': 'Hello'}])"
+      },
+      "async": {
+        "client_init": "client = AsyncAnthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))",
+        "message_create": "message = await client.messages.create(model='claude-sonnet-4-0', max_tokens=1024, messages=[{'role': 'user', 'content': 'Hello'}])"
+      }
+    }
+  },
+  "messages_api": {
+    "endpoint": "POST /v1/messages",
+    "required_headers": {
+      "x-api-key": "$ANTHROPIC_API_KEY",
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json"
+    },
+    "required_params": {
+      "model": "Идентификатор модели (например: claude-sonnet-4-0)",
+      "max_tokens": "Максимальное количество токенов в ответе (1-8192)",
+      "messages": "Массив сообщений с полями role и content"
+    },
+    "optional_params": {
+      "system": "Системный промпт для настройки поведения Claude",
+      "temperature": "Случайность ответа (0.0-1.0, по умолчанию 1.0)",
+      "stream": "Потоковая передача ответа (true/false)",
+      "tools": "Массив инструментов для tool use",
+      "tool_choice": "Управление использованием инструментов",
+      "stop_sequences": "Последовательности для остановки генерации",
+      "metadata": "Метаданные запроса (user_id и др.)"
+    }
+  },
+  "conversation_management": {
+    "stateless": "API не сохраняет состояние - нужно передавать всю историю",
+    "message_roles": [
+      "user",
+      "assistant"
+    ],
+    "message_structure": {
+      "role": "user или assistant",
+      "content": "строка или массив content blocks"
+    },
+    "content_types": [
+      {
+        "type": "text",
+        "text": "Текстовое содержимое"
+      },
+      {
+        "type": "image",
+        "source": "Изображение (base64 или URL)"
+      },
+      {
+        "type": "tool_use",
+        "id": "ID инструмента",
+        "name": "Имя",
+        "input": "Параметры"
+      },
+      {
+        "type": "tool_result",
+        "tool_use_id": "ID",
+        "content": "Результат"
+      }
+    ],
+    "prefilling": "Можно предзаполнить начало ответа Claude через assistant message"
+  },
+  "streaming": {
+    "parameter": "stream: true",
+    "response_format": "Server-Sent Events (SSE)",
+    "event_types": [
+      "message_start",
+      "content_block_start",
+      "content_block_delta",
+      "content_block_stop",
+      "message_delta",
+      "message_stop"
+    ],
+    "python_example": {
+      "basic": "stream = client.messages.create(stream=True, ...)",
+      "helper": "async with client.messages.stream(...) as stream: async for text in stream.text_stream: print(text)"
+    }
+  },
+  "tool_use": {
+    "overview": "Claude может использовать инструменты для расширения возможностей",
+    "types": {
+      "client_tools": "Выполняются на стороне клиента",
+      "server_tools": "Выполняются на серверах Anthropic (например, web search)"
+    },
+    "workflow": [
+      "1. Определение инструментов в параметре tools",
+      "2. Claude решает использовать инструмент",
+      "3. Выполнение инструмента клиентом",
+      "4. Возврат результата через tool_result",
+      "5. Claude формулирует финальный ответ"
+    ],
+    "tool_definition": {
+      "name": "Имя инструмента (1-64 символа)",
+      "description": "Подробное описание функциональности",
+      "input_schema": "JSON Schema для параметров",
+      "type": "custom (по умолчанию)"
+    },
+    "tool_choice_options": {
+      "auto": "Claude сам решает использовать ли инструменты",
+      "any": "Claude должен использовать любой инструмент",
+      "tool": "Принудительное использование конкретного инструмента",
+      "none": "Запрет использования инструментов"
+    }
+  },
+  "error_handling": {
+    "status_codes": {
+      "400": "BadRequestError - неверный запрос",
+      "401": "AuthenticationError - проблемы с API ключом",
+      "403": "PermissionDeniedError - нет доступа",
+      "404": "NotFoundError - ресурс не найден",
+      "422": "UnprocessableEntityError - невалидные данные",
+      "429": "RateLimitError - превышен лимит запросов",
+      "500+": "InternalServerError - внутренняя ошибка сервера"
+    },
+    "retry_logic": {
+      "default_retries": 2,
+      "retry_conditions": [
+        "connection errors",
+        "408",
+        "409",
+        "429",
+        "500+"
+      ],
+      "backoff": "exponential"
+    },
+    "python_exceptions": [
+      "anthropic.APIConnectionError",
+      "anthropic.RateLimitError",
+      "anthropic.APIStatusError",
+      "anthropic.APIError"
+    ]
+  },
+  "best_practices": {
+    "model_selection": "Используйте claude-sonnet-4-0 как основную модель",
+    "context_management": "Управляйте размером контекста для экономии токенов",
+    "system_prompts": "Используйте system промпты для настройки поведения",
+    "streaming": "Используйте streaming для длинных ответов",
+    "error_handling": "Реализуйте proper retry logic и обработку ошибок",
+    "rate_limits": "Учитывайте лимиты и используйте exponential backoff",
+    "security": "Храните API ключи в переменных окружения"
+  },
+  "integration_patterns": {
+    "conversational_agent": {
+      "description": "Поддержание диалога с сохранением контекста",
+      "implementation": "Накопление messages в списке и отправка полной истории"
+    },
+    "tool_agent": {
+      "description": "Агент с возможностью использования инструментов",
+      "implementation": "Определение tools и обработка tool_use/tool_result циклов"
+    },
+    "streaming_chat": {
+      "description": "Реалтайм чат с потоковой передачей",
+      "implementation": "Использование stream=True и обработка SSE событий"
+    }
+  },
+  "slc_agent_integration": {
+    "primary_use_cases": [
+      "Естественное общение с пользователями в Telegram",
+      "Анализ и понимание команд пользователя",
+      "Генерация ответов на основе контекста задач",
+      "Переспрашивание при недостатке информации",
+      "Интеллектуальная обработка ошибок и исключений"
+    ],
+    "recommended_config": {
+      "model": "claude-sonnet-4-0",
+      "max_tokens": 1024,
+      "temperature": 0.7,
+      "stream": true,
+      "system_prompt": "Настройка под роль SLC агента"
+    },
+    "context_optimization": {
+      "token_counting": "client.beta.messages.count_tokens()",
+      "context_compression": "Сжатие старых сообщений при приближении к лимиту",
+      "smart_truncation": "Умное обрезание контекста с сохранением важного"
+    }
+  },
+  "navigation_system": {
+    "purpose": "Специализированный проект",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/projects/slc_agent/anthropic_api_knowledge_base.json",
+    "file_role": "PROJECT_TEMPLATE",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info modules/projects/slc_agent/anthropic_api_knowledge_base.json для подробной информации",
+    "ai_context": "Файл СЛК системы: anthropic_api_knowledge_base.json"
+  }
+}

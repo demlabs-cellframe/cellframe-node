@@ -1,0 +1,167 @@
+{
+  "version": "1.0.0",
+  "created": "2025-01-16T23:45:00Z",
+  "updated": "2025-01-16T23:45:00Z",
+  "navigation_system": {
+    "purpose": "DAP SDK модуль - автоматическая загрузка стандартов кодирования и шаблонов для DAP SDK разработки",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/projects/dap_sdk.json",
+    "file_role": "DAP_SDK_MODULE",
+    "related_files": {
+      ".context/manifest.json": "Главный манифест системы",
+      ".context/modules/projects/dap_sdk/python_bindings_coding_standards.json": "Правила кодирования DAP SDK для Python биндингов"
+    },
+    "ai_context": "Модуль DAP SDK для Smart Layered Context"
+  },
+  "module": {
+    "name": "DAP SDK Development Module",
+    "type": "project_specific",
+    "category": "blockchain_crypto",
+    "description": "Комплексный модуль для разработки с DAP SDK, включая стандарты кодирования, шаблоны и лучшие практики",
+    "target_audience": "DAP SDK разработчики, Python биндинги, криптографические проекты"
+  },
+  "auto_load_files": [
+    ".context/modules/projects/dap_sdk/python_bindings_coding_standards.json",
+    ".context/modules/core/standards.json"
+  ],
+  "dap_sdk_overview": {
+    "description": "DAP SDK - криптографический фреймворк для блокчейн разработки",
+    "key_components": {
+      "dap_core": "Базовые функции и утилиты",
+      "dap_crypto": "Криптографические операции и алгоритмы",
+      "dap_config": "Система конфигурации",
+      "dap_global_db": "Глобальная база данных",
+      "dap_events": "Система событий",
+      "dap_network": "Сетевые компоненты"
+    },
+    "python_integration": "Python биндинги для интеграции с DAP SDK функциональностью"
+  },
+  "coding_standards_summary": {
+    "naming_conventions": {
+      "functions": "dap_ префикс, snake_case стиль",
+      "variables": "l_ (local), a_ (argument), s_ (static), g_ (global) префиксы",
+      "macros": "DAP_ префикс, UPPER_CASE стиль",
+      "types": "_t суффикс, snake_case стиль"
+    },
+    "memory_management": {
+      "allocation": "Использовать DAP_NEW, DAP_MALLOC, DAP_CALLOC",
+      "deallocation": "Использовать DAP_DELETE, DAP_FREE",
+      "forbidden": "Никогда не использовать malloc/free напрямую"
+    },
+    "forbidden_libraries": {
+      "openssl": "ЗАПРЕЩЕНО - использовать только собственные DAP SDK функции",
+      "external_crypto": "Все криптографические операции только через DAP SDK"
+    },
+    "logging": {
+      "function": "log_it()",
+      "levels": ["L_DEBUG", "L_INFO", "L_WARNING", "L_ERROR", "L_CRITICAL"],
+      "log_tag": "Обязательно #define LOG_TAG \"module_name\""
+    }
+  },
+  "python_bindings_guidelines": {
+    "purpose": "Создание реальных биндингов к DAP SDK функциям",
+    "no_stubs": "Никаких заглушек - только реальные вызовы DAP SDK",
+    "memory_safety": "Python управляет памятью, C биндинги освобождают DAP ресурсы",
+    "error_propagation": "Корректная передача ошибок DAP SDK в Python",
+    "function_mapping": {
+      "crypto": "dap_enc_*, dap_hash_* -> Python wrappers",
+      "config": "dap_config_* -> Python wrappers", 
+      "network": "dap_client_*, dap_server_* -> Python wrappers"
+    }
+  },
+  "project_templates": {
+    "python_bindings": {
+      "description": "Шаблон для создания Python биндингов к DAP SDK",
+      "includes": [
+        "CMakeLists.txt с линковкой DAP SDK",
+        "setup.py для Python пакета",
+        "C файлы с реальными биндингами",
+        "Python wrapper классы",
+        "Тесты интеграции"
+      ]
+    },
+    "dap_module": {
+      "description": "Шаблон для создания нового модуля DAP SDK",
+      "includes": [
+        "Заголовочные файлы с API",
+        "Имплементация с DAP стандартами",
+        "Тесты модуля",
+        "Документация API"
+      ]
+    }
+  },
+  "development_workflow": {
+    "setup": [
+      "1. Клонировать DAP SDK как submodule",
+      "2. Настроить CMake для линковки с DAP SDK",
+      "3. Создать C биндинги с реальными вызовами",
+      "4. Создать Python wrapper классы",
+      "5. Написать тесты интеграции"
+    ],
+    "testing": [
+      "Unit тесты для C биндингов",
+      "Integration тесты для Python API",
+      "Performance тесты для критических функций",
+      "Memory leak тесты"
+    ],
+    "documentation": [
+      "API документация на русском",
+      "Примеры использования",
+      "Troubleshooting guide",
+      "Performance benchmarks"
+    ]
+  },
+  "common_patterns": {
+    "error_handling": {
+      "pattern": "Проверка параметров -> Вызов DAP функции -> Обработка результата",
+      "example": "if (!param) return -EINVAL; int result = dap_function(); return result;"
+    },
+    "memory_allocation": {
+      "pattern": "DAP_NEW -> Проверка на NULL -> Использование -> DAP_DELETE",
+      "example": "ptr = DAP_NEW(type); if (!ptr) return -ENOMEM; ... DAP_DELETE(ptr);"
+    },
+    "logging": {
+      "pattern": "#define LOG_TAG \"module\" ... log_it(L_INFO, \"message\");",
+      "levels": "L_DEBUG для детальной отладки, L_ERROR для ошибок"
+    }
+  },
+  "integration_keywords": [
+    "dap", "sdk", "bindings", "python", "crypto", "blockchain",
+    "cellframe", "cryptography", "post-quantum", "security"
+  ],
+  "ai_recommendations": {
+    "when_detected": [
+      "dap", "sdk", "python bindings", "cellframe", "crypto", "blockchain"
+    ],
+    "auto_suggest": [
+      "Загрузить модуль DAP SDK",
+      "Применить стандарты кодирования DAP SDK",
+      "Использовать шаблоны для Python биндингов"
+    ],
+    "suggested_commands": [
+      "./slc load-context \"dap sdk development\"",
+      "./slc создай projects/dap_sdk.json python_bindings"
+    ]
+  },
+  "quality_checklist": {
+    "code_review": [
+      "✓ Используются только DAP SDK функции (не OpenSSL)",
+      "✓ Правильные префиксы переменных (l_, a_, s_, g_)",
+      "✓ Обработка ошибок через коды возврата",
+      "✓ Логирование через log_it() с правильными уровнями",
+      "✓ Освобождение ресурсов через DAP_DELETE/DAP_FREE"
+    ],
+    "testing": [
+      "✓ Unit тесты покрывают все публичные функции",
+      "✓ Тесты проверяют обработку ошибок",
+      "✓ Performance тесты для критических операций",
+      "✓ Memory leak тесты с valgrind"
+    ],
+    "documentation": [
+      "✓ API документирован на русском языке",
+      "✓ Примеры использования работают",
+      "✓ Ошибки документированы с кодами",
+      "✓ Performance характеристики указаны"
+    ]
+  }
+} 

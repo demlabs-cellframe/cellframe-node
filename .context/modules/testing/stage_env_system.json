@@ -77,16 +77,26 @@
         "loader": "src/config/loader.py",
         "format": "INI-подобный формат",
         "sections": [
-          "[network] - сетевая идентификация",
-          "[topology] - количество нод",
-          "[build] - настройки сборки",
-          "[network_settings] - порты и адресация",
-          "[consensus] - параметры консенсуса",
-          "[logging] - логирование",
-          "[paths] - пути к директориям",
-          "[artifacts] - сбор артефактов",
-          "[suite_isolation] - система снапшотов"
-        ]
+          "[network] - сетевая идентификация (name, network_id, consensus_type)",
+          "[topology] - количество нод по ролям (root_nodes_count, master_nodes_count, full_nodes_count)",
+          "[build] - настройки сборки (build_type, cellframe_version)",
+          "[network_settings] - порты и адресация (base_rpc_port, base_p2p_port, subnet, base_ip)",
+          "[consensus] - параметры консенсуса (min_validators, new_round_delay, auth_certs_prefix)",
+          "[balancer] - настройки балансировщика (enabled, type, uri)",
+          "[features] - опциональные возможности (monitoring, tests, crash_artifacts)",
+          "[logging] - логирование (log_dir, log_level, scenario_logs, retain_days)",
+          "[paths] - пути к директориям (cache_dir, artifacts_dir)",
+          "[artifacts] - сбор артефактов (collect_node_logs, collect_health_logs, retain_days)",
+          "[timeouts] - таймауты операций (startup, health_check, command)",
+          "[scenarios] - настройки сценариев (debug)",
+          "[node_source] - источник cellframe-node пакета (type, url/local_path/git_url)",
+          "[suite_isolation] - система снапшотов (mode, compression, auto_create)",
+          "[docker_customization] - кастомизация Docker образов (base_packages, base_post_script)",
+          "[role_customization_*] - кастомизация по ролям (packages, post_script)",
+          "[node_customization_*] - кастомизация отдельных нод (packages, deb_urls, post_script)",
+          "[repository_*] - custom APT репозитории (name, url, gpg_key)"
+        ],
+        "customization_hierarchy": "base → role → node (каждый уровень дополняет предыдущий)"
       }
     },
 
@@ -170,17 +180,34 @@
             "Экстракция node_address",
             "Экстракция hash (0x[hex])",
             "Валидация извлеченных данных",
-            "Поддержка custom regex паттернов"
+            "Поддержка ExtractType enum"
           ],
           "extract_types": [
-            "wallet_address - Cellframe wallet адрес (base58)",
-            "node_address - Node адрес (0x::)",
-            "hash - Хэш (0x[hex])",
+            "wallet_address - Cellframe wallet адрес (base58, 75-105 chars)",
+            "node_address - Node адрес (0x::формат)",
+            "hash - Хэш (0x[hex]{64})",
             "number - Числовые значения",
             "token_name - Имя токена",
             "bool - Булевы значения",
-            "raw - Произвольный regex"
-          ]
+            "raw - Произвольный тип"
+          ],
+          "validation": {
+            "wallet_address": "Base58 decode + SHA3-256 checksum verification",
+            "node_address": "Проверка :: separator",
+            "hash": "Проверка формата 0x[hex]{64}"
+          }
+        },
+        "validator": {
+          "module": "src/scenarios/validator.py",
+          "class": "ScenarioValidator",
+          "description": "Legacy компонент для pre-execution валидации с user-friendly ошибками",
+          "status": "Частично используется - основная валидация через Pydantic"
+        },
+        "suite_schema": {
+          "module": "src/scenarios/suite_schema.py",
+          "class": "ScenarioSuite",
+          "description": "Legacy модель для suite группировки",
+          "status": "Не используется активно - заменена на SuiteDescriptor в schema.py"
         }
       },
 
@@ -290,15 +317,18 @@
       },
 
       "monitoring_and_health": {
-        "health_monitor": {
+        "health_checker": {
           "module": "src/monitoring/health.py",
-          "class": "HealthMonitor",
+          "class": "HealthChecker",
           "responsibilities": [
-            "Проверка доступности нод (ping)",
+            "Проверка доступности нод (HTTP ping)",
             "Проверка CLI socket доступности",
             "Проверка RPC endpoint",
             "Логирование health events"
-          ]
+          ],
+          "models": {
+            "HealthStatus": "Результат health check для ноды"
+          }
         },
         "datum_monitor": {
           "module": "src/monitoring/datum.py",

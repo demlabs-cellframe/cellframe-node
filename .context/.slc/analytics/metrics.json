@@ -1,0 +1,116 @@
+{
+  "system_info": {
+    "created": "2025-06-08T17:10:35.888318",
+    "version": "1.0.0",
+    "last_update": "2025-06-08T17:32:03.160351"
+  },
+  "command_usage": {
+    "list": {
+      "count": 1,
+      "total_duration": 0.0020232200622558594,
+      "success_count": 1,
+      "last_used": "2025-06-08T17:30:39.162212",
+      "average_duration": 0.0020232200622558594
+    },
+    "search": {
+      "count": 1,
+      "total_duration": 0.00980997085571289,
+      "success_count": 1,
+      "last_used": "2025-06-08T17:30:44.239534",
+      "average_duration": 0.00980997085571289
+    },
+    "metrics": {
+      "count": 1,
+      "total_duration": 0.00019216537475585938,
+      "success_count": 1,
+      "last_used": "2025-06-08T17:30:48.942281",
+      "average_duration": 0.00019216537475585938
+    },
+    "analyze": {
+      "count": 1,
+      "total_duration": 0.0009479522705078125,
+      "success_count": 1,
+      "last_used": "2025-06-08T17:30:54.554812",
+      "average_duration": 0.0009479522705078125
+    },
+    "insights": {
+      "count": 1,
+      "total_duration": 0.0013248920440673828,
+      "success_count": 1,
+      "last_used": "2025-06-08T17:32:03.160343",
+      "average_duration": 0.0013248920440673828
+    }
+  },
+  "module_usage": {},
+  "performance_data": {
+    "command_execution_times": {
+      "list": [
+        {
+          "timestamp": "2025-06-08T17:30:39.162219",
+          "duration": 0.0020232200622558594,
+          "success": true,
+          "context": {}
+        }
+      ],
+      "search": [
+        {
+          "timestamp": "2025-06-08T17:30:44.239538",
+          "duration": 0.00980997085571289,
+          "success": true,
+          "context": {}
+        }
+      ],
+      "metrics": [
+        {
+          "timestamp": "2025-06-08T17:30:48.942296",
+          "duration": 0.00019216537475585938,
+          "success": true,
+          "context": {}
+        }
+      ],
+      "analyze": [
+        {
+          "timestamp": "2025-06-08T17:30:54.554829",
+          "duration": 0.0009479522705078125,
+          "success": true,
+          "context": {}
+        }
+      ],
+      "insights": [
+        {
+          "timestamp": "2025-06-08T17:32:03.160348",
+          "duration": 0.0013248920440673828,
+          "success": true,
+          "context": {}
+        }
+      ]
+    },
+    "module_loading_times": {},
+    "search_performance": []
+  },
+  "usage_patterns": {
+    "daily_usage": {},
+    "weekly_patterns": {},
+    "command_sequences": []
+  },
+  "quality_metrics": {
+    "system_health": 100.0,
+    "user_satisfaction": 0.0,
+    "recommendation_accuracy": 0.0
+  },
+  "navigation_system": {
+    "purpose": "Файл СЛК: metrics.json",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/.slc/analytics/metrics.json",
+    "file_role": "UNKNOWN",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info .slc/analytics/metrics.json для подробной информации",
+    "ai_context": "Файл СЛК системы: metrics.json"
+  }
+}

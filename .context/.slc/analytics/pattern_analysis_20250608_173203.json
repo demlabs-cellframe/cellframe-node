@@ -1,0 +1,130 @@
+{
+  "temporal_patterns": {
+    "peak_usage_hours": [],
+    "daily_patterns": {},
+    "command_frequency_trends": {}
+  },
+  "workflow_patterns": {
+    "common_command_sequences": [],
+    "module_usage_correlation": {},
+    "efficient_workflows": [
+      {
+        "command": "list",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.0020232200622558594,
+        "usage_count": 1
+      },
+      {
+        "command": "search",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.00980997085571289,
+        "usage_count": 1
+      },
+      {
+        "command": "metrics",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.00019216537475585938,
+        "usage_count": 1
+      },
+      {
+        "command": "analyze",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.0009479522705078125,
+        "usage_count": 1
+      }
+    ],
+    "workflow_bottlenecks": [
+      {
+        "command": "search",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.00980997085571289,
+        "usage_count": 1
+      },
+      {
+        "command": "metrics",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.00019216537475585938,
+        "usage_count": 1
+      },
+      {
+        "command": "analyze",
+        "efficiency_score": 10000.0,
+        "success_rate": 100.0,
+        "avg_duration": 0.0009479522705078125,
+        "usage_count": 1
+      }
+    ]
+  },
+  "efficiency_analysis": {
+    "system_health_score": 100.0,
+    "performance_trends": {},
+    "resource_utilization": {},
+    "optimization_opportunities": []
+  },
+  "optimization_recommendations": [
+    {
+      "type": "adoption",
+      "priority": "low",
+      "target": "system_usage",
+      "issue": "Низкая активность использования системы",
+      "recommendation": "Рассмотреть обучение пользователей или улучшение документации",
+      "expected_impact": "Повышение эффективности работы"
+    }
+  ],
+  "trend_analysis": {
+    "growth_trends": {
+      "total_executions": 4,
+      "command_diversity": 4,
+      "average_usage_per_command": 1.0,
+      "system_maturity_score": 4.0
+    },
+    "performance_evolution": {},
+    "usage_stability": {}
+  },
+  "user_behavior_insights": {
+    "usage_preferences": {
+      "most_used_commands": [
+        {
+          "command": "list",
+          "usage_count": 1
+        },
+        {
+          "command": "search",
+          "usage_count": 1
+        },
+        {
+          "command": "metrics",
+          "usage_count": 1
+        },
+        {
+          "command": "analyze",
+          "usage_count": 1
+        }
+      ],
+      "command_distribution": 0
+    },
+    "learning_curve_indicators": {},
+    "efficiency_indicators": {}
+  },
+  "navigation_system": {
+    "purpose": "Файл СЛК: pattern_analysis_20250608_173203.json",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/.slc/analytics/pattern_analysis_20250608_173203.json",
+    "file_role": "UNKNOWN",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info .slc/analytics/pattern_analysis_20250608_173203.json для подробной информации",
+    "ai_context": "Файл СЛК системы: pattern_analysis_20250608_173203.json"
+  }
+}

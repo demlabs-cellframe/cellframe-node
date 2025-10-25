@@ -1,0 +1,180 @@
+{
+  "task": {
+    "name": "Python DAP SDK Bindings",
+    "version": "1.0",
+    "type": "c_library_python_bindings",
+    "description": "Создание реальных биндингов между Python и DAP SDK вместо заглушек"
+  },
+  
+  "dap_sdk_coding_standards": {
+    "naming_conventions": {
+      "functions": {
+        "prefix": "dap_",
+        "style": "snake_case",
+        "examples": ["dap_common_init()", "dap_config_get()"]
+      },
+      "variables": {
+        "prefixes": {
+          "local": "l_",
+          "argument": "a_",
+          "static": "s_",
+          "global": "g_"
+        },
+        "style": "snake_case",
+        "examples": ["l_buffer_size", "a_config_path"]
+      },
+      "macros": {
+        "prefix": "DAP_",
+        "style": "UPPER_CASE",
+        "examples": ["DAP_NEW", "DAP_DELETE", "DAP_MALLOC"]
+      },
+      "types": {
+        "suffix": "_t",
+        "style": "snake_case",
+        "examples": ["dap_config_t", "dap_chain_t"]
+      }
+    },
+    
+    "memory_management": {
+      "allocation": {
+        "preferred": ["DAP_NEW", "DAP_NEW_Z", "DAP_MALLOC", "DAP_CALLOC"],
+        "avoid": ["malloc", "calloc", "new"],
+        "always_check": true,
+        "pattern": "if (!ptr) { log_it(L_CRITICAL, \"%s\", c_error_memory_alloc); return -ENOMEM; }"
+      },
+      "deallocation": {
+        "preferred": ["DAP_DELETE", "DAP_FREE"],
+        "avoid": ["free", "delete"],
+        "null_after_free": true
+      }
+    },
+    
+    "logging": {
+      "function": "log_it",
+      "levels": {
+        "L_DEBUG": "Detailed debugging information",
+        "L_INFO": "General information", 
+        "L_NOTICE": "Normal but significant events",
+        "L_MSG": "User-level messages",
+        "L_DAP": "DAP-specific events",
+        "L_WARNING": "Warning conditions",
+        "L_ATT": "Attention-requiring events",
+        "L_ERROR": "Error conditions",
+        "L_CRITICAL": "Critical conditions"
+      },
+      "log_tag_required": true,
+      "pattern": "#define LOG_TAG \"module_name\""
+    },
+    
+    "error_handling": {
+      "return_codes": {
+        "success": 0,
+        "memory_error": "-ENOMEM", 
+        "invalid_param": "-EINVAL",
+        "not_found": "-ENOENT"
+      },
+      "pattern": "Always check return values and handle errors gracefully"
+    },
+    
+    "includes": {
+      "required": ["dap_common.h"],
+      "order": ["system headers", "dap headers", "local headers"],
+      "style": "Use quotes for local, brackets for system"
+    },
+    
+    "code_style": {
+      "indentation": "4 spaces",
+      "braces": "K&R style", 
+      "line_length": "120 characters max",
+      "comments": "Use /* */ for block, // for inline"
+    },
+    
+    "forbidden_libraries": {
+      "openssl": {
+        "rule": "ЗАПРЕЩЕНО использовать OpenSSL. Все функции хэширования должны использовать только собственные реализации DAP SDK",
+        "rationale": "Проект использует собственные криптографические примитивы для независимости от внешних библиотек",
+        "hash_functions": {
+          "sha256": "dap_hash_fast() или dap_enc_hash()",
+          "keccak": "Использовать XKCP библиотеку через dap_crypto_XKCP",
+          "general": "Все хэш-функции доступны через dap_hash.h"
+        }
+      }
+    }
+  },
+  
+  "python_bindings_specifics": {
+    "purpose": "Создание прямых биндингов к реальным DAP SDK функциям",
+    "avoid": "Заглушки (stubs) и фиктивные реализации",
+    "memory_management": {
+      "principle": "Python управляет памятью автоматически, но C биндинги должны правильно освобождать DAP ресурсы",
+      "pattern": "Возвращать allocated memory для Python через malloc(), а DAP ресурсы освобождать через DAP_DELETE/DAP_FREE"
+    },
+    
+    "function_mapping": {
+      "crypto": {
+        "hash_fast": "dap_hash_fast() -> dap_hash_fast_py()",
+        "hash_slow": "Использовать dap_hash_fast() так как separate slow hash нет",
+        "key_operations": "Прямые вызовы dap_enc_key_* функций"
+      },
+      "config": {
+        "pattern": "Прямые вызовы dap_config_* функций с проверкой параметров"
+      },
+      "network": {
+        "client_server": "Прямые вызовы dap_client_* и dap_server_* функций"
+      },
+      "system": {
+        "time": "Прямые вызовы dap_time_* функций",
+        "logging": "Прямые вызовы log_it() и dap_log_* функций"
+      }
+    }
+  },
+  
+  "implementation_rules": {
+    "no_dummy_data": "Никаких фиктивных данных, только реальные вызовы DAP SDK",
+    "error_propagation": "Все ошибки DAP SDK должны корректно передаваться в Python",
+    "parameter_validation": "Всегда проверять входные параметры перед вызовом DAP функций",
+    "resource_cleanup": "Обеспечить правильную очистку DAP ресурсов при завершении Python объектов"
+  },
+  
+  "testing_requirements": {
+    "unit_tests": {
+      "logging_format": "DAP_LOG_FORMAT_NO_PREFIX",
+      "initialization": "dap_common_init() в начале каждого теста",
+      "cleanup": "dap_common_deinit() в конце каждого теста"
+    },
+    "integration_tests": "Тестировать реальные операции с DAP SDK, не заглушки"
+  },
+  
+  "current_files": {
+    "bindings": [
+      "src/python_dap_core.c - Реальные биндинги к dap_core функциям",
+      "src/python_dap_config.c - Реальные биндинги к dap_config функциям", 
+      "src/python_dap_crypto.c - Реальные биндинги к dap_crypto функциям",
+      "src/python_dap_network.c - Реальные биндинги к dap_network функциям",
+      "src/python_dap_system.c - Реальные биндинги к dap_system функциям",
+      "src/python_dap_common.c - Реальные биндинги к dap_common функциям"
+    ],
+    "headers": [
+      "include/python_cellframe_common.h - Объявления всех экспортируемых функций"
+    ],
+    "build": [
+      "CMakeLists.txt - Конфигурация сборки с линковкой DAP SDK",
+      "setup.py - Python package setup"
+    ]
+  },
+  
+  "progress": {
+    "completed": [
+      "✅ Удалены заглушки",
+      "✅ Созданы реальные биндинги для crypto, config, network, system, common",
+      "✅ Обновлен CMakeLists.txt для включения всех биндингов",
+      "✅ Обновлены объявления функций в заголовочном файле"
+    ],
+    "next_steps": [
+      "🔄 Исправить потенциальные ошибки компиляции",
+      "🔄 Протестировать биндинги с реальными DAP SDK функциями",
+      "🔄 Добавить необходимые include директивы",
+      "🔄 Проверить корректность передачи ошибок из DAP SDK в Python"
+    ]
+  }
+} 

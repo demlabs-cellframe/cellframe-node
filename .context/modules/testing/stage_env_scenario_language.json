@@ -173,6 +173,11 @@
     },
 
     "sections": {
+      "overview": {
+        "description": "Сценарий разделён на 3 секции: setup, test, check",
+        "execution_order": "setup → test → check",
+        "section_format": "Может быть list[TestStep] (старый формат) или SectionConfig (новый формат)"
+      },
       "setup": {
         "type": "SectionConfig | list[TestStep]",
         "required": false,
@@ -183,7 +188,11 @@
           "Создание токенов",
           "Генерация тестовых данных",
           "Ожидание синхронизации сети"
-        ]
+        ],
+        "modern_syntax": {
+          "with_defaults": "setup:\n  defaults:\n    node: node2\n    wait: 1s\n  steps:\n    - cli: ...",
+          "simple_list": "setup:\n  - cli: wallet new -w test\n  - wait: 3s"
+        }
       },
       "test": {
         "type": "SectionConfig | list[TestStep]",
@@ -194,18 +203,41 @@
           "Выполнение тестируемой операции",
           "Вызов API/CLI команд",
           "Создание транзакций"
-        ]
+        ],
+        "modern_syntax": {
+          "with_defaults": "test:\n  defaults:\n    wait: 5s\n  steps:\n    - cli: ...",
+          "simple_list": "test:\n  - cli: token list\n  - cli: wallet list"
+        }
       },
       "check": {
         "type": "CheckSectionConfig | list[CheckSpec]",
         "required": false,
         "description": "Assertions и проверки результатов",
         "execution": "Выполняется после test",
+        "fail_fast": "Прерывается при первом failed check",
         "typical_use": [
           "Проверка что операция выполнилась",
           "Валидация данных",
           "Проверка состояния системы"
-        ]
+        ],
+        "modern_syntax": {
+          "with_defaults": "check:\n  defaults:\n    node: node1\n  steps:\n    - cli: ...",
+          "simple_list": "check:\n  - cli: token info -name TEST\n    contains: 'TEST'"
+        }
+      },
+      "SectionConfig_model": {
+        "description": "Pydantic модель для setup/test секций",
+        "fields": {
+          "defaults": "Optional[StepDefaults] - defaults для всех шагов секции",
+          "steps": "List[TestStep] - список шагов"
+        }
+      },
+      "CheckSectionConfig_model": {
+        "description": "Pydantic модель для check секции",
+        "fields": {
+          "defaults": "Optional[StepDefaults] - defaults для всех checks",
+          "steps": "List[CheckSpec] - список проверок"
+        }
       }
     }
   },
@@ -868,14 +900,54 @@
       "methods": {
         "get_variable(name)": "Получить значение переменной",
         "set_variable(name, value)": "Установить переменную",
-        "has_variable(name)": "Проверить существование"
+        "has_variable(name)": "Проверить существование",
+        "get_summary()": "Получить summary выполнения (passed/failed/total)",
+        "add_result(type, success, data)": "Добавить результат шага"
       },
       "variable_lifecycle": {
         "predefined": "Из scenario.variables",
-        "builtin": "network_name автоматически",
-        "runtime": "Установленные через save: или ctx.set_variable()",
+        "builtin": "network_name автоматически из network.name",
+        "runtime": "Установленные через save:/save_hash/save_wallet/save_node или ctx.set_variable()",
         "scope": "Глобальный - доступны во всех секциях сценария"
       }
+    }
+  },
+
+  "internal_models": {
+    "SuiteSetupScenario": {
+      "module": "src/scenarios/schema.py",
+      "description": "Легковесная модель для выполнения suite-level setup",
+      "purpose": "В отличие от TestScenario, не требует test секции",
+      "fields": [
+        "name - название setup",
+        "description - описание",
+        "network - Optional[NetworkConfig]",
+        "includes - List[str]",
+        "setup - Union[List[TestStep], SectionConfig]",
+        "variables - Dict[str, Any]"
+      ],
+      "usage": "Создаётся в test_commands.py для выполнения suite descriptor's includes + setup",
+      "benefit": "Правильная валидация без hacky dummy steps"
+    },
+    "TestScenario": {
+      "module": "src/scenarios/schema.py",
+      "description": "Полная модель тестового сценария",
+      "required_fields": ["name", "description", "test"],
+      "validation": "model_validator нормализует setup/test/check к SectionConfig формату"
+    },
+    "ExtractType": {
+      "module": "src/scenarios/schema.py",
+      "description": "Enum для типов извлекаемых данных",
+      "values": [
+        "WALLET_ADDRESS - wallet адрес",
+        "NODE_ADDRESS - node адрес",
+        "HASH - хэш",
+        "NUMBER - число",
+        "TOKEN_NAME - имя токена",
+        "BOOL - булево значение",
+        "RAW - произвольный тип"
+      ],
+      "usage": "В DataExtractor для определения валидации"
     }
   },
 

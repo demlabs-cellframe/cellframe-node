@@ -1,0 +1,456 @@
+{
+  "version": "1.0",
+  "created": "2025-01-15T19:00:00Z",
+  "updated": "2025-01-15T19:00:00Z",
+  "extracted_from": "tasks/completed/valora_restaking/valora_analysis_completed.json",
+  "navigation_system": {
+    "purpose": "Методология разработки",
+    "recovery_path": ".context/manifest.json",
+    "current_file": ".context/modules/methodologies/defi_security_audit.json",
+    "file_role": "METHODOLOGY_TEMPLATE",
+    "related_files": [
+      ".context/manifest.json"
+    ],
+    "quick_navigation": {
+      "🏠 Главная": ".context/manifest.json - главный навигатор системы",
+      "🛠️ CLI": ".context/tools/scripts/slc_cli.py - автоматизация"
+    },
+    "usage_hint": "./slc info modules/methodologies/defi_security_audit.json для подробной информации",
+    "ai_context": "Файл СЛК системы: defi_security_audit.json"
+  },
+  "methodology_info": {
+    "name": "DeFi Security Audit Methodology",
+    "description": "Систематический подход к security audit DeFi протоколов с фокусом на критические уязвимости",
+    "version": "1.0",
+    "domain": "defi_security_audit",
+    "specialization": "liquid_staking_protocols",
+    "derived_from": "Анализ Valora Finance - Liquid Staking Protocol",
+    "applicability": "Все DeFi протоколы: liquid staking, lending, DEX, yield farming",
+    "target_projects": [
+      "Liquid Staking Protocols (Lido, Rocket Pool аналоги)",
+      "Lending/Borrowing Protocols (Aave, Compound типы)",
+      "Decentralized Exchanges (Uniswap, Curve типы)",
+      "Yield Farming Protocols",
+      "Cross-chain Bridges",
+      "Governance Protocols"
+    ]
+  },
+  "audit_methodology": {
+    "phase_1_architecture_analysis": {
+      "title": "🏗️ Анализ Архитектуры Протокола",
+      "priority": "HIGH",
+      "duration": "2-3 дня",
+      "objectives": [
+        "Понимание общей архитектуры протокола",
+        "Анализ взаимодействий между контрактами",
+        "Оценка модульности и upgradability",
+        "Документирование потоков данных"
+      ],
+      "checklist": {
+        "contract_inventory": {
+          "description": "Полная инвентаризация всех контрактов",
+          "tasks": [
+            "📋 Составить список всех контрактов протокола",
+            "🔗 Определить зависимости между контрактами",
+            "📊 Создать диаграмму архитектуры",
+            "📝 Документировать назначение каждого контракта"
+          ],
+          "valora_example": {
+            "contracts_analyzed": [
+              "ValoraCore.sol - главный контракт протокола",
+              "ValoraStakedCell.sol - sCELL токен",
+              "WithdrawalManager.sol - система вывода средств",
+              "AdminManager.sol - администрирование",
+              "BridgeManager.sol - cross-chain интеграция"
+            ]
+          }
+        },
+        "interaction_analysis": {
+          "description": "Анализ взаимодействий между компонентами",
+          "tasks": [
+            "🔄 Проследить потоки данных между контрактами",
+            "🔒 Проверить access control между модулями",
+            "⚡ Анализировать критические пути выполнения",
+            "🚨 Выявить single points of failure"
+          ]
+        },
+        "upgradability_assessment": {
+          "description": "Оценка системы обновлений",
+          "tasks": [
+            "🔧 Анализ proxy patterns (UUPS, Transparent, etc.)",
+            "👥 Проверка механизмов governance для upgrades",
+            "⏱️ Оценка timelocks и emergency procedures",
+            "🛡️ Анализ рисков централизации при upgrades"
+          ],
+          "valora_insights": "UUPS upgradeable паттерн требует особого внимания к upgrade mechanisms"
+        }
+      },
+      "deliverables": [
+        "📊 Диаграмма архитектуры контрактов",
+        "📋 Инвентарь контрактов с описаниями",
+        "🔄 Документация потоков данных",
+        "⚠️ Список выявленных архитектурных рисков"
+      ]
+    },
+    "phase_2_security_audit": {
+      "title": "🔐 Комплексный Security Audit",
+      "priority": "CRITICAL",
+      "duration": "5-7 дней",
+      "objectives": [
+        "Выявление критических уязвимостей",
+        "Анализ векторов атак",
+        "Оценка безопасности key mechanisms",
+        "Приоритизация найденных проблем"
+      ],
+      "vulnerability_categories": {
+        "smart_contract_vulnerabilities": {
+          "reentrancy_attacks": {
+            "description": "Проверка на возможность повторного входа",
+            "checks": [
+              "🔒 Использование ReentrancyGuard модификаторов",
+              "📍 Проверка CEI pattern (Check-Effect-Interaction)",
+              "🔄 Анализ внешних вызовов в критических функциях",
+              "💰 Особое внимание к withdrawal и transfer функциям"
+            ],
+            "valora_relevance": "Критично для WithdrawalManager - hash-based withdrawal система"
+          },
+          "access_control_issues": {
+            "description": "Анализ контроля доступа",
+            "checks": [
+              "👑 Проверка корректности role-based access control",
+              "🔑 Анализ административных функций",
+              "🚪 Проверка модификаторов доступа",
+              "⚠️ Выявление функций без proper access control"
+            ],
+            "valora_relevance": "AdminManager требует тщательной проверки прав доступа"
+          },
+          "arithmetic_vulnerabilities": {
+            "description": "Проблемы с арифметическими операциями",
+            "checks": [
+              "🔢 Integer overflow/underflow защита",
+              "📐 Корректность математики протокола",
+              "💹 Точность расчетов exchange rates",
+              "🔄 Проверка rebase логики"
+            ],
+            "valora_relevance": "Exchange rates между CELL и sCELL критичны"
+          }
+        },
+        "defi_specific_vulnerabilities": {
+          "flash_loan_attacks": {
+            "description": "Атаки с использованием flash loans",
+            "checks": [
+              "⚡ Проверка защиты от price manipulation",
+              "🔄 Анализ atomic transactions",
+              "💰 Оценка economic incentives",
+              "🛡️ Проверка oracle dependencies"
+            ]
+          },
+          "governance_attacks": {
+            "description": "Атаки на системы управления",
+            "checks": [
+              "🗳️ Анализ voting mechanisms",
+              "⏱️ Проверка timelocks для критических изменений",
+              "👥 Оценка decentralization level",
+              "🚨 Emergency procedures analysis"
+            ]
+          },
+          "liquidity_attacks": {
+            "description": "Атаки на ликвидность протокола",
+            "checks": [
+              "💧 Анализ withdrawal mechanisms",
+              "🔒 Проверка slashing conditions",
+              "⚖️ Evaluation of liquidity buffers",
+              "📊 Stress testing scenarios"
+            ],
+            "valora_relevance": "Мгновенные withdrawal requests требуют особого анализа"
+          }
+        },
+        "cross_chain_vulnerabilities": {
+          "description": "Специфичные проблемы cross-chain интеграции",
+          "checks": [
+            "🌉 Bridge security mechanisms",
+            "🔄 Message passing vulnerabilities",
+            "⏰ Timing attack vectors",
+            "💱 Cross-chain state synchronization"
+          ],
+          "valora_relevance": "BridgeManager для Cellframe интеграции критичен"
+        }
+      },
+      "audit_tools_and_techniques": {
+        "manual_code_review": {
+          "description": "Детальный ручной анализ кода",
+          "approach": [
+            "📖 Line-by-line code review",
+            "🔍 Logic flow analysis",
+            "🎯 Focus on critical functions",
+            "📝 Documentation of findings"
+          ]
+        },
+        "static_analysis": {
+          "description": "Автоматизированный статический анализ",
+          "tools": [
+            "Slither - comprehensive static analysis",
+            "Mythril - symbolic execution",
+            "Semgrep - custom pattern matching",
+            "Solhint - style and security linting"
+          ]
+        },
+        "mathematical_verification": {
+          "description": "Проверка математической корректности",
+          "focus_areas": [
+            "💹 Exchange rate calculations",
+            "🔄 Rebase mechanisms",
+            "💰 Fee calculations",
+            "⚖️ Economic equilibrium analysis"
+          ]
+        },
+        "attack_vector_analysis": {
+          "description": "Систематический анализ векторов атак",
+          "methodology": [
+            "🎯 Threat modeling",
+            "💰 Economic attack analysis",
+            "🔄 MEV (Maximal Extractable Value) considerations",
+            "🌐 Cross-protocol interaction risks"
+          ]
+        }
+      },
+      "deliverables": [
+        "📊 Comprehensive security audit report",
+        "🚨 Prioritized list of vulnerabilities",
+        "🛠️ Detailed remediation recommendations",
+        "⚠️ Risk assessment matrix",
+        "📋 Executive summary for stakeholders"
+      ]
+    },
+    "phase_3_mainnet_readiness": {
+      "title": "🚀 Оценка Готовности к Production",
+      "priority": "HIGH",
+      "duration": "2-3 дня",
+      "objectives": [
+        "Оценка готовности к mainnet deployment",
+        "Анализ операционной безопасности",
+        "Проверка monitoring и alerting",
+        "Validation deployment procedures"
+      ],
+      "readiness_checklist": {
+        "technical_readiness": {
+          "testing_completeness": [
+            "✅ Comprehensive unit test coverage (>90%)",
+            "✅ Integration tests for all contract interactions",
+            "✅ End-to-end protocol testing",
+            "✅ Stress testing under high load",
+            "✅ Fork testing on mainnet data"
+          ],
+          "security_validation": [
+            "✅ Security audit completed and issues resolved",
+            "✅ Multiple independent audits conducted",
+            "✅ Bug bounty program launched",
+            "✅ Formal verification where applicable"
+          ],
+          "performance_optimization": [
+            "✅ Gas optimization completed",
+            "✅ Transaction cost analysis",
+            "✅ Scalability considerations addressed",
+            "✅ MEV protection mechanisms in place"
+          ]
+        },
+        "operational_readiness": {
+          "monitoring_and_alerting": [
+            "✅ Real-time monitoring dashboard",
+            "✅ Critical metrics alerting",
+            "✅ Anomaly detection systems",
+            "✅ 24/7 incident response team"
+          ],
+          "emergency_procedures": [
+            "✅ Emergency pause mechanisms",
+            "✅ Incident response playbooks",
+            "✅ Communication protocols",
+            "✅ Recovery procedures documented"
+          ],
+          "governance_readiness": [
+            "✅ Governance framework deployed",
+            "✅ Voting mechanisms tested",
+            "✅ Timelock procedures validated",
+            "✅ Community engagement established"
+          ]
+        },
+        "documentation_completeness": [
+          "✅ Technical documentation for developers",
+          "✅ User guides and tutorials",
+          "✅ API documentation",
+          "✅ Security best practices guide",
+          "✅ Incident response documentation"
+        ]
+      },
+      "valora_status_analysis": {
+        "completed_requirements": [
+          "✅ BSC Testnet deployment successful",
+          "✅ Core functionality working properly",
+          "✅ Basic contract interactions validated"
+        ],
+        "missing_requirements": [
+          "❌ Comprehensive security audit",
+          "❓ Gas optimization analysis needed",
+          "❌ Monitoring and alerting systems",
+          "❌ Emergency procedures documentation"
+        ]
+      },
+      "deliverables": [
+        "📋 Mainnet readiness checklist",
+        "🗺️ Deployment roadmap",
+        "🚨 List of critical blockers",
+        "📈 Recommended improvement priorities"
+      ]
+    },
+    "phase_4_ecosystem_analysis": {
+      "title": "📋 Анализ Экосистемы и Недостающих Компонентов",
+      "priority": "MEDIUM",
+      "duration": "1-2 дня",
+      "objectives": [
+        "Анализ полноты экосистемы протокола",
+        "Выявление недостающих компонентов",
+        "Приоритизация развития",
+        "Roadmap для будущих улучшений"
+      ],
+      "ecosystem_components": {
+        "core_protocol": {
+          "description": "Основные smart contracts",
+          "assessment_criteria": [
+            "✅ Функциональная полнота",
+            "✅ Security audit status",
+            "✅ Upgradability mechanisms",
+            "✅ Performance optimization"
+          ]
+        },
+        "user_interfaces": {
+          "description": "Frontend applications для пользователей",
+          "typical_requirements": [
+            "🌐 Web application (dApp)",
+            "📱 Mobile application support",
+            "🔗 Wallet integration",
+            "📊 Dashboard для analytics"
+          ]
+        },
+        "infrastructure_components": {
+          "description": "Supporting infrastructure",
+          "typical_requirements": [
+            "🔗 Backend API services",
+            "📊 Analytics и monitoring",
+            "🤖 Automated operations (keepers)",
+            "📈 Subgraph для data indexing"
+          ]
+        },
+        "governance_and_community": {
+          "description": "Governance и community tools",
+          "typical_requirements": [
+            "🗳️ Voting interface",
+            "💬 Community forums",
+            "📚 Documentation portal",
+            "🎓 Educational content"
+          ]
+        }
+      },
+      "valora_gap_analysis": {
+        "missing_components": [
+          "❌ Web UI для пользователей",
+          "❌ Backend API для интеграции",
+          "❌ Real-time monitoring dashboard",
+          "❌ Comprehensive test suite",
+          "❌ Governance voting interface",
+          "❌ Multi-validator support"
+        ],
+        "development_priorities": [
+          "🔥 HIGH: Web UI для basic operations",
+          "🔥 HIGH: Monitoring и alerting",
+          "📊 MEDIUM: Analytics dashboard",
+          "🗳️ MEDIUM: Governance interface",
+          "🔮 LOW: Advanced features"
+        ]
+      },
+      "deliverables": [
+        "📋 Ecosystem completeness assessment",
+        "🎯 Prioritized development roadmap",
+        "📝 Technical requirements для missing components",
+        "💰 Resource allocation recommendations"
+      ]
+    }
+  },
+  "audit_report_template": {
+    "executive_summary": {
+      "protocol_overview": "Brief description of the audited protocol",
+      "audit_scope": "What was audited and what was excluded",
+      "key_findings": "Summary of critical and high severity issues",
+      "overall_assessment": "Overall security posture evaluation",
+      "recommendations": "Top-level recommendations for improvement"
+    },
+    "detailed_findings": {
+      "vulnerability_format": {
+        "title": "Clear, descriptive title",
+        "severity": "Critical | High | Medium | Low | Informational",
+        "description": "Detailed explanation of the vulnerability",
+        "impact": "Potential consequences if exploited",
+        "proof_of_concept": "Code snippet or steps to reproduce",
+        "recommendation": "Specific remediation steps",
+        "status": "Open | Fixed | Acknowledged | Disputed"
+      }
+    },
+    "appendices": {
+      "methodology": "Detailed audit methodology used",
+      "tools": "List of tools and techniques employed",
+      "scope": "Complete list of files and functions reviewed",
+      "disclaimers": "Audit limitations and disclaimers"
+    }
+  },
+  "cli_integration": {
+    "slc_cli_audit_command": {
+      "usage": "python3 tools/scripts/slc_cli.py audit PROJECT_PATH",
+      "description": "Automated DeFi security audit using this methodology",
+      "features": [
+        "📋 Automated checklist generation",
+        "📊 Report template creation",
+        "🔍 Basic static analysis integration",
+        "📝 Finding tracking and status updates"
+      ]
+    }
+  },
+  "best_practices": {
+    "audit_preparation": [
+      "📚 Study protocol documentation thoroughly",
+      "🎯 Understand business logic and tokenomics",
+      "🔗 Analyze external dependencies",
+      "📊 Review previous audit reports if available"
+    ],
+    "during_audit": [
+      "📝 Document findings immediately",
+      "🔄 Regular communication with development team",
+      "✅ Verify fixes before marking as resolved",
+      "🎯 Focus on high-impact, high-probability risks"
+    ],
+    "post_audit": [
+      "📊 Provide clear, actionable recommendations",
+      "🤝 Support development team during remediation",
+      "✅ Re-audit critical fixes",
+      "📈 Consider long-term security improvements"
+    ]
+  },
+  "knowledge_base": {
+    "reference_vulnerabilities": [
+      "The DAO (Reentrancy) - Historical significance",
+      "bZx Flash Loan Attacks - Price manipulation",
+      "Harvest Finance - Flash loan + governance attack",
+      "Alpha Homora - Bank run scenario"
+    ],
+    "useful_resources": [
+      "🔗 Consensys Smart Contract Best Practices",
+      "📚 DeFiSafety Protocol Reviews",
+      "🛡️ Rekt.news - DeFi incident analysis",
+      "📖 Trail of Bits Security Guidelines"
+    ]
+  },
+  "continuous_improvement": {
+    "methodology_updates": "Regular updates based on new attack vectors and best practices",
+    "community_feedback": "Incorporating lessons learned from community audits",
+    "tool_integration": "Adding new tools and techniques as they become available",
+    "knowledge_sharing": "Contributing findings back to the DeFi security community"
+  }
+}
