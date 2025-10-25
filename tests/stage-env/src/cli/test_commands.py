@@ -298,9 +298,14 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                         
                         from ..scenarios.executor import ScenarioExecutor
                         from ..scenarios.schema import SuiteSetupScenario
+                        from ..scenarios.parser import ScenarioParser
                         
-                        # Create a lightweight scenario for suite setup (no test steps required)
-                        suite_setup_data = {
+                        # Create a temporary YAML file for suite setup with includes
+                        # This allows ScenarioParser to process includes properly
+                        import tempfile
+                        import yaml
+                        
+                        suite_setup_yaml = {
                             "name": f"{suite_name} - Suite Setup",
                             "description": "Suite-level initialization",
                             "network": suite_spec.network.dict() if suite_spec.network else {"topology": "default"},
@@ -308,9 +313,27 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             "setup": suite_spec.setup.dict() if suite_spec.setup else [],
                         }
                         
+                        # Write to temporary file
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False, dir=suite_dir) as f:
+                            yaml.dump(suite_setup_yaml, f)
+                            temp_suite_setup_file = Path(f.name)
+                        
                         try:
-                            # Parse suite setup using SuiteSetupScenario (no test steps required)
-                            suite_setup_scenario = SuiteSetupScenario(**suite_setup_data)
+                            # Parse using ScenarioParser (this processes includes!)
+                            suite_parser = ScenarioParser(
+                                scenarios_root=suite_path,
+                                common_root=common_root
+                            )
+                            
+                            # Load as regular scenario first to get includes processed
+                            temp_relative = temp_suite_setup_file.relative_to(suite_path)
+                            parsed_data = suite_parser._load_yaml_file(temp_suite_setup_file)
+                            
+                            # Process includes
+                            merged_data = suite_parser._process_includes(parsed_data, suite_path)
+                            
+                            # Now create SuiteSetupScenario from merged data
+                            suite_setup_scenario = SuiteSetupScenario(**merged_data)
                             
                             # Execute setup
                             executor = ScenarioExecutor(
@@ -330,6 +353,12 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             print_error(f"❌ Skipping all scenarios in suite: {suite_name}")
                             # Skip all scenarios in this suite
                             continue
+                        finally:
+                            # Clean up temp file
+                            try:
+                                temp_suite_setup_file.unlink()
+                            except:
+                                pass
 
 
                     
