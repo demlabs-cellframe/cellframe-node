@@ -203,11 +203,12 @@ class DatumMonitor:
             
             # CRITICAL: Check if datum NEVER appeared in mempool
             # This likely means the datum wasn't created (CLI command failed)
-            # Datums are created locally and appear in mempool almost instantly (<1s)
-            if not was_in_mempool and elapsed > 0.5:  # Give it 0.5 seconds max
+            # Datums are created locally and appear in mempool almost instantly (<100ms)
+            if not was_in_mempool and elapsed > 0.1:  # Give it 100ms max
                 error = f"Datum never appeared in mempool after {elapsed:.1f}s - likely not created (check CLI command output for errors)"
                 self._log(f"  ❌ {error}")
                 self._log(f"  💡 Datum hash received: {datum_hash[:50]}...")
+                self._log(f"  💡 Check that token_decl/token_emit command succeeded")
                 return DatumMonitorResult(
                     status=DatumStatus.REJECTED,
                     datum_hash=datum_hash,
@@ -290,8 +291,9 @@ class DatumMonitor:
             container_name = self._node_to_container(node)
             container = self.docker_client.containers.get(container_name)
             
+            # Use mempool_list instead of mempool_proc -list
             cmd = [
-                self.node_cli_path, "mempool_proc", "-list",
+                self.node_cli_path, "mempool_list",
                 "-net", network, "-chain", chain
             ]
             
