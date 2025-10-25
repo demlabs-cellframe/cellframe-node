@@ -264,10 +264,15 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                     if network_mgr:
                         # OPTIMIZATION: Skip restore for first suite if we have pristine network
                         if is_first_suite:
-                            print_success("🚀 Using pristine network (no restore needed)")
-                            # Mark network as used - subsequent suites will restore
-                            pristine_marker.unlink()
+                            # CRITICAL: Remove marker IMMEDIATELY before using pristine network
+                            # Even if suite fails, next run will correctly do restore
+                            try:
+                                pristine_marker.unlink()
+                            except FileNotFoundError:
+                                pass  # Already removed, that's fine
                             is_first_suite = False  # Only first suite gets this benefit
+                            
+                            print_success("🚀 Using pristine network (no restore needed)")
                         else:
                             print_info("🧹 Restoring clean environment state...")
                             
