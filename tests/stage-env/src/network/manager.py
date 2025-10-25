@@ -190,6 +190,24 @@ class NetworkManager:
                    topology=self.topology_name,
                    rebuild=rebuild)
         
+        # Stop previous environment FIRST (keep volumes - they contain certs!)
+        logger.info("stopping_previous_environment")
+        try:
+            self.compose.down(volumes=False, remove_images=False)
+            logger.info("previous_environment_stopped")
+        except Exception as e:
+            logger.debug("no_previous_environment", error=str(e))
+        
+        # Clean up any remaining stale resources
+        self.compose.cleanup_stale_resources()
+        
+        # CRITICAL: Clean node data AFTER stopping old network, BEFORE any generation
+        # This ensures clean slate before configs/certs generation
+        if self.suite_isolation_config.get('auto_create_on_startup', True):
+            if self.snapshot_manager.mode != SnapshotMode.DISABLED:
+                logger.info("cleaning_node_data_after_stop")
+                self._clean_node_data()
+        
         # Generate node configurations
         if not self.nodes:
             node_configs = self.generate_node_configs()
@@ -203,24 +221,6 @@ class NetworkManager:
             node_configs,
             force=rebuild
         )
-        
-        # Stop previous environment (keep volumes - they contain certs!)
-        logger.info("stopping_previous_environment")
-        try:
-            self.compose.down(volumes=False, remove_images=False)
-            logger.info("previous_environment_stopped")
-        except Exception as e:
-            logger.debug("no_previous_environment", error=str(e))
-        
-        # Clean up any remaining stale resources
-        self.compose.cleanup_stale_resources()
-        
-        # CRITICAL: Clean node data AFTER stopping old network, BEFORE starting new one
-        # This ensures new network starts with truly pristine state
-        if self.suite_isolation_config.get('auto_create_on_startup', True):
-            if self.snapshot_manager.mode != SnapshotMode.DISABLED:
-                logger.info("cleaning_node_data_after_stop_before_start")
-                self._clean_node_data()
         
         # Generate dynamic docker-compose.yml for all nodes
         logger.info("generating_docker_compose")
