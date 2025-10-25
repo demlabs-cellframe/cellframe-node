@@ -35,10 +35,12 @@ class DatumStatus(str, Enum):
     VERIFIED = "verified"
     IN_BLOCKS = "in_blocks"
     PROPAGATED = "propagated"
+    SUCCESS = "success"  # Alias for successful completion (in_blocks or propagated)
     REJECTED = "rejected"
     TIMEOUT_MEMPOOL = "timeout_mempool"
     TIMEOUT_VERIFICATION = "timeout_verification"
     TIMEOUT_BLOCKS = "timeout_blocks"
+    TIMEOUT_IN_BLOCKS = "timeout_in_blocks"  # Alias for TIMEOUT_BLOCKS
     TIMEOUT_TOTAL = "timeout_total"
 
 
