@@ -19,11 +19,12 @@ Usage:
 
 import asyncio
 import re
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass, field
+
+import docker
 
 from ..scenarios.schema import DatumStatus
 
@@ -63,6 +64,7 @@ class DatumMonitor:
             log_file: Optional path to monitoring logs directory
         """
         self.node_cli_path = node_cli_path
+        self.docker_client = docker.from_env()
         
         # Create separate datum monitor log
         if log_file:
@@ -286,20 +288,24 @@ class DatumMonitor:
         try:
             # Convert node to container name
             container_name = self._node_to_container(node)
+            container = self.docker_client.containers.get(container_name)
             
             cmd = [
-                "docker", "exec", container_name,
                 self.node_cli_path, "mempool_proc", "-list",
                 "-net", network, "-chain", chain
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
             
-            if result.returncode != 0:
+            if exit_code != 0:
                 return False
             
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            
             # Check if our datum hash is in the output
-            return datum_hash.lower() in result.stdout.lower()
+            return datum_hash.lower() in stdout_str.lower()
             
         except Exception as e:
             self._log(f"  ⚠️ Failed to check mempool: {e}")
@@ -321,22 +327,26 @@ class DatumMonitor:
         try:
             # Convert node to container name
             container_name = self._node_to_container(node)
+            container = self.docker_client.containers.get(container_name)
             
             # Get recent blocks and search for our datum
             cmd = [
-                "docker", "exec", container_name,
                 self.node_cli_path, "block", "list",
                 "-net", network, "-chain", chain, "-last", "10"
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
             
-            if result.returncode != 0:
+            if exit_code != 0:
                 return None
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
             
             # Parse block list output for our datum hash
             # Format: block #N hash:... datums:...
-            lines = result.stdout.split('\n')
+            lines = stdout_str.split('\n')
             for line in lines:
                 if datum_hash.lower() in line.lower():
                     # Extract block number from line
