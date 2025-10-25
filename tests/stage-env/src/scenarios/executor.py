@@ -123,6 +123,80 @@ class ScenarioExecutor:
         self.debug = debug
         self._running = False
         # Monitoring manager будет получен через синглтон при старте сценария
+        # Node role to ID mapping cache (populated from topology)
+        self._node_role_mapping: Optional[Dict[str, str]] = None
+    
+    def _resolve_node_alias(self, node_alias: str) -> str:
+        """
+        Resolve node alias to actual node ID.
+        
+        Supports formats:
+        - node1, node2, ... -> node1, node2 (passthrough)
+        - node-1, node-2 -> node1, node2
+        - root-1, root-2 -> first/second root node
+        - master-1, master-2 -> first/second master node
+        - full-1, full-2 -> first/second full node
+        
+        Args:
+            node_alias: Node alias from scenario
+            
+        Returns:
+            Actual node ID (e.g., "node1")
+        """
+        # Direct node ID (node1, node2, etc.)
+        if node_alias.startswith("node") and len(node_alias) > 4 and node_alias[4:].isdigit():
+            return node_alias
+        
+        # node-N format -> nodeN
+        if node_alias.startswith("node-"):
+            node_num = node_alias[5:]
+            if node_num.isdigit():
+                return f"node{node_num}"
+        
+        # Role-based aliases (root-1, master-2, full-1)
+        if "-" in node_alias:
+            parts = node_alias.rsplit("-", 1)
+            if len(parts) == 2:
+                role, index_str = parts
+                if index_str.isdigit():
+                    index = int(index_str)
+                    
+                    # Need to resolve from topology
+                    if self._node_role_mapping:
+                        role_nodes = [
+                            node_id for node_id, node_role in self._node_role_mapping.items()
+                            if node_role == role
+                        ]
+                        if role_nodes and 1 <= index <= len(role_nodes):
+                            return role_nodes[index - 1]  # 1-indexed
+        
+        # Fallback: return as-is (will fail later if invalid)
+        return node_alias
+    
+    def _resolve_node_to_container(self, node: str) -> str:
+        """
+        Convert node ID/alias to Docker container name.
+        
+        Args:
+            node: Node ID or alias
+            
+        Returns:
+            Container name (e.g., "cellframe-stage-node-1")
+        """
+        # Resolve alias to actual node ID first
+        node_id = self._resolve_node_alias(node)
+        
+        # Already a full container name
+        if node_id.startswith("cellframe-stage-"):
+            return node_id
+        
+        # Extract number from node ID (node1 -> 1)
+        if node_id.startswith("node"):
+            node_num = node_id[4:]  # Remove "node" prefix
+            return f"cellframe-stage-node-{node_num}"
+        
+        # Unknown format - assume it's a service name
+        return f"cellframe-stage-{node_id}"
     
     def _log_to_file(self, message: str):
         """Write message to log file if enabled."""
@@ -966,17 +1040,8 @@ class ScenarioExecutor:
         self, command: str, node: str, timeout: Optional[int] = 30
     ) -> Dict[str, Any]:
         """Run CLI command via docker exec."""
-        # Convert node ID to container name
-        # node1 -> cellframe-stage-node-1
-        if not node.startswith("cellframe-stage-"):
-            # Extract number from node ID (node1 -> 1, node2 -> 2, etc.)
-            if node.startswith("node"):
-                node_num = node[4:]  # Remove "node" prefix
-                container_name = f"cellframe-stage-node-{node_num}"
-            else:
-                container_name = f"cellframe-stage-{node}"
-        else:
-            container_name = node
+        # Convert node alias to container name
+        container_name = self._resolve_node_to_container(node)
         
         # Build docker exec command
         full_cmd = [
@@ -1054,15 +1119,8 @@ class ScenarioExecutor:
         # Substitute variables in bash script
         script = ctx.substitute(step.bash)
         
-        # Convert node ID to container name
-        if not step.node.startswith("cellframe-stage-"):
-            if step.node.startswith("node"):
-                node_num = step.node[4:]
-                container_name = f"cellframe-stage-node-{node_num}"
-            else:
-                container_name = f"cellframe-stage-{step.node}"
-        else:
-            container_name = step.node
+        # Convert node alias to container name
+        container_name = self._resolve_node_to_container(step.node)
         
         # Build docker exec command
         full_cmd = [
