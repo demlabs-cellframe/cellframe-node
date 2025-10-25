@@ -250,10 +250,18 @@ class NetworkManager:
             if self.snapshot_manager.mode != SnapshotMode.DISABLED:
                 logger.info("creating_initial_clean_snapshot_with_pause")
                 try:
-                    # CRITICAL: Clean node data before snapshot to ensure pristine state
-                    # This removes wallets, chains, and other runtime data from previous runs
+                    # CRITICAL: Stop containers before cleaning data to avoid crashes
+                    logger.info("stopping_containers_for_data_cleanup")
+                    self.compose.down(volumes=False, remove_images=False)
+                    
+                    # Clean node data to ensure pristine state
                     logger.info("cleaning_node_data_for_pristine_snapshot")
                     self._clean_node_data()
+                    
+                    # Restart containers with clean data
+                    logger.info("restarting_containers_with_clean_data")
+                    self.compose.up(detach=True, wait=False)
+                    await self._wait_for_network_ready()
                     
                     # Pause all containers to freeze state
                     logger.info("pausing_containers_for_snapshot")
