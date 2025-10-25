@@ -633,7 +633,7 @@ class NetworkManager:
         
         Note: Uses sudo to remove root-owned files created by containers.
         """
-        import subprocess
+        from ..utils.cli import run_command
         
         cache_dir = self.paths_config.get('cache_dir', '../testing/cache')
         cache_path = (self.base_path / cache_dir).resolve()
@@ -647,17 +647,13 @@ class NetworkManager:
         
         # Use sudo to remove directory tree (may contain root-owned files from containers)
         try:
-            subprocess.run(
+            run_command(
                 ["sudo", "rm", "-rf", str(data_dir)],
-                check=True,
-                capture_output=True,
-                text=True
+                check=True
             )
             logger.info("node_data_removed")
-        except subprocess.CalledProcessError as e:
-            logger.error("failed_to_remove_node_data", 
-                        error=str(e),
-                        stderr=e.stderr)
+        except Exception as e:
+            logger.error("failed_to_remove_node_data", error=str(e))
             raise
         
         # Recreate empty data directory structure for each node
