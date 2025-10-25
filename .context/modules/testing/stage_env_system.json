@@ -109,21 +109,34 @@
           "Создание и удаление сетевых топологий",
           "Генерация конфигураций для нод",
           "Health-check monitoring нод",
-          "Интеграция с SnapshotManager"
+          "Интеграция с SnapshotManager",
+          "Управление логами и выполнением команд в контейнерах"
         ],
         "key_methods": {
-          "start()": "Запуск Docker Compose сети",
-          "stop()": "Остановка сети",
-          "rebuild()": "Полная пересборка",
+          "start()": "Запуск Docker Compose сети с генерацией конфигов и сертификатов",
+          "stop()": "Остановка сети (с опцией remove_volumes)",
+          "restart()": "Перезапуск всей сети или конкретной ноды",
+          "rebuild()": "Полная пересборка (cleanup + build + start)",
+          "get_status()": "Получение статуса сети (nodes, health, containers)",
+          "generate_node_configs()": "Генерация NodeConfig для всех нод топологии",
           "create_clean_snapshot()": "Создание снапшота чистого состояния",
-          "restore_clean_state()": "Восстановление из снапшота",
-          "get_status()": "Получение статуса сети"
+          "restore_clean_state()": "Восстановление из снапшота (stop → restore → start)",
+          "clean_test_data()": "Очистка user данных через docker exec (wallets, chains, gdb, logs)",
+          "cleanup()": "Полная очистка (volumes, containers, artifacts)",
+          "get_node_logs()": "Получение логов конкретной ноды",
+          "exec_in_node()": "Выполнение команды в контейнере ноды",
+          "list_nodes()": "Список всех нод с метаданными",
+          "_wait_for_network_ready()": "Ожидание готовности всех нод (internal)"
         },
         "dependencies": [
           "DockerComposeManager (src/docker/compose.py)",
           "TopologyBuilder (src/network/topology_builder.py)",
           "SnapshotManager (src/snapshots/manager.py)",
-          "CertGenerator (src/certs/generator.py)"
+          "CertGenerator (src/certs/generator.py)",
+          "ConfigGenerator (src/config/generator.py)",
+          "GenesisInitializer (src/network/genesis.py)",
+          "HealthChecker (src/monitoring/health.py)",
+          "ArtifactsManager (src/utils/artifacts.py)"
         ]
       },
 
@@ -164,11 +177,25 @@
           "models": [
             "TestScenario - полный сценарий теста",
             "SuiteDescriptor - описание test suite",
+            "SuiteSetupScenario - легковесная модель для suite setup",
             "NetworkConfig - конфигурация сети",
+            "NodeConfig - конфигурация ноды в сценарии",
+            "NodePackageSourceConfig - источник пакета для ноды",
             "SectionConfig - setup/test секции",
             "CheckSectionConfig - check секция",
-            "CLIStep, ToolStep, RPCStep, etc. - типы шагов",
-            "StepDefaults - иерархические defaults"
+            "StepDefaults - иерархические defaults",
+            "StepGroup - группа шагов с defaults",
+            "ScenarioMetadata - общие метаданные",
+            "Step types: CLIStep, ToolStep, RPCStep, WaitStep, WaitForDatumStep, PythonStep, BashStep, LoopStep",
+            "Check types: CLICheck, RPCCheck, PythonCheck, BashCheck",
+            "Package models: AptPackage, LocalPackage, URLPackage",
+            "File models: FileFromSource, FileFromContent"
+          ],
+          "enums": [
+            "NodeRole - роли нод (ROOT, MASTER, FULL, LIGHT, ARCHIVE)",
+            "ExpectResult - ожидаемый результат (SUCCESS, ERROR, ANY)",
+            "DatumStatus - статус датума (NOT_FOUND, IN_MEMPOOL, VERIFIED, IN_BLOCKS, PROPAGATED, REJECTED, TIMEOUT_*)",
+            "ExtractType - типы извлечения (WALLET_ADDRESS, NODE_ADDRESS, HASH, NUMBER, TOKEN_NAME, BOOL, RAW)"
           ],
           "validation": "Pydantic model_validator для сложных проверок"
         },
@@ -333,13 +360,32 @@
         "datum_monitor": {
           "module": "src/monitoring/datum.py",
           "class": "DatumMonitor",
+          "description": "Фоновый сервис мониторинга жизненного цикла датумов",
           "responsibilities": [
             "Мониторинг жизненного цикла датумов",
-            "Отслеживание: mempool → block → propagation",
+            "Отслеживание: mempool → verification → block → propagation",
             "Fail-fast валидация hash формата",
-            "Таймауты: 0.5s mempool, 30s block, 60s propagation"
+            "Таймауты: 0.5s mempool, 30s block, 60s propagation",
+            "Concurrent мониторинг нескольких датумов"
           ],
-          "usage": "WaitForDatumStep в сценариях"
+          "key_methods": {
+            "start()": "Запуск фонового monitoring loop",
+            "stop()": "Остановка сервиса",
+            "track_datum()": "Регистрация датума для мониторинга (возвращает Future)",
+            "_monitoring_loop()": "Основной цикл проверки всех зарегистрированных датумов",
+            "_check_datum()": "Проверка конкретного датума через все стадии",
+            "_check_mempool()": "Проверка наличия в mempool",
+            "_check_verified()": "Проверка verification на master нодах",
+            "_check_in_blocks()": "Проверка включения в блоки",
+            "_check_propagated()": "Проверка распространения блока",
+            "_run_cli()": "Выполнение CLI команды для проверки"
+          },
+          "models": {
+            "DatumTrackingRequest": "Запрос на отслеживание датума (dataclass)",
+            "DatumMonitorResult": "Результат мониторинга (status, elapsed_time, details)"
+          },
+          "usage": "WaitForDatumStep в сценариях",
+          "pattern": "Singleton через MonitoringManager"
         },
         "monitoring_manager": {
           "module": "src/monitoring/manager.py",

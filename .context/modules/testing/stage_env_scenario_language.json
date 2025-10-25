@@ -910,6 +910,36 @@
         "runtime": "Установленные через save:/save_hash/save_wallet/save_node или ctx.set_variable()",
         "scope": "Глобальный - доступны во всех секциях сценария"
       }
+    },
+    "ScenarioExecutor": {
+      "module": "src/scenarios/executor.py",
+      "description": "Выполнение сценариев с полным lifecycle management",
+      "key_methods": {
+        "execute_scenario()": "Главный метод - выполнение всего сценария (setup → test → check)",
+        "_execute_steps()": "Выполнение списка шагов с применением defaults",
+        "_execute_cli_step()": "Выполнение CLI команды через docker exec",
+        "_execute_tool_step()": "Выполнение cellframe-node-tool команды",
+        "_execute_rpc_step()": "JSON-RPC вызов к ноде",
+        "_execute_python_step()": "Выполнение Python кода с ctx доступом",
+        "_execute_bash_step()": "Выполнение Bash скрипта в контейнере",
+        "_execute_wait_step()": "Простое ожидание",
+        "_execute_wait_for_datum_step()": "Ожидание датума через DatumMonitor",
+        "_execute_loop_step()": "Выполнение цикла (deprecated)",
+        "_execute_checks()": "Выполнение всех checks с fail-fast",
+        "_execute_cli_check()": "CLI check",
+        "_execute_python_check()": "Python assertions check",
+        "_execute_bash_check()": "Bash exit code check",
+        "_execute_rpc_check()": "RPC result check",
+        "_merge_defaults()": "Объединение defaults иерархии",
+        "_apply_defaults()": "Применение defaults к шагу",
+        "_check_expectation()": "Проверка ожидаемого результата (парсинг JSON errors)",
+        "_wait_duration()": "Парсинг и выполнение wait (5s, 500ms)"
+      },
+      "integration": {
+        "cli_parser": "Использует CLICommandParser для автодобавления CLI опций",
+        "datum_monitor": "Использует MonitoringManager.get_datum_monitor() для wait_for_datum",
+        "docker": "docker_client для exec команд в контейнерах"
+      }
     }
   },
 

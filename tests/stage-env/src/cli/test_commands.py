@@ -284,8 +284,7 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                             
                             # Execute setup
                             executor = ScenarioExecutor(
-                                docker_client=network_mgr.docker_client if network_mgr else None,
-                                node_configs=network_mgr.node_configs if network_mgr else {},
+                                node_cli_path="cellframe-node-cli",
                                 log_file=suite_dir / "suite-setup.log",
                                 debug=debug
                             )
