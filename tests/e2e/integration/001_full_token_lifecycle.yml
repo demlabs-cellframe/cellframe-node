@@ -10,7 +10,6 @@ network:
   topology: default
 
 includes:
-  - common/create_test_cert.yml
   - common/networks/single_node.yml
 
 defaults:

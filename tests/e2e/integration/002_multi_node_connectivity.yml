@@ -9,15 +9,12 @@ version: "1.0"
 network:
 
 includes:
-  - common/create_test_cert.yml
   topology: default
 
 includes:
-  - common/create_test_cert.yml
 
 
 includes:
-  - common/create_test_cert.yml
 setup:
   - wait: 15s
 
