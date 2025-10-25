@@ -353,12 +353,11 @@ class NetworkConsensusMonitor:
         
         # Overall readiness:
         # - All nodes online
-        # - MAJORITY of nodes have full node list (allow stragglers)
+        # - ALL nodes have full node list (no stragglers allowed)
         # - Chains are synced (or no blocks yet - genesis state)
-        majority_threshold = (self.expected_node_count * 2) // 3  # At least 2/3 of nodes
         state.ready = (
             state.all_nodes_online and
-            state.nodes_with_full_list >= majority_threshold and  # At least 2/3 have full list
+            state.nodes_with_full_list == self.expected_node_count and  # ALL nodes must have full list
             (state.all_chains_synced or state.unique_chain_states == 0)  # Synced or no blocks yet
         )
         
