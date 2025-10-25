@@ -10,7 +10,6 @@ network:
   topology: default
 
 includes:
-  - common/create_test_cert.yml
   - common/networks/single_node.yml
 
 # Global defaults
@@ -21,12 +20,10 @@ defaults:
 setup:
   - wait: 3s
   
-  # Create wallets using loop
-  - loop:
-      over: [wallet1, wallet2]
-      variable: wallet_name
-      steps:
-        - cli: wallet new -w {{wallet_name}}
+  # Create wallets
+  - cli: wallet new -w wallet1
+  
+  - cli: wallet new -w wallet2
   
   # Get wallet addresses with validation
   - cli: wallet info -w wallet1 -net stagenet

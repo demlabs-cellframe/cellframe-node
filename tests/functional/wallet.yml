@@ -7,7 +7,22 @@ tags: [functional, wallet, features]
 version: "1.0"
 
 network:
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
   topology: default
 
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
+
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
 # This is a suite descriptor file (metadata only, no executable steps)
 # Individual test scenarios are in the wallet/ subdirectory

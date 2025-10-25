@@ -385,6 +385,12 @@ class SuiteDescriptor(BaseModel):
     # Optional network configuration for suite-level defaults
     network: Optional[NetworkConfig] = Field(None, description="Default network topology for suite")
     
+    # Optional includes for suite-level setup (executed once before all scenarios)
+    includes: List[str] = Field(default_factory=list, description="Common includes for all scenarios in suite")
+    
+    # Optional setup steps for suite (executed once before all scenarios)
+    setup: Optional[SectionConfig] = Field(None, description="Suite-level setup steps")
+    
     @property
     def name(self) -> str:
         """Alias for suite name (for compatibility)."""

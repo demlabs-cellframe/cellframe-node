@@ -13,5 +13,20 @@ scenarios:
   - tx_create_arbitrage.yml
 
 network:
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
   topology: default
 
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
+
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml

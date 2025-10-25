@@ -261,6 +261,45 @@ def register_commands(app: typer.Typer, base_path: Path, get_config_path: Callab
                         except Exception as e:
                             print_warning(f"Failed to restore clean state: {e}")
 
+                    # Execute suite-level setup (if defined)
+                    if isinstance(suite_spec, SuiteDescriptor) and (suite_spec.includes or suite_spec.setup):
+                        print_info("🔧 Executing suite-level setup...")
+                        
+                        from ..scenarios.executor import ScenarioExecutor
+                        from ..scenarios.schema import TestScenario
+                        
+                        # Create a temporary scenario for suite setup
+                        suite_setup_data = {
+                            "name": f"{suite_name} - Suite Setup",
+                            "description": "Suite-level initialization",
+                            "network": suite_spec.network.dict() if suite_spec.network else {"topology": "default"},
+                            "includes": suite_spec.includes if suite_spec.includes else [],
+                            "setup": suite_spec.setup.dict() if suite_spec.setup else [],
+                        }
+                        
+                        try:
+                            # Parse suite setup as a scenario
+                            suite_setup_scenario = TestScenario(**suite_setup_data)
+                            
+                            # Execute setup
+                            executor = ScenarioExecutor(
+                                docker_client=network_mgr.docker_client if network_mgr else None,
+                                node_configs=network_mgr.node_configs if network_mgr else {},
+                                log_file=suite_dir / "suite-setup.log",
+                                debug=debug
+                            )
+                            
+                            async def _run_suite_setup():
+                                await executor.execute_scenario(suite_setup_scenario)
+                            
+                            asyncio.run(_run_suite_setup())
+                            print_success("✓ Suite setup completed")
+                            
+                        except Exception as e:
+                            print_error(f"Suite setup failed: {e}")
+                            print_warning("Continuing with scenarios...")
+
+
                     
                     # Filter scenarios if needed
                     if filter:
