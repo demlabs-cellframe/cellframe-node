@@ -732,33 +732,28 @@ class ScenarioExecutor:
         ctx.add_result("wait", True, {"duration": step.wait})
     
     async def _execute_wait_for_datum_step(self, step: WaitForDatumStep, ctx: RuntimeContext):
-        """Execute wait-for-datum step - register datum with background monitor."""
+        """Execute wait-for-datum step - directly monitor datum lifecycle."""
         # Support both single hash and list of hashes
         datum_hashes = step.wait_for_datum if isinstance(step.wait_for_datum, list) else [step.wait_for_datum]
         
         # Substitute variables in hashes
         datum_hashes = [ctx.substitute(h) for h in datum_hashes]
         
-        logger.info(f"Registering {len(datum_hashes)} datum(s) for monitoring")
+        logger.info(f"Monitoring {len(datum_hashes)} datum(s)")
         
         # Get monitoring manager singleton
-        monitoring = await MonitoringManager.get_instance(
+        monitoring = MonitoringManager.get_instance(
             node_cli_path=self.node_cli_path,
             log_file=self.log_file
         )
         
-        # CRITICAL: Start monitoring service if not already started
-        if not monitoring.is_started():
-            logger.debug("Starting monitoring service")
-            await monitoring.start()
-        
-        # Register and wait for each datum
+        # Monitor each datum directly (no background tasks)
         results = []
         for datum_hash in datum_hashes:
             logger.debug(f"Monitoring datum: {datum_hash[:16]}...")
             
-            # Register datum for tracking (returns Future)
-            result_future = monitoring.datum.track_datum(
+            # Wait for datum to complete processing
+            result = await monitoring.datum.wait_for_datum(
                 datum_hash=datum_hash,
                 node=step.node,
                 network=step.network,
@@ -770,12 +765,10 @@ class ScenarioExecutor:
                 timeout_in_blocks=step.timeout_in_blocks
             )
             
-            # Wait for result
-            result = await result_future
             results.append(result)
             
             # Check if monitoring failed
-            if result.status not in [DatumStatus.PROPAGATED, DatumStatus.IN_BLOCKS]:
+            if result.status != DatumStatus.SUCCESS:
                 error_msg = f"Datum monitoring failed: {result.error_message}"
                 logger.error(error_msg)
                 
