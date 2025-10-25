@@ -26,11 +26,11 @@ includes:
 setup:
   # Create two wallets for testing
   - cli: wallet new -w sender
-    save: sender_addr
+    save_wallet: sender_addr
     wait: 1s
   
   - cli: wallet new -w receiver
-    save: receiver_addr
+    save_wallet: receiver_addr
     wait: 1s
   
   # Create token (UTXO blocking через token_update, не через флаг)
@@ -74,7 +74,7 @@ test:
   
   # Attempt to spend unblocked UTXO - should SUCCESS
   - cli: tx_create -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1
-    save: transfer_tx
+    save_hash: transfer_tx
 
   - wait_for_datum: "{{transfer_tx}}"
 
