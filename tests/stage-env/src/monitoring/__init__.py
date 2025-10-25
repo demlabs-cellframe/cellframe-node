@@ -33,7 +33,10 @@ from .health import HealthChecker, HealthStatus
 from .network_consensus import (
     NetworkConsensusMonitor,
     NetworkConsensusState,
-    NodeMetrics
+    NodeMetrics,
+    MempoolMetrics,
+    ConsensusMetrics,
+    ESBocsRoundState
 )
 
 __all__ = [
@@ -45,5 +48,8 @@ __all__ = [
     "NetworkConsensusMonitor",
     "NetworkConsensusState",
     "NodeMetrics",
+    "MempoolMetrics",
+    "ConsensusMetrics",
+    "ESBocsRoundState",
 ]
 

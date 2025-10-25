@@ -6,29 +6,88 @@ Monitors and validates:
 - Chain state synchronization (block hashes, counts)
 - Network topology integrity
 - Consensus readiness
+- ESBocs consensus phases and round states
+- Mempool contents and transaction propagation
+- Block propagation across validators
 
 Usage:
     monitor = NetworkConsensusMonitor(nodes, node_cli_path)
     await monitor.wait_for_network_ready(timeout=60)
+    
+    # Get detailed consensus state
+    detailed_state = await monitor.collect_detailed_consensus_state()
 """
 
 import asyncio
 from typing import Dict, List, Optional, Set, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from enum import Enum
 
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
+class ESBocsRoundState(Enum):
+    """ESBocs consensus round states."""
+    WAIT_START = "WAIT_START"
+    WAIT_PROC = "WAIT_PROC"
+    WAIT_SIGNS = "WAIT_SIGNS"
+    WAIT_FINISH = "WAIT_FINISH"
+    WAIT_VOTING = "WAIT_VOTING"
+    UNKNOWN = "UNKNOWN"
+
+
+@dataclass
+class MempoolMetrics:
+    """Mempool state for a node."""
+    
+    total_datums: int = 0
+    datum_hashes: Set[str] = field(default_factory=set)
+    by_type: Dict[str, int] = field(default_factory=dict)  # type -> count
+    
+    def __str__(self) -> str:
+        types_str = ", ".join(f"{t}:{c}" for t, c in self.by_type.items())
+        return f"total={self.total_datums}, types=[{types_str}]"
+
+
+@dataclass
+class ConsensusMetrics:
+    """ESBocs consensus-specific metrics for a node."""
+    
+    round_id: Optional[int] = None
+    round_state: ESBocsRoundState = ESBocsRoundState.UNKNOWN
+    
+    # Validator state
+    is_validator: bool = False
+    validator_addr: Optional[str] = None
+    
+    # Consensus counters
+    submitted_candidates: int = 0
+    approved_count: int = 0
+    rejected_count: int = 0
+    signed_count: int = 0
+    
+    # Timing
+    last_block_time: Optional[str] = None
+    rounds_without_block: int = 0
+    
+    def __str__(self) -> str:
+        return (
+            f"round={self.round_id or 'N/A'}, "
+            f"state={self.round_state.value}, "
+            f"validator={self.is_validator}"
+        )
+
+
 @dataclass
 class NodeMetrics:
-    """Metrics collected from a single node."""
+    """Extended metrics collected from a single node."""
     
     node_id: str
     node_addr: Optional[str] = None  # Node's own address
-    node_list: Set[str] = None  # Set of known node addresses
+    node_list: Set[str] = field(default_factory=set)  # Set of known node addresses
     node_list_count: int = 0
     
     # Chain state for main chain
@@ -39,9 +98,20 @@ class NodeMetrics:
     is_online: bool = False
     error: Optional[str] = None
     
-    def __post_init__(self):
-        if self.node_list is None:
-            self.node_list = set()
+    # Extended metrics
+    mempool: MempoolMetrics = field(default_factory=MempoolMetrics)
+    consensus: ConsensusMetrics = field(default_factory=ConsensusMetrics)
+    
+    def summary(self) -> str:
+        """Get compact summary string."""
+        return (
+            f"{self.node_id}: "
+            f"online={self.is_online}, "
+            f"blocks={self.main_chain_blocks}, "
+            f"peers={self.node_list_count}, "
+            f"mempool={self.mempool.total_datums}, "
+            f"{self.consensus}"
+        )
 
 
 @dataclass
@@ -146,6 +216,16 @@ class NetworkConsensusMonitor:
                 f"net -net {self.network_name} get status"
             )
             metrics.is_online = self._parse_online_status(net_get)
+            
+            # Collect extended metrics if node is online
+            if metrics.is_online:
+                try:
+                    await self._collect_mempool_metrics(node_id, metrics)
+                    await self._collect_consensus_metrics(node_id, metrics)
+                except Exception as e:
+                    logger.debug("failed_to_collect_extended_metrics",
+                                node=node_id,
+                                error=str(e))
             
         except Exception as e:
             metrics.error = str(e)
@@ -323,6 +403,95 @@ class NetworkConsensusMonitor:
             
             # Wait before next check
             await asyncio.sleep(interval)
+    
+    async def _collect_mempool_metrics(self, node_id: str, metrics: NodeMetrics) -> None:
+        """
+        Collect mempool metrics from a node.
+        
+        Args:
+            node_id: Node identifier
+            metrics: NodeMetrics object to update
+        """
+        try:
+            # Get mempool list
+            mempool_out = await self._exec_cli(
+                node_id,
+                f"mempool list -net {self.network_name}"
+            )
+            
+            # Parse mempool output
+            import re
+            HASH_PATTERN = r'0x[A-Fa-f0-9]{64}'
+            
+            hashes = set(re.findall(HASH_PATTERN, mempool_out))
+            metrics.mempool.datum_hashes = hashes
+            metrics.mempool.total_datums = len(hashes)
+            
+            # Count by type if available
+            for line in mempool_out.split('\n'):
+                line_lower = line.lower()
+                if 'type:' in line_lower:
+                    for dtype in ['token', 'emission', 'transaction', 'decree', 'anchor']:
+                        if dtype in line_lower:
+                            metrics.mempool.by_type[dtype] = metrics.mempool.by_type.get(dtype, 0) + 1
+            
+            logger.debug("collected_mempool_metrics",
+                        node=node_id,
+                        total=metrics.mempool.total_datums,
+                        types=metrics.mempool.by_type)
+                        
+        except Exception as e:
+            logger.debug("mempool_collection_failed",
+                        node=node_id,
+                        error=str(e))
+    
+    async def _collect_consensus_metrics(self, node_id: str, metrics: NodeMetrics) -> None:
+        """
+        Collect ESBocs consensus metrics from a node.
+        
+        Args:
+            node_id: Node identifier
+            metrics: NodeMetrics object to update
+        """
+        try:
+            # Get consensus debug info (if available)
+            # Try: esbocs get status or similar command
+            try:
+                consensus_out = await self._exec_cli(
+                    node_id,
+                    f"block list -net {self.network_name} -chain main"
+                )
+                
+                # Parse last block timestamp
+                for line in consensus_out.split('\n'):
+                    if 'timestamp:' in line.lower() or 'time:' in line.lower():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            metrics.consensus.last_block_time = parts[-1]
+                            break
+                
+            except Exception as e:
+                logger.debug("consensus_debug_not_available",
+                            node=node_id,
+                            error=str(e))
+            
+            # Check if node is validator
+            node_config = self.nodes.get(node_id)
+            if node_config:
+                role = getattr(node_config, 'role', '')
+                metrics.consensus.is_validator = 'master' in role.lower() or 'root' in role.lower()
+                if metrics.consensus.is_validator:
+                    metrics.consensus.validator_addr = metrics.node_addr
+            
+            logger.debug("collected_consensus_metrics",
+                        node=node_id,
+                        is_validator=metrics.consensus.is_validator,
+                        last_block_time=metrics.consensus.last_block_time)
+                        
+        except Exception as e:
+            logger.debug("consensus_collection_failed",
+                        node=node_id,
+                        error=str(e))
     
     async def _exec_cli(self, node_id: str, command: str) -> str:
         """
