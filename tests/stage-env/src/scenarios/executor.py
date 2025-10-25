@@ -427,6 +427,31 @@ class ScenarioExecutor:
             success = self._check_expectation(result, step.expect, step.contains)
             
             if not success:
+                # Determine what went wrong for better error message
+                error_details = []
+                if step.expect == "success":
+                    if result["returncode"] != 0:
+                        error_details.append(f"exit code {result['returncode']} (expected 0)")
+                    # Check if there's an error in output
+                    if result["stdout"]:
+                        try:
+                            import yaml
+                            yaml_response = yaml.safe_load(result["stdout"])
+                            if isinstance(yaml_response, dict) and "errors" in yaml_response:
+                                errors = yaml_response["errors"]
+                                if isinstance(errors, dict):
+                                    error_code = errors.get('code')
+                                    if error_code is not None and error_code != 0:
+                                        error_details.append(f"errors.code={error_code}")
+                                        if 'message' in errors:
+                                            error_details.append(f"message: {errors['message']}")
+                                elif isinstance(errors, list) and errors:
+                                    error_details.append(f"errors list: {errors}")
+                        except:
+                            pass
+                
+                error_summary = "; ".join(error_details) if error_details else f"exit code {result['returncode']}"
+                
                 ctx.add_result("cli", False, {
                     "command": cmd,
                     "node": step.node,
@@ -434,11 +459,19 @@ class ScenarioExecutor:
                     "error": result["stderr"],
                     "exit_code": result["returncode"]
                 })
-                raise ScenarioExecutionError(
-                    f"CLI command failed: {cmd}\n"
-                    f"Expected: {step.expect}\n"
-                    f"Got: exit code {result['returncode']}"
-                )
+                
+                # Create detailed error message
+                error_msg = f"CLI command failed: {cmd}\n"
+                error_msg += f"Expected: {step.expect}\n"
+                error_msg += f"Got: {error_summary}\n"
+                if result["stdout"]:
+                    # Show first 500 chars of output
+                    stdout_preview = result["stdout"][:500]
+                    if len(result["stdout"]) > 500:
+                        stdout_preview += "... (truncated)"
+                    error_msg += f"\nOutput:\n{stdout_preview}"
+                
+                raise ScenarioExecutionError(error_msg)
             
             # Save result to variable if requested
             if step.save:
