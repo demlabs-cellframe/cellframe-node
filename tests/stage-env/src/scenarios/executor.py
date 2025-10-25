@@ -742,7 +742,15 @@ class ScenarioExecutor:
         logger.info(f"Registering {len(datum_hashes)} datum(s) for monitoring")
         
         # Get monitoring manager singleton
-        monitoring = await MonitoringManager.get_instance()
+        monitoring = await MonitoringManager.get_instance(
+            node_cli_path=self.node_cli_path,
+            log_file=self.log_file
+        )
+        
+        # CRITICAL: Start monitoring service if not already started
+        if not monitoring.is_started():
+            logger.debug("Starting monitoring service")
+            await monitoring.start()
         
         # Register and wait for each datum
         results = []
