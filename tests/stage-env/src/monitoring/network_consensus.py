@@ -197,6 +197,12 @@ class NetworkConsensusMonitor:
                 )
                 metrics.node_list = self._parse_node_list(node_list_output)
                 metrics.node_list_count = len(metrics.node_list)
+                
+                # Debug: log if node list is empty
+                if metrics.node_list_count == 0:
+                    logger.warning("node_has_empty_node_list",
+                                  node=node_id,
+                                  output_preview=node_list_output[:300])
             except Exception as e:
                 logger.warning("failed_to_get_node_list",
                               node=node_id,
