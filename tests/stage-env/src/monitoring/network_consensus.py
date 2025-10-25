@@ -358,16 +358,21 @@ class NetworkConsensusMonitor:
         
         Returns set of node addresses.
         """
+        import re
+        # Use same pattern as DataExtractor for consistency
+        NODE_ADDRESS_PATTERN = r'[A-Fa-f0-9:]{10,}'
+        
         node_addrs = set()
         
         # Look for lines like: "addr: XXXX::XXXX::XXXX::XXXX"
         for line in output.split('\n'):
             line = line.strip()
             if 'addr:' in line or 'address:' in line:
-                parts = line.split()
-                for part in parts:
-                    if '::' in part:  # IPv6-like node address
-                        node_addrs.add(part)
+                # Extract all node addresses matching the pattern
+                matches = re.findall(NODE_ADDRESS_PATTERN, line)
+                for match in matches:
+                    if '::' in match:  # Must have :: separators (IPv6-like format)
+                        node_addrs.add(match)
         
         return node_addrs
     
