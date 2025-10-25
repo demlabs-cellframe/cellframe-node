@@ -1134,4 +1134,49 @@ class DockerComposeManager:
             status[service] = container.status
         
         return status
+    
+    def clean_cache_data(self, cache_path: Path) -> None:
+        """
+        Clean cache/data directory using temporary Docker container.
+        
+        This method runs a minimal Alpine container to remove cache/data/
+        directory. Using Docker ensures proper permissions for files created
+        by other containers (owned by root inside containers).
+        
+        Args:
+            cache_path: Path to cache directory (parent of data/)
+            
+        Raises:
+            RuntimeError: If cleanup fails
+        """
+        data_dir = cache_path / "data"
+        
+        if not data_dir.exists():
+            logger.debug("cache_data_not_exists", path=str(data_dir))
+            return
+        
+        logger.info("cleaning_cache_data_with_docker", path=str(data_dir))
+        
+        try:
+            # Run Alpine container with cache mounted to /cleanup/
+            # This gives container access to clean the files
+            container = self.client.containers.run(
+                image="alpine:latest",
+                command=["sh", "-c", "rm -rf /cleanup/data && echo 'Cleanup complete'"],
+                volumes={
+                    str(cache_path.absolute()): {
+                        'bind': '/cleanup',
+                        'mode': 'rw'
+                    }
+                },
+                remove=True,  # Auto-remove container after completion
+                detach=False,  # Wait for completion
+            )
+            
+            logger.info("cache_data_cleaned", 
+                       output=container.decode('utf-8').strip() if isinstance(container, bytes) else str(container))
+            
+        except Exception as e:
+            logger.error("cache_data_cleanup_failed", error=str(e))
+            raise RuntimeError(f"Failed to clean cache data: {e}")
 

@@ -631,10 +631,9 @@ class NetworkManager:
         
         Called before pause→snapshot→unpause to guarantee pristine state.
         
-        Note: Uses sudo to remove root-owned files created by containers.
+        Implementation: Uses temporary Docker container (Alpine) to clean files.
+        This ensures proper permissions for root-owned files created by node containers.
         """
-        from ..utils.cli import run_command
-        
         cache_dir = self.paths_config.get('cache_dir', '../testing/cache')
         cache_path = (self.base_path / cache_dir).resolve()
         data_dir = cache_path / "data"
@@ -645,12 +644,9 @@ class NetworkManager:
         
         logger.info("removing_node_data_directories", path=str(data_dir))
         
-        # Use sudo to remove directory tree (may contain root-owned files from containers)
+        # Use Docker container to remove files (handles root-owned files)
         try:
-            run_command(
-                ["sudo", "rm", "-rf", str(data_dir)],
-                check=True
-            )
+            self.compose.clean_cache_data(cache_path)
             logger.info("node_data_removed")
         except Exception as e:
             logger.error("failed_to_remove_node_data", error=str(e))
