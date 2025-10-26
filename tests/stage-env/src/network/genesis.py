@@ -575,4 +575,321 @@ class GenesisInitializer:
                    total=len(nodes) - 1,
                    failed=len(failed_nodes),
                    failed_nodes=", ".join(failed_nodes) if failed_nodes else "none")
+    
+    async def generate_fee_wallet(self) -> str:
+        """
+        Generate fee collection wallet on node1.
+        
+        Creates a wallet named 'fee_collector' on the first node
+        and returns its address for use in chain configuration.
+        
+        Returns:
+            Wallet address string
+            
+        Raises:
+            RuntimeError: If wallet creation or address extraction fails
+        """
+        logger.info("generating_fee_wallet", node="node1")
+        
+        try:
+            # Get node1 container
+            container_name = f"cellframe-stage-node-1"
+            container = self.docker_client.containers.get(container_name)
+            
+            # Create wallet
+            cmd = ["cellframe-node-cli", "wallet", "new", "-w", "fee_collector", "-net", self.network_name]
+            logger.debug("creating_fee_wallet", command=" ".join(cmd))
+            
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            stderr_str = stderr.decode('utf-8') if stderr else ""
+            
+            if exit_code != 0:
+                error_msg = f"Failed to create fee wallet: exit code {exit_code}"
+                if stderr_str:
+                    error_msg += f", stderr: {stderr_str}"
+                logger.error("fee_wallet_creation_failed", error=error_msg)
+                raise RuntimeError(error_msg)
+            
+            logger.debug("fee_wallet_created", output=stdout_str[:200])
+            
+            # Get wallet address
+            cmd_info = ["cellframe-node-cli", "wallet", "info", "-w", "fee_collector", "-net", self.network_name]
+            logger.debug("getting_fee_wallet_address", command=" ".join(cmd_info))
+            
+            result_info = container.exec_run(cmd_info, demux=True)
+            exit_code_info = result_info.exit_code
+            stdout_info, stderr_info = result_info.output
+            
+            stdout_info_str = stdout_info.decode('utf-8') if stdout_info else ""
+            stderr_info_str = stderr_info.decode('utf-8') if stderr_info else ""
+            
+            if exit_code_info != 0:
+                error_msg = f"Failed to get wallet address: exit code {exit_code_info}"
+                if stderr_info_str:
+                    error_msg += f", stderr: {stderr_info_str}"
+                logger.error("fee_wallet_info_failed", error=error_msg)
+                raise RuntimeError(error_msg)
+            
+            # Extract address from wallet info output
+            # Format: "addr: <address>"
+            import re
+            addr_match = re.search(r'addr:\s*(\S+)', stdout_info_str, re.IGNORECASE)
+            if not addr_match:
+                logger.error("fee_wallet_address_not_found", output=stdout_info_str[:200])
+                raise RuntimeError(f"Could not extract wallet address from output: {stdout_info_str[:200]}")
+            
+            fee_addr = addr_match.group(1)
+            logger.info("fee_wallet_generated", address=fee_addr)
+            
+            return fee_addr
+            
+        except docker.errors.NotFound:
+            error_msg = f"Container {container_name} not found"
+            logger.error("container_not_found", error=error_msg)
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            logger.error("fee_wallet_generation_error", error=str(e))
+            raise
+    
+    async def create_native_token(self, root_cert_name: str = "stagenet.master-1") -> str:
+        """
+        Create TCELL native token on zerochain.
+        
+        Executes token_decl on root node to create the native token.
+        Uses zerochain (token declarations chain).
+        
+        Args:
+            root_cert_name: Certificate name for signing (default: stagenet.master-1)
+            
+        Returns:
+            Token declaration datum hash
+            
+        Raises:
+            RuntimeError: If token creation fails
+        """
+        logger.info("creating_native_token", token="TCELL", chain="zerochain", cert=root_cert_name)
+        
+        try:
+            # Get node1 container (root node)
+            container_name = f"cellframe-stage-node-1"
+            container = self.docker_client.containers.get(container_name)
+            
+            # Create TCELL token on zerochain
+            cmd = [
+                "cellframe-node-cli", "token_decl",
+                "-token", "TCELL",
+                "-total_supply", "1000000000",
+                "-decimals", "18",
+                "-signs_total", "1",
+                "-signs_emission", "1",
+                "-certs", root_cert_name,
+                "-net", self.network_name,
+                "-chain", "zerochain"
+            ]
+            
+            logger.debug("executing_token_decl", command=" ".join(cmd))
+            
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            stderr_str = stderr.decode('utf-8') if stderr else ""
+            
+            # Parse YAML output to check for errors
+            import yaml
+            try:
+                output_data = yaml.safe_load(stdout_str)
+                if isinstance(output_data, dict) and 'errors' in output_data:
+                    error_code = output_data['errors'].get('code', -1)
+                    error_msg = output_data['errors'].get('message', '')
+                    
+                    if error_code != 0:
+                        logger.error("token_decl_failed", code=error_code, message=error_msg)
+                        raise RuntimeError(f"token_decl failed: code={error_code}, message={error_msg}")
+                    
+                    # Success - extract hash from message
+                    # Format: "Datum 0x... with token TCELL is placed in datum pool"
+                    import re
+                    hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', error_msg)
+                    if hash_match:
+                        token_hash = hash_match.group(1)
+                        logger.info("native_token_created", token="TCELL", hash=token_hash)
+                        return token_hash
+                    else:
+                        logger.error("token_hash_not_found", message=error_msg)
+                        raise RuntimeError(f"Could not extract token hash from: {error_msg}")
+                        
+            except yaml.YAMLError as e:
+                logger.error("failed_to_parse_token_decl_output", error=str(e), output=stdout_str[:200])
+                raise RuntimeError(f"Failed to parse token_decl output: {e}")
+            
+            if exit_code != 0:
+                error_msg = f"token_decl failed: exit code {exit_code}"
+                if stderr_str:
+                    error_msg += f", stderr: {stderr_str}"
+                logger.error("token_decl_execution_failed", error=error_msg)
+                raise RuntimeError(error_msg)
+            
+            # Fallback: no errors dict found
+            logger.error("unexpected_token_decl_output", output=stdout_str[:200])
+            raise RuntimeError(f"Unexpected token_decl output format: {stdout_str[:200]}")
+            
+        except docker.errors.NotFound:
+            error_msg = f"Container {container_name} not found"
+            logger.error("container_not_found", error=error_msg)
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            logger.error("native_token_creation_error", error=str(e))
+            raise
+    
+    async def emit_native_token(self, fee_addr: str, root_cert_name: str = "stagenet.master-1") -> str:
+        """
+        Emit TCELL native token to fee wallet on zerochain.
+        
+        Executes token_emit on root node to create emission.
+        Uses zerochain (emission chain).
+        
+        Args:
+            fee_addr: Fee wallet address to receive emission
+            root_cert_name: Certificate name for signing
+            
+        Returns:
+            Emission datum hash
+            
+        Raises:
+            RuntimeError: If emission fails
+        """
+        logger.info("emitting_native_token", token="TCELL", chain="zerochain", to=fee_addr)
+        
+        try:
+            container_name = f"cellframe-stage-node-1"
+            container = self.docker_client.containers.get(container_name)
+            
+            cmd = [
+                "cellframe-node-cli", "token_emit",
+                "-token", "TCELL",
+                "-value", "1000000000",
+                "-addr", fee_addr,
+                "-certs", root_cert_name,
+                "-net", self.network_name,
+                "-chain", "zerochain"
+            ]
+            
+            logger.debug("executing_token_emit", command=" ".join(cmd))
+            
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            stderr_str = stderr.decode('utf-8') if stderr else ""
+            
+            import yaml, re
+            try:
+                output_data = yaml.safe_load(stdout_str)
+                if isinstance(output_data, dict) and 'errors' in output_data:
+                    error_code = output_data['errors'].get('code', -1)
+                    error_msg = output_data['errors'].get('message', '')
+                    
+                    if error_code != 0:
+                        logger.error("token_emit_failed", code=error_code, message=error_msg)
+                        raise RuntimeError(f"token_emit failed: code={error_code}, message={error_msg}")
+                    
+                    hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', error_msg)
+                    if hash_match:
+                        emission_hash = hash_match.group(1)
+                        logger.info("native_token_emitted", token="TCELL", hash=emission_hash)
+                        return emission_hash
+                    else:
+                        raise RuntimeError(f"Could not extract emission hash from: {error_msg}")
+                        
+            except yaml.YAMLError as e:
+                logger.error("failed_to_parse_token_emit_output", error=str(e))
+                raise RuntimeError(f"Failed to parse token_emit output: {e}")
+            
+            if exit_code != 0:
+                raise RuntimeError(f"token_emit failed: exit code {exit_code}")
+            
+            raise RuntimeError(f"Unexpected token_emit output format")
+            
+        except Exception as e:
+            logger.error("native_token_emission_error", error=str(e))
+            raise
+    
+    async def create_first_transaction(self, emission_hash: str) -> str:
+        """
+        Create first TCELL transaction on main chain.
+        
+        Creates a transaction from emission to initiate main chain.
+        Uses main chain (transactions chain).
+        
+        Args:
+            emission_hash: Emission datum hash to spend from
+            
+        Returns:
+            Transaction datum hash
+            
+        Raises:
+            RuntimeError: If transaction creation fails
+        """
+        logger.info("creating_first_transaction", token="TCELL", chain="main", from_emission=emission_hash[:16])
+        
+        try:
+            container_name = f"cellframe-stage-node-1"
+            container = self.docker_client.containers.get(container_name)
+            
+            cmd = [
+                "cellframe-node-cli", "tx_create",
+                "-token", "TCELL",
+                "-from_emission", emission_hash,
+                "-value", "100000000",
+                "-fee", "0.1",
+                "-net", self.network_name,
+                "-chain", "main"
+            ]
+            
+            logger.debug("executing_tx_create", command=" ".join(cmd))
+            
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, stderr = result.output
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            
+            import yaml, re
+            try:
+                output_data = yaml.safe_load(stdout_str)
+                if isinstance(output_data, dict) and 'errors' in output_data:
+                    error_code = output_data['errors'].get('code', -1)
+                    error_msg = output_data['errors'].get('message', '')
+                    
+                    if error_code != 0:
+                        logger.error("tx_create_failed", code=error_code, message=error_msg)
+                        raise RuntimeError(f"tx_create failed: code={error_code}, message={error_msg}")
+                    
+                    hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', error_msg)
+                    if hash_match:
+                        tx_hash = hash_match.group(1)
+                        logger.info("first_transaction_created", token="TCELL", hash=tx_hash)
+                        return tx_hash
+                    else:
+                        raise RuntimeError(f"Could not extract tx hash from: {error_msg}")
+                        
+            except yaml.YAMLError as e:
+                logger.error("failed_to_parse_tx_create_output", error=str(e))
+                raise RuntimeError(f"Failed to parse tx_create output: {e}")
+            
+            if exit_code != 0:
+                raise RuntimeError(f"tx_create failed: exit code {exit_code}")
+            
+            raise RuntimeError(f"Unexpected tx_create output format")
+            
+        except Exception as e:
+            logger.error("first_transaction_creation_error", error=str(e))
+            raise
 
