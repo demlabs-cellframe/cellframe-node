@@ -994,19 +994,28 @@ class GenesisInitializer:
                 except Exception as e:
                     logger.warning("failed_to_trigger_mempool_proc", node=f"node{node.node_id}", error=str(e))
             
-            # Step 3: Wait for datum to be finalized in block (simple check)
-            await asyncio.sleep(3)  # Give DAG-PoA time to finalize
+            # Step 3: Wait for datum to be finalized in block (polling with timeout)
+            logger.info("waiting_for_datum_in_blocks", datum=datum_hash[:16], timeout=timeout)
+            blocks_check_start = time.time()
+            found_in_blocks = False
             
-            # Verify datum in blocks
-            cmd_blocks = ["cellframe-node-cli", "block", "list", "-net", self.network_name, "-chain", "zerochain", "-last", "10"]
-            result_blocks = container.exec_run(cmd_blocks, demux=True)
-            stdout_blocks, _ = result_blocks.output
-            stdout_blocks_str = stdout_blocks.decode('utf-8') if stdout_blocks else ""
+            while time.time() - blocks_check_start < timeout:
+                cmd_blocks = ["cellframe-node-cli", "block", "list", "-net", self.network_name, "-chain", "zerochain", "-last", "10"]
+                result_blocks = container.exec_run(cmd_blocks, demux=True)
+                stdout_blocks, _ = result_blocks.output
+                stdout_blocks_str = stdout_blocks.decode('utf-8') if stdout_blocks else ""
+                
+                if datum_hash.lower() in stdout_blocks_str.lower():
+                    found_in_blocks = True
+                    logger.info("datum_finalized_in_zerochain", datum=datum_hash[:16], elapsed=f"{time.time() - blocks_check_start:.1f}s")
+                    break
+                
+                # Wait before retry
+                await asyncio.sleep(2)
             
-            if datum_hash.lower() in stdout_blocks_str.lower():
-                logger.info("datum_finalized_in_zerochain", datum=datum_hash[:16])
-            else:
-                logger.warning("datum_not_yet_in_block", datum=datum_hash[:16], note="May need more time")
+            if not found_in_blocks:
+                logger.error("datum_not_finalized_in_blocks", datum=datum_hash[:16], elapsed=f"{time.time() - blocks_check_start:.1f}s")
+                raise RuntimeError(f"Datum {datum_hash[:16]}... was not finalized in blocks within {timeout}s")
                 
         except Exception as e:
             logger.error("zerochain_datum_processing_error", error=str(e))
