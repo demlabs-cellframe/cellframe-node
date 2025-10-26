@@ -243,6 +243,21 @@ class NetworkManager:
         if wait_ready:
             await self._wait_for_network_ready()
         
+        # PHASE 0: Initialize genesis state (create validator certificates FIRST)
+        # Root certificates are required for TCELL token signing
+        logger.info("=== PHASE 0: Genesis Initialization (Certificates) ===")
+        try:
+            await self.genesis.initialize(node_configs)
+            logger.info("genesis_certificates_created")
+        except Exception as e:
+            logger.error("genesis_initialization_failed", error=str(e))
+            # Critical - stop network
+            try:
+                self.compose.down(volumes=False, remove_images=False)
+            except Exception as stop_error:
+                logger.warning("failed_to_stop_network", error=str(stop_error))
+            raise RuntimeError(f"Genesis initialization failed: {e}") from e
+        
         # PHASE 1: Generate fee wallet and native token (TCELL)
         # This creates the foundational economic layer for the network
         logger.info("=== PHASE 1: Fee Wallet & Native Token Generation ===")
@@ -320,10 +335,10 @@ class NetworkManager:
             logger.warning("genesis_block_capture_failed", error=str(e))
             # Non-critical - continue without genesis blocks
         
-        # PHASE 3: Initialize genesis state (register nodes, aliases)
+        # PHASE 3: Node Registration & Aliases
+        # Register node aliases and populate node lists
         logger.info("=== PHASE 3: Node Registration & Aliases ===")
         try:
-            await self.genesis.initialize(node_configs)
             await self.genesis.register_node_aliases(node_configs)
             
             # CRITICAL: Register all nodes via CLI from node1
@@ -331,9 +346,8 @@ class NetworkManager:
             logger.info("registering_all_nodes_via_cli")
             await self.genesis.register_all_nodes_via_cli(node_configs)
         except Exception as e:
-            logger.error("genesis_initialization_failed", error=str(e))
-            # Don't fail the whole start process, just log the error
-            # Validator orders might already exist in a restarted network
+            logger.error("node_registration_failed", error=str(e))
+            # Non-critical - continue, nodes may self-discover
         
         # PHASE 4: Wait for network consensus
         logger.info("=== PHASE 4: Network Consensus Verification ===")

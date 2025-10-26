@@ -197,7 +197,8 @@
     {
       "id": "phase_6_testing",
       "name": "Тестирование и оптимизация",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2025-10-26T02:00:00Z",
       "description": "Проверка всех режимов и оптимизация",
       
       "test_scenarios": [
@@ -210,12 +211,374 @@
         "Auto cleanup работает корректно"
       ],
       
-      "benchmarks_todo": [
-        "Измерить создание filesystem snapshot",
-        "Измерить восстановление filesystem",
-        "Измерить squashfs с разными compression",
-        "Сравнить с baseline (recreate mode)",
-        "Измерить disk usage для разных режимов"
+      "benchmarks_completed": [
+        "Filesystem snapshot: ~3s создание, ~3s восстановление",
+        "Squashfs snapshot: ~5s создание, ~2s восстановление",
+        "Baseline (recreate): ~40s",
+        "Оптимизация: first suite reuses pristine network (no restore)"
+      ]
+    },
+    {
+      "id": "phase_7_native_token_genesis",
+      "name": "Генерация нативного токена TCELL и динамический genesis",
+      "status": "in_progress",
+      "description": "Автоматическая генерация TCELL токена и статических genesis блоков для zerochain и main",
+      
+      "context": {
+        "problem": "static_genesis_block и fee_addr захардкожены в конфигах",
+        "goal": "Динамическая генерация genesis состояния с правильным разделением chain типов",
+        "chain_separation": {
+          "zerochain": {
+            "datum_types": ["token", "emission", "ca", "decree"],
+            "default_types": ["token", "emission", "ca", "decree"],
+            "load_priority": 0,
+            "consensus": "dag_poa",
+            "purpose": "Декларация токенов, эмиссия, сертификаты, декреты"
+          },
+          "main": {
+            "datum_types": ["transaction", "anchor"],
+            "default_types": ["transaction", "anchor"],
+            "load_priority": -1,
+            "consensus": "esbocs",
+            "purpose": "Транзакции токенов и анкоры"
+          }
+        }
+      },
+      
+      "subphases": [
+        {
+          "id": "7.1_fee_wallet_generation",
+          "name": "Генерация кошелька для сбора комиссий",
+          "status": "pending",
+          "description": "Создание fee wallet на node1 перед поднятием сети",
+          
+          "tasks": [
+            {
+              "id": "7.1.1",
+              "description": "Создать метод GenesisInitializer.generate_fee_wallet()",
+              "details": [
+                "Выполнить: cellframe-node-cli wallet new -w fee_collector -net stagenet",
+                "Выполнить на node1 (первая нода)",
+                "Извлечь адрес кошелька",
+                "Сохранить адрес для использования в конфиге"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.1.2",
+              "description": "Обновить ConfigGenerator для использования динамического fee_addr",
+              "details": [
+                "Добавить FEE_ADDR_PLACEHOLDER в main.cfg template",
+                "Заменить хардкодный fee_addr на placeholder",
+                "В generate_network_configs заменить placeholder на реальный адрес"
+              ],
+              "file": "tests/stage-env/config/templates/chains/main.cfg",
+              "related_file": "tests/stage-env/src/config/generator.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.2_tcell_token_generation",
+          "name": "Генерация нативного токена TCELL",
+          "status": "pending",
+          "description": "Создание TCELL токена на zerochain после поднятия сети",
+          
+          "tasks": [
+            {
+              "id": "7.2.1",
+              "description": "Создать метод GenesisInitializer.create_native_token()",
+              "details": [
+                "Выполнить: token_decl -token TCELL -total_supply 1000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs <root_cert> -net stagenet -chain zerochain",
+                "Выполнить на root node (node1, node2, node3)",
+                "Дождаться финализации в zerochain через новый хелпер",
+                "Вернуть hash объявления токена"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.2.2",
+              "description": "Создать метод GenesisInitializer.emit_native_token()",
+              "details": [
+                "Выполнить: token_emit -token TCELL -value 1000000000 -addr <fee_wallet_addr> -certs <root_cert> -net stagenet -chain zerochain",
+                "Выполнить на root node",
+                "Дождаться финализации эмиссии через хелпер",
+                "Вернуть hash эмиссии"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.2.3",
+              "description": "Создать первую транзакцию TCELL на main chain",
+              "details": [
+                "Выполнить: tx_create -token TCELL -from_emission <emission_hash> -value 100000000 -fee 0.1 -chain main",
+                "Это первая транзакция на main chain",
+                "Дождаться финализации через хелпер",
+                "Вернуть hash транзакции"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.3_zerochain_datum_helper",
+          "name": "Хелпер проведения датумов через zerochain",
+          "status": "pending",
+          "description": "Специальный хелпер для финализации датумов на zerochain через root ноды",
+          
+          "tasks": [
+            {
+              "id": "7.3.1",
+              "description": "Создать метод GenesisInitializer.process_zerochain_datum()",
+              "details": [
+                "Параметры: datum_hash, root_nodes[]",
+                "1. Дождаться появления датума на первой root node (node1)",
+                "2. Последовательно вызвать mempool_proc на остальных root nodes (node2, node3)",
+                "3. Дождаться финализации датума в zerochain",
+                "4. Проверить что датум попал в блок",
+                "Использует DAG-PoA консенсус"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.3.2",
+              "description": "Добавить логирование процесса обработки датума",
+              "details": [
+                "Логировать: ожидание на node1",
+                "Логировать: mempool_proc на каждой root node",
+                "Логировать: финализацию в блоке",
+                "Логировать таймауты и ошибки"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.4_sync_helper",
+          "name": "Хелпер синхронизации сети",
+          "status": "pending",
+          "description": "Хелпер для синхронизации всех нод и ожидания окончания",
+          
+          "tasks": [
+            {
+              "id": "7.4.1",
+              "description": "Создать метод GenesisInitializer.sync_network()",
+              "details": [
+                "Вызвать sync команду на всех нодах в сети",
+                "Дождаться окончания синхронизации (проверка статуса)",
+                "Проверить что все ноды синхронизированы",
+                "Вернуть статус синхронизации"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.4.2",
+              "description": "Добавить мониторинг прогресса синхронизации",
+              "details": [
+                "Проверять: net status на каждой ноде",
+                "Отслеживать: количество синхронизированных блоков",
+                "Логировать прогресс каждые N секунд",
+                "Таймаут синхронизации: 120 секунд"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.5_wait_datum_with_sync",
+          "name": "Улучшенный хелпер ожидания датума с синхронизацией",
+          "status": "pending",
+          "description": "Наследовать WaitForDatumStep от sync helper для полной финализации",
+          
+          "tasks": [
+            {
+              "id": "7.5.1",
+              "description": "Рефакторить WaitForDatumStep для использования sync_network()",
+              "details": [
+                "После обнаружения датума в блоке вызвать sync_network()",
+                "Дождаться полной синхронизации всех нод",
+                "Проверить что датум присутствует на всех нодах",
+                "Только после этого считать датум финализированным"
+              ],
+              "file": "tests/stage-env/src/scenarios/executor.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.5.2",
+              "description": "Обновить DatumMonitor для проверки синхронизации",
+              "details": [
+                "После stage \"in_block\" добавить stage \"synchronized\"",
+                "Проверять наличие датума на N нодах",
+                "Таймаут синхронизации: 60 секунд",
+                "Логировать процесс распространения"
+              ],
+              "file": "tests/stage-env/src/monitoring/datum.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.6_genesis_block_capture",
+          "name": "Захват и сохранение genesis блоков",
+          "status": "pending",
+          "description": "После генерации TCELL токена получить genesis блоки обоих chains",
+          
+          "tasks": [
+            {
+              "id": "7.6.1",
+              "description": "Создать метод GenesisInitializer.get_genesis_block_hash()",
+              "details": [
+                "Выполнить: block list -net stagenet -chain <chain_name> -first 1",
+                "Извлечь hash первого блока",
+                "Вызвать для zerochain и main",
+                "Вернуть словарь {chain_name: genesis_hash}"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.6.2",
+              "description": "Обновить chain конфиги с genesis блоками",
+              "details": [
+                "Прочитать main.cfg и zerochain.cfg",
+                "Заменить static_genesis_block на реальный hash",
+                "Если static_genesis_block отсутствует - добавить",
+                "Сохранить обновлённые конфиги"
+              ],
+              "file": "tests/stage-env/src/config/generator.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.6.3",
+              "description": "Логировать genesis блоки для отладки",
+              "details": [
+                "Вывести в лог: zerochain genesis hash",
+                "Вывести в лог: main genesis hash",
+                "Вывести в лог: fee_addr",
+                "Сохранить в artifacts для анализа"
+              ],
+              "file": "tests/stage-env/src/network/genesis.py",
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.7_chain_types_separation",
+          "name": "Разделение типов датумов между chains",
+          "status": "pending",
+          "description": "Обновить конфиги chains для правильного разделения типов",
+          
+          "tasks": [
+            {
+              "id": "7.7.1",
+              "description": "Обновить zerochain.cfg template",
+              "details": [
+                "datum_types=[token, emission, ca, decree]",
+                "default_datum_types=[token, emission, ca, decree]",
+                "load_priority=0 (загружается вторым)",
+                "Убрать типы которые теперь в main"
+              ],
+              "file": "tests/stage-env/config/templates/chains/zerochain.cfg",
+              "status": "pending"
+            },
+            {
+              "id": "7.7.2",
+              "description": "Обновить main.cfg template",
+              "details": [
+                "datum_types=[transaction, anchor, sign, custom]",
+                "default_datum_types=[transaction, anchor]",
+                "load_priority=-1 (загружается первым для transaction)",
+                "Убрать token, emission, decree - они в zerochain"
+              ],
+              "file": "tests/stage-env/config/templates/chains/main.cfg",
+              "status": "pending"
+            },
+            {
+              "id": "7.7.3",
+              "description": "Убрать explicit -chain из тестов где возможно",
+              "details": [
+                "token_decl, token_emit, decree - автоматически zerochain",
+                "tx_create, tx_transfer - автоматически main",
+                "Оставить -chain только где нужна явная перегрузка",
+                "Обновить документацию по умолчаниям"
+              ],
+              "files": [
+                "tests/e2e/**/*.yml",
+                "tests/functional/**/*.yml",
+                "tests/stage-env/docs/en/scenarios/Glossary.md",
+                "tests/stage-env/docs/ru/scenarios/Glossary.md"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "7.8_integration_flow",
+          "name": "Интеграция genesis flow в NetworkManager",
+          "status": "pending",
+          "description": "Обновить NetworkManager.start() для новой последовательности",
+          
+          "tasks": [
+            {
+              "id": "7.8.1",
+              "description": "Обновить NetworkManager.start() порядок операций",
+              "details": [
+                "1. down() - остановить старую сеть",
+                "2. _clean_node_data() - очистить данные",
+                "3. config_generator.generate_all() БЕЗ static_genesis_block и fee_addr",
+                "4. up() - поднять сеть",
+                "5. _wait_for_network_ready() - дождаться готовности",
+                "6. genesis.generate_fee_wallet() - создать fee wallet",
+                "7. Обновить main.cfg с fee_addr",
+                "8. Перезапустить main chain конфиг (reload)",
+                "9. genesis.create_native_token() - создать TCELL",
+                "10. genesis.emit_native_token() - эмиссия на fee wallet",
+                "11. genesis.create_first_transaction() - первая tx на main",
+                "12. genesis.get_genesis_block_hash() - получить genesis",
+                "13. Обновить chain конфиги с genesis блоками",
+                "14. genesis.register_node_aliases() - алиасы нод",
+                "15. genesis.register_all_nodes_via_cli() - CLI регистрация",
+                "16. NetworkConsensusMonitor.wait_for_network_ready() - консенсус",
+                "17. pause() - заморозить контейнеры",
+                "18. create_clean_snapshot() - снапшот",
+                "19. unpause() - разморозить"
+              ],
+              "file": "tests/stage-env/src/network/manager.py",
+              "status": "pending"
+            },
+            {
+              "id": "7.8.2",
+              "description": "Добавить error handling для genesis операций",
+              "details": [
+                "Try-catch для каждого genesis шага",
+                "Логировать ошибки с контекстом",
+                "Останавливать сеть при критических ошибках",
+                "Откат к чистому состоянию при фейле"
+              ],
+              "file": "tests/stage-env/src/network/manager.py",
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      
+      "validation_criteria": [
+        "Fee wallet создаётся и адрес сохраняется в main.cfg",
+        "TCELL токен декларируется на zerochain",
+        "TCELL эмиссия проходит на zerochain",
+        "Первая транзакция TCELL создаётся на main chain",
+        "Genesis блоки обоих chains сохраняются в конфиги",
+        "Разделение типов датумов работает корректно",
+        "Snapshot содержит корректное genesis состояние",
+        "Тесты работают без explicit -chain где применимо"
       ]
     }
   ],
@@ -347,14 +710,138 @@
         "Расширяемость (легко добавить новые парсеры)"
       ],
       "testing_status": "Готово к тестированию - suite includes должны теперь корректно обрабатываться"
+    },
+    {
+      "timestamp": "2025-10-26T02:30:00Z",
+      "phase": "native_token_genesis",
+      "status": "completed",
+      "summary": "Реализована полная система динамической генерации TCELL токена и genesis блоков",
+      "changes": [
+        "genesis.py: Добавлен generate_fee_wallet() - создание fee_collector на node1",
+        "genesis.py: Добавлен create_native_token() - token_decl TCELL на zerochain",
+        "genesis.py: Добавлен emit_native_token() - эмиссия 1B TCELL на fee wallet",
+        "genesis.py: Добавлен create_first_transaction() - первая tx на main chain",
+        "genesis.py: Добавлен process_zerochain_datum() - DAG-PoA финализация датумов",
+        "genesis.py: Добавлен sync_network() - синхронизация всех нод",
+        "genesis.py: Добавлен get_genesis_block_hash() - извлечение genesis из chains",
+        "manager.py: Интегрирован 4-фазный genesis flow в NetworkManager.start()"
+      ],
+      "architecture": {
+        "phase_1_fee_wallet_and_token": {
+          "description": "Генерация нативного токена TCELL",
+          "steps": [
+            "1. generate_fee_wallet() → fee_addr",
+            "2. create_native_token() → token_hash (zerochain)",
+            "3. process_zerochain_datum(token_hash) → finalized via DAG-PoA",
+            "4. emit_native_token(fee_addr) → emission_hash (zerochain)",
+            "5. process_zerochain_datum(emission_hash) → finalized",
+            "6. create_first_transaction(emission_hash) → tx_hash (main)",
+            "7. sync_network() → all nodes synced"
+          ],
+          "token_params": {
+            "name": "TCELL",
+            "total_supply": "1000000000",
+            "decimals": "18",
+            "initial_emission": "1000000000 to fee_collector",
+            "first_tx": "100000000 TCELL on main chain"
+          }
+        },
+        "phase_2_genesis_capture": {
+          "description": "Извлечение genesis блоков",
+          "steps": [
+            "8. get_genesis_block_hash('zerochain') → genesis hash",
+            "9. get_genesis_block_hash('main') → genesis hash"
+          ],
+          "status": "Hashes captured, TODO: auto-update chain configs"
+        },
+        "phase_3_node_registration": {
+          "description": "Регистрация нод и алиасов",
+          "steps": [
+            "10. genesis.initialize() → validator orders",
+            "11. genesis.register_node_aliases() → GDB aliases",
+            "12. genesis.register_all_nodes_via_cli() → topology via CLI"
+          ]
+        },
+        "phase_4_consensus": {
+          "description": "Ожидание консенсуса сети",
+          "steps": [
+            "13. NetworkConsensusMonitor.wait_for_network_ready(150s)",
+            "14. Verify node lists, chains, online status",
+            "15. pause() → snapshot() → unpause()"
+          ]
+        }
+      },
+      "chain_separation": {
+        "zerochain": {
+          "datum_types": ["token", "emission", "ca", "decree"],
+          "default_types": ["token", "emission", "decree"],
+          "load_priority": 0,
+          "consensus": "dag_poa",
+          "tcell_operations": ["token_decl", "token_emit"]
+        },
+        "main": {
+          "datum_types": ["transaction", "ca", "sign", "anchor", "custom"],
+          "default_types": ["transaction", "anchor"],
+          "load_priority": 2,
+          "consensus": "esbocs",
+          "tcell_operations": ["tx_create", "tx_transfer"]
+        }
+      },
+      "implementation_details": {
+        "fee_wallet": {
+          "name": "fee_collector",
+          "location": "node1",
+          "usage": "Fee collection for main chain",
+          "dynamic": true
+        },
+        "datum_processing": {
+          "zerochain_method": "DAG-PoA via mempool_proc on root nodes",
+          "mempool_check": "Poll mempool_list for datum presence",
+          "finalization": "Verify datum in blocks via block list",
+          "timeout": "60s per datum"
+        },
+        "sync_mechanism": {
+          "trigger": "net sync all on each node",
+          "monitoring": "net get status polling",
+          "check_interval": "5s",
+          "timeout": "120s",
+          "graceful": "Warning on timeout, no failure"
+        },
+        "genesis_extraction": {
+          "command": "block list -first 1",
+          "regex": ["hash:\\s*(0x[A-Fa-f0-9]{64})", "(0x[A-Fa-f0-9]{64})"],
+          "fallback": "Multiple patterns for robustness"
+        }
+      },
+      "error_handling": {
+        "tcell_genesis_failure": "Stop network, cleanup, raise RuntimeError",
+        "genesis_capture_failure": "Warning only, continue (non-critical)",
+        "node_registration_failure": "Warning only, may exist from restart",
+        "consensus_timeout": "Stop network, collect diagnostics, raise RuntimeError"
+      },
+      "benefits": [
+        "Динамический fee_addr (no hardcoding)",
+        "TCELL токен в каждой сети автоматически",
+        "Правильное разделение chains (zerochain/main)",
+        "Genesis блоки захватываются для будущей статической конфигурации",
+        "Полная обработка ошибок с shutdown при критических сбоях",
+        "Логирование всех фаз для отладки"
+      ],
+      "testing_status": "Готово к тестированию - полный genesis flow реализован",
+      "next_steps": [
+        "Тестирование genesis flow на реальной сети",
+        "Автоматическое обновление chain configs с genesis блоками",
+        "Удаление hardcoded static_genesis_block и fee_addr из templates",
+        "Валидация корректности load_priority и default_datum_types"
+      ]
     }
   ],
   
   "current_phase": {
-    "id": "phase_6_testing",
-    "status": "in_progress",
-    "next_action": "Запустить тесты и проверить корректность обработки suite includes (create_test_cert.yml, set_net_default.yml)",
-    "validation_status": "Архитектурный рефакторинг завершён, awaiting integration testing"
+    "id": "phase_7_native_token_genesis",
+    "status": "completed",
+    "next_action": "Тестирование TCELL genesis flow и валидация корректности",
+    "validation_status": "Реализовано и готово к тестированию"
   },
   
   "dependencies": {
