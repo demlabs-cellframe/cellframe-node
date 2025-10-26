@@ -791,7 +791,17 @@ class GenesisInitializer:
             
             logger.info("token_emit_raw_output", exit_code=exit_code, stdout_preview=stdout_str[:500], stderr_preview=stderr_str[:200])
             
+            if exit_code != 0:
+                error_msg = f"token_emit failed: exit code {exit_code}"
+                if stderr_str:
+                    error_msg += f", stderr: {stderr_str}"
+                logger.error("token_emit_execution_failed", error=error_msg)
+                raise RuntimeError(error_msg)
+            
+            # Parse output - can be YAML or plain text
             import yaml, re
+            
+            # Try YAML first
             try:
                 output_data = yaml.safe_load(stdout_str)
                 if isinstance(output_data, dict) and 'errors' in output_data:
@@ -802,22 +812,26 @@ class GenesisInitializer:
                         logger.error("token_emit_failed", code=error_code, message=error_msg)
                         raise RuntimeError(f"token_emit failed: code={error_code}, message={error_msg}")
                     
+                    # YAML format - extract hash from message
                     hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', error_msg)
                     if hash_match:
                         emission_hash = hash_match.group(1)
                         logger.info("native_token_emitted", token="TCELL", hash=emission_hash)
                         return emission_hash
-                    else:
-                        raise RuntimeError(f"Could not extract emission hash from: {error_msg}")
-                        
-            except yaml.YAMLError as e:
-                logger.error("failed_to_parse_token_emit_output", error=str(e))
-                raise RuntimeError(f"Failed to parse token_emit output: {e}")
+            except yaml.YAMLError:
+                # Not YAML - try plain text parsing
+                pass
             
-            if exit_code != 0:
-                raise RuntimeError(f"token_emit failed: exit code {exit_code}")
+            # Plain text format: "result: Datum 0x... with 256bit emission is placed in datum pool"
+            hash_match = re.search(r'Datum\s+(0x[A-Fa-f0-9]{64})', stdout_str, re.IGNORECASE)
+            if hash_match:
+                emission_hash = hash_match.group(1)
+                logger.info("native_token_emitted", token="TCELL", hash=emission_hash, format="plain_text")
+                return emission_hash
             
-            raise RuntimeError(f"Unexpected token_emit output format")
+            # Fallback - no hash found
+            logger.error("emission_hash_not_found", output=stdout_str[:200])
+            raise RuntimeError(f"Could not extract emission hash from output: {stdout_str[:200]}")
             
         except Exception as e:
             logger.error("native_token_emission_error", error=str(e))
@@ -865,7 +879,15 @@ class GenesisInitializer:
             
             logger.info("tx_create_raw_output", exit_code=exit_code, stdout_preview=stdout_str[:500])
             
+            if exit_code != 0:
+                error_msg = f"tx_create failed: exit code {exit_code}"
+                logger.error("tx_create_execution_failed", error=error_msg)
+                raise RuntimeError(error_msg)
+            
+            # Parse output - can be YAML or plain text
             import yaml, re
+            
+            # Try YAML first
             try:
                 output_data = yaml.safe_load(stdout_str)
                 if isinstance(output_data, dict) and 'errors' in output_data:
@@ -876,22 +898,26 @@ class GenesisInitializer:
                         logger.error("tx_create_failed", code=error_code, message=error_msg)
                         raise RuntimeError(f"tx_create failed: code={error_code}, message={error_msg}")
                     
+                    # YAML format - extract hash from message
                     hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', error_msg)
                     if hash_match:
                         tx_hash = hash_match.group(1)
                         logger.info("first_transaction_created", token="TCELL", hash=tx_hash)
                         return tx_hash
-                    else:
-                        raise RuntimeError(f"Could not extract tx hash from: {error_msg}")
-                        
-            except yaml.YAMLError as e:
-                logger.error("failed_to_parse_tx_create_output", error=str(e))
-                raise RuntimeError(f"Failed to parse tx_create output: {e}")
+            except yaml.YAMLError:
+                # Not YAML - try plain text parsing
+                pass
             
-            if exit_code != 0:
-                raise RuntimeError(f"tx_create failed: exit code {exit_code}")
+            # Plain text format: extract any 0x hash
+            hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', stdout_str, re.IGNORECASE)
+            if hash_match:
+                tx_hash = hash_match.group(1)
+                logger.info("first_transaction_created", token="TCELL", hash=tx_hash, format="plain_text")
+                return tx_hash
             
-            raise RuntimeError(f"Unexpected tx_create output format")
+            # Fallback - no hash found
+            logger.error("tx_hash_not_found", output=stdout_str[:200])
+            raise RuntimeError(f"Could not extract tx hash from output: {stdout_str[:200]}")
             
         except Exception as e:
             logger.error("first_transaction_creation_error", error=str(e))
