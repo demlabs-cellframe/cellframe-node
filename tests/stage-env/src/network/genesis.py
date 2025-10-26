@@ -773,7 +773,7 @@ class GenesisInitializer:
             cmd = [
                 "cellframe-node-cli", "token_emit",
                 "-token", "TCELL",
-                "-value", "1000000000",
+                "-emission_value", "1000000000",
                 "-addr", fee_addr,
                 "-certs", root_cert_name,
                 "-net", self.network_name,
