@@ -243,8 +243,85 @@ class NetworkManager:
         if wait_ready:
             await self._wait_for_network_ready()
         
-        # Initialize genesis state (create validator orders, register node aliases)
-        logger.info("initializing_genesis_state")
+        # PHASE 1: Generate fee wallet and native token (TCELL)
+        # This creates the foundational economic layer for the network
+        logger.info("=== PHASE 1: Fee Wallet & Native Token Generation ===")
+        
+        try:
+            # Step 1: Generate fee collection wallet on node1
+            logger.info("step_1_generating_fee_wallet")
+            fee_addr = await self.genesis.generate_fee_wallet()
+            logger.info("fee_wallet_created", address=fee_addr)
+            
+            # Step 2: Create TCELL token on zerochain
+            logger.info("step_2_creating_tcell_token")
+            token_hash = await self.genesis.create_native_token()
+            logger.info("tcell_token_created", hash=token_hash[:16])
+            
+            # Step 3: Process token declaration through zerochain DAG-PoA
+            logger.info("step_3_processing_token_decl_zerochain")
+            root_nodes = [n for n in node_configs if n.role == 'root']
+            await self.genesis.process_zerochain_datum(token_hash, root_nodes)
+            logger.info("token_decl_finalized")
+            
+            # Step 4: Emit TCELL to fee wallet on zerochain
+            logger.info("step_4_emitting_tcell")
+            emission_hash = await self.genesis.emit_native_token(fee_addr)
+            logger.info("tcell_emitted", hash=emission_hash[:16])
+            
+            # Step 5: Process emission through zerochain DAG-PoA
+            logger.info("step_5_processing_emission_zerochain")
+            await self.genesis.process_zerochain_datum(emission_hash, root_nodes)
+            logger.info("emission_finalized")
+            
+            # Step 6: Create first transaction on main chain
+            logger.info("step_6_creating_first_transaction")
+            tx_hash = await self.genesis.create_first_transaction(emission_hash)
+            logger.info("first_transaction_created", hash=tx_hash[:16])
+            
+            # Step 7: Synchronize network after TCELL genesis
+            logger.info("step_7_synchronizing_network")
+            await self.genesis.sync_network(node_configs)
+            logger.info("network_synchronized_after_tcell")
+            
+        except Exception as e:
+            logger.error("tcell_genesis_failed", error=str(e))
+            logger.error("stopping_network_due_to_genesis_failure")
+            try:
+                self.compose.down(volumes=False, remove_images=False)
+            except Exception as stop_error:
+                logger.warning("failed_to_stop_network", error=str(stop_error))
+            raise RuntimeError(f"TCELL genesis failed: {e}") from e
+        
+        # PHASE 2: Capture genesis blocks for both chains
+        logger.info("=== PHASE 2: Genesis Block Capture ===")
+        
+        try:
+            # Step 8: Get genesis block hashes from both chains
+            logger.info("step_8_capturing_genesis_blocks")
+            zerochain_genesis = await self.genesis.get_genesis_block_hash("zerochain")
+            main_genesis = await self.genesis.get_genesis_block_hash("main")
+            
+            if zerochain_genesis:
+                logger.info("zerochain_genesis_captured", hash=zerochain_genesis[:16])
+            else:
+                logger.warning("zerochain_genesis_not_found")
+            
+            if main_genesis:
+                logger.info("main_genesis_captured", hash=main_genesis[:16])
+            else:
+                logger.warning("main_genesis_not_found")
+            
+            # TODO: Update chain configs with genesis blocks
+            # This would require modifying config files and reloading
+            # For now, we log the hashes for manual configuration
+            
+        except Exception as e:
+            logger.warning("genesis_block_capture_failed", error=str(e))
+            # Non-critical - continue without genesis blocks
+        
+        # PHASE 3: Initialize genesis state (register nodes, aliases)
+        logger.info("=== PHASE 3: Node Registration & Aliases ===")
         try:
             await self.genesis.initialize(node_configs)
             await self.genesis.register_node_aliases(node_configs)
@@ -258,12 +335,8 @@ class NetworkManager:
             # Don't fail the whole start process, just log the error
             # Validator orders might already exist in a restarted network
         
-        # CRITICAL: Wait for network consensus before snapshot
-        # Verify all nodes have:
-        # - Same node list (topology synchronized)
-        # - Same chain state (blocks synced)
-        # - Online status (operational)
-        logger.info("waiting_for_network_consensus")
+        # PHASE 4: Wait for network consensus
+        logger.info("=== PHASE 4: Network Consensus Verification ===")
         from ..monitoring.network_consensus import NetworkConsensusMonitor
         
         consensus_monitor = NetworkConsensusMonitor(
