@@ -191,9 +191,9 @@ check:
 ```
 
 **Save хелперы:**
-- `save_wallet: var` - извлекает wallet address (base58 + checksum валидация)
-- `save_hash: var` - извлекает hash (0x[hex]{64})
-- `save_node: var` - извлекает node address (0x::формат)
+- `save_wallet: var` - извлекает и валидирует wallet address 
+- `save_hash: var` - извлекает и валидирует hash (0x[hex]{64})
+- `save_node: var` - извлекает и валидирует node address 
 - `save: var` - сохраняет весь вывод
 
 **Сравнение:**

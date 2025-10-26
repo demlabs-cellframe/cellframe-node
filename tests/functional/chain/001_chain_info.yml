@@ -6,17 +6,11 @@ description: Test retrieving chain information
 tags: [functional, chain, info]
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
   - common/networks/single_node.yml
 
 setup:
   - wait: 10s
-
-defaults:
-  node: node1
 
 test:
   # Test: Get chain list

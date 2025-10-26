@@ -407,6 +407,50 @@ services:
     - ./../testing/cache/configs/shared/ca:/opt/cellframe-node/share/ca:ro
     - ./../testing/cache/crash-artifacts/node7:/crash-artifacts/node-7
     - ./../testing/cache/cellframe-packages:/var/cache/cellframe-packages
+  node-8:
+    build:
+      args:
+        BUILD_TYPE: ${BUILD_TYPE:-debug}
+        CELLFRAME_VERSION: ${CELLFRAME_VERSION:-latest}
+      context: .
+      dockerfile: Dockerfile.cellframe
+    container_name: cellframe-stage-node-8
+    environment:
+      NODE_ID: '8'
+      NODE_ROLE: full
+      NODE_TYPE: full_nodes
+      NODE_IP: 172.20.0.17
+      NETWORK_NAME: stagenet
+      DAP_DEBUG: '1'
+      CELLFRAME_DEBUG: '1'
+    healthcheck:
+      interval: 10s
+      retries: 3
+      start_period: 30s
+      test:
+      - CMD
+      - sh
+      - -c
+      - pgrep -f cellframe-node > /dev/null
+      timeout: 5s
+    hostname: cellframe-stage-node-8
+    image: cf-node:${BUILD_TYPE:-debug}-${CELLFRAME_VERSION:-latest}
+    networks:
+      stagenet:
+        ipv4_address: 172.20.0.17
+    ports:
+    - 8086:8079
+    restart: unless-stopped
+    ulimits:
+      core: -1
+    volumes:
+    - ./../testing/cache/configs/node8/cellframe-node.cfg:/opt/cellframe-node/etc/cellframe-node.cfg
+    - ./../testing/cache/configs/node8/cellframe-node.cfg.d:/opt/cellframe-node/etc/cellframe-node.cfg.d
+    - ./../testing/cache/configs/node8/network:/opt/cellframe-node/etc/network
+    - ./../testing/cache/data/node8:/opt/cellframe-node/var
+    - ./../testing/cache/configs/shared/ca:/opt/cellframe-node/share/ca:ro
+    - ./../testing/cache/crash-artifacts/node8:/crash-artifacts/node-8
+    - ./../testing/cache/cellframe-packages:/var/cache/cellframe-packages
 networks:
   stagenet:
     driver: bridge

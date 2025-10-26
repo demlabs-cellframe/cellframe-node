@@ -1,22 +1,13 @@
 # Arbitrage Bypass Test
 # Verifies that arbitrage transactions can bypass blocked UTXO
-
 name: Arbitrage Bypass Test
 description: Arbitrage transactions should bypass UTXO blocklist
 author: QA Team
 tags: [arbitrage, utxo-blocking, critical]
-version: "1.0"
 
-network:
-  topology: default
-
-# Include common templates
-includes:
-  - common/wallets/create_wallet.yml
 
 # Global defaults for all sections
 defaults:
-  node: node1
   certs: test_cert 
   fee: 0.1
 
