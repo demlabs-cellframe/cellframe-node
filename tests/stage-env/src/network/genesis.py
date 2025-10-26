@@ -994,28 +994,30 @@ class GenesisInitializer:
                 except Exception as e:
                     logger.warning("failed_to_trigger_mempool_proc", node=f"node{node.node_id}", error=str(e))
             
-            # Step 3: Wait for datum to be finalized in block (polling with timeout)
-            logger.info("waiting_for_datum_in_blocks", datum=datum_hash[:16], timeout=timeout)
-            blocks_check_start = time.time()
-            found_in_blocks = False
+            # Step 3: Wait for datum to be finalized in DAG (polling with timeout)
+            # Note: DAG-PoA uses events, not blocks
+            logger.info("waiting_for_datum_in_dag", datum=datum_hash[:16], timeout=timeout)
+            dag_check_start = time.time()
+            found_in_dag = False
             
-            while time.time() - blocks_check_start < timeout:
-                cmd_blocks = ["cellframe-node-cli", "block", "list", "-net", self.network_name, "-chain", "zerochain", "-last", "10"]
-                result_blocks = container.exec_run(cmd_blocks, demux=True)
-                stdout_blocks, _ = result_blocks.output
-                stdout_blocks_str = stdout_blocks.decode('utf-8') if stdout_blocks else ""
+            while time.time() - dag_check_start < timeout:
+                # For DAG-PoA, check if datum is in events (not blocks!)
+                cmd_events = ["cellframe-node-cli", "event", "list", "-net", self.network_name, "-chain", "zerochain", "-last", "20"]
+                result_events = container.exec_run(cmd_events, demux=True)
+                stdout_events, _ = result_events.output
+                stdout_events_str = stdout_events.decode('utf-8') if stdout_events else ""
                 
-                if datum_hash.lower() in stdout_blocks_str.lower():
-                    found_in_blocks = True
-                    logger.info("datum_finalized_in_zerochain", datum=datum_hash[:16], elapsed=f"{time.time() - blocks_check_start:.1f}s")
+                if datum_hash.lower() in stdout_events_str.lower():
+                    found_in_dag = True
+                    logger.info("datum_finalized_in_zerochain", datum=datum_hash[:16], elapsed=f"{time.time() - dag_check_start:.1f}s")
                     break
                 
                 # Wait before retry
                 await asyncio.sleep(2)
             
-            if not found_in_blocks:
-                logger.error("datum_not_finalized_in_blocks", datum=datum_hash[:16], elapsed=f"{time.time() - blocks_check_start:.1f}s")
-                raise RuntimeError(f"Datum {datum_hash[:16]}... was not finalized in blocks within {timeout}s")
+            if not found_in_dag:
+                logger.error("datum_not_finalized_in_dag", datum=datum_hash[:16], elapsed=f"{time.time() - dag_check_start:.1f}s")
+                raise RuntimeError(f"Datum {datum_hash[:16]}... was not finalized in DAG within {timeout}s")
                 
         except Exception as e:
             logger.error("zerochain_datum_processing_error", error=str(e))
