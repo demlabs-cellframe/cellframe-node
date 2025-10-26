@@ -789,7 +789,7 @@ class GenesisInitializer:
             stdout_str = stdout.decode('utf-8') if stdout else ""
             stderr_str = stderr.decode('utf-8') if stderr else ""
             
-            logger.debug("token_emit_output", exit_code=exit_code, stdout=stdout_str[:500], stderr=stderr_str[:200])
+            logger.info("token_emit_raw_output", exit_code=exit_code, stdout_preview=stdout_str[:500], stderr_preview=stderr_str[:200])
             
             import yaml, re
             try:
@@ -863,7 +863,7 @@ class GenesisInitializer:
             
             stdout_str = stdout.decode('utf-8') if stdout else ""
             
-            logger.debug("tx_create_output", exit_code=exit_code, stdout=stdout_str[:500])
+            logger.info("tx_create_raw_output", exit_code=exit_code, stdout_preview=stdout_str[:500])
             
             import yaml, re
             try:
