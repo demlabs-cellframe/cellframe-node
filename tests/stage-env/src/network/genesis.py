@@ -655,7 +655,7 @@ class GenesisInitializer:
             logger.error("fee_wallet_generation_error", error=str(e))
             raise
     
-    async def create_native_token(self, root_cert_name: str = "stagenet.master-1") -> str:
+    async def create_native_token(self, root_cert_name: str = "pvt.stagenet.master.0") -> str:
         """
         Create TCELL native token on zerochain.
         
@@ -663,7 +663,7 @@ class GenesisInitializer:
         Uses zerochain (token declarations chain).
         
         Args:
-            root_cert_name: Certificate name for signing (default: stagenet.master-1)
+            root_cert_name: Certificate name for signing (default: pvt.stagenet.master.0 for node1)
             
         Returns:
             Token declaration datum hash
@@ -747,7 +747,7 @@ class GenesisInitializer:
             logger.error("native_token_creation_error", error=str(e))
             raise
     
-    async def emit_native_token(self, fee_addr: str, root_cert_name: str = "stagenet.master-1") -> str:
+    async def emit_native_token(self, fee_addr: str, root_cert_name: str = "pvt.stagenet.master.0") -> str:
         """
         Emit TCELL native token to fee wallet on zerochain.
         
@@ -756,7 +756,7 @@ class GenesisInitializer:
         
         Args:
             fee_addr: Fee wallet address to receive emission
-            root_cert_name: Certificate name for signing
+            root_cert_name: Certificate name for signing (default: pvt.stagenet.master.0)
             
         Returns:
             Emission datum hash
