@@ -837,7 +837,7 @@ class GenesisInitializer:
             logger.error("native_token_emission_error", error=str(e))
             raise
     
-    async def create_first_transaction(self, emission_hash: str) -> str:
+    async def create_first_transaction(self, emission_hash: str, root_cert_name: str = "pvt.stagenet.master.0") -> str:
         """
         Create first TCELL transaction on main chain.
         
@@ -846,6 +846,7 @@ class GenesisInitializer:
         
         Args:
             emission_hash: Emission datum hash to spend from
+            root_cert_name: Certificate name for signing (default: pvt.stagenet.master.0)
             
         Returns:
             Transaction datum hash
@@ -865,6 +866,7 @@ class GenesisInitializer:
                 "-from_emission", emission_hash,
                 "-value", "100000000",
                 "-fee", "0.1",
+                "-cert", root_cert_name,
                 "-net", self.network_name,
                 "-chain", "main"
             ]
