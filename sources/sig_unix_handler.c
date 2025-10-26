@@ -9,7 +9,7 @@
 #include "dap_chain_node.h"
 #include "dap_chain_net_srv_xchange.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
-#include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_stake.h"
 #include "dap_chain.h"
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -18,7 +18,7 @@
 #include "dap_http_server.h"
 #include "dap_dns_server.h"
 #include "sig_unix_handler.h"
-#include "dap_plugin.h"
+
 #ifdef DAP_MODULES_DYNAMIC
 #include "dap_modules_dynamic_cdb.h"
 #endif

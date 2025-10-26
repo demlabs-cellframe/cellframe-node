@@ -251,6 +251,7 @@ static int s_wallet_create(int argc, const char **argv) {
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
+        dap_chain_wallet_close(l_wallet);
         return 0;
     } else {
         log_it(L_ERROR, "Failed to create a wallet.");
