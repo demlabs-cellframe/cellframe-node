@@ -10,6 +10,7 @@
   "auto_load": [
     ".context/modules/testing/stage_env_system.json",
     ".context/modules/testing/stage_env_scenario_language.json",
+    ".context/modules/projects/cellframe_sdk.json",
     ".context/modules/languages/python/python_development.json",
     ".context/modules/core/development_standards.json",
     ".context/modules/core/standards.json"
@@ -710,6 +711,96 @@
         "Расширяемость (легко добавить новые парсеры)"
       ],
       "testing_status": "Готово к тестированию - suite includes должны теперь корректно обрабатываться"
+    },
+    {
+      "timestamp": "2025-10-26T06:25:00Z",
+      "phase": "native_token_genesis_debugging",
+      "status": "in_progress",
+      "summary": "Глубокий анализ проблем с genesis: seed_mode и DAG-PoA event creation",
+      "discovered_issues": {
+        "issue_1_wrong_dag_command": {
+          "symptom": "event list command error: can't recognize command=event;list",
+          "root_cause": "Использовалась команда 'event list' вместо 'dag event list'",
+          "fix": "Исправлено на: dag event list -net stagenet -chain zerochain -from events -limit 20",
+          "code_ref": "genesis.py:996",
+          "status": "fixed"
+        },
+        "issue_2_no_events_created": {
+          "symptom": "total events: 0 - НИ ОДНОГО event не создаётся в DAG",
+          "root_cause": "DAG-PoA требует seed_mode=true для создания ПЕРВОГО event (genesis event)",
+          "sdk_code_reference": "dap_chain_cs_dag_poa.c:773: else if ( s_seed_mode || (a_hashes && a_hashes_count) )",
+          "explanation": "Первый event НЕ имеет parent hashes → нужен seed_mode чтобы обойти эту проверку",
+          "discovery_evidence": {
+            "log_line": "dag_finalization_progress: total events: 0 (каждые 10 секунд в течение 120s)",
+            "mempool_status": "Datum в mempool присутствует",
+            "mempool_proc_status": "mempool_proc вызывается на node2 и node3",
+            "event_creation_status": "Events НЕ создаются"
+          },
+          "fix_approach": "Включить seed_mode=true на ROOT нодах ПЕРЕД созданием TCELL, выключить ПОСЛЕ финализации",
+          "status": "implementing"
+        },
+        "issue_3_certificate_distribution": {
+          "symptom": "Приватные сертификаты копировались в /share/ca (НЕПРАВИЛЬНО!)",
+          "root_cause": "Код копировал pvt.stagenet.master.N.dcert в shared directory",
+          "security_issue": "Приватные ключи НЕ должны быть доступны всем нодам!",
+          "fix": "Изменено на копирование ТОЛЬКО публичных сертификатов (stagenet.master.N) в /share/ca",
+          "code_ref": "config/generator.py:575-593",
+          "status": "fixed"
+        },
+        "issue_4_seed_mode_restart_required": {
+          "symptom": "sed -i изменяет конфиг, но нода не перечитывает его",
+          "root_cause": "Cellframe Node загружает seed_mode ОДИН РАЗ при старте (dap_chain_block_init)",
+          "fix": "Добавлен 'sv restart cellframe-node' после изменения seed_mode",
+          "code_ref": "genesis.py:1148-1153, 1188-1195",
+          "wait_time": "5 секунд после restart для стабилизации",
+          "status": "fixed"
+        }
+      },
+      "new_genesis_flow": {
+        "description": "Обновлённая последовательность с seed_mode управлением",
+        "steps": [
+          "Step 1: Enable seed_mode on ROOT nodes (node1,2,3)",
+          "Step 2: Generate fee_wallet",
+          "Step 3: Create TCELL token (zerochain)",
+          "Step 4: Process token_decl через DAG-PoA (с seed_mode!)",
+          "Step 5: Emit TCELL",
+          "Step 6: Process emission через DAG-PoA (с seed_mode!)",
+          "Step 7: Disable seed_mode on ROOT nodes + restart",
+          "Step 8: Enable seed_mode on MASTER nodes (node4,5,6)",
+          "Step 9: Create first TX on main chain",
+          "Step 10: Get main genesis block hash",
+          "Step 11: Disable seed_mode on MASTER nodes + restart",
+          "Step 12: Update static_genesis_block in all configs",
+          "Step 13: Sync network"
+        ],
+        "critical_points": [
+          "✅ Seed mode для ROOT нод позволяет создать genesis events в DAG",
+          "✅ Seed mode для MASTER нод позволяет создать genesis block в ESBocs",
+          "✅ Restart после изменения seed_mode обязателен!",
+          "✅ Seed mode ДОЛЖЕН быть выключен в финальном snapshot!"
+        ]
+      },
+      "code_changes": [
+        "genesis.py: enable_seed_mode_for_genesis() - универсальный метод для root/master нод",
+        "genesis.py: disable_seed_mode_after_genesis() - с restart и ожиданием",
+        "genesis.py: Улучшено логирование dag_finalization_progress (каждые 10s)",
+        "genesis.py: Исправлена команда: dag event list -from events",
+        "manager.py: Реорганизован genesis flow - seed_mode включается ДО создания datums",
+        "config/generator.py: Исправлено - ТОЛЬКО публичные certs в /share/ca"
+      ],
+      "testing_plan": [
+        "1. Запустить тест с новым seed_mode flow",
+        "2. Проверить логи ROOT нод - должно быть: 'Genesis event produced'",
+        "3. Проверить dag event list - events должны появиться",
+        "4. Проверить что seed_mode=false в финальных конфигах",
+        "5. Проверить что приватные certs ТОЛЬКО у своих нод"
+      ],
+      "next_actions": [
+        "Запустить полный тест",
+        "Анализировать логи ROOT нод на создание events",
+        "Проверить что TX создаётся на main с seed_mode",
+        "Документировать результаты в progress_log"
+      ]
     },
     {
       "timestamp": "2025-10-26T02:30:00Z",

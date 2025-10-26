@@ -1,7 +1,0 @@
-# Default network configuration for CLI commands
-# Include this in your test to auto-populate -net option
-
-defaults:
-  cli:
-    net: "{{network_name}}"
-

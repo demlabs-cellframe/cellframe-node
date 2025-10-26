@@ -3,8 +3,8 @@
   "domain": "cellframe_sdk",
   "version": "3.4-0",
   "created": "2025-01-07T00:00:00Z",
-  "updated": "2025-10-16T00:00:00Z",
-  "template_source": "Cellframe SDK v3.4-0 + DAP SDK analysis",
+  "updated": "2025-10-26T05:25:00Z",
+  "template_source": "Cellframe SDK v3.4-0 + Consensus & Certificates Deep Dive",
   "navigation_system": {
     "purpose": "Файл СЛК: cellframe_sdk.json",
     "recovery_path": ".context/manifest.json",
@@ -174,6 +174,1126 @@
           "path": "cellframe-sdk/modules/consensus/block-pow/",
           "description": "Proof of Work для блоков",
           "enable_flag": "cs-block-pow"
+        }
+      }
+    },
+
+    "certificate_architecture": {
+      "description": "Система сертификатов и криптографической идентификации в Cellframe",
+      "critical_distinction": "ТРИ типа сертификатов с РАЗНЫМИ назначениями",
+      
+      "certificate_types": {
+        "node_addr_certificate": {
+          "purpose": "Идентификация узла в P2P сети (корневой сертификат ноды)",
+          "file_name": "node-addr.dcert",
+          "location": "/var/lib/ca/node-addr.dcert",
+          "address_format": "dap_stream_node_addr_t - короткий формат IPv6-like: 8598::57B2::FE83::5F16",
+          "generation": {
+            "function": "dap_cert_generate() с типом ключа (обычно Dilithium)",
+            "address_extraction": "dap_stream_node_addr_from_cert() извлекает адрес из публичного ключа"
+          },
+          "usage": [
+            "Идентификация узла в P2P сети (node list, topology)",
+            "Используется в authorized_nodes_addrs для DAG-PoA",
+            "Используется в validators_addrs для ESBocs",
+            "НЕ используется для подписи блоков/events!",
+            "Генерация validator address (они идентичны!)"
+          ],
+          "storage": "node_addr.txt файл содержит текстовое представление адреса",
+          "critical_note": "Это КОРНЕВОЙ сертификат ноды! master.N сертификаты ТОЛЬКО для подписи!"
+        },
+        
+        "validator_private_certificate": {
+          "purpose": "Подпись блоков/events (ПРИВАТНЫЙ ключ)",
+          "file_name_pattern": "pvt.{network}.master.{idx}.dcert",
+          "example": "pvt.stagenet.master.0.dcert",
+          "location": "/var/lib/ca/pvt.stagenet.master.N.dcert (только на своей ноде!)",
+          "contains": "Приватный ключ для подписи (dap_enc_key_t с private key)",
+          "generation": "dap_cert_generate_mem() с DAP_ENC_KEY_TYPE_SIG_DILITHIUM",
+          "usage": [
+            "CLI команды: -certs pvt.stagenet.master.0",
+            "Подпись datums: token_decl, token_emit, tx_create",
+            "Подпись блоков в ESBocs (blocks-sign-cert config)",
+            "Подпись events в DAG-PoA (events-sign-cert config)"
+          ],
+          "distribution": "Каждая нода имеет ТОЛЬКО свой приватный сертификат",
+          "security": "НИКОГДА не копируется на другие ноды!"
+        },
+        
+        "validator_public_certificate": {
+          "purpose": "Верификация подписей других валидаторов (ПУБЛИЧНЫЙ ключ)",
+          "file_name_pattern": "{network}.master.{idx}.dcert",
+          "example": "stagenet.master.0.dcert",
+          "location": [
+            "/var/lib/ca/stagenet.master.N.dcert (все публичные сертификаты на всех нодах)",
+            "/share/ca/stagenet.master.N.dcert (shared directory для Docker)"
+          ],
+          "contains": "Только публичный ключ (без private key)",
+          "generation": "dap_cert_to_pkey() + dap_cert_from_pkey() из приватного сертификата",
+          "usage": [
+            "Загружается в память DAG-PoA/ESBocs консенсусом",
+            "Используется для проверки подписей от других валидаторов",
+            "dap_cert_find_by_name('stagenet.master.0') или 'stagenet.master.0.pub'"
+          ],
+          "distribution": "ВСЕ публичные сертификаты ВСЕХ валидаторов копируются на ВСЕ ноды",
+          "critical_note": "БЕЗ pvt. prefix! Файл stagenet.master.N.dcert, НЕ pvt.stagenet.master.N.dcert"
+        }
+      },
+      
+      "certificate_loading_flow": {
+        "step_1_generation": {
+          "tool": "dap-cert или cf-cert-generator",
+          "creates": [
+            "pvt.stagenet.master.N.dcert (приватный с private key)",
+            "stagenet.master.N.dcert (публичный, экспорт из приватного)",
+            "node-addr.dcert (адресный сертификат)"
+          ]
+        },
+        "step_2_distribution": {
+          "private_certs": "Только на свою ноду: /var/lib/ca/pvt.stagenet.master.{own_idx}.dcert",
+          "public_certs": "На ВСЕ ноды: /var/lib/ca/stagenet.master.{0..N}.dcert",
+          "node_addr": "На свою ноду: /var/lib/ca/node-addr.dcert"
+        },
+        "step_3_loading_into_memory": {
+          "when": "При инициализации chain и consensus модулей",
+          "function": "dap_cert_folder_load() - сканирует /var/lib/ca/",
+          "registration": "dap_cert_add() регистрирует сертификат в глобальном хранилище",
+          "lookup": "dap_cert_find_by_name() ищет по имени БЕЗ .dcert расширения"
+        },
+        "step_4_consensus_initialization": {
+          "dag_poa": {
+            "config_param": "auth_certs_prefix=stagenet.master",
+            "cert_count": "auth_certs_number=3",
+            "loading_code": "dap_chain_cs_dag_poa.c:385-394",
+            "lookup_pattern": [
+              "1. Ищет: stagenet.master.0 (БЕЗ pvt.!)",
+              "2. Fallback: stagenet.master.0.pub",
+              "3. Ошибка если не нашёл"
+            ],
+            "result": "Массив l_poa_pvt->auth_certs[] с публичными сертификатами",
+            "signing": "Использует events-sign-cert из config (с pvt. prefix)"
+          },
+          "esbocs": {
+            "config_param": "auth_certs_prefix=stagenet.master",
+            "cert_count": "auth_certs_count=6",
+            "loading_code": "dap_chain_cs_esbocs.c:327-340",
+            "lookup_pattern": [
+              "1. Ищет: stagenet.master.0",
+              "2. Fallback: stagenet.master.0.pub",
+              "3. Ошибка если не нашёл"
+            ],
+            "result": "Список emergency_validator_addrs для консенсуса",
+            "signing": "Использует blocks-sign-cert из config (с pvt. prefix)"
+          }
+        }
+      },
+      
+      "naming_conventions": {
+        "summary": "Критическая матрица именования - когда использовать pvt. prefix, когда нет",
+        
+        "naming_matrix": {
+          "filesystem": {
+            "private_cert_file": "pvt.stagenet.master.0.dcert ← С pvt. prefix!",
+            "public_cert_file": "stagenet.master.0.dcert ← БЕЗ pvt. prefix!",
+            "node_addr_file": "node-addr.dcert ← специальное имя"
+          },
+          "config_parameters": {
+            "auth_certs_prefix": "stagenet.master ← БЕЗ pvt.! (DAG-PoA и ESBocs)",
+            "blocks_sign_cert": "pvt.stagenet.master.N ← С pvt.! (ESBocs signing)",
+            "events_sign_cert": "pvt.stagenet.master.N ← С pvt.! (DAG-PoA signing)"
+          },
+          "cli_commands": {
+            "token_decl": "-certs pvt.stagenet.master.0 ← С pvt.!",
+            "token_emit": "-certs pvt.stagenet.master.0 ← С pvt.!",
+            "tx_create": "-cert pvt.stagenet.master.0 ← С pvt.!",
+            "validator_create": "-cert pvt.stagenet.master.0 ← С pvt.!"
+          },
+          "sdk_internal": {
+            "dap_cert_find_by_name": "stagenet.master.0 ← БЕЗ pvt.! (поиск в памяти)",
+            "cert_registration": "stagenet.master.0 ← БЕЗ pvt.! (имя в глобальном хранилище)",
+            "fallback_with_pub": "stagenet.master.0.pub ← если не нашёл основное имя"
+          }
+        },
+        
+        "critical_rules": {
+          "rule_1": "Файл ПРИВАТНОГО сертификата ВСЕГДА с pvt.: pvt.{network}.master.{idx}.dcert",
+          "rule_2": "Файл ПУБЛИЧНОГО сертификата ВСЕГДА БЕЗ pvt.: {network}.master.{idx}.dcert",
+          "rule_3": "Config параметры auth_certs_prefix ВСЕГДА БЕЗ pvt.: {network}.master",
+          "rule_4": "Config параметры для подписи ВСЕГДА С pvt.: blocks-sign-cert=pvt.{network}.master.{idx}",
+          "rule_5": "CLI команды для подписи (-certs, -cert) ВСЕГДА С pvt.",
+          "rule_6": "SDK поиск в памяти (dap_cert_find_by_name) ВСЕГДА БЕЗ pvt.",
+          "rule_7": "БЕЗ .dcert расширения! dap_cert_find_by_name('stagenet.master.0'), не '.dcert'"
+        },
+        
+        "common_mistakes": [
+          "❌ auth_certs_prefix=pvt.stagenet.master → Консенсус не найдёт сертификаты!",
+          "❌ -certs stagenet.master.0 → Подпись не сработает (нет приватного ключа)!",
+          "❌ Только pvt.stagenet.master.N.dcert без публичных → Консенсус не загрузится!",
+          "❌ Публичный файл pvt.stagenet.master.0.dcert → Неправильное имя для публичного!",
+          "❌ dap_cert_find_by_name('pvt.stagenet.master.0') → Не найдёт (pvt не в имени)!",
+          "❌ dap_cert_find_by_name('stagenet.master.0.dcert') → Не найдёт (без расширения)!"
+        ],
+        
+        "verification_checklist": [
+          "✓ Файлы pvt.stagenet.master.N.dcert существуют в /var/lib/ca/ (только на своих нодах)",
+          "✓ Файлы stagenet.master.{0..N}.dcert существуют в /var/lib/ca/ (на ВСЕХ нодах)",
+          "✓ Файлы stagenet.master.{0..N}.dcert существуют в /share/ca/ (Docker shared)",
+          "✓ node-addr.dcert существует на каждой ноде",
+          "✓ auth_certs_prefix БЕЗ pvt. в chain config",
+          "✓ blocks-sign-cert/events-sign-cert С pvt. в node config"
+        ]
+      },
+      
+      "validator_address_generation": {
+        "description": "Адрес валидатора генерируется из node-addr сертификата, НЕ из master сертификата!",
+        "critical_flow": [
+          "1. node-addr.dcert генерируется первым",
+          "2. dap_stream_node_addr_from_cert(node-addr) → node address (короткий)",
+          "3. Validator address = Node address (они ОДИНАКОВЫЕ!)",
+          "4. master.N.dcert используется ТОЛЬКО для подписи, НЕ для адреса!"
+        ],
+        "code_reference": "tests/stage-env/src/certs/cert-generator.c:378-393",
+        "validation": "Validator address должен совпадать с адресом из node-addr.dcert"
+      }
+    },
+
+    "consensus_detailed_architecture": {
+      "description": "Детальная архитектура консенсусов Cellframe SDK",
+      
+      "dag_poa_consensus": {
+        "full_name": "Directed Acyclic Graph - Proof of Authority",
+        "file": "cellframe-sdk/modules/consensus/dag-poa/dap_chain_cs_dag_poa.c",
+        "topology": "DAG (не blockchain!)",
+        "use_case": "Zerochain - быстрые операции (token_decl, emission, decree)",
+        
+        "initialization": {
+          "config_section": "[dag-poa]",
+          "required_params": {
+            "auth_certs_prefix": "Префикс сертификатов (БЕЗ pvt.!): stagenet.master",
+            "auth_certs_number": "Количество авторизованных нод: 3",
+            "auth_certs_number_verify": "Минимум подписей: 2 (обычно N/2 + 1)",
+            "auto_confirmation": "true - автоматическое подтверждение events",
+            "auto_round_complete": "true - автоматическое завершение раундов"
+          },
+          "optional_params": {
+            "events-sign-cert": "Приватный сертификат для подписи (с pvt.!): pvt.stagenet.master.0",
+            "confirmations_timeout": "Таймаут подтверждений в секундах: 15",
+            "wait_sync_before_complete": "Ожидание синхронизации: 120"
+          },
+          "initialization_code": "s_callback_new() в dap_chain_cs_dag_poa.c:343-402"
+        },
+        
+        "certificate_loading": {
+          "description": "Пошаговая загрузка auth сертификатов в DAG-PoA консенсус",
+          "code_location": "dap_chain_cs_dag_poa.c:385-394",
+          
+          "algorithm": [
+            "char l_cert_name[MAX_PATH + 1];",
+            "for (uint16_t i = 0; i < auth_certs_count; ++i) {",
+            "  // Формируем: auth_certs_prefix + '.' + i",
+            "  l_pos = snprintf(l_cert_name, sizeof(l_cert_name), \"%s.%hu\", auth_certs_prefix, i);",
+            "  // Результат: 'stagenet.master.0'",
+            "  ",
+            "  // Поиск #1: Ищем основное имя БЕЗ .pub",
+            "  if (!(auth_certs[i] = dap_cert_find_by_name(l_cert_name))) {",
+            "    // Поиск #2: Добавляем .pub суффикс",
+            "    dap_strncpy(l_cert_name + l_pos, '.pub', ...);",
+            "    // Результат: 'stagenet.master.0.pub'",
+            "    ",
+            "    if (!(auth_certs[i] = dap_cert_find_by_name(l_cert_name)))",
+            "      return ERROR; // Сертификат не найден!",
+            "  }",
+            "  log_it(L_NOTICE, 'Initialized auth cert \"%s\"', l_cert_name);",
+            "}"
+          ],
+          
+          "key_points": [
+            "1. Читает auth_certs_prefix из [dag-poa]: stagenet.master",
+            "2. Для каждого i от 0 до auth_certs_number-1",
+            "3. Формирует имя: stagenet.master.{i}",
+            "4. Ищет в памяти через dap_cert_find_by_name() - БЕЗ pvt.!",
+            "5. Если не нашёл: пробует с .pub суффиксом",
+            "6. Если всё равно не нашёл: КРИТИЧЕСКАЯ ошибка инициализации",
+            "7. Сохраняет указатель на cert в массив auth_certs[]",
+            "8. Логирует успех: 'Initialized auth cert \"stagenet.master.0\"'"
+          ],
+          
+          "result": "Массив l_poa_pvt->auth_certs[i] с публичными сертификатами для верификации подписей",
+          
+          "prerequisite": "Публичные сертификаты stagenet.master.N.dcert ДОЛЖНЫ быть загружены в память через dap_cert_folder_load()"
+        },
+        
+        "event_signing": {
+          "who": "Только ROOT ноды с NODE_ROLE_ROOT или NODE_ROLE_ROOT_MASTER",
+          "signing_certificate": "Берётся из node config: events-sign-cert=pvt.stagenet.master.0",
+          
+          "signing_flow": [
+            "1. Datum помещается в mempool через CLI (token_decl, token_emit)",
+            "2. Root нода вызывает mempool_proc -datum <hash>",
+            "3. Создаётся DAG event с этим datum",
+            "4. Event подписывается ПРИВАТНЫМ ключом из pvt.stagenet.master.N.dcert",
+            "5. Event распространяется на другие root ноды через P2P"
+          ],
+          
+          "verification_flow": [
+            "1. Другая root нода получает event",
+            "2. Извлекает индекс подписавшей ноды из event",
+            "3. Берёт ПУБЛИЧНЫЙ сертификат из auth_certs[idx] (stagenet.master.N)",
+            "4. Верифицирует подпись используя публичный ключ",
+            "5. Если верификация OK - добавляет свою подпись"
+          ],
+          
+          "consensus_achievement": {
+            "threshold": "auth_certs_number_verify подписей (обычно N/2 + 1)",
+            "example": "Для 3 root нод нужно минимум 2 подписи",
+            "when_reached": "Event считается финализированным и добавляется в DAG",
+            "verification": "Проверка через: event list -chain zerochain"
+          },
+          
+          "critical_asymmetry": {
+            "signing": "Использует ПРИВАТНЫЙ: pvt.stagenet.master.N.dcert (только у подписывающей ноды)",
+            "verification": "Использует ПУБЛИЧНЫЙ: stagenet.master.N.dcert (у всех нод для проверки)",
+            "why_it_works": "Публичный ключ может проверить подпись от приватного ключа"
+          },
+          
+          "code_references": {
+            "signing_check": "dap_chain_cs_dag_poa.c:405-412 - проверка роли ноды",
+            "event_creation": "s_callback_event_create() создаёт и подписывает event",
+            "event_verification": "s_callback_event_verify() проверяет подписи"
+          }
+        },
+        
+        "node_roles_for_dag_poa": {
+          "root_nodes": {
+            "role": "NODE_ROLE_ROOT",
+            "description": "Авторизованные ноды для DAG-PoA",
+            "responsibilities": [
+              "Подпись events приватным сертификатом",
+              "Верификация events от других root нод",
+              "Достижение консенсуса (N/2 + 1 подписей)",
+              "Финализация events в DAG"
+            ],
+            "certificates": [
+              "pvt.stagenet.master.N.dcert - для подписи (свой)",
+              "stagenet.master.{0..N}.dcert - для верификации (все)"
+            ],
+            "config": "node-role=root в network config"
+          },
+          "full_nodes": {
+            "role": "NODE_ROLE_FULL",
+            "description": "Полные ноды БЕЗ права подписи",
+            "responsibilities": [
+              "Получение и хранение всех events",
+              "Верификация подписей",
+              "Синхронизация DAG",
+              "НЕ подписывают events!"
+            ],
+            "certificates": [
+              "stagenet.master.{0..N}.dcert - только для верификации",
+              "НЕТ приватных сертификатов!"
+            ]
+          }
+        },
+        
+        "common_issues": {
+          "certs_not_found": {
+            "error": "Can't find cert \"stagenet.master.0\"",
+            "causes": [
+              "Публичный сертификат не скопирован в /var/lib/ca/",
+              "Файл назван с pvt. prefix: pvt.stagenet.master.0.dcert (НЕПРАВИЛЬНО для публичного!)",
+              "auth_certs_prefix указан с pvt.: pvt.stagenet.master (НЕПРАВИЛЬНО!)"
+            ],
+            "solution": "Проверить что файлы stagenet.master.N.dcert (БЕЗ pvt.) существуют в /var/lib/ca/"
+          },
+          "no_private_key": {
+            "error": "Certificate \"stagenet.master.0\" has no private key",
+            "cause": "Используется публичный сертификат там где нужен приватный",
+            "solution": "Для подписи использовать pvt.stagenet.master.N, не stagenet.master.N"
+          },
+          "signing_failed": {
+            "error": "Successful count of certificate signing is 0",
+            "causes": [
+              "CLI команда использует имя БЕЗ pvt.: -certs stagenet.master.0",
+              "Приватный сертификат не найден в /var/lib/ca/"
+            ],
+            "solution": "В CLI всегда указывать -certs pvt.stagenet.master.N"
+          }
+        }
+      },
+      
+      "esbocs_consensus": {
+        "full_name": "Enhanced Synchronous Byzantine-resilient Ordered Consensus System",
+        "file": "cellframe-sdk/modules/consensus/esbocs/dap_chain_cs_esbocs.c",
+        "topology": "Blockchain (линейная цепь блоков)",
+        "use_case": "Main chain - транзакции, anchors, сложные операции",
+        
+        "initialization": {
+          "config_section": "[esbocs]",
+          "required_params": {
+            "auth_certs_prefix": "Префикс сертификатов валидаторов: stagenet.master",
+            "auth_certs_count": "Количество валидаторов: 6",
+            "min_validators_count": "Минимум онлайн валидаторов для старта: 4",
+            "validators_addrs": "Список node addresses валидаторов (НЕ validator addresses!)"
+          },
+          "timing_params": {
+            "new_round_delay": "Задержка между раундами в секундах: 10",
+            "round_attempts_max": "Максимум попыток в раунде: 4",
+            "round_attempt_timeout": "Таймаут попытки в секундах: 10"
+          },
+          "signing_params": {
+            "blocks-sign-cert": "Приватный сертификат для подписи блоков: pvt.stagenet.master.N"
+          },
+          "initialization_code": "dap_chain_cs_esbocs.c:316-351"
+        },
+        
+        "certificate_loading": {
+          "description": "Загрузка валидаторских сертификатов в ESBocs консенсус",
+          "code_location": "dap_chain_cs_esbocs.c:327-346",
+          
+          "algorithm": [
+            "// Аналогично DAG-PoA, но с дополнительной генерацией signing_addr",
+            "for (i = 0; i < auth_certs_count; ++i) {",
+            "  l_pos2 = snprintf(l_cert_name + l_dot_pos, 16, '.%u', i);",
+            "  // Результат: 'stagenet.master.0'",
+            "  ",
+            "  if (!(l_cert_cur = dap_cert_find_by_name(l_cert_name))) {",
+            "    dap_strncpy(l_cert_name + l_dot_pos + l_pos2, '.pub', ...);",
+            "    // Fallback: 'stagenet.master.0.pub'",
+            "    if (!(l_cert_cur = dap_cert_find_by_name(l_cert_name))) {",
+            "      log_it(L_ERROR, 'Can\\'t find cert \"%s\"', l_cert_name);",
+            "      return ERROR;",
+            "    }",
+            "  }",
+            "  ",
+            "  // ВАЖНО: Генерируем signing address из публичного ключа",
+            "  dap_chain_addr_fill_from_key(&l_signing_addr, l_cert_cur->enc_key, net_id);",
+            "  ",
+            "  // Добавляем в emergency_validator_addrs для консенсуса",
+            "  l_esbocs_pvt->emergency_validator_addrs = ",
+            "    dap_list_append(..., DAP_DUP(&l_signing_addr));",
+            "  ",
+            "  log_it(L_NOTICE, 'Initialized auth cert \"%s\"', l_cert_name);",
+            "}"
+          ],
+          
+          "key_differences_from_dag_poa": [
+            "ESBocs дополнительно генерирует signing_addr (wallet-like адрес)",
+            "signing_addr используется для идентификации валидатора в раундах",
+            "Сохраняется в emergency_validator_addrs список",
+            "Используется для emergency consensus recovery"
+          ],
+          
+          "critical": "Так же ищет ПУБЛИЧНЫЕ сертификаты БЕЗ pvt. prefix! Алгоритм идентичен DAG-PoA"
+        },
+        
+        "validator_system": {
+          "validator_orders": {
+            "purpose": "Регистрация валидатора в стейкинг системе",
+            "command": "srv_stake order create validator",
+            "required_params": [
+              "-net stagenet",
+              "-value_min 100000000000000000000 (100 tokens)",
+              "-value_max 10000000000000000000000 (10000 tokens)",
+              "-tax 10.0 (процент комиссии)",
+              "-cert pvt.stagenet.master.0 (ПРИВАТНЫЙ сертификат!)",
+              "-node_addr 8598::57B2::FE83::5F16 (адрес из node-addr.dcert)"
+            ],
+            "note": "Для genesis НЕ требуется! Validator orders нужны для runtime регистрации"
+          },
+          
+          "master_nodes": {
+            "role": "NODE_ROLE_MASTER",
+            "description": "Валидаторы для ESBocs консенсуса на main chain",
+            "responsibilities": [
+              "Участие в раундах консенсуса",
+              "Предложение блоков",
+              "Голосование за блоки",
+              "Подпись финальных блоков"
+            ],
+            "certificates": [
+              "pvt.stagenet.master.N.dcert - для подписи блоков (свой)",
+              "stagenet.master.{0..M}.dcert - для верификации (все валидаторы)"
+            ],
+            "config": "blocks-sign-cert=pvt.stagenet.master.N в node config"
+          }
+        },
+        
+        "consensus_rounds": {
+          "description": "ESBocs работает через синхронные раунды голосования (Byzantine Fault Tolerant)",
+          
+          "round_phases": {
+            "phase_1_propose": {
+              "name": "PROPOSE",
+              "description": "Один валидатор выбирается proposer'ом и предлагает блок",
+              "selection": "Round-robin или stake-weighted выбор proposer'а",
+              "action": "Proposer собирает datums из mempool и формирует блок",
+              "broadcast": "Блок отправляется всем валидаторам для голосования"
+            },
+            "phase_2_prevote": {
+              "name": "PREVOTE",
+              "description": "Валидаторы голосуют за предложенный блок",
+              "validation": "Проверка валидности блока (транзакции, подписи, balances)",
+              "action": "Если блок валидный - валидатор отправляет PREVOTE сообщение",
+              "threshold": "Нужно 2/3+ голосов для перехода к PRECOMMIT"
+            },
+            "phase_3_precommit": {
+              "name": "PRECOMMIT",
+              "description": "Валидаторы подтверждают намерение закоммитить блок",
+              "action": "После получения 2/3+ PREVOTE валидаторы отправляют PRECOMMIT",
+              "threshold": "Нужно 2/3+ PRECOMMIT для финализации",
+              "signing": "Валидаторы подписывают блок своими pvt.stagenet.master.N.dcert"
+            },
+            "phase_4_commit": {
+              "name": "COMMIT",
+              "description": "Блок финализируется и добавляется в blockchain",
+              "action": "Блок с подписями записывается в chain",
+              "propagation": "Блок распространяется на все ноды сети (включая full ноды)",
+              "verification": "Проверка через: block list -chain main"
+            }
+          },
+          
+          "timing_parameters": {
+            "new_round_delay": {
+              "description": "Задержка между раундами в секундах",
+              "default": "10 секунд",
+              "critical": "new_round_delay=0 → консенсус не работает!",
+              "recommendation": "Минимум 10 секунд для стабильной работы"
+            },
+            "round_attempts_max": {
+              "description": "Максимум попыток в одном раунде",
+              "default": "4",
+              "reason": "Если консенсус не достигнут - переход к следующему раунду"
+            },
+            "round_attempt_timeout": {
+              "description": "Таймаут одной попытки в секундах",
+              "default": "10",
+              "formula": "Общее время раунда = round_attempts_max * round_attempt_timeout"
+            }
+          },
+          
+          "validator_requirements": {
+            "minimum_online": "min_validators_count валидаторов должны быть ONLINE",
+            "typical_value": "4 из 6 валидаторов",
+            "network_state": "Валидаторы должны быть в NET_STATE_ONLINE",
+            "certificate": "blocks-sign-cert должен быть настроен для подписи"
+          },
+          
+          "consensus_failure_scenarios": {
+            "not_enough_validators": "< min_validators_count онлайн → раунды не запускаются",
+            "network_partition": "Валидаторы не видят друг друга → таймаут раундов",
+            "no_sign_cert": "blocks-sign-cert не настроен → валидатор не участвует",
+            "zero_round_delay": "new_round_delay=0 → бесконечное ожидание первого блока"
+          }
+        },
+        
+        "common_issues": {
+          "no_sign_cert": {
+            "error": "No sign certificate provided for net stagenet, can't sign any blocks",
+            "cause": "blocks-sign-cert не указан в config или сертификат не найден",
+            "solution": "Добавить в node config: blocks-sign-cert=pvt.stagenet.master.N"
+          },
+          "insufficient_validators": {
+            "error": "Not enough validators online",
+            "cause": "Меньше чем min_validators_count валидаторов в сети",
+            "solution": "Увеличить количество online master нод или уменьшить min_validators_count"
+          },
+          "round_timeout": {
+            "error": "Round timeout exceeded",
+            "cause": "new_round_delay=0 или слишком малое значение",
+            "solution": "Установить new_round_delay >= 10 секунд"
+          }
+        }
+      },
+      
+      "network_topology_and_certificates": {
+        "description": "Взаимосвязь сертификатов, ролей нод и консенсусов",
+        
+        "typical_network_structure": {
+          "root_nodes": {
+            "count": "3 (обычно)",
+            "role": "ROOT или ROOT_MASTER",
+            "consensus": "DAG-PoA на zerochain",
+            "certificates": {
+              "node_identification": "node-addr.dcert → 8598::57B2::FE83::5F16",
+              "dag_poa_signing": "pvt.stagenet.master.{0,1,2}.dcert",
+              "dag_poa_verification": "stagenet.master.{0,1,2}.dcert"
+            },
+            "responsibilities": [
+              "Bootstrap сети через seed_nodes_hosts",
+              "Подпись events на zerochain",
+              "Обработка token_decl, emission, decree",
+              "Координация P2P топологии"
+            ]
+          },
+          
+          "master_nodes": {
+            "count": "3-6 (обычно)",
+            "role": "MASTER",
+            "consensus": "ESBocs на main chain",
+            "certificates": {
+              "node_identification": "node-addr.dcert → свой адрес",
+              "esbocs_signing": "pvt.stagenet.master.{3,4,5,...}.dcert",
+              "esbocs_verification": "stagenet.master.{0..N}.dcert (ВСЕ валидаторы)"
+            },
+            "responsibilities": [
+              "Участие в ESBocs раундах",
+              "Подпись блоков на main chain",
+              "Обработка transactions, anchors",
+              "Валидация cross-chain операций"
+            ],
+            "validator_registration": "srv_stake order create validator (НЕ требуется для genesis!)"
+          },
+          
+          "full_nodes": {
+            "count": "Любое количество",
+            "role": "FULL",
+            "consensus": "Нет (только получение и хранение)",
+            "certificates": {
+              "node_identification": "node-addr.dcert",
+              "verification_only": "stagenet.master.{0..N}.dcert (для проверки подписей)"
+            },
+            "responsibilities": [
+              "Хранение полной копии всех chains",
+              "Верификация подписей",
+              "Обслуживание клиентов (RPC, HTTP)",
+              "Синхронизация с сетью"
+            ]
+          }
+        },
+        
+        "certificate_distribution_matrix": {
+          "node_addr_dcert": "Каждая нода имеет ТОЛЬКО свой → /var/lib/ca/node-addr.dcert",
+          "pvt_master_N_dcert": "Каждая нода имеет ТОЛЬКО свой → /var/lib/ca/pvt.stagenet.master.N.dcert",
+          "public_master_dcerts": "ВСЕ ноды имеют ВСЕ публичные → /var/lib/ca/stagenet.master.{0..M}.dcert",
+          "shared_directory": "/share/ca/ в Docker содержит ВСЕ публичные сертификаты для всех нод"
+        },
+        
+        "config_files_relationship": {
+          "zerochain_cfg": {
+            "consensus": "dag_poa",
+            "auth_certs_prefix": "stagenet.master (БЕЗ pvt.!)",
+            "auth_certs_number": "3 (количество root нод)",
+            "who_uses": "Все ноды в сети для верификации events",
+            "signing_cert": "events-sign-cert=pvt.stagenet.master.N (только на root нодах!)"
+          },
+          "main_cfg": {
+            "consensus": "esbocs",
+            "auth_certs_prefix": "stagenet.master (БЕЗ pvt.!)",
+            "auth_certs_count": "6 (количество master нод)",
+            "validators_addrs": "Список node addresses мастер нод",
+            "who_uses": "Все ноды для верификации блоков",
+            "signing_cert": "blocks-sign-cert=pvt.stagenet.master.N (только на master нодах!)"
+          },
+          "node_config": {
+            "location": "/opt/cellframe-node/etc/node_N.cfg",
+            "содержит": [
+              "node-role=root/master/full",
+              "blocks-sign-cert=pvt.stagenet.master.N (для master)",
+              "events-sign-cert=pvt.stagenet.master.N (для root)"
+            ]
+          }
+        }
+      },
+      
+      "genesis_block_mechanics": {
+        "description": "Механизм создания и валидации genesis блока в ESBocs blockchain",
+        
+        "configuration_parameters": {
+          "is_static_genesis_block": {
+            "location": "chain_config [blocks] section",
+            "type": "boolean",
+            "purpose": "Включает строгую проверку genesis блока по hash",
+            "default": "false",
+            "recommendation": "true для production сетей"
+          },
+          "static_genesis_block": {
+            "location": "chain_config [blocks] section",
+            "type": "hash string (0x...)",
+            "purpose": "Ожидаемый hash первого (genesis) блока",
+            "validation": "Если is_static_genesis_block=true, первый блок ДОЛЖЕН иметь этот hash",
+            "example": "static_genesis_block=0xFBBC12E641C77E03BF8F5CBADBBBD653D65D3465BAEB73FC85516D2E98C48BDC"
+          },
+          "genesis_block": {
+            "location": "chain_config [blocks] section (deprecated)",
+            "type": "hash string",
+            "purpose": "Старый параметр, используется для обратной совместимости",
+            "note": "Предпочитайте static_genesis_block"
+          }
+        },
+        
+        "block_creation_flow": {
+          "function": "dap_chain_block_new(dap_chain_hash_fast_t *a_prev_block, size_t *a_block_size)",
+          "code_location": "cellframe-sdk/modules/type/blocks/dap_chain_block.c:62-95",
+          
+          "algorithm": [
+            "if (a_prev_block) {",
+            "  // Обычный блок - добавляем META_PREV с hash предыдущего",
+            "  dap_chain_block_meta_add(&block, ..., DAP_CHAIN_BLOCK_META_PREV, a_prev_block, ...);",
+            "} else {",
+            "  // Genesis блок - добавляем META_GENESIS (пустой meta)",
+            "  dap_chain_block_meta_add(&block, ..., DAP_CHAIN_BLOCK_META_GENESIS, NULL, 0);",
+            "  log_it(L_INFO, 'Genesis block produced');",
+            "}"
+          ],
+          
+          "key_point": "Genesis блок создаётся когда a_prev_block == NULL (нет предыдущего блока)"
+        },
+        
+        "genesis_block_acceptance": {
+          "description": "Валидация genesis блока при добавлении в chain",
+          "code_location": "cellframe-sdk/modules/type/blocks/dap_chain_cs_blocks.c:2147-2169",
+          
+          "validation_logic": [
+            "// Проверяем что блок имеет META_GENESIS",
+            "if (dap_chain_block_meta_get(block, ..., DAP_CHAIN_BLOCK_META_GENESIS)) {",
+            "  ",
+            "  if (s_seed_mode) {",
+            "    // Seed mode - принимаем любой genesis",
+            "    log_it(L_NOTICE, 'Accepting new genesis block %s', hash);",
+            "    return ATOM_ACCEPT;",
+            "  }",
+            "  ",
+            "  // Production mode - проверяем hash",
+            "  if (dap_hash_fast_compare(&block_hash, &static_genesis_block_hash) &&",
+            "      !dap_hash_fast_is_blank(&block_hash)) {",
+            "    log_it(L_NOTICE, 'Accepting static genesis block %s', hash);",
+            "    return ATOM_ACCEPT;",
+            "  }",
+            "  ",
+            "  // Hash не совпадает!",
+            "  log_it(L_WARNING, 'Can\\'t accept genesis block: hash mismatch');",
+            "  return ATOM_REJECT;  // ← КРИТИЧНО!",
+            "}"
+          ],
+          
+          "critical_rules": [
+            "1. Если is_static_genesis_block=true И hash не совпадает → БЛОК ОТКЛОНЯЕТСЯ!",
+            "2. Seed mode (s_seed_mode=true) ОБХОДИТ проверку hash",
+            "3. Если static_genesis_block пустой (blank) → genesis блок принимается"
+          ]
+        },
+        
+        "esbocs_block_creation": {
+          "description": "Создание блоков через ESBocs консенсус",
+          "code_location": "cellframe-sdk/modules/consensus/esbocs/dap_chain_cs_esbocs.c:1702-1723",
+          
+          "empty_block_creation": [
+            "// ESBocs может создать пустой блок если нет datums",
+            "if (!candidate && empty_block_generation) {",
+            "  if (!blocks->callback_block_create) {",
+            "    log_it(L_ERROR, 'Not found chain callback for block creation');",
+            "    return;",
+            "  }",
+            "  candidate = blocks->callback_block_create(blocks, &candidate_size);",
+            "}"
+          ],
+          
+          "callback_block_create": {
+            "function": "s_block_create() в dap_chain_cs_blocks.c:2693-2710",
+            "logic": [
+              "dap_chain_block_cache_t *last_block = HASH_LAST(blocks);",
+              "if (last_block) {",
+              "  // Есть предыдущие блоки - создаём обычный",
+              "  return dap_chain_block_new(&last_block->block_hash, &size);",
+              "}",
+              "// Нет блоков - genesis block can't be blank",
+              "return NULL;  // ← НЕ создаёт genesis автоматически!"
+            ],
+            "critical_note": "Genesis блок НЕ создаётся автоматически через callback_block_create!"
+          }
+        },
+        
+        "genesis_initialization_strategies": {
+          "strategy_1_manual_genesis": {
+            "name": "Ручное создание genesis блока",
+            "steps": [
+              "1. Запустить сеть БЕЗ is_static_genesis_block или в seed mode",
+              "2. Создать первый datum (transaction, anchor, etc)",
+              "3. ESBocs консенсус создаст первый блок (genesis)",
+              "4. Получить hash: block list -chain main -first 1",
+              "5. Записать hash в static_genesis_block в конфиге",
+              "6. Перезапустить сеть с is_static_genesis_block=true"
+            ],
+            "use_case": "Новая сеть, genesis hash заранее неизвестен"
+          },
+          
+          "strategy_2_hardcoded_genesis": {
+            "name": "Жёстко заданный genesis блок",
+            "steps": [
+              "1. Заранее сгенерировать genesis блок в dev среде",
+              "2. Получить его hash",
+              "3. Прописать hash в static_genesis_block для всех нод",
+              "4. Запустить сеть с is_static_genesis_block=true",
+              "5. Первая нода создаёт genesis блок",
+              "6. Другие ноды валидируют его по hash"
+            ],
+            "use_case": "Production сети, genesis известен заранее",
+            "security": "Гарантирует идентичность genesis на всех нодах"
+          },
+          
+          "strategy_3_dynamic_genesis": {
+            "name": "Динамическая генерация genesis при первом datum",
+            "steps": [
+              "1. Запустить сеть БЕЗ static_genesis_block",
+              "2. Создать первый datum (token_decl, emission, tx)",
+              "3. Datum попадёт в mempool",
+              "4. ESBocs консенсус соберёт его в первый блок",
+              "5. Genesis блок создаётся автоматически с datum",
+              "6. Опционально: получить hash и записать в конфиг для будущих нод"
+            ],
+            "use_case": "Stagenet, testnet где genesis можно динамически генерировать",
+            "note": "Первый блок ВСЕГДА будет содержать хотя бы один datum"
+          }
+        },
+        
+        "common_issues": {
+          "issue_1_genesis_rejected": {
+            "symptom": "Can't accept genesis block: hash mismatch with static genesis block",
+            "cause": "static_genesis_block в конфиге не совпадает с фактическим hash",
+            "solutions": [
+              "1. Получить фактический hash: block list -chain main -first 1",
+              "2. Обновить static_genesis_block в конфиге",
+              "3. Или отключить is_static_genesis_block",
+              "4. Или включить seed mode (не рекомендуется для production)"
+            ]
+          },
+          
+          "issue_2_no_genesis_created": {
+            "symptom": "Main chain пустой, genesis блок не создаётся",
+            "cause": "Нет datums для включения в первый блок",
+            "explanation": "ESBocs НЕ создаёт пустые genesis блоки автоматически",
+            "solutions": [
+              "1. Создать хотя бы один datum (transaction, anchor)",
+              "2. Datum попадёт в mempool",
+              "3. ESBocs соберёт его в первый блок (genesis)",
+              "4. Или включить empty_block_generation в конфиге (если поддерживается)"
+            ]
+          },
+          
+          "issue_3_cross_chain_tx_fails": {
+            "symptom": "Specified emission not found при tx_create БЕЗ -chain",
+            "cause": "Emission на zerochain, SDK пытается создать TX на main (по default_datum_types), но main chain пустой (нет genesis)",
+            "root_cause": "Main chain не имеет genesis блока → не может принимать datums",
+            "solution": "Сначала инициализировать main chain через anchor/tx на самом main, затем делать cross-chain операции"
+          }
+        },
+        
+        "best_practices": {
+          "production_networks": [
+            "✓ ВСЕГДА использовать is_static_genesis_block=true",
+            "✓ Заранее генерировать genesis в dev среде",
+            "✓ Распространять static_genesis_block hash на все ноды",
+            "✓ Проверять hash genesis при bootstrap новых нод"
+          ],
+          "test_networks": [
+            "✓ Можно отключить is_static_genesis_block",
+            "✓ Динамически генерировать genesis при первом datum",
+            "✓ Сохранять hash genesis для консистентности snapshots"
+          ],
+          "development": [
+            "✓ Seed mode для свободной генерации genesis",
+            "✓ Получать hash после генерации для документации",
+            "✓ Тестировать валидацию static_genesis_block перед production"
+          ]
+        }
+      },
+      
+      "datum_processing_by_consensus": {
+        "dag_poa_datums": {
+          "types": ["token", "emission", "decree"],
+          "chain": "zerochain (DAG-PoA)",
+          "processed_by": "ROOT ноды (3 штуки обычно)",
+          
+          "complete_flow": [
+            "1. Datum создаётся через CLI (token_decl, token_emit, decree_create)",
+            "2. CLI отправляет datum в mempool через RPC/HTTP API",
+            "3. Datum попадает в mempool: stagenet.chain-zerochain.mempool (GDB группа)",
+            "4. Проверка наличия: mempool_list -chain zerochain",
+            "5. Root нода #1 вызывает: mempool_proc -datum <hash> -chain zerochain",
+            "6. mempool_proc создаёт DAG event с этим datum",
+            "7. Event подписывается ПРИВАТНЫМ ключом: pvt.stagenet.master.0.dcert",
+            "8. Event распространяется на другие root ноды (node2, node3) через P2P",
+            "9. Root ноды #2 и #3 ТОЖЕ вызывают mempool_proc для этого datum",
+            "10. Каждая root нода добавляет СВОЮ подпись к event",
+            "11. Другие root ноды верифицируют подписи используя ПУБЛИЧНЫЕ сертификаты",
+            "12. Когда собрано auth_certs_number_verify подписей (2 из 3) - event финализируется",
+            "13. Event добавляется в DAG структуру (НЕ в blockchain!)",
+            "14. Datum становится частью распределённого реестра",
+            "15. Проверка финализации: event list -chain zerochain -last 10"
+          ],
+          
+          "mempool_proc_command": {
+            "purpose": "Триггер обработки datum в mempool для создания event",
+            "syntax": "mempool_proc -datum <hash> -net <network> -chain <chain>",
+            "who_executes": "Только ROOT ноды! Full ноды не могут вызывать",
+            "what_it_does": [
+              "Извлекает datum из mempool",
+              "Создаёт DAG event",
+              "Подписывает event приватным ключом ноды",
+              "Отправляет event другим root нодам для сбора подписей"
+            ],
+            "frequency": "Вызывается на КАЖДОЙ root ноде для КАЖДОГО datum",
+            "timing": "Обычно сразу после появления datum в mempool (< 1 секунда)"
+          },
+          
+          "dag_vs_blockchain": {
+            "dag_structure": "События (events) образуют граф с множественными родителями",
+            "no_blocks": "DAG-PoA НЕ создаёт blocks! Используется event list, НЕ block list!",
+            "finalization": "Event финализируется когда собрано достаточно подписей",
+            "verification_command": "event list -chain zerochain (block list вернёт ошибку!)",
+            "error_if_block_list": "Type of chain zerochain is not block. This chain with type dag_poa is not supported by this command"
+          },
+          
+          "performance": {
+            "speed": "Очень быстро - секунды (нет задержки между events)",
+            "throughput": "Высокий - множественные events параллельно",
+            "latency": "Низкая - только время P2P распространения + подписи",
+            "comparison": "В 10+ раз быстрее чем ESBocs блоки"
+          }
+        },
+        
+        "esbocs_datums": {
+          "types": ["transaction", "anchor", "ca", "sign"],
+          "chain": "main (ESBocs)",
+          "flow": [
+            "1. Datum создаётся (tx_create)",
+            "2. Попадает в mempool: stagenet.chain-main.mempool",
+            "3. Ожидает нового раунда (new_round_delay)",
+            "4. Один из master валидаторов предлагает блок с datum",
+            "5. Раунд консенсуса: PROPOSE → PREVOTE → PRECOMMIT",
+            "6. Блок подписывается валидаторами: pvt.stagenet.master.N.dcert",
+            "7. При достижении консенсуса блок финализируется",
+            "8. Блок добавляется в blockchain",
+            "9. Проверка: block list -chain main"
+          ],
+          "timing": "Зависит от new_round_delay (минимум 10 секунд между блоками)"
+        },
+        
+        "cross_chain_operations": {
+          "description": "Работа с datums расположенными на разных chains",
+          
+          "common_scenario": {
+            "problem": "Emission создана на zerochain, нужно создать TX на main chain",
+            "error": "Specified emission not found",
+            "root_cause": "tx_create с явным -chain main ищет emission ТОЛЬКО на main chain",
+            "explanation": "SDK не поддерживает прямое spending emission из другого chain"
+          },
+          
+          "solutions": {
+            "solution_1_auto_detect": {
+              "approach": "Не указывать -chain параметр в tx_create",
+              "command": "tx_create -token TCELL -from_emission <hash> -value 100 (БЕЗ -chain!)",
+              "behavior": "SDK автоматически определит chain по расположению emission",
+              "result": "TX будет создана на том же chain где находится emission (zerochain)",
+              "when_to_use": "Когда не важно на каком chain создаётся TX"
+            },
+            
+            "solution_2_same_chain": {
+              "approach": "Создать всё на одном chain",
+              "flow": [
+                "token_decl -chain main",
+                "token_emit -chain main", 
+                "tx_create -chain main ← emission на том же chain!"
+              ],
+              "when_to_use": "Когда нужен строгий контроль над chain placement"
+            },
+            
+            "solution_3_anchor": {
+              "approach": "Использовать anchor datum для cross-chain linking",
+              "description": "Anchor создаёт связь между chains",
+              "complexity": "Требует дополнительной логики anchor creation",
+              "when_to_use": "Для истинных cross-chain transfers"
+            },
+            
+            "solution_4_wait_finalization": {
+              "approach": "Дождаться финализации emission перед TX",
+              "critical": "ОБЯЗАТЕЛЬНО для DAG-PoA!",
+              "verification": "event list -chain zerochain | grep <emission_hash>",
+              "timeout": "Обычно 3-5 секунд для финализации",
+              "monitoring": "Polling event list каждые 2 секунды"
+            }
+          },
+          
+          "sdk_chain_detection": {
+            "function": "dap_chain_net_get_default_chain_by_chain_type()",
+            "behavior_when_chain_specified": "Ищет datum ТОЛЬКО на указанном chain",
+            "behavior_when_no_chain": "Ищет datum на default chain для этого datum type",
+            "emission_lookup": "Если emission на другом chain - вернёт 'not found'"
+          },
+          
+          "best_practice_for_genesis": {
+            "recommendation": "Создавать emission и первую TX на ОДНОМ chain",
+            "typical_flow": [
+              "1. token_decl -chain zerochain",
+              "2. emission -chain zerochain",
+              "3. tx_create БЕЗ -chain (auto-detect → zerochain)",
+              "4. Main chain инициализируется через другой механизм (anchor или отдельный token)"
+            ],
+            "why": "Избежать cross-chain complexity на стадии genesis"
+          }
+        }
+      },
+      
+      "practical_examples": {
+        "description": "Реальные примеры использования сертификатов и консенсуса",
+        
+        "example_1_genesis_setup": {
+          "scenario": "Инициализация stagenet с 3 root и 3 master нодами",
+          
+          "step_1_certificate_generation": {
+            "command": "cf-cert-generator -net stagenet -nodes 8 -validators 6",
+            "creates": [
+              "8x node-addr.dcert (по одному на каждую ноду)",
+              "6x pvt.stagenet.master.{0..5}.dcert (приватные для валидаторов)",
+              "6x stagenet.master.{0..5}.dcert (публичные для всех)"
+            ]
+          },
+          
+          "step_2_certificate_distribution": {
+            "node1_root": [
+              "/var/lib/ca/node-addr.dcert (свой)",
+              "/var/lib/ca/pvt.stagenet.master.0.dcert (свой приватный)",
+              "/var/lib/ca/stagenet.master.{0..5}.dcert (все публичные!)"
+            ],
+            "node4_master": [
+              "/var/lib/ca/node-addr.dcert (свой)",
+              "/var/lib/ca/pvt.stagenet.master.3.dcert (свой приватный)",
+              "/var/lib/ca/stagenet.master.{0..5}.dcert (все публичные!)"
+            ],
+            "node7_full": [
+              "/var/lib/ca/node-addr.dcert (свой)",
+              "/var/lib/ca/stagenet.master.{0..5}.dcert (все публичные для верификации)",
+              "НЕТ приватных master сертификатов!"
+            ]
+          },
+          
+          "step_3_config_setup": {
+            "zerochain_cfg": [
+              "[dag-poa]",
+              "auth_certs_prefix=stagenet.master  # БЕЗ pvt.!",
+              "auth_certs_number=3  # Только root ноды",
+              "auth_certs_number_verify=2  # 2 из 3"
+            ],
+            "main_cfg": [
+              "[esbocs]",
+              "auth_certs_prefix=stagenet.master  # БЕЗ pvt.!",
+              "auth_certs_count=6  # All validators",
+              "min_validators_count=4  # Минимум онлайн"
+            ],
+            "node1_cfg": [
+              "[general]",
+              "node-role=root",
+              "",
+              "[dag-poa]",
+              "events-sign-cert=pvt.stagenet.master.0  # С pvt.!"
+            ],
+            "node4_cfg": [
+              "[general]",
+              "node-role=master",
+              "",
+              "[esbocs]",
+              "blocks-sign-cert=pvt.stagenet.master.3  # С pvt.!"
+            ]
+          },
+          
+          "step_4_runtime_verification": {
+            "check_certs_loaded": [
+              "docker exec node-1 ls -la /var/lib/ca/",
+              "Должны быть: node-addr.dcert, pvt.stagenet.master.0.dcert, stagenet.master.{0..5}.dcert"
+            ],
+            "check_dag_poa_init": [
+              "docker logs node-1 | grep 'Initialized auth cert'",
+              "Должно быть: stagenet.master.0, stagenet.master.1, stagenet.master.2"
+            ],
+            "check_esbocs_init": [
+              "docker logs node-4 | grep 'Initialized auth cert'",
+              "Должно быть: stagenet.master.{0..5} (все валидаторы)"
+            ]
+          }
+        },
+        
+        "example_2_token_creation_on_dag_poa": {
+          "scenario": "Создание TCELL токена на zerochain с DAG-PoA",
+          
+          "commands": [
+            "# Step 1: Декларация токена (выполняется на node1 - root)",
+            "cellframe-node-cli token_decl \\",
+            "  -token TCELL \\",
+            "  -total_supply 1000000000 \\",
+            "  -decimals 18 \\",
+            "  -signs_total 1 \\",
+            "  -signs_emission 1 \\",
+            "  -certs pvt.stagenet.master.0 \\  # С pvt.!",
+            "  -net stagenet \\",
+            "  -chain zerochain",
+            "",
+            "# Output: Datum 0x8186F04778C96A... is placed in datum pool",
+            "",
+            "# Step 2: Проверка в mempool",
+            "cellframe-node-cli mempool_list -net stagenet -chain zerochain",
+            "",
+            "# Step 3: Обработка на root нодах",
+            "# На node1:",
+            "cellframe-node-cli mempool_proc -datum 0x8186F04778C96A... -net stagenet -chain zerochain",
+            "",
+            "# На node2 и node3 - ТОЖЕ вызвать mempool_proc!",
+            "",
+            "# Step 4: Проверка финализации",
+            "cellframe-node-cli event list -net stagenet -chain zerochain -last 10",
+            "# Должен появиться event с datum hash"
+          ],
+          
+          "what_happens_internally": [
+            "1. node1 создаёт event с token_decl datum",
+            "2. node1 подписывает event своим pvt.stagenet.master.0.dcert",
+            "3. Event отправляется на node2 и node3",
+            "4. node2 верифицирует подпись node1 используя stagenet.master.0.dcert (публичный)",
+            "5. node2 вызывает mempool_proc и добавляет СВОЮ подпись (pvt.stagenet.master.1)",
+            "6. node3 делает то же самое (pvt.stagenet.master.2)",
+            "7. Когда собрано 2 подписи из 3 - event финализируется",
+            "8. Datum теперь часть DAG и доступен для использования"
+          ],
+          
+          "timing": "Весь процесс занимает 3-5 секунд (быстро!)"
+        },
+        
+        "example_3_debugging_cert_issues": {
+          "scenario": "Диагностика проблем с сертификатами",
+          
+          "symptom_1_cant_find_cert": {
+            "error_log": "[ERROR] Can't find cert \"stagenet.master.0\"",
+            "diagnosis_steps": [
+              "1. Проверить файлы: ls -la /var/lib/ca/ | grep master",
+              "2. Должны быть: stagenet.master.0.dcert (БЕЗ pvt.!)",
+              "3. Проверить конфиг: grep auth_certs_prefix /opt/cellframe-node/etc/network/stagenet/zerochain.cfg",
+              "4. Должно быть: auth_certs_prefix=stagenet.master (БЕЗ pvt.!)",
+              "5. Если файл называется pvt.stagenet.master.0.dcert → переименовать или пересоздать!"
+            ],
+            "fix": "Создать публичные сертификаты БЕЗ pvt. prefix в имени файла"
+          },
+          
+          "symptom_2_no_private_key": {
+            "error_log": "Certificate has no private key",
+            "diagnosis": "Используется публичный сертификат для подписи",
+            "check": "CLI команда использует -certs stagenet.master.0 (без pvt.)",
+            "fix": "Изменить на -certs pvt.stagenet.master.0"
+          },
+          
+          "symptom_3_event_not_finalized": {
+            "error": "Datum не финализируется в DAG",
+            "possible_causes": [
+              "1. Root ноды не вызывают mempool_proc",
+              "2. events-sign-cert не настроен в node config",
+              "3. Приватный сертификат pvt.stagenet.master.N.dcert отсутствует",
+              "4. Публичные сертификаты не на всех root нодах",
+              "5. < auth_certs_number_verify root нод онлайн"
+            ],
+            "verification": [
+              "docker logs node-1 | grep 'events-sign-cert'",
+              "docker logs node-1 | grep 'Initialized auth cert'",
+              "docker exec node-1 ls /var/lib/ca/ | grep -c 'stagenet.master' # Должно быть 3+"
+            ]
+          }
         }
       }
     },
