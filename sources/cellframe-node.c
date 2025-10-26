@@ -94,7 +94,6 @@
 
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
 #include "dap_chain_net_srv_vpn.h"
-#include "dap_chain_net_vpn_client.h"
 #endif
 
 #include "dap_global_db.h"
@@ -498,11 +497,6 @@ int main( int argc, const char **argv )
             log_it(L_ERROR, "Can't init dap chain network service vpn module");
             return -70;
         }
-    }
-    // vpn client
-    if(dap_chain_net_vpn_client_init(g_config) != 0) {
-        log_it(L_ERROR, "Can't init dap chain network service vpn client");
-        return -72;
     }
 
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
