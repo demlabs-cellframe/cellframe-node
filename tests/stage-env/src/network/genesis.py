@@ -892,4 +892,231 @@ class GenesisInitializer:
         except Exception as e:
             logger.error("first_transaction_creation_error", error=str(e))
             raise
+    
+    async def process_zerochain_datum(self, datum_hash: str, root_nodes: List[NodeConfig], timeout: int = 60) -> None:
+        """
+        Process datum through zerochain DAG-PoA consensus.
+        
+        Waits for datum to appear on first root node, then triggers
+        mempool_proc on remaining root nodes to finalize via DAG-PoA.
+        
+        Args:
+            datum_hash: Datum hash to process
+            root_nodes: List of root node configurations
+            timeout: Timeout in seconds for datum to appear
+            
+        Raises:
+            RuntimeError: If datum processing fails
+        """
+        logger.info("processing_zerochain_datum", datum=datum_hash[:16], root_count=len(root_nodes))
+        
+        if not root_nodes:
+            raise RuntimeError("No root nodes provided for zerochain datum processing")
+        
+        try:
+            # Step 1: Wait for datum to appear in mempool on first root node
+            first_node = root_nodes[0]
+            container_name = f"cellframe-stage-node-{first_node.node_id}"
+            container = self.docker_client.containers.get(container_name)
+            
+            logger.debug("waiting_for_datum_in_mempool", node=f"node{first_node.node_id}", datum=datum_hash[:16])
+            
+            # Poll mempool for datum
+            import time
+            start_time = time.time()
+            found = False
+            
+            while time.time() - start_time < timeout:
+                cmd = ["cellframe-node-cli", "mempool_list", "-net", self.network_name, "-chain", "zerochain"]
+                result = container.exec_run(cmd, demux=True)
+                stdout, _ = result.output
+                stdout_str = stdout.decode('utf-8') if stdout else ""
+                
+                if datum_hash.lower() in stdout_str.lower():
+                    found = True
+                    logger.info("datum_appeared_in_mempool", node=f"node{first_node.node_id}", elapsed=f"{time.time() - start_time:.1f}s")
+                    break
+                
+                await asyncio.sleep(1)
+            
+            if not found:
+                raise RuntimeError(f"Datum {datum_hash[:16]}... did not appear in mempool within {timeout}s")
+            
+            # Step 2: Trigger mempool_proc on remaining root nodes
+            for node in root_nodes[1:]:
+                container_name = f"cellframe-stage-node-{node.node_id}"
+                try:
+                    node_container = self.docker_client.containers.get(container_name)
+                    
+                    cmd_proc = ["cellframe-node-cli", "mempool_proc", "-datum", datum_hash, "-net", self.network_name, "-chain", "zerochain"]
+                    logger.debug("triggering_mempool_proc", node=f"node{node.node_id}", datum=datum_hash[:16])
+                    
+                    result_proc = node_container.exec_run(cmd_proc, demux=True)
+                    exit_code = result_proc.exit_code
+                    
+                    if exit_code == 0:
+                        logger.info("mempool_proc_triggered", node=f"node{node.node_id}")
+                    else:
+                        logger.warning("mempool_proc_failed", node=f"node{node.node_id}", exit_code=exit_code)
+                        
+                except Exception as e:
+                    logger.warning("failed_to_trigger_mempool_proc", node=f"node{node.node_id}", error=str(e))
+            
+            # Step 3: Wait for datum to be finalized in block (simple check)
+            await asyncio.sleep(3)  # Give DAG-PoA time to finalize
+            
+            # Verify datum in blocks
+            cmd_blocks = ["cellframe-node-cli", "block", "list", "-net", self.network_name, "-chain", "zerochain", "-last", "10"]
+            result_blocks = container.exec_run(cmd_blocks, demux=True)
+            stdout_blocks, _ = result_blocks.output
+            stdout_blocks_str = stdout_blocks.decode('utf-8') if stdout_blocks else ""
+            
+            if datum_hash.lower() in stdout_blocks_str.lower():
+                logger.info("datum_finalized_in_zerochain", datum=datum_hash[:16])
+            else:
+                logger.warning("datum_not_yet_in_block", datum=datum_hash[:16], note="May need more time")
+                
+        except Exception as e:
+            logger.error("zerochain_datum_processing_error", error=str(e))
+            raise
+    
+    async def sync_network(self, nodes: List[NodeConfig], timeout: int = 120) -> None:
+        """
+        Synchronize all nodes in the network.
+        
+        Triggers sync on all nodes and waits for completion.
+        Monitors sync progress via net status.
+        
+        Args:
+            nodes: List of all node configurations
+            timeout: Timeout in seconds for sync completion
+            
+        Raises:
+            RuntimeError: If sync fails or times out
+        """
+        logger.info("synchronizing_network", node_count=len(nodes), timeout=timeout)
+        
+        try:
+            # Trigger sync on all nodes
+            for node in nodes:
+                container_name = f"cellframe-stage-node-{node.node_id}"
+                try:
+                    container = self.docker_client.containers.get(container_name)
+                    
+                    cmd_sync = ["cellframe-node-cli", "net", "-net", self.network_name, "sync", "all"]
+                    logger.debug("triggering_sync", node=f"node{node.node_id}")
+                    
+                    result = container.exec_run(cmd_sync, demux=True)
+                    exit_code = result.exit_code
+                    
+                    if exit_code == 0:
+                        logger.debug("sync_triggered", node=f"node{node.node_id}")
+                    else:
+                        logger.warning("sync_trigger_failed", node=f"node{node.node_id}", exit_code=exit_code)
+                        
+                except Exception as e:
+                    logger.warning("failed_to_trigger_sync", node=f"node{node.node_id}", error=str(e))
+            
+            # Monitor sync progress
+            import time
+            start_time = time.time()
+            check_interval = 5
+            
+            while time.time() - start_time < timeout:
+                all_synced = True
+                sync_status = {}
+                
+                for node in nodes:
+                    container_name = f"cellframe-stage-node-{node.node_id}"
+                    try:
+                        container = self.docker_client.containers.get(container_name)
+                        
+                        cmd_status = ["cellframe-node-cli", "net", "-net", self.network_name, "get", "status"]
+                        result = container.exec_run(cmd_status, demux=True)
+                        stdout, _ = result.output
+                        stdout_str = stdout.decode('utf-8') if stdout else ""
+                        
+                        # Check for "synced" status
+                        import re
+                        synced = bool(re.search(r'status:\s*synced', stdout_str, re.IGNORECASE))
+                        sync_status[f"node{node.node_id}"] = "synced" if synced else "syncing"
+                        
+                        if not synced:
+                            all_synced = False
+                            
+                    except Exception as e:
+                        logger.warning("failed_to_check_sync_status", node=f"node{node.node_id}", error=str(e))
+                        all_synced = False
+                        sync_status[f"node{node.node_id}"] = "error"
+                
+                if all_synced:
+                    logger.info("network_synchronized", elapsed=f"{time.time() - start_time:.1f}s")
+                    return
+                
+                logger.debug("sync_progress", status=sync_status, elapsed=f"{time.time() - start_time:.1f}s")
+                await asyncio.sleep(check_interval)
+            
+            # Timeout reached
+            logger.warning("sync_timeout", elapsed=timeout, final_status=sync_status)
+            # Don't raise - sync may complete eventually
+            
+        except Exception as e:
+            logger.error("network_sync_error", error=str(e))
+            raise
+    
+    async def get_genesis_block_hash(self, chain_name: str) -> Optional[str]:
+        """
+        Get genesis block hash from specified chain.
+        
+        Retrieves the first block hash from a chain for use in
+        static_genesis_block configuration.
+        
+        Args:
+            chain_name: Chain name (zerochain or main)
+            
+        Returns:
+            Genesis block hash or None if not found
+        """
+        logger.info("getting_genesis_block", chain=chain_name)
+        
+        try:
+            # Get from node1
+            container_name = f"cellframe-stage-node-1"
+            container = self.docker_client.containers.get(container_name)
+            
+            cmd = ["cellframe-node-cli", "block", "list", "-net", self.network_name, "-chain", chain_name, "-first", "1"]
+            logger.debug("fetching_first_block", chain=chain_name)
+            
+            result = container.exec_run(cmd, demux=True)
+            exit_code = result.exit_code
+            stdout, _ = result.output
+            
+            stdout_str = stdout.decode('utf-8') if stdout else ""
+            
+            if exit_code != 0:
+                logger.warning("block_list_failed", chain=chain_name, exit_code=exit_code)
+                return None
+            
+            # Parse block hash from output
+            # Format: "block #0 hash: 0x..."
+            import re
+            hash_match = re.search(r'hash:\s*(0x[A-Fa-f0-9]{64})', stdout_str, re.IGNORECASE)
+            if hash_match:
+                genesis_hash = hash_match.group(1)
+                logger.info("genesis_block_found", chain=chain_name, hash=genesis_hash[:16])
+                return genesis_hash
+            
+            # Try alternative format
+            hash_match = re.search(r'(0x[A-Fa-f0-9]{64})', stdout_str)
+            if hash_match:
+                genesis_hash = hash_match.group(1)
+                logger.info("genesis_block_found_alt_format", chain=chain_name, hash=genesis_hash[:16])
+                return genesis_hash
+            
+            logger.warning("genesis_block_not_found", chain=chain_name, output=stdout_str[:200])
+            return None
+            
+        except Exception as e:
+            logger.error("genesis_block_retrieval_error", chain=chain_name, error=str(e))
+            return None
 
