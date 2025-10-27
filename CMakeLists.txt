@@ -20,7 +20,7 @@ SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
 
 # Option for weel download on-build
-option(PYTHON_WHEELS_PREBUILD "Download wheels on build" ON)
+option(PYTHON_WHEELS_PREBUILD "Download wheels on build" OFF)
 # Cpp check
 if(ENABLE_CPPCHECK_ANALYSIS)
     find_program(CPPCHECK cppcheck)
@@ -147,6 +147,14 @@ endif()
 if(BUILD_CELLFRAME_NODE_TESTS)
     set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
     set(BUILD_CELLFRAME_SDK_TESTS ON)
+endif()
+
+# Enable DAP SDK tests when Cellframe SDK tests are enabled
+if(BUILD_CELLFRAME_SDK_TESTS)
+    set(BUILD_TESTS ON)
+    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    enable_testing()
+    message(STATUS "Cellframe SDK tests enabled - CTest configured")
 endif()
 
 # activate sphincsplus flexible option
