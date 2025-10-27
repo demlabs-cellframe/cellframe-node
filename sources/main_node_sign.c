@@ -58,7 +58,7 @@ static struct option const options[] =
   {"out", required_argument, 0, 'o'},
 };
 
-static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_in);
+static dap_chain_datum_tx_t* json_parse_input_tx (dap_json_t *a_in);
 static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx);
 
 void bad_option(){
@@ -223,7 +223,7 @@ static const char* s_json_get_text(struct json_object *a_json, const char *a_key
     struct json_object *l_json = json_object_object_get(a_json, a_key);
     if(l_json && json_object_is_type(l_json, json_type_string)) {
         // Read text
-        return json_object_get_string(l_json);
+        return dap_json_object_get_string(l_json);
     }
     return NULL;
 }
@@ -319,7 +319,7 @@ static dap_pkey_t* s_json_get_pkey(struct json_object *a_json)
     return l_pub_key;
 }
 
-static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
+static dap_chain_datum_tx_t* json_parse_input_tx (dap_json_t *a_json_in)
 {
     dap_list_t *l_sign_list = NULL;// list 'sing' items
     size_t l_items_ready = 0;
@@ -347,7 +347,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
         if(!l_json_item_type && json_object_is_type(l_json_item_type, json_type_string)) {
             continue;
         }
-        const char *l_item_type_str = json_object_get_string(l_json_item_type);
+        const char *l_item_type_str = dap_json_object_get_string(l_json_item_type);
         dap_chain_tx_item_type_t l_item_type = dap_chain_datum_tx_item_str_to_type(l_item_type_str);
         if(l_item_type == TX_ITEM_TYPE_UNKNOWN) {
             continue;
@@ -640,16 +640,16 @@ static dap_chain_datum_tx_t* json_parse_input_tx (json_object* a_json_in)
 
 static char* convert_tx_to_json_string(dap_chain_datum_tx_t *a_tx)
 {
-    json_object* json_obj_out = json_object_new_object();
-    json_object* l_json_arr_reply = NULL;
+    dap_json_t *json_obj_out = dap_json_object_new();
+    dap_json_t *l_json_arr_reply = NULL;
     dap_hash_fast_t l_hash_tmp = { };
     byte_t *item; size_t l_size;
     char *l_hash_str = NULL;
     char l_tmp_buf[DAP_TIME_STR_SIZE];
-    json_object* json_arr_items = dap_json_array_new();
+    dap_json_t *json_arr_items = dap_json_array_new();
     //   const char *
     TX_ITEM_ITER_TX(item, l_size, a_tx) {
-        json_object* json_obj_item = json_object_new_object();
+        dap_json_t *json_obj_item = dap_json_object_new();
         switch (*item) {
         case TX_ITEM_TYPE_IN:
             l_hash_tmp = ((dap_chain_tx_in_t*)item)->header.tx_prev_hash;
