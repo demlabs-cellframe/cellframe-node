@@ -739,9 +739,11 @@ static int s_wallet_pkey_show(int argc, const char **argv)
     dap_hash_fast_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
         printf("Can't serialize wallet %s", argv[4]);
+        dap_chain_wallet_close(l_wallet);
         exit(-135);
     }
     printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    dap_chain_wallet_close(l_wallet);
     return 0;
 }
 
@@ -760,11 +762,13 @@ static int s_wallet_pkey_show_full(int argc, const char **argv)
     dap_hash_fast_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
         printf("Can't serialize wallet %s", argv[4]);
+        dap_chain_wallet_close(l_wallet);
         exit(-135);
     }
     char *l_pkey_str = dap_chain_wallet_get_pkey_str(l_wallet, "hex");
     printf("hash: %s\npkey: %s\n", dap_chain_hash_fast_to_str_static(&l_hash), l_pkey_str);
     DAP_DELETE(l_pkey_str);
+    dap_chain_wallet_close(l_wallet);
     return 0;
 }
 
