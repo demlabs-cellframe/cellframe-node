@@ -141,7 +141,12 @@ if(LINUX OR DARWIN)
 endif()
 
 if(BUILD_CELLFRAME_NODE_TESTS)
-    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    # Add test-framework to default modules if not defined
+    if(NOT DEFINED DAPSDK_MODULES OR DAPSDK_MODULES STREQUAL "")
+        set(DAPSDK_MODULES "crypto plugin io network-core network-server network-client network-link_manager global-db test-framework")
+    else()
+        set(DAPSDK_MODULES "${DAPSDK_MODULES} test-framework")
+    endif()
     set(BUILD_CELLFRAME_SDK_TESTS ON)
 endif()
 

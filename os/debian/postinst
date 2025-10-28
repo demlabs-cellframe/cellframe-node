@@ -22,7 +22,10 @@ fi
 
 #set permissions
 echo "[!] Set exec permissions"
-chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
+chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli || true
+# Set Python executables permissions if they exist
+[ -d "$DAP_PREFIX/python/bin" ] && chmod +x $DAP_PREFIX/python/bin/pip3* 2>/dev/null || true
+[ -d "$DAP_PREFIX/python/bin" ] && chmod +x $DAP_PREFIX/python/bin/python3* 2>/dev/null || true
 
 # Function to find working pip and python executables
 find_python_executables() {
@@ -98,8 +101,9 @@ install_python_packages() {
     
     # Find Python executables
     if ! find_python_executables; then
-        echo "[!] Error: Cannot find working Python/pip executables"
-        return 1
+        echo "[!] Warning: Cannot find working Python/pip executables"
+        echo "[!] Skipping Python packages installation (node will work without Python features)"
+        return 0
     fi
     
     local installed_count=0
