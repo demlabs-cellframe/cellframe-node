@@ -143,7 +143,7 @@ int main(int argc, char **argv)
     }
 
     // Parse json
-    struct json_object *l_json = json_tokener_parse(l_input_data);
+    dap_json_t *l_json = json_tokener_parse(l_input_data);
     if (!l_json){
         printf("Can't parse json");
         DAP_DELETE(l_input_data);
@@ -216,11 +216,11 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static const char* s_json_get_text(struct json_object *a_json, const char *a_key)
+static const char* s_json_get_text(dap_json_t *a_json, const char *a_key)
 {
     if(!a_json || !a_key)
         return NULL;
-    struct json_object *l_json = json_object_object_get(a_json, a_key);
+    dap_json_t *l_json = json_object_object_get(a_json, a_key);
     if(l_json && json_object_is_type(l_json, json_type_string)) {
         // Read text
         return dap_json_object_get_string(l_json);
@@ -228,11 +228,11 @@ static const char* s_json_get_text(struct json_object *a_json, const char *a_key
     return NULL;
 }
 
-static bool s_json_get_int64(struct json_object *a_json, const char *a_key, int64_t *a_out)
+static bool s_json_get_int64(dap_json_t *a_json, const char *a_key, int64_t *a_out)
 {
     if(!a_json || !a_key || !a_out)
         return false;
-    struct json_object *l_json = json_object_object_get(a_json, a_key);
+    dap_json_t *l_json = json_object_object_get(a_json, a_key);
     if(l_json) {
         if(json_object_is_type(l_json, json_type_int)) {
             // Read number
@@ -243,7 +243,7 @@ static bool s_json_get_int64(struct json_object *a_json, const char *a_key, int6
     return false;
 }
 
-static bool s_json_get_unit(struct json_object *a_json, const char *a_key, dap_chain_net_srv_price_unit_uid_t *a_out)
+static bool s_json_get_unit(dap_json_t *a_json, const char *a_key, dap_chain_net_srv_price_unit_uid_t *a_out)
 {
     const char *l_unit_str = s_json_get_text(a_json, a_key);
     if(!l_unit_str || !a_out)
@@ -255,7 +255,7 @@ static bool s_json_get_unit(struct json_object *a_json, const char *a_key, dap_c
     return true;
 }
 
-static bool s_json_get_uint256(struct json_object *a_json, const char *a_key, uint256_t *a_out)
+static bool s_json_get_uint256(dap_json_t *a_json, const char *a_key, uint256_t *a_out)
 {
     const char *l_uint256_str = s_json_get_text(a_json, a_key);
     if(!a_out || !l_uint256_str)
@@ -269,7 +269,7 @@ static bool s_json_get_uint256(struct json_object *a_json, const char *a_key, ui
 }
 
 // service names: srv_stake, srv_vpn, srv_xchange
-static bool s_json_get_srv_uid(struct json_object *a_json, const char *a_key_service_id, const char *a_key_service, uint64_t *a_out)
+static bool s_json_get_srv_uid(dap_json_t *a_json, const char *a_key_service_id, const char *a_key_service, uint64_t *a_out)
 {
     uint64_t l_srv_id;
     if(!a_out)
@@ -288,18 +288,18 @@ static bool s_json_get_srv_uid(struct json_object *a_json, const char *a_key_ser
     return false;
 }
 
-static dap_chain_wallet_t* s_json_get_wallet(struct json_object *a_json, const char *a_key)
+static dap_chain_wallet_t* s_json_get_wallet(dap_json_t *a_json, const char *a_key)
 {
     return dap_chain_wallet_open(s_json_get_text(a_json, a_key), dap_chain_wallet_get_path(g_config), NULL);
 }
 
-static const dap_cert_t* s_json_get_cert(struct json_object *a_json, const char *a_key)
+static const dap_cert_t* s_json_get_cert(dap_json_t *a_json, const char *a_key)
 {
     return dap_cert_find_by_name(s_json_get_text(a_json, a_key));
 }
 
 // Read pkey from wallet or cert
-static dap_pkey_t* s_json_get_pkey(struct json_object *a_json)
+static dap_pkey_t* s_json_get_pkey(dap_json_t *a_json)
 {
     dap_pkey_t *l_pub_key = NULL;
     // From wallet
@@ -325,7 +325,7 @@ static dap_chain_datum_tx_t* json_parse_input_tx (dap_json_t *a_json_in)
     size_t l_items_ready = 0;
 
     // Read items from json file
-    struct json_object *l_json_items = json_object_object_get(a_json_in, "items");
+    dap_json_t *l_json_items = json_object_object_get(a_json_in, "items");
     size_t l_items_count = json_object_array_length(l_json_items);
     if(!l_json_items || !json_object_is_type(l_json_items, json_type_array) || !(l_items_count = json_object_array_length(l_json_items))) {
         printf("%s", "Wrong json format: not found array 'items' or array is empty");
@@ -339,11 +339,11 @@ static dap_chain_datum_tx_t* json_parse_input_tx (dap_json_t *a_json_in)
     }
 
     for(size_t i = 0; i < l_items_count; ++i) {
-        struct json_object *l_json_item_obj = json_object_array_get_idx(l_json_items, i);
+        dap_json_t *l_json_item_obj = json_object_array_get_idx(l_json_items, i);
         if(!l_json_item_obj || !json_object_is_type(l_json_item_obj, json_type_object)) {
             continue;
         }
-        struct json_object *l_json_item_type = json_object_object_get(l_json_item_obj, "type");
+        dap_json_t *l_json_item_type = json_object_object_get(l_json_item_obj, "type");
         if(!l_json_item_type && json_object_is_type(l_json_item_type, json_type_string)) {
             continue;
         }
