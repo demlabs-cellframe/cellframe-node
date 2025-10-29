@@ -106,20 +106,26 @@ cppcheck_code_quality:
 
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+  - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
   - echo ${PATCH_NUM_VAR_NAME}
+  - echo ${VERSION_VAR_NAME}
+  - source ./version.mk
+  - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
+  - echo "Current version from version.mk:${CURRENT_VERSION}"
+  - 'STORED_VERSION=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${VERSION_VAR_NAME}" | jq -r ".value // empty")'
+  - echo "Stored version from GitLab:${STORED_VERSION}"
   - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
-  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
-  - source ./version.mk
-  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
-    #re-create version.mk based on current data
+  - 'if [ -z "${STORED_VERSION}" ]; then echo "First build for this branch - starting with patch number 0"; PATCH_NUM=0; fi'
+  - 'if [ -n "${STORED_VERSION}" ] && [ "${STORED_VERSION}" != "${CURRENT_VERSION}" ]; then echo "Version changed from ${STORED_VERSION} to ${CURRENT_VERSION} - resetting patch number to 0"; PATCH_NUM=0; fi'
+  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=0'
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
   - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
   - cat ./version.mk
-     #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-  - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
+  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
+  - 'PIPLINE_NAME="Build ${CURRENT_VERSION}-${PATCH_NUM}: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
 amd64:linux.rwd.bld:
@@ -391,7 +397,8 @@ any:android.release:
 
 version:up:
   stage: post_build
-  dependencies: []
+  dependencies:
+    - amd64:linux.rwd.bld
   tags:
     - ansible-runner
   variables:
@@ -400,8 +407,14 @@ version:up:
     - when: on_success
   script:
     - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+    - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
     - echo ${PATCH_NUM_VAR_NAME}
+    - echo ${VERSION_VAR_NAME}
+    - source version.mk
+    - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
+    - echo "Current version:${CURRENT_VERSION}"
     - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
     - PATCH_NUM=$((PATCH_NUM + 1))
-    - 'echo "New patch version: ${PATCH_NUM}"'
+    - 'echo "New patch version:${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+    - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$VERSION_VAR_NAME" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
