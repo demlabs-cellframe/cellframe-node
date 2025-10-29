@@ -13,3 +13,6 @@
 	path = dap-sdk
 	url = ../../dap/dap-sdk.git
 	branch = develop
+[submodule "tests/stage-env"]
+	path = tests/stage-env
+	url = ../cellframe-stage-env.git
