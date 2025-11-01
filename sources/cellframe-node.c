@@ -541,17 +541,17 @@ int main( int argc, const char **argv )
         }
     }
     dap_chain_net_try_online_all();
-    dap_chain_net_announce_addr_all();
+    dap_chain_net_announce_addr_all(NULL);
     rc = dap_events_wait();
     log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
     // Deinit modules
 
-//failure:
+//failure or exit:
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
         dap_plugin_stop_all();
         dap_plugin_deinit();
     }
-
+    dap_events_deinit();
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();

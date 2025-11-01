@@ -251,6 +251,7 @@ static int s_wallet_create(int argc, const char **argv) {
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
+        dap_chain_wallet_close(l_wallet);
         return 0;
     } else {
         log_it(L_ERROR, "Failed to create a wallet.");
@@ -341,6 +342,7 @@ static int s_wallet_create_wp(int argc, const char **argv) {
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
+        dap_chain_wallet_close(l_wallet);
         return 0;
     } else {
         log_it(L_ERROR, "Failed to create a wallet.");
@@ -373,6 +375,7 @@ static int s_wallet_sign_file(int argc, const char **argv) {
       FILE *l_data_file = fopen( argv[5],"rb" );
       if ( l_data_file ) {
         fclose(l_data_file);
+        dap_chain_wallet_close(l_wallet);
         log_it(L_NOTICE, "Certificate %s was successfully created from wallet %s.\n", argv[5], argv[3]);
         exit(0);
       }
@@ -380,6 +383,7 @@ static int s_wallet_sign_file(int argc, const char **argv) {
       log_it( L_ERROR, "Cert index %d can't be found in wallet with %zu certs inside"
                                          ,l_cert_index,l_wallet_certs_number );
       s_help();
+      dap_chain_wallet_close(l_wallet);
       exit( -3002 );
     }
     return 0;
@@ -714,9 +718,11 @@ static int s_wallet_pkey_show(int argc, const char **argv)
     dap_hash_fast_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
         printf("Can't serialize wallet %s", argv[4]);
+        dap_chain_wallet_close(l_wallet);
         exit(-135);
     }
     printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    dap_chain_wallet_close(l_wallet);
     return 0;
 }
 
