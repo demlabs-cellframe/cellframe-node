@@ -118,19 +118,13 @@ endif()
 
 set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
 set(BUILD_WITH_ZIP OFF)
-option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
-option(ADD_UPDATER OFF)
-#if(MACOS)
-#    if(SUPPORT_PYTHON_PLUGINS)
-#        set(BUILD_WITH_PYTHON_ENV ON)
-#    endif()
-#endif()
 
+option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX)
-    #set(BUILD_WITH_PYTHON_ENV ON)
-    #set(SUPPORT_PYTHON_PLUGINS ON)
+option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
+if ((LINUX OR MACOS) AND SUPPORT_PYTHON_PLUGINS)
+    set(BUILD_WITH_PYTHON_ENV ON)
 endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
