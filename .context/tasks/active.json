@@ -1,6 +1,0 @@
-{
-  "auto_load": [
-    ".context/tasks/stage_env_snapshot_system.json"
-  ],
-  "note": "Активная задача: Stage-Env Snapshot System - Система снапшотов для ускорения тестов"
-}

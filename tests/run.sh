@@ -6,7 +6,7 @@
 #   ./tests/run.sh                     # Run all tests
 #   ./tests/run.sh --e2e               # Run only E2E tests
 #   ./tests/run.sh --functional        # Run only functional tests
-#   ./tests/run.sh --clean             # Clean before running
+#   ./tests/run.sh --clean             # Clean cache before running (does NOT rebuild node)
 #
 
 set -e
@@ -77,7 +77,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
-            echo "  --clean         Clean before running"
+            echo "  --clean         Clean cache before running (does NOT rebuild node)"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "Examples:"
@@ -135,14 +135,11 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
     info "Detected cellframe-node repository"
     
     # Check if we need to build
+    # NOTE: --clean flag only cleans cache, NOT build directory
+    # Build only happens if package doesn't exist
     DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f 2>/dev/null | head -n 1)
     
-    if [ -z "$DEB_PACKAGE" ] || [ "$CLEAN_BEFORE" = true ]; then
-        if [ "$CLEAN_BEFORE" = true ]; then
-            info "Cleaning previous build..."
-            rm -rf "$TEST_BUILD_DIR"
-        fi
-        
+    if [ -z "$DEB_PACKAGE" ]; then
         info "Building local package..."
         
         # Create test_build directory
@@ -224,6 +221,41 @@ if $CLEAN_BEFORE; then
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
         "$STAGE_ENV_WRAPPER" clean --all || true
+    fi
+    
+    # Additional cleanup: snapshot, cache/data, cache/code, config
+    # This ensures complete cleanup even if snapshot deletion fails
+    info "Cleaning additional directories..."
+    
+    STAGE_ENV_DIR="$SCRIPT_DIR/stage-env"
+    TESTING_DIR="$SCRIPT_DIR/testing"
+    
+    # Clean snapshots
+    if [ -d "$TESTING_DIR/snapshots" ]; then
+        info "Removing snapshots..."
+        rm -rf "$TESTING_DIR/snapshots"/* || true
+        success "Snapshots cleaned"
+    fi
+    
+    # Clean cache/data
+    if [ -d "$TESTING_DIR/cache/data" ]; then
+        info "Removing cache/data..."
+        rm -rf "$TESTING_DIR/cache/data"/* || true
+        success "Cache/data cleaned"
+    fi
+    
+    # Clean cache/code
+    if [ -d "$TESTING_DIR/cache/code" ]; then
+        info "Removing cache/code..."
+        rm -rf "$TESTING_DIR/cache/code"/* || true
+        success "Cache/code cleaned"
+    fi
+    
+    # Clean config cache (if exists)
+    if [ -d "$STAGE_ENV_DIR/.cache" ]; then
+        info "Removing config cache..."
+        rm -rf "$STAGE_ENV_DIR/.cache" || true
+        success "Config cache cleaned"
     fi
     
     success "Environment cleaned"
