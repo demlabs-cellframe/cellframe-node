@@ -1,6 +1,7 @@
 # Build artifacts
 test_build/
-
+testing/
+test-in-docker
 # Runtime artifacts
 testing/artifacts/
 testing/cache/
