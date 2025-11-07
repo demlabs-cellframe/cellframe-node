@@ -110,7 +110,12 @@ endif()
 include (dap-sdk/cmake/OS_Detection.cmake)
 
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
+#option(BUILD_CELLFRAME_SDK_TESTS "Build Cellframe SDK tests" ON)
 #set(BUILD_DAP_SDK_TESTS ON)
+if (BUILD_CELLFRAME_NODE_TESTS OR BUILD_CELLFRAME_SDK_TESTS OR BUILD_DAP_SDK_TESTS)
+    set(NEED_TEST_FRAMEWORK ON)
+endif()
+
 #set (BUILD_WITH_TPS_TEST ON)
 if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
@@ -134,14 +139,13 @@ if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
 endif()
 
-if(BUILD_CELLFRAME_NODE_TESTS)
+if(NEED_TEST_FRAMEWORK)
     # Add test-framework to default modules if not defined
     if(NOT DEFINED DAPSDK_MODULES OR DAPSDK_MODULES STREQUAL "")
         set(DAPSDK_MODULES "crypto plugin io network-core network-server network-client network-link_manager global-db test-framework")
     else()
         set(DAPSDK_MODULES "${DAPSDK_MODULES} test-framework")
     endif()
-    set(BUILD_CELLFRAME_SDK_TESTS ON)
 endif()
 
 # activate sphincsplus flexible option
