@@ -7,6 +7,7 @@
 #   ./tests/run.sh --e2e               # Run only E2E tests
 #   ./tests/run.sh --functional        # Run only functional tests
 #   ./tests/run.sh --clean             # Clean cache before running (does NOT rebuild node)
+#   ./tests/run.sh --rebuild           # Rebuild Docker images before starting network
 #
 
 set -e
@@ -55,6 +56,7 @@ TEST_BUILD_DIR="$PROJECT_ROOT/build"
 RUN_E2E=false
 RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
+REBUILD_IMAGES=false
 SPECIFIC_TESTS=()
 
 while [[ $# -gt 0 ]]; do
@@ -71,6 +73,10 @@ while [[ $# -gt 0 ]]; do
             CLEAN_BEFORE=true
             shift
             ;;
+        --rebuild)
+            REBUILD_IMAGES=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS] [TEST_PATH...]"
             echo ""
@@ -78,11 +84,14 @@ while [[ $# -gt 0 ]]; do
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
             echo "  --clean         Clean cache before running (does NOT rebuild node)"
+            echo "  --rebuild       Rebuild Docker images before starting network"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "Examples:"
             echo "  $0                                    # Run all tests"
             echo "  $0 --e2e                              # Run all E2E tests"
+            echo "  $0 --clean --e2e                      # Clean cache and run E2E tests"
+            echo "  $0 --rebuild --e2e                    # Rebuild images and run E2E tests"
             echo "  $0 tests/e2e/token                    # Run specific test suite"
             echo "  $0 tests/e2e/token/001_token_decl.yml # Run specific test"
             echo "  $0 tests/functional/wallet tests/e2e/token # Run multiple suites"
@@ -220,38 +229,55 @@ if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        "$STAGE_ENV_WRAPPER" clean --all || true
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" clean --all || true
     fi
     
     # Additional cleanup: snapshot, cache/data, cache/code, config
     # This ensures complete cleanup even if snapshot deletion fails
+    # NOTE: cache/data cleanup is handled by stage-env clean --all via Docker
+    # This section only handles directories that stage-env doesn't clean
     info "Cleaning additional directories..."
     
     STAGE_ENV_DIR="$SCRIPT_DIR/stage-env"
     TESTING_DIR="$SCRIPT_DIR/testing"
     
-    # Clean snapshots
-    if [ -d "$TESTING_DIR/snapshots" ]; then
-        info "Removing snapshots..."
-        rm -rf "$TESTING_DIR/snapshots"/* || true
+    # Clean snapshots (if stage-env clean didn't handle them)
+    if [ -d "$TESTING_DIR/snapshots" ] && [ "$(ls -A "$TESTING_DIR/snapshots" 2>/dev/null)" ]; then
+        info "Removing remaining snapshots..."
+        # Use Docker for cleanup if available (handles root-owned files)
+        if command -v docker &> /dev/null; then
+            docker run --rm -v "$TESTING_DIR:/cleanup" alpine:latest sh -c "rm -rf /cleanup/snapshots/* && echo 'Snapshots cleaned'" || true
+        else
+            rm -rf "$TESTING_DIR/snapshots"/* || true
+        fi
         success "Snapshots cleaned"
     fi
     
-    # Clean cache/data
-    if [ -d "$TESTING_DIR/cache/data" ]; then
-        info "Removing cache/data..."
-        rm -rf "$TESTING_DIR/cache/data"/* || true
+    # Clean cache/data using Docker (handles root-owned files from containers)
+    if [ -d "$TESTING_DIR/cache/data" ] && [ "$(ls -A "$TESTING_DIR/cache/data" 2>/dev/null)" ]; then
+        info "Removing cache/data via Docker..."
+        if command -v docker &> /dev/null; then
+            docker run --rm -v "$TESTING_DIR/cache:/cleanup" alpine:latest sh -c "rm -rf /cleanup/data/* && echo 'Cache/data cleaned'" || true
+        else
+            warning "Docker not available, falling back to sudo (may fail)"
+            sudo rm -rf "$TESTING_DIR/cache/data"/* || true
+        fi
         success "Cache/data cleaned"
     fi
     
-    # Clean cache/code
-    if [ -d "$TESTING_DIR/cache/code" ]; then
-        info "Removing cache/code..."
-        rm -rf "$TESTING_DIR/cache/code"/* || true
+    # Clean cache/code using Docker (handles root-owned files from containers)
+    if [ -d "$TESTING_DIR/cache/code" ] && [ "$(ls -A "$TESTING_DIR/cache/code" 2>/dev/null)" ]; then
+        info "Removing cache/code via Docker..."
+        if command -v docker &> /dev/null; then
+            docker run --rm -v "$TESTING_DIR/cache:/cleanup" alpine:latest sh -c "rm -rf /cleanup/code/* && echo 'Cache/code cleaned'" || true
+        else
+            warning "Docker not available, falling back to sudo (may fail)"
+            sudo rm -rf "$TESTING_DIR/cache/code"/* || true
+        fi
         success "Cache/code cleaned"
     fi
     
-    # Clean config cache (if exists)
+    # Clean config cache (if exists) - this is safe to remove with rm
     if [ -d "$STAGE_ENV_DIR/.cache" ]; then
         info "Removing config cache..."
         rm -rf "$STAGE_ENV_DIR/.cache" || true
@@ -280,7 +306,14 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
     else
         # Start stage environment with config
         info "Starting stage environment..."
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait || E2E_EXIT=$?
+        
+        # Build rebuild flag for stage-env start
+        if [ "$REBUILD_IMAGES" = true ]; then
+            info "Will rebuild Docker images before starting"
+            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --rebuild --wait || E2E_EXIT=$?
+        else
+            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait || E2E_EXIT=$?
+        fi
         
         if [ $E2E_EXIT -eq 0 ]; then
             success "Stage environment started"
