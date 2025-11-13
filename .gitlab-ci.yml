@@ -137,7 +137,7 @@ amd64:linux.rwd.bld:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux rwd
     artifacts:
       paths:
@@ -242,7 +242,7 @@ amd64:linux.release:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
@@ -255,7 +255,7 @@ amd64:windows.rwd:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows rwd
+      - ./prod_build/build.sh --target windows rwd -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
@@ -271,7 +271,7 @@ any:macos.release:
     script:
       - export PATH=/opt/homebrew/bin:$PATH
       - security unlock-keychain -p 1234 ~/Library/Keychains/login.keychain-db 
-      - ./prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+      - ./prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest.universal --just-redirect
@@ -290,7 +290,7 @@ amd64:linux.debug:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON  -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
@@ -303,7 +303,7 @@ amd64:linux.rwd.opt:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
+      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DCELLFRAME_NO_OPTIMIZATION=OFF -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
@@ -334,7 +334,7 @@ amd64:linux.updtr:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DADD_UPDATER=ON
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DADD_UPDATER=ON -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
@@ -347,7 +347,7 @@ amd64:linux.updtr:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script: 
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/  build_linux_release/*-amd64.deb --redirect-from linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64
@@ -377,7 +377,7 @@ arm64:linux.release:
       - /opt/buildtools/prepare_environment.sh arm64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release
+      - ./prod_build/build.sh --target linux release -DBUILD_WITH_ECDSA=ON
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
