@@ -57,6 +57,7 @@ RUN_E2E=false
 RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
 REBUILD_IMAGES=false
+PKGS_UPDATE=false
 SPECIFIC_TESTS=()
 
 while [[ $# -gt 0 ]]; do
@@ -77,6 +78,10 @@ while [[ $# -gt 0 ]]; do
             REBUILD_IMAGES=true
             shift
             ;;
+        --pkgs-update)
+            PKGS_UPDATE=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS] [TEST_PATH...]"
             echo ""
@@ -85,6 +90,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --functional    Run only functional tests"
             echo "  --clean         Clean cache before running (does NOT rebuild node)"
             echo "  --rebuild       Rebuild Docker images before starting network"
+            echo "  --pkgs-update   Update packages in running containers (binary + apt update/upgrade)"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "Examples:"
@@ -290,6 +296,26 @@ fi
 # Track results
 E2E_EXIT=0
 FUNCTIONAL_EXIT=0
+
+# Handle pkgs-update flag
+if [ "$PKGS_UPDATE" = true ]; then
+    echo ""
+    info "═══════════════════════════════════"
+    info "Updating Packages"
+    info "═══════════════════════════════════"
+    echo ""
+    
+    if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
+        error "stage-env wrapper not found or not executable"
+        exit 1
+    fi
+    
+    info "Updating packages in running containers..."
+    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" pkgs_update || exit $?
+    
+    success "Package update completed"
+    exit 0
+fi
 
 # Run all tests (E2E + Functional) in a single run
 if $RUN_E2E || $RUN_FUNCTIONAL; then
