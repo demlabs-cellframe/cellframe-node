@@ -356,7 +356,7 @@ amd64:linux.updtr:
 
 armhf:linux.release:
     extends: .build
-    image: demlabs/debian/arm32:qt6
+    image: demlabs/debian/arm32:qt5
     dependencies:
       - amd64:linux.rwd.bld
     before_script:
@@ -370,7 +370,7 @@ armhf:linux.release:
 
 arm64:linux.release:
     extends: .build
-    image: demlabs/debian/arm64:qt6
+    image: demlabs/debian/arm64:qt5
     dependencies:
       - amd64:linux.rwd.bld
     before_script:
