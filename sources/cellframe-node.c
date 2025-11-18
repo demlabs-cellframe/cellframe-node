@@ -424,7 +424,7 @@ int main( int argc, const char **argv )
     }
     dap_chain_net_load_all();
 
-    if( dap_chain_wallet_shared_init() ) {
+    if( dap_chain_wallet_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
