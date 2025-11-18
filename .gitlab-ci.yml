@@ -21,7 +21,7 @@ stages:
 cppcheck_full_analysis:
 # Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
   stage: code_check
-  image: demlabs/debian/amd64:cpp_check
+  image: demlabs/debian/amd64:qt6
   timeout: 12h
   script:
     - cd /builds/cellframe/cellframe-node
@@ -42,7 +42,7 @@ cppcheck_full_analysis:
 cppcheck_code_quality:
 # Generates a code quality report in JSON format for merge requests, identifying potential issues in the codebase.
   stage: code_check
-  image: demlabs/debian/amd64:cpp_check
+  image: demlabs/debian/amd64:qt6
   timeout: 3h
   script:
     - cd /builds/cellframe/cellframe-node
@@ -91,7 +91,7 @@ cppcheck_code_quality:
 
 .publish:
   extends: .ci-polygon
-  image: demlabs/amd64/debian-buster:linuxbuilder
+  image: demlabs/debian/amd64:qt6
   stage: publish
   before_script: /opt/buildtools/prepare_environment.sh 
 
@@ -106,26 +106,32 @@ cppcheck_code_quality:
 
 .fill_version_mk: &fill_version_mk
   - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+  - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
   - echo ${PATCH_NUM_VAR_NAME}
+  - echo ${VERSION_VAR_NAME}
+  - source ./version.mk
+  - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
+  - echo "Current version from version.mk:${CURRENT_VERSION}"
+  - 'STORED_VERSION=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${VERSION_VAR_NAME}" | jq -r ".value // empty")'
+  - echo "Stored version from GitLab:${STORED_VERSION}"
   - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
   - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
-  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${PATCH_NUM_MAIN}'
-  - source ./version.mk
-  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=${VERSION_PATCH}' 
-    #re-create version.mk based on current data
+  - 'if [ -z "${STORED_VERSION}" ]; then echo "First build for this branch - starting with patch number 0"; PATCH_NUM=0; fi'
+  - 'if [ -n "${STORED_VERSION}" ] && [ "${STORED_VERSION}" != "${CURRENT_VERSION}" ]; then echo "Version changed from ${STORED_VERSION} to ${CURRENT_VERSION} - resetting patch number to 0"; PATCH_NUM=0; fi'
+  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=0'
   - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
   - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
   - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
   - cat ./version.mk
-     #create var
   - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-  - 'PIPLINE_NAME="Build $PATCH_NUM: $CI_COMMIT_MESSAGE"'
+  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
+  - 'PIPLINE_NAME="Build ${CURRENT_VERSION}-${PATCH_NUM}: $CI_COMMIT_MESSAGE"'
   - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
 
 amd64:linux.rwd.bld:
     extends: .build
     stage: test_build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
       - *fill_version_mk
@@ -167,7 +173,7 @@ asan_build:
     DAP_ASAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
-  image: demlabs/debian/amd64:qt5
+  image: demlabs/debian/amd64:qt6
   rules:
    - when: manual
      allow_failure: true
@@ -185,7 +191,7 @@ ubsan_build:
     DAP_UBSAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
-  image: demlabs/debian/amd64:qt5
+  image: demlabs/debian/amd64:qt6
   rules:
    - when: manual
      allow_failure: true
@@ -203,7 +209,7 @@ tsan_build:
     DAP_TSAN: "1"
   dependencies:
     - amd64:linux.rwd.bld
-  image: demlabs/debian/amd64:qt5
+  image: demlabs/debian/amd64:qt6
   rules:
    - when: manual
      allow_failure: true
@@ -219,7 +225,7 @@ amd64:linux.rwd:
     stage: build
     dependencies:
       - amd64:linux.rwd.bld
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     before_script: 
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
@@ -229,7 +235,7 @@ amd64:linux.rwd:
       
 amd64:linux.release:
     extends: .build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -242,7 +248,7 @@ amd64:linux.release:
 
 amd64:windows.rwd:
     extends: .build
-    image: demlabs/windows/amd64:qt5
+    image: demlabs/windows/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -277,7 +283,7 @@ any:macos.release:
 
 amd64:linux.debug:
     extends: .build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -290,7 +296,7 @@ amd64:linux.debug:
 
 amd64:linux.rwd.opt:
     extends: .build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -304,7 +310,7 @@ amd64:linux.rwd.opt:
 
 amd64:linux.tps:
     extends: .build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -315,10 +321,10 @@ amd64:linux.tps:
       - ./prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
-.amd64:linux.updtr:
+amd64:linux.updtr:
     extends: .build
     stage: build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     rules:
@@ -334,7 +340,7 @@ amd64:linux.tps:
 
 .amd64:linux.release:
     extends: .build
-    image: demlabs/debian/amd64:qt5
+    image: demlabs/debian/amd64:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script: 
@@ -378,7 +384,7 @@ arm64:linux.release:
   
 any:android.release:
     extends: .build
-    image: demlabs/android/any:qt5
+    image: demlabs/android/any:qt6
     dependencies:
       - amd64:linux.rwd.bld
     before_script:
@@ -391,7 +397,8 @@ any:android.release:
 
 version:up:
   stage: post_build
-  dependencies: []
+  dependencies:
+    - amd64:linux.rwd.bld
   tags:
     - ansible-runner
   variables:
@@ -400,8 +407,14 @@ version:up:
     - when: on_success
   script:
     - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
+    - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
     - echo ${PATCH_NUM_VAR_NAME}
+    - echo ${VERSION_VAR_NAME}
+    - source version.mk
+    - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
+    - echo "Current version:${CURRENT_VERSION}"
     - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
     - PATCH_NUM=$((PATCH_NUM + 1))
-    - 'echo "New patch version: ${PATCH_NUM}"'
+    - 'echo "New patch version:${PATCH_NUM}"'
     - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
+    - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$VERSION_VAR_NAME" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
