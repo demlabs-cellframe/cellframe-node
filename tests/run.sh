@@ -311,7 +311,7 @@ if [ "$PKGS_UPDATE" = true ]; then
     fi
     
     info "Updating packages in running containers..."
-    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" pkgs_update || exit $?
+    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" pkgs-update || exit $?
     
     success "Package update completed"
     exit 0
