@@ -195,15 +195,19 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
     
     success "Package created: $(basename "$DEB_PACKAGE")"
     
-    # Update stage-env.cfg to use local package
+    # Update config to use local package (using temp file to preserve user config)
     if [ -f "$STAGE_ENV_CONFIG" ]; then
-        info "Updating stage-env.cfg with local package path..."
+        # Create a temporary config for this run
+        cp "$STAGE_ENV_CONFIG" "${STAGE_ENV_CONFIG}.tmp"
+        STAGE_ENV_RUN_CONFIG="${STAGE_ENV_CONFIG}.tmp"
         
-        # Create temporary config with updated node_source
+        info "Updating temporary config with local package path..."
+            
+        # Update temporary config
         python3 -c "
 import configparser
 config = configparser.ConfigParser()
-config.read('$STAGE_ENV_CONFIG')
+config.read('$STAGE_ENV_RUN_CONFIG')
 
 if not config.has_section('node_source'):
     config.add_section('node_source')
@@ -211,16 +215,21 @@ if not config.has_section('node_source'):
 config.set('node_source', 'type', 'local')
 config.set('node_source', 'local_path', '$DEB_PACKAGE')
 
-with open('$STAGE_ENV_CONFIG', 'w') as f:
+with open('$STAGE_ENV_RUN_CONFIG', 'w') as f:
     config.write(f)
 " || {
-            warning "Failed to update stage-env.cfg automatically"
-            info "Please update [node_source] section manually:"
-            info "  type = local"
-            info "  local_path = $DEB_PACKAGE"
+            warning "Failed to update temporary config"
+            # Fallback to original config if update fails
+            STAGE_ENV_RUN_CONFIG="$STAGE_ENV_CONFIG"
         }
+            
+        # Use the temporary config for execution
+        STAGE_ENV_CONFIG="$STAGE_ENV_RUN_CONFIG"
         
-        success "stage-env.cfg updated to use local package"
+        # Ensure cleanup on exit
+        trap 'rm -f "$STAGE_ENV_CONFIG"' EXIT
+        
+        success "Using local package: $(basename "$DEB_PACKAGE")"
     else
         warning "stage-env.cfg not found at $STAGE_ENV_CONFIG"
     fi
@@ -445,4 +454,3 @@ if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ]; then
 fi
 
 exit $TOTAL_EXIT
-
