@@ -364,7 +364,7 @@ if(UNIX AND NOT WIN32)
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
             elseif (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
                 # python-build-standalone for ARM32 (armv7) - includes pip
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251031-armv7-unknown-linux-gnueabi-install_only.tar.gz")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251031-armv7-unknown-linux-gnueabi-install_only.tar.gz")
             endif()
             add_definitions("-DPYTHON_VERSION=\"python3.10\"")
 
