@@ -363,8 +363,8 @@ if(UNIX AND NOT WIN32)
                 # python-build-standalone for ARM64 - requires only GLIBC 2.17, includes pip
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
             elseif (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
-                # python-build-standalone for ARM32 (armv7) - includes pip
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251031-armv7-unknown-linux-gnueabi-install_only.tar.gz")
+                # python-build-standalone for ARM32 (armv7) hard-float - includes pip
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
             endif()
             add_definitions("-DPYTHON_VERSION=\"python3.10\"")
 
@@ -450,7 +450,7 @@ if(UNIX AND NOT WIN32)
                 find_package(Python EXACT 3.10 COMPONENTS Development REQUIRED)
             endif()
 
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
@@ -633,9 +633,9 @@ else()
     endif()
 
     if(WIN32)
-        INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION . )
-        INSTALL(FILES resources/cellframe.ico DESTINATION . )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION . )
+        INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
     endif()
 
     if (NOT ANDROID)
@@ -711,9 +711,7 @@ else()
                 endif()
 
                 INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/Lib/ USE_SOURCE_PERMISSIONS)
-
             else()
-
                 # Use PYTHON_ACTUAL_ROOT which auto-detects correct path for any Python distribution
                 set(PYTHON_PIP "${PYTHON_ACTUAL_ROOT}/bin/pip3")
                 set(PYTHON_BIN "${PYTHON_ACTUAL_ROOT}/bin/python3.10")
@@ -724,22 +722,25 @@ else()
                 INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
                 INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
                 INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
-                
+
+                # Create symlinks for libpython (required for runtime library loading)
+                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \"$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1\")")
+                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \"$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so\")")
+
                 INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
-                
+
                 # Download Python wheel files
                 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
                     cmake_policy(SET CMP0135 NEW)
                 endif()
-                
-                
-                            # Function to download and install wheel packages
+
+                # Function to download and install wheel packages
                 function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
                     # Download wheel file with temporary name first
                     set(TEMP_WHEEL_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_temp.whl")
-                    
+
                     message(STATUS "Downloading ${PACKAGE_NAME} from ${PACKAGE_URL}")
-                    
+
                     # Download the wheel file (CMake will handle redirects automatically)
                     file(DOWNLOAD 
                         "${PACKAGE_URL}"
@@ -749,20 +750,20 @@ else()
                         TIMEOUT 300
                         STATUS DOWNLOAD_STATUS
                     )
-                    
+
                     # Check download result
                     list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
                     if(DOWNLOAD_RESULT EQUAL 0)
                         # Read first few bytes to check if it's a valid wheel file
                         file(READ "${TEMP_WHEEL_PATH}" WHEEL_HEADER LIMIT 100)
-                        
+
                         # Check if it starts with PK (zip file signature)
                         if(WHEEL_HEADER MATCHES "^PK")
                             # Extract filename from URL
                             string(REGEX MATCH "([^/]+\\.[^/]+)$" FILENAME_MATCH "${PACKAGE_URL}")
                             if(FILENAME_MATCH)
                                 set(REAL_FILENAME "${FILENAME_MATCH}")
-                                
+
                                 # Check if filename matches pip wheel format (package-version-python-tag-platform.whl)
                                 if(NOT "${REAL_FILENAME}" MATCHES "^[a-zA-Z0-9_-]+-[0-9]+\\.[0-9]+\\.[0-9]+.*\\.whl$")
                                     message(FATAL_ERROR "Wheel filename '${REAL_FILENAME}' does not match pip format. Expected: package-version-python-tag-platform.whl")
@@ -770,13 +771,13 @@ else()
                             else()
                                 message(FATAL_ERROR "Could not extract wheel filename from URL: ${PACKAGE_URL}")
                             endif()
-                            
+
                             # Rename to final filename
                             set(FINAL_WHEEL_PATH "${CMAKE_BINARY_DIR}/${REAL_FILENAME}")
                             file(RENAME "${TEMP_WHEEL_PATH}" "${FINAL_WHEEL_PATH}")
-                            
+
                             message(STATUS "Using filename: ${REAL_FILENAME}")
-                            
+
                             # Install wheel file to wheels directory
                             INSTALL(FILES ${FINAL_WHEEL_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
                             message(STATUS "Successfully downloaded and installed ${PACKAGE_NAME} as ${REAL_FILENAME}")
@@ -808,10 +809,9 @@ else()
                 else()
                     message(STATUS "[WHEEL] Skipping wheel packages download")
                 endif()
-                
+
                 INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             endif()
-
         endif()
     endif()
 
