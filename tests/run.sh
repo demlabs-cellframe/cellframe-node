@@ -145,99 +145,10 @@ fi
 
 success "Prerequisites OK"
 
-# Detect if running in cellframe-node repository and build local package
-if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_ROOT/CMakeLists.txt"; then
-    info "Detected cellframe-node repository"
-    
-    # Check if we need to build
-    # NOTE: --clean flag only cleans cache, NOT build directory
-    # Build only happens if package doesn't exist
-    DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f 2>/dev/null | head -n 1)
-    
-    if [ -z "$DEB_PACKAGE" ]; then
-        info "Building local package..."
-        
-        # Create test_build directory
-        mkdir -p "$TEST_BUILD_DIR"
-        cd "$TEST_BUILD_DIR"
-        
-        # Configure with CMake (Debug mode for testing)
-        info "Configuring with CMake (Debug mode)..."
-        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
-            error "CMake configuration failed"
-            exit 1
-        }
-        
-        # Build
-        info "Building cellframe-node..."
-        make -j$(nproc) cellframe-node || {
-            error "Build failed"
-            exit 1
-        }
-        
-        # Package with cpack
-        info "Creating .deb package..."
-        cpack -G DEB || {
-            error "Packaging failed"
-            exit 1
-        }
-        
-        # Find the newly generated .deb package
-        DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
-    else
-        info "Using existing package: $(basename "$DEB_PACKAGE")"
-    fi
-    
-    if [ -z "$DEB_PACKAGE" ]; then
-        error "No .deb package found after build"
-        exit 1
-    fi
-    
-    success "Package created: $(basename "$DEB_PACKAGE")"
-    
-    # Update config to use local package (using temp file to preserve user config)
-    if [ -f "$STAGE_ENV_CONFIG" ]; then
-        # Create a temporary config for this run
-        cp "$STAGE_ENV_CONFIG" "${STAGE_ENV_CONFIG}.tmp"
-        STAGE_ENV_RUN_CONFIG="${STAGE_ENV_CONFIG}.tmp"
-        
-        info "Updating temporary config with local package path..."
-            
-        # Update temporary config
-        python3 -c "
-import configparser
-config = configparser.ConfigParser()
-config.read('$STAGE_ENV_RUN_CONFIG')
-
-if not config.has_section('node_source'):
-    config.add_section('node_source')
-
-config.set('node_source', 'type', 'local')
-config.set('node_source', 'local_path', '$DEB_PACKAGE')
-
-with open('$STAGE_ENV_RUN_CONFIG', 'w') as f:
-    config.write(f)
-" || {
-            warning "Failed to update temporary config"
-            # Fallback to original config if update fails
-            STAGE_ENV_RUN_CONFIG="$STAGE_ENV_CONFIG"
-        }
-            
-        # Use the temporary config for execution
-        STAGE_ENV_CONFIG="$STAGE_ENV_RUN_CONFIG"
-        
-        # Ensure cleanup on exit
-        trap 'rm -f "$STAGE_ENV_CONFIG"' EXIT
-        
-        success "Using local package: $(basename "$DEB_PACKAGE")"
-    else
-        warning "stage-env.cfg not found at $STAGE_ENV_CONFIG"
-    fi
-    
-    cd "$PROJECT_ROOT"
-else
-    info "Not in cellframe-node repository - using configured node source"
-fi
+# Package building is now handled by stage-env automatically
+# run.sh only passes config path to stage-env
+info "Using node source configuration from $STAGE_ENV_CONFIG"
+info "Stage-env will handle package building automatically if needed"
 
 # Clean if requested
 if $CLEAN_BEFORE; then
