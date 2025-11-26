@@ -450,7 +450,8 @@ if(UNIX AND NOT WIN32)
                 find_package(Python EXACT 3.10 COMPONENTS Development REQUIRED)
             endif()
 
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib")
+            # Prefer relative python runtime path but keep absolute install path as fallback
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib:${CMAKE_INSTALL_PREFIX}/python/lib")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
