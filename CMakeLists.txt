@@ -477,7 +477,7 @@ if(UNIX AND NOT WIN32)
 
         include_directories(${Python_INCLUDE_DIRS} include/)
         add_subdirectory(python-cellframe)
-        #this helps
+#this helps
         #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
         if (DARWIN)
@@ -497,6 +497,73 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
     endif()
+endif()
+
+if(WIN32 AND SUPPORT_PYTHON_PLUGINS)
+    message("[+] Build with python plugins support (Windows)")
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
+    add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
+
+    if (BUILD_WITH_PYTHON_ENV)
+        # python-build-standalone runtime provided by user
+        set(PYTHON_URL "https://github.com/astral-sh/python-build-standalone/releases/download/20251120/cpython-3.10.19+20251120-x86_64-pc-windows-msvc-install_only.tar.gz")
+        add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+            cmake_policy(SET CMP0135 NEW)
+        endif()
+
+        FetchContent_Declare(
+            CPythonStaticWin
+            URL ${PYTHON_URL}
+        )
+        FetchContent_MakeAvailable(CPythonStaticWin)
+        set(cpythonstatic_SOURCE_DIR ${cpythonstaticwin_SOURCE_DIR})
+
+        # Detect actual root in case of nested structure
+        if(EXISTS "${cpythonstatic_SOURCE_DIR}/python")
+            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/python")
+        elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
+        else()
+            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
+        endif()
+
+        message("[*] Python extracted to: ${cpythonstatic_SOURCE_DIR}")
+        message("[*] Python root dir set to: ${PYTHON_ACTUAL_ROOT}")
+
+        set(Python_VERSION "3.10")
+        set(Python_VERSION_MAJOR "3")
+        set(Python_VERSION_MINOR "10")
+        set(Python_INCLUDE_DIRS "${PYTHON_ACTUAL_ROOT}/include")
+        set(Python_LIBRARY_DIRS "${PYTHON_ACTUAL_ROOT}/libs")
+        set(Python_LIBRARIES "${Python_LIBRARY_DIRS}/python310.lib")
+        set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS})
+        set(PYTHON_LIBRARIES ${Python_LIBRARIES})
+
+        add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
+    else()
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
+            cmake_policy(SET CMP0094 NEW)
+        endif()
+        find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
+        set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS})
+        set(PYTHON_LIBRARIES ${Python_LIBRARIES})
+    endif()
+
+    message("[*] Python version: " ${Python_VERSION})
+    message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
+    message("[*] Python library path: " ${Python_LIBRARY_DIRS})
+    message("[*] Python libraries: " "${Python_LIBRARIES}")
+
+    include_directories(${Python_INCLUDE_DIRS} include/)
+    add_subdirectory(python-cellframe)
+    list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+
+    target_link_libraries(${PROJECT_NAME} dap_plugins_python ${Python_LIBRARIES})
+    target_link_libraries(${NODE_CLI_TARGET} dap_plugins_python ${Python_LIBRARIES})
+    target_link_libraries(${NODE_TOOL_TARGET} dap_plugins_python ${Python_LIBRARIES})
 endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
@@ -566,9 +633,9 @@ else()
     endif()
 
     if(WIN32)
-        INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION . )
+        INSTALL(FILES resources/cellframe.ico DESTINATION . )
+        INSTALL(FILES resources/cellframe.bmp DESTINATION . )
     endif()
 
     if (NOT ANDROID)
@@ -583,103 +650,161 @@ else()
     if(NOT ANDROID)
         #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
+            if(WIN32)
+                set(PYTHON_BIN_DIR "${PYTHON_ACTUAL_ROOT}")
+                set(PYTHON_LIB_DIR_PRFX "python3.10")
+                set(PYTHON_STD_LIB "${PYTHON_ACTUAL_ROOT}/Lib")
+                set(PYTHON_DLLS "${PYTHON_ACTUAL_ROOT}/DLLs")
+                set(PYTHON_LIBS_DIR "${PYTHON_ACTUAL_ROOT}/libs")
+                set(PYTHON_INCLUDE_DIR_WIN "${PYTHON_ACTUAL_ROOT}/include")
 
-            # Use PYTHON_ACTUAL_ROOT which auto-detects correct path for any Python distribution
-            set(PYTHON_PIP "${PYTHON_ACTUAL_ROOT}/bin/pip3")
-            set(PYTHON_BIN "${PYTHON_ACTUAL_ROOT}/bin/python3.10")
-            set(PYTHON_LIB "${PYTHON_ACTUAL_ROOT}/lib/libpython3.10.so.1.0")
-            set(PYTHON_LIB_DIR "${PYTHON_ACTUAL_ROOT}/lib/python3.10")
-            set(PYTHON_LIB_DIR_PRFX "python3.10")
+                # Binaries and runtime DLLs
+                if(EXISTS "${PYTHON_BIN_DIR}/python.exe")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/python.exe" DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ RENAME python3.10.exe)
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/python.exe" DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ RENAME python.exe)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/python3.exe")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/python3.exe" DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/pythonw.exe")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/pythonw.exe" DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/)
+                endif()
 
-            INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-            INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-            INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
-            
-            INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
-            
-            # Download Python wheel files
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
-                cmake_policy(SET CMP0135 NEW)
-            endif()
-            
-            
-                        # Function to download and install wheel packages
-            function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
-                # Download wheel file with temporary name first
-                set(TEMP_WHEEL_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_temp.whl")
+                if(EXISTS "${PYTHON_BIN_DIR}/python310.dll")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/python310.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/python3.dll")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/python3.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/vcruntime140.dll")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/vcruntime140.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/vcruntime140_1.dll")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/vcruntime140_1.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+                endif()
+                if(EXISTS "${PYTHON_BIN_DIR}/vcruntime140_threads.dll")
+                    INSTALL(FILES "${PYTHON_BIN_DIR}/vcruntime140_threads.dll" DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+                endif()
+
+                if(EXISTS "${PYTHON_LIBS_DIR}")
+                    INSTALL(DIRECTORY ${PYTHON_LIBS_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python/libs/ USE_SOURCE_PERMISSIONS)
+                endif()
+                if(EXISTS "${PYTHON_INCLUDE_DIR_WIN}")
+                    INSTALL(DIRECTORY ${PYTHON_INCLUDE_DIR_WIN}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python/include/ USE_SOURCE_PERMISSIONS)
+                endif()
+
+                if(EXISTS "${PYTHON_STD_LIB}")
+                    INSTALL(DIRECTORY ${PYTHON_STD_LIB}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/ USE_SOURCE_PERMISSIONS)
+                endif()
+
+                if(EXISTS "${PYTHON_DLLS}")
+                    INSTALL(DIRECTORY ${PYTHON_DLLS}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/lib-dynload/ USE_SOURCE_PERMISSIONS)
+                endif()
+
+                # Ship our python modules as sources
+                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+                INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
+                INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+
+            else()
+
+                # Use PYTHON_ACTUAL_ROOT which auto-detects correct path for any Python distribution
+                set(PYTHON_PIP "${PYTHON_ACTUAL_ROOT}/bin/pip3")
+                set(PYTHON_BIN "${PYTHON_ACTUAL_ROOT}/bin/python3.10")
+                set(PYTHON_LIB "${PYTHON_ACTUAL_ROOT}/lib/libpython3.10.so.1.0")
+                set(PYTHON_LIB_DIR "${PYTHON_ACTUAL_ROOT}/lib/python3.10")
+                set(PYTHON_LIB_DIR_PRFX "python3.10")
+
+                INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+                INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
+                INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
                 
-                message(STATUS "Downloading ${PACKAGE_NAME} from ${PACKAGE_URL}")
+                INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
                 
-                # Download the wheel file (CMake will handle redirects automatically)
-                file(DOWNLOAD 
-                    "${PACKAGE_URL}"
-                    "${TEMP_WHEEL_PATH}"
-                    SHOW_PROGRESS
-                    INACTIVITY_TIMEOUT 30
-                    TIMEOUT 300
-                    STATUS DOWNLOAD_STATUS
-                )
+                # Download Python wheel files
+                if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+                    cmake_policy(SET CMP0135 NEW)
+                endif()
                 
-                # Check download result
-                list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
-                if(DOWNLOAD_RESULT EQUAL 0)
-                    # Read first few bytes to check if it's a valid wheel file
-                    file(READ "${TEMP_WHEEL_PATH}" WHEEL_HEADER LIMIT 100)
+                
+                            # Function to download and install wheel packages
+                function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
+                    # Download wheel file with temporary name first
+                    set(TEMP_WHEEL_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_temp.whl")
                     
-                    # Check if it starts with PK (zip file signature)
-                    if(WHEEL_HEADER MATCHES "^PK")
-                        # Extract filename from URL
-                        string(REGEX MATCH "([^/]+\\.[^/]+)$" FILENAME_MATCH "${PACKAGE_URL}")
-                        if(FILENAME_MATCH)
-                            set(REAL_FILENAME "${FILENAME_MATCH}")
-                            
-                            # Check if filename matches pip wheel format (package-version-python-tag-platform.whl)
-                            if(NOT "${REAL_FILENAME}" MATCHES "^[a-zA-Z0-9_-]+-[0-9]+\\.[0-9]+\\.[0-9]+.*\\.whl$")
-                                message(FATAL_ERROR "Wheel filename '${REAL_FILENAME}' does not match pip format. Expected: package-version-python-tag-platform.whl")
+                    message(STATUS "Downloading ${PACKAGE_NAME} from ${PACKAGE_URL}")
+                    
+                    # Download the wheel file (CMake will handle redirects automatically)
+                    file(DOWNLOAD 
+                        "${PACKAGE_URL}"
+                        "${TEMP_WHEEL_PATH}"
+                        SHOW_PROGRESS
+                        INACTIVITY_TIMEOUT 30
+                        TIMEOUT 300
+                        STATUS DOWNLOAD_STATUS
+                    )
+                    
+                    # Check download result
+                    list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+                    if(DOWNLOAD_RESULT EQUAL 0)
+                        # Read first few bytes to check if it's a valid wheel file
+                        file(READ "${TEMP_WHEEL_PATH}" WHEEL_HEADER LIMIT 100)
+                        
+                        # Check if it starts with PK (zip file signature)
+                        if(WHEEL_HEADER MATCHES "^PK")
+                            # Extract filename from URL
+                            string(REGEX MATCH "([^/]+\\.[^/]+)$" FILENAME_MATCH "${PACKAGE_URL}")
+                            if(FILENAME_MATCH)
+                                set(REAL_FILENAME "${FILENAME_MATCH}")
+                                
+                                # Check if filename matches pip wheel format (package-version-python-tag-platform.whl)
+                                if(NOT "${REAL_FILENAME}" MATCHES "^[a-zA-Z0-9_-]+-[0-9]+\\.[0-9]+\\.[0-9]+.*\\.whl$")
+                                    message(FATAL_ERROR "Wheel filename '${REAL_FILENAME}' does not match pip format. Expected: package-version-python-tag-platform.whl")
+                                endif()
+                            else()
+                                message(FATAL_ERROR "Could not extract wheel filename from URL: ${PACKAGE_URL}")
                             endif()
+                            
+                            # Rename to final filename
+                            set(FINAL_WHEEL_PATH "${CMAKE_BINARY_DIR}/${REAL_FILENAME}")
+                            file(RENAME "${TEMP_WHEEL_PATH}" "${FINAL_WHEEL_PATH}")
+                            
+                            message(STATUS "Using filename: ${REAL_FILENAME}")
+                            
+                            # Install wheel file to wheels directory
+                            INSTALL(FILES ${FINAL_WHEEL_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
+                            message(STATUS "Successfully downloaded and installed ${PACKAGE_NAME} as ${REAL_FILENAME}")
+                            set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
                         else()
-                            message(FATAL_ERROR "Could not extract wheel filename from URL: ${PACKAGE_URL}")
+                            message(WARNING "Downloaded file is not a valid wheel file (doesn't start with PK)")
+                            file(REMOVE "${TEMP_WHEEL_PATH}")
+                            set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
                         endif()
-                        
-                        # Rename to final filename
-                        set(FINAL_WHEEL_PATH "${CMAKE_BINARY_DIR}/${REAL_FILENAME}")
-                        file(RENAME "${TEMP_WHEEL_PATH}" "${FINAL_WHEEL_PATH}")
-                        
-                        message(STATUS "Using filename: ${REAL_FILENAME}")
-                        
-                        # Install wheel file to wheels directory
-                        INSTALL(FILES ${FINAL_WHEEL_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
-                        message(STATUS "Successfully downloaded and installed ${PACKAGE_NAME} as ${REAL_FILENAME}")
-                        set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
                     else()
-                        message(WARNING "Downloaded file is not a valid wheel file (doesn't start with PK)")
-                        file(REMOVE "${TEMP_WHEEL_PATH}")
+                        message(WARNING "Failed to download ${PACKAGE_NAME}")
                         set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
                     endif()
-                else()
-                    message(WARNING "Failed to download ${PACKAGE_NAME}")
-                    set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
-                endif()
-            endfunction()
+                endfunction()
 
-            # Download pycfhelpers wheel file/
-            if(PYTHON_WHEELS_PREBUILD)
-               # Try to download wheel packages
-                message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
-                download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
-                # Download pycftools wheel file
-                download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
-                        # Check if both packages downloaded successfully
-                if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
-                    message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+                # Download pycfhelpers wheel file/
+                if(PYTHON_WHEELS_PREBUILD)
+                   # Try to download wheel packages
+                    message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
+                    download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
+                    # Download pycftools wheel file
+                    download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
+                            # Check if both packages downloaded successfully
+                    if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
+                        message(STATUS "[WHEEL] All wheel packages downloaded successfully")
+                    else()
+                        message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
+                    endif()
                 else()
-                    message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
+                    message(STATUS "[WHEEL] Skipping wheel packages download")
                 endif()
-            else()
-                message(STATUS "[WHEEL] Skipping wheel packages download")
+                
+                INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             endif()
-            
-            INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
         endif()
     endif()
@@ -687,5 +812,3 @@ else()
 
 endif()
 INCLUDE(CPack)
-
-

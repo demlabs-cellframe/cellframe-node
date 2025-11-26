@@ -198,6 +198,13 @@ Section "${APP_NAME}" CORE
 
 	SetOutPath "$ConfigPath\share"
 	File /r "opt/cellframe-node/share/*"
+	
+	; Python runtime (used by plugins)
+	SetOutPath "$ConfigPath\python"
+	File /r "opt/cellframe-node/python/*"
+	SetOutPath "$INSTDIR"
+	File "opt/cellframe-node/bin/python*.dll"
+	File "opt/cellframe-node/bin/vcruntime*.dll"
 		
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\Uninstall.exe"
