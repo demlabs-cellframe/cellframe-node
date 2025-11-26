@@ -363,8 +363,8 @@ if(UNIX AND NOT WIN32)
                 # python-build-standalone for ARM64 - requires only GLIBC 2.17, includes pip
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
             elseif (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
-                # python-build-standalone for ARM32 (armv7) - includes pip
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251031-armv7-unknown-linux-gnueabi-install_only.tar.gz")
+                # python-build-standalone for ARM32 (armv7) hard-float - includes pip
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
             endif()
             add_definitions("-DPYTHON_VERSION=\"python3.10\"")
 
@@ -450,7 +450,7 @@ if(UNIX AND NOT WIN32)
                 find_package(Python EXACT 3.10 COMPONENTS Development REQUIRED)
             endif()
 
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
@@ -594,6 +594,10 @@ else()
             INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
+            
+            # Create symlinks for libpython (required for runtime library loading)
+            INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1)")
+            INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so)")
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
