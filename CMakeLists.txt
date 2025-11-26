@@ -724,8 +724,8 @@ else()
                 INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
 
                 # Create symlinks for libpython (required for runtime library loading)
-                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \"$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1\")")
-                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \"$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so\")")
+                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1)")
+                INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so)")
 
                 INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
 
