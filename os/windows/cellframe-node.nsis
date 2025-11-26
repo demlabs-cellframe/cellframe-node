@@ -199,12 +199,17 @@ Section "${APP_NAME}" CORE
 	SetOutPath "$ConfigPath\share"
 	File /r "opt/cellframe-node/share/*"
 	
-	; Python runtime (used by plugins)
+	; Python runtime (used by plugins) - include only if present in dist
+	IfFileExists "opt/cellframe-node/python/python.exe" 0 skip_python
+	IfFileExists "opt/cellframe-node/bin/python310.dll" 0 skip_python
 	SetOutPath "$ConfigPath\python"
-	File /r "opt/cellframe-node/python/*"
+	File /nonfatal /r "opt/cellframe-node/python/*"
 	SetOutPath "$INSTDIR"
-	File "opt/cellframe-node/bin/python*.dll"
-	File "opt/cellframe-node/bin/vcruntime*.dll"
+	File /nonfatal "opt/cellframe-node/bin/python*.dll"
+	File /nonfatal "opt/cellframe-node/bin/vcruntime*.dll"
+	goto end_python
+skip_python:
+end_python:
 		
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\Uninstall.exe"
