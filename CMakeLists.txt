@@ -138,7 +138,7 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting compose")
+                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-stake-ext compose")
 
 if(LINUX OR DARWIN)
     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
@@ -147,6 +147,14 @@ endif()
 if(BUILD_CELLFRAME_NODE_TESTS)
     set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
     set(BUILD_CELLFRAME_SDK_TESTS ON)
+endif()
+
+# Enable DAP SDK tests when Cellframe SDK tests are enabled
+if(BUILD_CELLFRAME_SDK_TESTS)
+    set(BUILD_TESTS ON)
+    set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
+    enable_testing()
+    message(STATUS "Cellframe SDK tests enabled - CTest configured")
 endif()
 
 # activate sphincsplus flexible option

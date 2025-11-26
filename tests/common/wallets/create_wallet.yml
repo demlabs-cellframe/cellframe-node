@@ -1,0 +1,8 @@
+# Create Wallet Template
+# Предоставляет: {{wallet_addr}}
+
+setup:
+  - cli: wallet new -w test_wallet
+    save: wallet_addr
+    wait: 1s
+

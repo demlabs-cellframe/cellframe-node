@@ -47,11 +47,11 @@ find_python_executables() {
     # Check if both found
     if [ -z "$PYTHON_PIP" ]; then
         echo "[!] Warning: No working pip found"
-        return 1
+        return 0    
     fi
     if [ -z "$PYTHON_BIN" ]; then
         echo "[!] Warning: No working python found"
-        return 1
+        return 0
     fi
     return 0
 }
@@ -99,7 +99,7 @@ install_python_packages() {
     # Find Python executables
     if ! find_python_executables; then
         echo "[!] Error: Cannot find working Python/pip executables"
-        return 1
+        return 0
     fi
     
     local installed_count=0
