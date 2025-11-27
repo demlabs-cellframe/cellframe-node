@@ -258,6 +258,11 @@ if(UNIX)
     #have to figure out how to use it properly with custom RPATH for python plugins...
     if (NOT SUPPORT_PYTHON_PLUGINS)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+        # For cross-compilation: tell dpkg-shlibdeps where to find target arch libraries
+        if (CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT)
+            SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS 
+                "${CMAKE_SYSROOT}/lib;${CMAKE_SYSROOT}/usr/lib;${CMAKE_SYSROOT}/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/lib/arm-linux-gnueabihf;${CMAKE_SYSROOT}/usr/lib/arm-linux-gnueabihf")
+        endif()
     endif()
 
     message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
