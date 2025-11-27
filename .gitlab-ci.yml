@@ -10,57 +10,12 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 
 stages:
-    - code_check
     - test_build
     - diagnostic_builds
     - build
     - post_build
     - publish
     - deploy
-
-cppcheck_full_analysis:
-# Performs an in-depth static code analysis with cppcheck, producing a detailed HTML report for manual inspection.
-  stage: code_check
-  image: demlabs/debian/amd64:qt6
-  timeout: 12h
-  script:
-    - cd /builds/cellframe/cellframe-node
-    - mkdir -p build && cd build
-    - cmake -DENABLE_CPPCHECK_ANALYSIS=ON ..
-    - make cppcheck_analysis
-    - echo "HTML report generated at build/cppcheck_html_report/index.html"
-  artifacts:
-    paths:
-      - build/cppcheck_html_report/
-    expire_in: 1 day
-  rules:
-    - when: manual
-      allow_failure: true
-  tags:
-    - ci-polygon
-
-cppcheck_code_quality:
-# Generates a code quality report in JSON format for merge requests, identifying potential issues in the codebase.
-  stage: code_check
-  image: demlabs/debian/amd64:qt6
-  timeout: 3h
-  script:
-    - cd /builds/cellframe/cellframe-node
-    - /usr/bin/cppcheck --xml --library=std --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective -j$(nproc) -q . 2> cppcheck-report.xml
-    - cppcheck-codequality --input-file cppcheck-report.xml --output-file gl-code-quality-report.json
-    - cat gl-code-quality-report.json
-  artifacts:
-    reports:
-      codequality: gl-code-quality-report.json
-    paths:
-      - gl-code-quality-report.json
-    expire_in: 4 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-      allow_failure: true
-  tags:
-    - ci-polygon
 
 .ci-polygon:
   tags:
