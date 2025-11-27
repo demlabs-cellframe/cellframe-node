@@ -279,12 +279,7 @@ else()
     message("[ ] Not UNIX")
 endif()
 
-
-if (CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "armhf")
-    message("[*] ArmHF - no python")
-    set(SUPPORT_PYTHON_PLUGINS OFF)
-    set(BUILD_WITH_PYTHON_ENV OFF)
-endif()
+# Python support for armhf now available via python-build-standalone
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
@@ -364,12 +359,14 @@ if(UNIX AND NOT WIN32)
             
             set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz")
 
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/python-3.11.11-jammy-aarch64.tar.xz")
-                add_definitions("-DPYTHON_VERSION=\"python3.11\"")
-            else()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+            if (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "arm64")
+                # python-build-standalone for ARM64 - requires only GLIBC 2.17, includes pip
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
+            elseif (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
+                # python-build-standalone for ARM32 (armv7) hard-float - includes pip
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
             endif()
+            add_definitions("-DPYTHON_VERSION=\"python3.10\"")
 
             if (DARWIN)
                 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
@@ -400,15 +397,60 @@ if(UNIX AND NOT WIN32)
             set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
             set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
 
-            list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
-            
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
+            # Determine the actual Python root directory (tarball may extract to nested path)
+            # FetchContent may strip top-level dir or keep nested structure
+            if(EXISTS "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.so")
+                # Direct extraction (FetchContent strips top-level dir)
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
+            elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/python/lib/libpython3.10.so")
+                # python-build-standalone nested structure
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/python")
+            elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/opt/cellframe-node/python")
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/opt/cellframe-node/python")
             else()
-                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
+            endif()
+            
+            message("[*] Python extracted to: ${cpythonstatic_SOURCE_DIR}")
+            message("[*] Python root dir set to: ${PYTHON_ACTUAL_ROOT}")
+            message("[*] Host processor: ${CMAKE_HOST_SYSTEM_PROCESSOR}, Target processor: ${CMAKE_SYSTEM_PROCESSOR}")
+            
+            # Detect cross-compilation: compare host and target architectures
+            set(IS_CROSS_COMPILING FALSE)
+            if(CMAKE_CROSSCOMPILING)
+                set(IS_CROSS_COMPILING TRUE)
+            elseif(NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL CMAKE_SYSTEM_PROCESSOR)
+                set(IS_CROSS_COMPILING TRUE)
+            endif()
+            
+            if(IS_CROSS_COMPILING)
+                # For cross-compilation, manually set Python paths (find_package fails to run target interpreter)
+                message("[*] Cross-compilation detected - setting Python paths manually")
+                set(Python_VERSION "3.10")
+                set(Python_VERSION_MAJOR "3")
+                set(Python_VERSION_MINOR "10")
+                set(Python_INCLUDE_DIRS "${PYTHON_ACTUAL_ROOT}/include/python3.10")
+                set(Python_LIBRARY_DIRS "${PYTHON_ACTUAL_ROOT}/lib")
+                set(Python_LIBRARIES "${PYTHON_ACTUAL_ROOT}/lib/libpython3.10.so")
+                
+                if(NOT EXISTS "${Python_INCLUDE_DIRS}/Python.h")
+                    message(FATAL_ERROR "Python.h not found at ${Python_INCLUDE_DIRS}/Python.h")
+                endif()
+                if(NOT EXISTS "${Python_LIBRARIES}")
+                    message(FATAL_ERROR "Python library not found at ${Python_LIBRARIES}")
+                endif()
+                
+                message("[*] Cross-compile: Using Python ${Python_VERSION} from ${PYTHON_ACTUAL_ROOT}")
+            else()
+                # Native build - use find_package
+                message("[*] Native build detected - using find_package(Python)")
+                list(APPEND CMAKE_PREFIX_PATH ${PYTHON_ACTUAL_ROOT})
+                set(Python_ROOT_DIR ${PYTHON_ACTUAL_ROOT})
+                set(Python_FIND_STRATEGY LOCATION)
+                find_package(Python EXACT 3.10 COMPONENTS Development REQUIRED)
             endif()
 
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
+            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib")
 
             add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
         else()
@@ -542,23 +584,20 @@ else()
         #install all python-specific files back to its original location
         if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
 
-            set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-            set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
-            set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.so.1.0")
-            set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+            # Use PYTHON_ACTUAL_ROOT which auto-detects correct path for any Python distribution
+            set(PYTHON_PIP "${PYTHON_ACTUAL_ROOT}/bin/pip3")
+            set(PYTHON_BIN "${PYTHON_ACTUAL_ROOT}/bin/python3.10")
+            set(PYTHON_LIB "${PYTHON_ACTUAL_ROOT}/lib/libpython3.10.so.1.0")
+            set(PYTHON_LIB_DIR "${PYTHON_ACTUAL_ROOT}/lib/python3.10")
             set(PYTHON_LIB_DIR_PRFX "python3.10")
-            
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-                set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.11")
-                set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.11.so.1.0")    
-                set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.11")
-                set(PYTHON_LIB_DIR_PRFX "python3.11")
-            endif()
 
             INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
             INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
+            
+            # Create symlinks for libpython (required for runtime library loading)
+            INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1)")
+            INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so)")
             
             INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
             
