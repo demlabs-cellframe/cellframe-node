@@ -199,16 +199,16 @@ Section "${APP_NAME}" CORE
 	SetOutPath "$ConfigPath\share"
 	File /r "opt/cellframe-node/share/*"
 	
-	; Python runtime (used by plugins) - include only if present in dist
-	IfFileExists "opt/cellframe-node/python/python.exe" 0 skip_python
-	IfFileExists "opt/cellframe-node/bin/python310.dll" 0 skip_python
+	; Python runtime (used by plugins)
 	SetOutPath "$ConfigPath\python"
 	File /nonfatal /r "opt/cellframe-node/python/*"
 	SetOutPath "$INSTDIR"
+	; Copy DLLs placed next to executables (and fall back to python/ if needed)
 	File /nonfatal "opt/cellframe-node/bin/python*.dll"
 	File /nonfatal "opt/cellframe-node/bin/vcruntime*.dll"
+	File /nonfatal "opt/cellframe-node/python/python*.dll"
+	File /nonfatal "opt/cellframe-node/python/vcruntime*.dll"
 	goto end_python
-skip_python:
 end_python:
 		
 	WriteRegStr HKLM "${UNINSTALL_PATH}" "DisplayName" "${APP_NAME} ${APP_VERSION}"
