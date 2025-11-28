@@ -338,109 +338,100 @@ endif()
 
 add_subdirectory(conftool)
 
-if(UNIX AND NOT WIN32)
-    message ("[*] Unix library set")
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-    set(NODE_LIBRARIES cellframe-sdk )
+# =============================================================================
+# Python plugins support (all platforms)
+# =============================================================================
+if(SUPPORT_PYTHON_PLUGINS)
+    message("[+] Build with python plugins support")
 
-    set(NODE_CLI_LIBRARIES m cellframe-sdk)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
+    add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
 
-    set(NODE_TOOL_LIBRARIES m cellframe-sdk)
-
-    if (SUPPORT_PYTHON_PLUGINS)
-        message("[+] Build with python plugins support")
-
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
-
-        if (BUILD_WITH_PYTHON_ENV)
-            
+    if(BUILD_WITH_PYTHON_ENV)
+        # Select Python URL based on platform
+        if(WIN32)
+            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251120-x86_64-pc-windows-msvc-install_only.tar.gz")
+        elseif(DARWIN)
+            if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+            else()
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+            endif()
+        else()
+            # Linux default
             set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz")
-
-            if (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "arm64")
-                # python-build-standalone for ARM64 - requires only GLIBC 2.17, includes pip
+            if(CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "arm64")
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
-            elseif (CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
-                # python-build-standalone for ARM32 (armv7) hard-float - includes pip
+            elseif(CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
                 set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
             endif()
-            add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+        endif()
+        add_definitions("-DPYTHON_VERSION=\"python3.10\"")
 
-            if (DARWIN)
-                if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
-                else ()
-                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
-                endif()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
+        message("[+] Build with python environment")
+        message("    Downloading static prebuild cpython: ${PYTHON_URL}")
+
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
+            cmake_policy(SET CMP0135 NEW)
+        endif()
+
+        FetchContent_Declare(CPythonStatic URL ${PYTHON_URL})
+        FetchContent_MakeAvailable(CPythonStatic)
+
+        # Determine the actual Python root directory (tarball may extract to nested path)
+        if(WIN32)
+            if(EXISTS "${cpythonstatic_SOURCE_DIR}/python")
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/python")
+            elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/libs/python310.lib")
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
+            else()
+                set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
             endif()
-
-            message("[+] Build with python environment")
-            message("    Downloading static prebuild cpython  ${PYTHON_URL}")
-            #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
-            # installing pip in it, then tared all back.
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
-                cmake_policy(SET CMP0135 NEW)
-            endif()
-
-            
-            FetchContent_Declare(
-                CPythonStatic
-                URL ${PYTHON_URL}
-            )
-            FetchContent_MakeAvailable(CPythonStatic)
-            set(cpythonstatic_SOURCE_DIR ${cpythonstatic_SOURCE_DIR})
-            
-            set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
-            set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
-            set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
-
-            # Determine the actual Python root directory (tarball may extract to nested path)
-            # FetchContent may strip top-level dir or keep nested structure
-            if(EXISTS "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.so")
-                # Direct extraction (FetchContent strips top-level dir)
+        else()
+            if(EXISTS "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.so" OR EXISTS "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
                 set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
             elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/python/lib/libpython3.10.so")
-                # python-build-standalone nested structure
                 set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/python")
             elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/opt/cellframe-node/python")
                 set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/opt/cellframe-node/python")
             else()
                 set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
             endif()
-            
-            message("[*] Python extracted to: ${cpythonstatic_SOURCE_DIR}")
-            message("[*] Python root dir set to: ${PYTHON_ACTUAL_ROOT}")
+        endif()
+
+        message("[*] Python extracted to: ${cpythonstatic_SOURCE_DIR}")
+        message("[*] Python root dir set to: ${PYTHON_ACTUAL_ROOT}")
+
+        # Set Python paths based on platform
+        set(Python_VERSION "3.10")
+        set(Python_VERSION_MAJOR "3")
+        set(Python_VERSION_MINOR "10")
+
+        if(WIN32)
+            set(Python_INCLUDE_DIRS "${PYTHON_ACTUAL_ROOT}/include")
+            set(Python_LIBRARY_DIRS "${PYTHON_ACTUAL_ROOT}/libs")
+            set(Python_LIBRARIES "${Python_LIBRARY_DIRS}/python310.lib")
+        else()
+            # Unix: check for cross-compilation
             message("[*] Host processor: ${CMAKE_HOST_SYSTEM_PROCESSOR}, Target processor: ${CMAKE_SYSTEM_PROCESSOR}")
-            
-            # Detect cross-compilation: compare host and target architectures
             set(IS_CROSS_COMPILING FALSE)
-            if(CMAKE_CROSSCOMPILING)
-                set(IS_CROSS_COMPILING TRUE)
-            elseif(NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL CMAKE_SYSTEM_PROCESSOR)
+            if(CMAKE_CROSSCOMPILING OR NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL CMAKE_SYSTEM_PROCESSOR)
                 set(IS_CROSS_COMPILING TRUE)
             endif()
-            
+
             if(IS_CROSS_COMPILING)
-                # For cross-compilation, manually set Python paths (find_package fails to run target interpreter)
                 message("[*] Cross-compilation detected - setting Python paths manually")
-                set(Python_VERSION "3.10")
-                set(Python_VERSION_MAJOR "3")
-                set(Python_VERSION_MINOR "10")
                 set(Python_INCLUDE_DIRS "${PYTHON_ACTUAL_ROOT}/include/python3.10")
                 set(Python_LIBRARY_DIRS "${PYTHON_ACTUAL_ROOT}/lib")
                 set(Python_LIBRARIES "${PYTHON_ACTUAL_ROOT}/lib/libpython3.10.so")
-                
+
                 if(NOT EXISTS "${Python_INCLUDE_DIRS}/Python.h")
                     message(FATAL_ERROR "Python.h not found at ${Python_INCLUDE_DIRS}/Python.h")
                 endif()
                 if(NOT EXISTS "${Python_LIBRARIES}")
                     message(FATAL_ERROR "Python library not found at ${Python_LIBRARIES}")
                 endif()
-                
-                message("[*] Cross-compile: Using Python ${Python_VERSION} from ${PYTHON_ACTUAL_ROOT}")
             else()
-                # Native build - use find_package
                 message("[*] Native build detected - using find_package(Python)")
                 list(APPEND CMAKE_PREFIX_PATH ${PYTHON_ACTUAL_ROOT})
                 set(Python_ROOT_DIR ${PYTHON_ACTUAL_ROOT})
@@ -448,122 +439,79 @@ if(UNIX AND NOT WIN32)
                 find_package(Python EXACT 3.10 COMPONENTS Development REQUIRED)
             endif()
 
-            # Prefer relative python runtime path but keep absolute install path as fallback
+            # Set rpath for Unix
             target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,\$ORIGIN/../python/lib:${CMAKE_INSTALL_PREFIX}/python/lib")
+        endif()
 
-            add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
+        add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
+    else()
+        # Use system Python
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
+            cmake_policy(SET CMP0094 NEW)
+        endif()
+        if(WIN32)
+            find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
         else()
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
-                cmake_policy(SET CMP0094 NEW)
-            endif()
             find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
             if(MACOS OR IOS)
                 list(APPEND Python_LIBRARIES ssl crypto z util expat)
             elseif(LINUX OR BSD)
-                if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
+                if(CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
                     list(APPEND Python_LIBRARIES crypt nsl z util expat)
                 else()
                     list(APPEND Python_LIBRARIES ssl crypto crypt nsl z util expat)
                 endif()
             endif()
         endif()
-
-        message("[*] Python version: " ${Python_VERSION})
-        message("[*] Python path: " ${Python_EXECUTABLE})
-        message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
-        message("[*] Python library path: " ${Python_LIBRARY_DIRS})
-        message("[*] Python libraries: " "${Python_LIBRARIES}")
-
-        include_directories(${Python_INCLUDE_DIRS} include/)
-        add_subdirectory(python-cellframe)
-#this helps
-        #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
-        list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
-        if (DARWIN)
-        add_custom_command(TARGET ${NODE_TARGET} 
-            POST_BUILD COMMAND 
-            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
-            ${NODE_TARGET})
-        endif()
     endif()
 
-    if(ANDROID )
-        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log  )
+    message("[*] Python version: ${Python_VERSION}")
+    message("[*] Python includes path: ${Python_INCLUDE_DIRS}")
+    message("[*] Python library path: ${Python_LIBRARY_DIRS}")
+    message("[*] Python libraries: ${Python_LIBRARIES}")
+
+    include_directories(${Python_INCLUDE_DIRS} include/)
+    add_subdirectory(python-cellframe)
+
+    if(DARWIN)
+        add_custom_command(TARGET ${NODE_TARGET}
+            POST_BUILD COMMAND
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib
+            ${NODE_TARGET})
+    endif()
+endif()
+
+# =============================================================================
+# Platform-specific linking
+# =============================================================================
+if(UNIX AND NOT WIN32)
+    message("[*] Unix library set")
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
+    set(NODE_LIBRARIES cellframe-sdk)
+    set(NODE_CLI_LIBRARIES m cellframe-sdk)
+    set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+
+    if(SUPPORT_PYTHON_PLUGINS)
+        list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+    endif()
+
+    if(ANDROID)
+        set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
         target_link_libraries(${NODE_TARGET} ${ALL_LIBRARIES})
     else()
-        target_link_libraries(${NODE_TARGET}      ${NODE_LIBRARIES} pthread )
-        target_link_libraries(${NODE_CLI_TARGET}  ${NODE_CLI_LIBRARIES} pthread )
-        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread )
+        target_link_libraries(${NODE_TARGET} ${NODE_LIBRARIES} pthread)
+        target_link_libraries(${NODE_CLI_TARGET} ${NODE_CLI_LIBRARIES} pthread)
+        target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread)
     endif()
 endif()
 
 if(WIN32 AND SUPPORT_PYTHON_PLUGINS)
-    message("[+] Build with python plugins support (Windows)")
-
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-    add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
-
-    if (BUILD_WITH_PYTHON_ENV)
-        # python-build-standalone runtime provided by user
-        set(PYTHON_URL "https://github.com/astral-sh/python-build-standalone/releases/download/20251120/cpython-3.10.19+20251120-x86_64-pc-windows-msvc-install_only.tar.gz")
-        add_definitions("-DPYTHON_VERSION=\"python3.10\"")
-
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
-            cmake_policy(SET CMP0135 NEW)
-        endif()
-
-        FetchContent_Declare(
-            CPythonStaticWin
-            URL ${PYTHON_URL}
-        )
-        FetchContent_MakeAvailable(CPythonStaticWin)
-        set(cpythonstatic_SOURCE_DIR ${cpythonstaticwin_SOURCE_DIR})
-
-        # Detect actual root in case of nested structure
-        if(EXISTS "${cpythonstatic_SOURCE_DIR}/python")
-            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}/python")
-        elseif(EXISTS "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
-            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
-        else()
-            set(PYTHON_ACTUAL_ROOT "${cpythonstatic_SOURCE_DIR}")
-        endif()
-
-        message("[*] Python extracted to: ${cpythonstatic_SOURCE_DIR}")
-        message("[*] Python root dir set to: ${PYTHON_ACTUAL_ROOT}")
-
-        set(Python_VERSION "3.10")
-        set(Python_VERSION_MAJOR "3")
-        set(Python_VERSION_MINOR "10")
-        set(Python_INCLUDE_DIRS "${PYTHON_ACTUAL_ROOT}/include")
-        set(Python_LIBRARY_DIRS "${PYTHON_ACTUAL_ROOT}/libs")
-        set(Python_LIBRARIES "${Python_LIBRARY_DIRS}/python310.lib")
-        set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS})
-        set(PYTHON_LIBRARIES ${Python_LIBRARIES})
-
-        add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-    else()
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
-            cmake_policy(SET CMP0094 NEW)
-        endif()
-        find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
-        set(PYTHON_INCLUDE_DIR ${Python_INCLUDE_DIRS})
-        set(PYTHON_LIBRARIES ${Python_LIBRARIES})
-    endif()
-
-    message("[*] Python version: " ${Python_VERSION})
-    message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
-    message("[*] Python library path: " ${Python_LIBRARY_DIRS})
-    message("[*] Python libraries: " "${Python_LIBRARIES}")
-
-    include_directories(${Python_INCLUDE_DIRS} include/)
-    add_subdirectory(python-cellframe)
-    list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
-
     target_link_libraries(${PROJECT_NAME} dap_plugins_python ${Python_LIBRARIES})
     target_link_libraries(${NODE_CLI_TARGET} dap_plugins_python ${Python_LIBRARIES})
     target_link_libraries(${NODE_TOOL_TARGET} dap_plugins_python ${Python_LIBRARIES})
 endif()
+
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 
