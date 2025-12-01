@@ -575,7 +575,7 @@ static int s_cert_create_pkey(int argc, const char **argv) {
 }
 
 static int s_cert_copy(int argc, const char **argv, bool a_pvt_key_copy)
-{
+{   
     if (argc < 5) {
         log_it(L_ERROR, "Incorrect arguments count");
         exit(-7021);
