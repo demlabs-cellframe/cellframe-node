@@ -129,7 +129,7 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX OR WIN32)
+if(LINUX OR WIN32 OR DARWIN)
     set(BUILD_WITH_PYTHON_ENV ON)
     set(SUPPORT_PYTHON_PLUGINS ON)
 endif()
@@ -352,10 +352,23 @@ if(SUPPORT_PYTHON_PLUGINS)
         if(WIN32)
             set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251120-x86_64-pc-windows-msvc-install_only.tar.gz")
         elseif(DARWIN)
-            if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
+            # Check if building universal binary (arm64 + x86_64)
+            string(FIND "${CMAKE_OSX_ARCHITECTURES}" "arm64" _has_arm64)
+            string(FIND "${CMAKE_OSX_ARCHITECTURES}" "x86_64" _has_x86_64)
+            
+            if(_has_arm64 GREATER -1 AND _has_x86_64 GREATER -1)
+                # Universal build - download both architectures and combine with lipo
+                message("[*] Universal build detected (arm64 + x86_64)")
+                message("[*] Will download both Python architectures and combine with lipo")
+                set(PYTHON_UNIVERSAL_BUILD ON)
+                set(PYTHON_URL_ARM64 "https://internal-pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL_X86_64 "https://internal-pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz")
+                # Use arm64 as primary for headers/stdlib, will lipo the dylib
+                set(PYTHON_URL "${PYTHON_URL_ARM64}")
+            elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+                set(PYTHON_URL "https://internal-pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz")
             else()
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL "https://internal-pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz")
             endif()
         else()
             # Linux default
@@ -377,6 +390,77 @@ if(SUPPORT_PYTHON_PLUGINS)
 
         FetchContent_Declare(CPythonStatic URL ${PYTHON_URL})
         FetchContent_MakeAvailable(CPythonStatic)
+        
+        # For universal builds, also download x86_64 Python and create fat binary
+        if(PYTHON_UNIVERSAL_BUILD)
+            message("[*] Downloading x86_64 Python for universal build...")
+            FetchContent_Declare(CPythonStaticX86 URL ${PYTHON_URL_X86_64})
+            FetchContent_MakeAvailable(CPythonStaticX86)
+            set(PYTHON_X86_ROOT "${cpythonstaticx86_SOURCE_DIR}")
+            message("[*] x86_64 Python downloaded to: ${PYTHON_X86_ROOT}")
+            
+            # Create universal dylib immediately (needed for linking)
+            set(PYTHON_ARM64_DYLIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
+            set(PYTHON_X86_DYLIB "${PYTHON_X86_ROOT}/lib/libpython3.10.dylib")
+            set(PYTHON_UNIVERSAL_DYLIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.universal.dylib")
+            
+            # Check if universal dylib already exists (from previous build)
+            execute_process(
+                COMMAND lipo -info "${PYTHON_ARM64_DYLIB}"
+                OUTPUT_VARIABLE ARM64_LIPO_INFO
+                ERROR_QUIET
+            )
+            
+            if(ARM64_LIPO_INFO MATCHES "x86_64 arm64" OR ARM64_LIPO_INFO MATCHES "arm64 x86_64")
+                message("[*] Universal Python dylib already exists, skipping lipo")
+            else()
+                # Verify we have different architectures before lipo
+                execute_process(
+                    COMMAND lipo -info "${PYTHON_X86_DYLIB}"
+                    OUTPUT_VARIABLE X86_LIPO_INFO
+                    ERROR_QUIET
+                )
+                
+                if(ARM64_LIPO_INFO MATCHES "x86_64" AND X86_LIPO_INFO MATCHES "x86_64")
+                    message(FATAL_ERROR "Both Python dylibs are x86_64! CMake cache is stale. Please delete build/_deps and reconfigure.")
+                endif()
+                
+                if(ARM64_LIPO_INFO MATCHES "arm64" AND X86_LIPO_INFO MATCHES "arm64")
+                    message(FATAL_ERROR "Both Python dylibs are arm64! CMake cache is stale. Please delete build/_deps and reconfigure.")
+                endif()
+                
+                message("[*] Creating universal Python dylib with lipo...")
+                execute_process(
+                    COMMAND lipo -create "${PYTHON_ARM64_DYLIB}" "${PYTHON_X86_DYLIB}" -output "${PYTHON_UNIVERSAL_DYLIB}"
+                    RESULT_VARIABLE LIPO_RESULT
+                )
+                
+                if(NOT LIPO_RESULT EQUAL 0)
+                    message(FATAL_ERROR "Failed to create universal Python dylib with lipo")
+                endif()
+                
+                # Replace the original dylib with universal one for linking
+                file(RENAME "${PYTHON_ARM64_DYLIB}" "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.arm64.dylib")
+                file(RENAME "${PYTHON_UNIVERSAL_DYLIB}" "${PYTHON_ARM64_DYLIB}")
+                message("[*] Universal Python dylib created and installed for linking")
+                
+                # Also backup arm64 python executable for later lipo
+                if(EXISTS "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
+                    file(RENAME "${cpythonstatic_SOURCE_DIR}/bin/python3.10" "${cpythonstatic_SOURCE_DIR}/bin/python3.10.arm64")
+                endif()
+            endif()
+            
+            # Verify it's universal
+            execute_process(
+                COMMAND lipo -info "${PYTHON_ARM64_DYLIB}"
+                OUTPUT_VARIABLE LIPO_INFO
+            )
+            message("[*] Python dylib info: ${LIPO_INFO}")
+            
+            if(NOT LIPO_INFO MATCHES "x86_64" OR NOT LIPO_INFO MATCHES "arm64")
+                message(WARNING "Python dylib may not be universal! Info: ${LIPO_INFO}")
+            endif()
+        endif()
 
         # Determine the actual Python root directory (tarball may extract to nested path)
         if(WIN32)
@@ -479,10 +563,11 @@ if(SUPPORT_PYTHON_PLUGINS)
     add_subdirectory(python-cellframe)
 
     if(DARWIN)
+        # Fix Python library path to use proper framework structure
         add_custom_command(TARGET ${NODE_TARGET}
             POST_BUILD COMMAND
-            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib
-            ${NODE_TARGET})
+            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/Python.framework/Versions/3.10/Python
+            $<TARGET_FILE:${NODE_TARGET}>)
     endif()
 endif()
 
@@ -536,23 +621,139 @@ if(DARWIN)
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
     if (BUILD_WITH_PYTHON_ENV)
-    set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-    set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
-    set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
-    set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
-    set(PYTHON_LIB_DIR_PRFX "python3.10")
-    
-    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
-    
-    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
-    
-    # Note: pycfhelpers and pycftools are installed as source packages on macOS
-    # Wheel packages are not yet supported on macOS
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
+        # =============================================================================
+        # Python.framework structure for macOS (Apple-compliant framework bundle)
+        # =============================================================================
+        # Structure:
+        #   Python.framework/
+        #   ├── Python              -> Versions/Current/Python
+        #   ├── Resources           -> Versions/Current/Resources
+        #   └── Versions/
+        #       ├── Current         -> 3.10
+        #       └── 3.10/
+        #           ├── Python      (the dylib)
+        #           ├── Resources/
+        #           │   └── Info.plist
+        #           ├── bin/
+        #           ├── include/
+        #           └── lib/
+        #               └── python3.10/
+        # =============================================================================
+        
+        set(PYTHON_FRAMEWORK_DIR "${RLIBDIR}/Python.framework")
+        set(PYTHON_VERSION_DIR "${PYTHON_FRAMEWORK_DIR}/Versions/3.10")
+        
+        set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
+        set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
+        set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
+        set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
+        set(PYTHON_INCLUDE_DIR_SRC "${cpythonstatic_SOURCE_DIR}/include/python3.10")
+        
+        # For universal builds, the universal dylib was already created during configure phase
+        # Just copy it and the executables
+        if(PYTHON_UNIVERSAL_BUILD)
+            # The universal dylib is already at PYTHON_LIB (we replaced it during configure)
+            INSTALL(FILES ${PYTHON_LIB} DESTINATION ${PYTHON_VERSION_DIR} RENAME Python)
+            
+            # For python executable, create universal from both archs
+            set(PYTHON_BIN_ARM64 "${cpythonstatic_SOURCE_DIR}/bin/python3.10.arm64")
+            set(PYTHON_BIN_X86 "${PYTHON_X86_ROOT}/bin/python3.10")
+            
+            # Create universal python3.10 executable using lipo
+            INSTALL(CODE "
+                message(STATUS \"Creating universal Python executable...\")
+                set(ARM64_BIN \"${PYTHON_BIN_ARM64}\")
+                set(X86_BIN \"${PYTHON_BIN_X86}\")
+                set(OUTPUT_BIN \"\$ENV{DESTDIR}${PYTHON_VERSION_DIR}/bin/python3.10\")
+                
+                file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${PYTHON_VERSION_DIR}/bin\")
+                
+                execute_process(
+                    COMMAND lipo -create \"\${ARM64_BIN}\" \"\${X86_BIN}\" -output \"\${OUTPUT_BIN}\"
+                    RESULT_VARIABLE LIPO_RESULT
+                )
+                
+                if(NOT LIPO_RESULT EQUAL 0)
+                    message(STATUS \"lipo failed, copying single arch python executable\")
+                    file(COPY \"\${ARM64_BIN}\" DESTINATION \"\$ENV{DESTDIR}${PYTHON_VERSION_DIR}/bin/\")
+                else()
+                    message(STATUS \"Universal Python executable created\")
+                endif()
+                
+                # Set executable permissions
+                file(CHMOD \"\${OUTPUT_BIN}\" 
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+            ")
+        else()
+            # Single architecture - just copy the dylib
+            INSTALL(FILES ${PYTHON_LIB} DESTINATION ${PYTHON_VERSION_DIR} RENAME Python)
+            
+            # Install Python executables (single arch)
+            INSTALL(FILES ${PYTHON_BIN} DESTINATION ${PYTHON_VERSION_DIR}/bin/ 
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        endif()
+        
+        # Install pip (no need to lipo, it's a script)
+        INSTALL(FILES ${PYTHON_PIP} DESTINATION ${PYTHON_VERSION_DIR}/bin/ 
+                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        
+        # Install Python standard library
+        INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${PYTHON_VERSION_DIR}/lib/ USE_SOURCE_PERMISSIONS)
+        
+        # Install Python headers
+        if(EXISTS "${PYTHON_INCLUDE_DIR_SRC}")
+            INSTALL(DIRECTORY ${PYTHON_INCLUDE_DIR_SRC} DESTINATION ${PYTHON_VERSION_DIR}/include/ USE_SOURCE_PERMISSIONS)
+        endif()
+        
+        # Install Framework Info.plist
+        INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Python.framework.Info.plist 
+                DESTINATION ${PYTHON_VERSION_DIR}/Resources/ RENAME Info.plist)
+        
+        # Install interfaces
+        INSTALL(DIRECTORY python-cellframe/dists/interfaces 
+                DESTINATION ${PYTHON_VERSION_DIR}/Resources/ USE_SOURCE_PERMISSIONS)
+        
+        # Create framework symlinks (required for proper framework structure)
+        # These are created during install phase
+        INSTALL(CODE "
+            message(STATUS \"Creating Python.framework symlinks...\")
+            set(FW_DIR \"\$ENV{DESTDIR}${PYTHON_FRAMEWORK_DIR}\")
+            set(VER_DIR \"\${FW_DIR}/Versions/3.10\")
+            
+            # Create Versions/Current -> 3.10
+            execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink 
+                \"3.10\" \"\${FW_DIR}/Versions/Current\")
+            
+            # Create Python -> Versions/Current/Python
+            execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink 
+                \"Versions/Current/Python\" \"\${FW_DIR}/Python\")
+            
+            # Create Resources -> Versions/Current/Resources
+            execute_process(COMMAND \${CMAKE_COMMAND} -E create_symlink 
+                \"Versions/Current/Resources\" \"\${FW_DIR}/Resources\")
+            
+            message(STATUS \"Python.framework symlinks created\")
+        ")
+        
+        # Fix install_name in Python dylib (required for proper linking)
+        INSTALL(CODE "
+            message(STATUS \"Fixing Python dylib install_name...\")
+            set(PYTHON_DYLIB \"\$ENV{DESTDIR}${PYTHON_VERSION_DIR}/Python\")
+            
+            # Change install_name from /install/lib/libpython3.10.dylib to framework path
+            execute_process(
+                COMMAND install_name_tool -id 
+                    \"@rpath/Python.framework/Versions/3.10/Python\"
+                    \"\${PYTHON_DYLIB}\"
+                RESULT_VARIABLE INSTALL_NAME_RESULT
+            )
+            
+            if(NOT INSTALL_NAME_RESULT EQUAL 0)
+                message(WARNING \"Failed to fix Python dylib install_name\")
+            else()
+                message(STATUS \"Python dylib install_name fixed\")
+            endif()
+        ")
     endif()
 
 
