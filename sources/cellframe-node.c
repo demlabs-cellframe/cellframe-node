@@ -387,7 +387,6 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't provide exchange capability");
     }
     // Initialize DEX v2 service
-    extern int dap_chain_net_srv_dex_init();
     if (dap_chain_net_srv_dex_init()) {
         log_it(L_ERROR, "Can't provide DEX v2 capability");
     }
@@ -439,6 +438,11 @@ int main( int argc, const char **argv )
         return -61;
     }
     dap_chain_net_load_all();
+
+    if( (dap_chain_wallet_shared_notify_init()) ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
 
     if( dap_chain_net_srv_order_init() )
         return -67;
