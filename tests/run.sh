@@ -58,6 +58,7 @@ RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
 REBUILD_IMAGES=false
 PKGS_UPDATE=false
+STOP_ENV=false
 SPECIFIC_TESTS=()
 
 while [[ $# -gt 0 ]]; do
@@ -82,6 +83,10 @@ while [[ $# -gt 0 ]]; do
             PKGS_UPDATE=true
             shift
             ;;
+        --stop)
+            STOP_ENV=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS] [TEST_PATH...]"
             echo ""
@@ -91,6 +96,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --clean         Clean cache before running (does NOT rebuild node)"
             echo "  --rebuild       Rebuild Docker images before starting network"
             echo "  --pkgs-update   Update packages in running containers (binary + apt update/upgrade)"
+            echo "  --stop          Stop stage environment"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "Examples:"
@@ -98,6 +104,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --e2e                              # Run all E2E tests"
             echo "  $0 --clean --e2e                      # Clean cache and run E2E tests"
             echo "  $0 --rebuild --e2e                    # Rebuild images and run E2E tests"
+            echo "  $0 --stop                             # Stop stage environment"
             echo "  $0 tests/e2e/token                    # Run specific test suite"
             echo "  $0 tests/e2e/token/001_token_decl.yml # Run specific test"
             echo "  $0 tests/functional/wallet tests/e2e/token # Run multiple suites"
@@ -116,6 +123,21 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Handle --stop first
+if [ "$STOP_ENV" = true ]; then
+    info "Stopping stage environment..."
+    
+    if [ -x "$STAGE_ENV_WRAPPER" ]; then
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
+    else
+        error "stage-env wrapper not found or not executable"
+        exit 1
+    fi
+    
+    success "Stage environment stopped"
+    exit 0
+fi
 
 # If specific tests provided, use them directly
 if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
