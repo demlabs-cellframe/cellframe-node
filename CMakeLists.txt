@@ -585,10 +585,11 @@ if(UNIX AND NOT WIN32)
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
     endif()
 
-    # Check for 32-bit ARM (armv6, armv7, armhf) - requires libatomic for 64-bit atomics
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "armv7")
+    # Check for 32-bit system - requires libatomic for 64-bit atomics
+    # CMAKE_SIZEOF_VOID_P is 4 on 32-bit, 8 on 64-bit
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
         set(NEED_LIBATOMIC TRUE)
-        message("[*] 32-bit ARM detected (${CMAKE_SYSTEM_PROCESSOR}), will add libatomic")
+        message("[*] 32-bit system detected (${CMAKE_SYSTEM_PROCESSOR}), will add libatomic")
     endif()
 
     if(ANDROID)
