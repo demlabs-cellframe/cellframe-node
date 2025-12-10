@@ -581,16 +581,14 @@ if(UNIX AND NOT WIN32)
     set(NODE_CLI_LIBRARIES m cellframe-sdk)
     set(NODE_TOOL_LIBRARIES m cellframe-sdk)
 
-    # Add libatomic for 32-bit ARM (required for 64-bit atomic operations)
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        message("[*] 32-bit ARM detected, adding libatomic")
-        list(APPEND NODE_LIBRARIES atomic)
-        list(APPEND NODE_CLI_LIBRARIES atomic)
-        list(APPEND NODE_TOOL_LIBRARIES atomic)
-    endif()
-
     if(SUPPORT_PYTHON_PLUGINS)
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
+    endif()
+
+    # Check for 32-bit ARM (armv6, armv7, armhf) - requires libatomic for 64-bit atomics
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "armv7")
+        set(NEED_LIBATOMIC TRUE)
+        message("[*] 32-bit ARM detected (${CMAKE_SYSTEM_PROCESSOR}), will add libatomic")
     endif()
 
     if(ANDROID)
@@ -601,6 +599,12 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${NODE_LIBRARIES} pthread)
         target_link_libraries(${NODE_CLI_TARGET} ${NODE_CLI_LIBRARIES} pthread)
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread)
+        # libatomic must come AFTER all other libraries
+        if(NEED_LIBATOMIC)
+            target_link_libraries(${NODE_TARGET} atomic)
+            target_link_libraries(${NODE_CLI_TARGET} atomic)
+            target_link_libraries(${NODE_TOOL_TARGET} atomic)
+        endif()
     endif()
 endif()
 
