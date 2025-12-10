@@ -107,6 +107,12 @@ endif()
 
 include (dap-sdk/cmake/OS_Detection.cmake)
 
+# Add libatomic globally for 32-bit systems (required for 64-bit atomic operations)
+if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND UNIX AND NOT APPLE)
+    message("[*] 32-bit system detected globally, adding libatomic to all targets")
+    link_libraries(atomic)
+endif()
+
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 if (NOT ANDROID)
     set(BUILD_WITH_GDB_DRIVER_SQLITE ON)
@@ -585,13 +591,6 @@ if(UNIX AND NOT WIN32)
         list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
     endif()
 
-    # Check for 32-bit system - requires libatomic for 64-bit atomics
-    # CMAKE_SIZEOF_VOID_P is 4 on 32-bit, 8 on 64-bit
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(NEED_LIBATOMIC TRUE)
-        message("[*] 32-bit system detected (${CMAKE_SYSTEM_PROCESSOR}), will add libatomic")
-    endif()
-
     if(ANDROID)
         set(ALL_LIBRARIES ${NODE_LIBRARIES} ${NODE_CLI_LIBRARIES} ${NODE_TOOL_LIBRARIES} log)
         list(REMOVE_DUPLICATES ALL_LIBRARIES)
@@ -600,12 +599,6 @@ if(UNIX AND NOT WIN32)
         target_link_libraries(${NODE_TARGET} ${NODE_LIBRARIES} pthread)
         target_link_libraries(${NODE_CLI_TARGET} ${NODE_CLI_LIBRARIES} pthread)
         target_link_libraries(${NODE_TOOL_TARGET} ${NODE_TOOL_LIBRARIES} pthread)
-        # libatomic must come AFTER all other libraries
-        if(NEED_LIBATOMIC)
-            target_link_libraries(${NODE_TARGET} atomic)
-            target_link_libraries(${NODE_CLI_TARGET} atomic)
-            target_link_libraries(${NODE_TOOL_TARGET} atomic)
-        endif()
     endif()
 endif()
 
