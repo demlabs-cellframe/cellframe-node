@@ -1,0 +1,101 @@
+2025-12-14T06:13:56.658451Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251214_131356.log
+2025-12-14T06:13:56.807669Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-14T06:13:56.809012Z [info     ] loading_topology_from_template topology=default
+2025-12-14T06:13:56.809470Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-14T06:13:56.814643Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-14T06:13:56.832146Z [info     ] docker_connected               version=28.5.1
+2025-12-14T06:13:56.973517Z [info     ] genesis_initializer_created    network=stagenet
+2025-12-14T06:13:56.982156Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-14T06:13:56.998594Z [info     ] filesystem_mode_initialized    rsync_available=True snapshots_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/snapshots
+2025-12-14T06:13:56.998756Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'filesystem', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'full', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots', 'cache_dir': 'cache'} mode=filesystem
+2025-12-14T06:13:56.999286Z [info     ] network_manager_initialized    cache_dir=cache network=stagenet snapshot_mode=filesystem timeouts={'startup': 600, 'health_check': 600, 'command': 30} topology=default
+2025-12-14T06:13:56.999533Z [info     ] starting_network               rebuild=False topology=default
+2025-12-14T06:13:56.999603Z [info     ] stopping_previous_environment 
+2025-12-14T06:13:56.999658Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-14T06:13:57.094123Z [info     ] services_stopped              
+2025-12-14T06:13:57.094275Z [info     ] previous_environment_stopped  
+2025-12-14T06:13:57.094329Z [info     ] cleanup_stale_resources        project=cellframe-stage
+2025-12-14T06:13:57.203787Z [info     ] removing_stale_containers      count=6
+2025-12-14T06:13:58.797560Z [info     ] removing_stale_networks        count=1
+2025-12-14T06:13:59.074993Z [info     ] cleanup_completed             
+2025-12-14T06:13:59.075425Z [info     ] no_phase1_snapshot_cleaning_data_for_fresh_start name=phase1_zerochain_genesis
+2025-12-14T06:13:59.075557Z [info     ] cleaning_node_data_after_stop 
+2025-12-14T06:13:59.075683Z [info     ] removing_node_data_directories path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-14T06:13:59.075774Z [info     ] cleaning_cache_data_with_docker path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-14T06:13:59.436226Z [info     ] cache_data_cleaned             output='Cleanup complete'
+2025-12-14T06:13:59.436370Z [info     ] node_data_removed             
+2025-12-14T06:13:59.436609Z [info     ] node_data_cleaned_and_recreated nodes=0
+2025-12-14T06:13:59.436692Z [info     ] generating_node_configs       
+2025-12-14T06:13:59.436822Z [info     ] node_configs_generated         count=7 seed_nodes=3 validators=3
+2025-12-14T06:13:59.436880Z [info     ] generating_configs_and_certs  
+2025-12-14T06:13:59.436930Z [info     ] generating_configurations      force=False network=stagenet nodes=7
+2025-12-14T06:13:59.438809Z [info     ] generating_certificates        count=7 force=False
+2025-12-14T06:13:59.438942Z [info     ] generating_all_certificates    method=docker network=stagenet nodes=7 validators=3
+• Generating 7 node certificates using Docker...
+2025-12-14T06:13:59.469073Z [info     ] calling_docker_cert_generator  image=cf-cert-generator:latest network_id=0x1234 network_name=stagenet node_count=7 output_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs
+2025-12-14T06:13:59.843408Z [info     ] cert_generator_docker_output   stdout=
+✓ Generated 7 node + 0 validator certificates
+2025-12-14T06:13:59.844501Z [info     ] all_certificates_generated     nodes=7 validators=0
+2025-12-14T06:13:59.846673Z [info     ] organizing_validator_certificates
+2025-12-14T06:13:59.847813Z [info     ] copying_all_private_certs_to_root1_for_centralized_genesis
+2025-12-14T06:13:59.848093Z [info     ] all_private_certs_copied_to_root1 additional_certs=2 note='root-1 can now perform centralized genesis with threshold consensus' own_cert=1 total_pvt_certs=3
+2025-12-14T06:13:59.848534Z [info     ] distributing_public_certs_to_all_nodes network=stagenet total_nodes=7
+2025-12-14T06:13:59.848943Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=1 root_certs=3
+2025-12-14T06:13:59.849339Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=2 root_certs=3
+2025-12-14T06:13:59.849693Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=3 root_certs=3
+2025-12-14T06:13:59.850071Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=4 root_certs=3
+2025-12-14T06:13:59.850456Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=5 root_certs=3
+2025-12-14T06:13:59.850806Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=6 root_certs=3
+2025-12-14T06:13:59.851173Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=7 root_certs=3
+2025-12-14T06:13:59.851232Z [info     ] certificates_generated         count=7
+2025-12-14T06:13:59.856115Z [info     ] validator_addresses_collected  addresses=[CD6D::3B60::E69E::4E02,DD9C::682E::F2A6::EF00,977... count=3
+2025-12-14T06:13:59.856305Z [info     ] root_node_addresses_collected  addresses=[FC58::0DD8::7020::B8BA,D072::C474::FEC2::FA97,90B... count=3
+2025-12-14T06:13:59.856435Z [info     ] validator_addresses_collected  addresses=[CD6D::3B60::E69E::4E02,DD9C::682E::F2A6::EF00,977... count=3
+2025-12-14T06:13:59.856496Z [info     ] mainchain_validators_configured master_validators_count=3 min_validators_count=2 note='Using master node addresses in validators_addrs for mainchain'
+2025-12-14T06:13:59.856884Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-14T06:13:59.861361Z [info     ] configurations_generated       network=stagenet nodes=7
+2025-12-14T06:13:59.861479Z [info     ] generating_docker_compose     
+2025-12-14T06:13:59.861878Z [info     ] generating_compose_file        build_type=debug cache_dir=cache node_count=7 node_source_type=url
+2025-12-14T06:13:59.887786Z [info     ] compose_file_generated         path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml services=7
+2025-12-14T06:13:59.887967Z [info     ] node_distribution              full=1 master=3 root=3
+2025-12-14T06:13:59.888042Z [info     ] === PHASE 1: ROOT Nodes Startup (DAG-PoA Genesis) ===
+2025-12-14T06:13:59.896453Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=3
+2025-12-14T06:13:59.914007Z [info     ] Loaded scenario: PHASE 1 - Zerochain Genesis from genesis/phase1_zerochain.yml
+2025-12-14T06:13:59.928404Z [info     ] executing_phase1_scenario     
+2025-12-14T06:13:59.928541Z [info     ] Starting scenario: PHASE 1 - Zerochain Genesis
+2025-12-14T06:13:59.928596Z [info     ] Description: Initialize ROOT nodes, create token and emission
+2025-12-14T06:13:59.928686Z [info     ] Executing setup phase...      
+2025-12-14T06:13:59.928769Z [info     ] Step 1/4: ConfigStep (cellframe-node)
+2025-12-14T06:13:59.928951Z [info     ] Config: regenerating 'cellframe-node' for nodes [0, 1, 2] with vars ['seed_mode']
+2025-12-14T06:13:59.929880Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-14T06:13:59.930917Z [warning  ] Target config file /home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/configs/node0/cellframe-node.cfg does not exist, skipping regeneration for node 0
+2025-12-14T06:13:59.931216Z [info     ] Regenerated cellframe-node.cfg for node 1
+2025-12-14T06:13:59.931477Z [info     ] Regenerated cellframe-node.cfg for node 2
+2025-12-14T06:13:59.931560Z [info     ] Step 2/4: DockerOpStep        
+2025-12-14T06:13:59.931637Z [info     ] Docker operation: start on services ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3']
+2025-12-14T06:13:59.931708Z [info     ] starting_services              services=['root-0', 'root-1', 'root-2', 'master-0', 'master-1', 'master-2']
+2025-12-14T06:14:00.592028Z [info     ] services_started              
+2025-12-14T06:14:00.592704Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-root-0', 'cellframe-stage-root-1', 'cellframe-stage-root-2', 'cellframe-stage-master-0', 'cellframe-stage-master-1', 'cellframe-stage-master-2']
+2025-12-14T06:14:00.592833Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-master-0', 'cellframe-stage-root-2', 'cellframe-stage-root-1', 'cellframe-stage-master-1', 'cellframe-stage-master-2', 'cellframe-stage-root-0'] timeout=30.0
+2025-12-14T06:14:00.622434Z [info     ] all_containers_have_ips        count=6 elapsed=0.0
+2025-12-14T06:14:00.622604Z [info     ] ✅ All containers have IP addresses count=6
+2025-12-14T06:14:00.622668Z [info     ] ✅ Docker operation 'start' completed
+2025-12-14T06:14:00.622731Z [info     ] Step 3/4: NetworkWaitStep     
+2025-12-14T06:14:00.622808Z [info     ] Waiting for network state: online on nodes ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3']
+2025-12-14T06:13:59.739411Z [info     ] waiting_for_nodes_online       node_count=6 timeout=60
+2025-12-14T06:14:09.496764Z [info     ] node_state_check_during_wait   elapsed=11.2s node=root--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:09.499889Z [info     ] node_state_check_during_wait   elapsed=11.2s node=master--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:19.726321Z [info     ] node_state_check_during_wait   elapsed=21.4s node=root--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:19.729244Z [info     ] node_state_check_during_wait   elapsed=21.4s node=master--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:27.477040Z [info     ] node_state_check_during_wait   elapsed=31.5s node=root--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:27.480241Z [info     ] node_state_check_during_wait   elapsed=31.5s node=master--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:37.607055Z [info     ] node_state_check_during_wait   elapsed=41.7s node=root--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:37.609976Z [info     ] node_state_check_during_wait   elapsed=41.7s node=master--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:47.769909Z [info     ] node_state_check_during_wait   elapsed=51.8s node=root--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:47.772925Z [info     ] node_state_check_during_wait   elapsed=51.8s node=master--1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:14:55.445341Z [error    ] nodes_online_timeout           elapsed=61.9s missing=2 online=4 total=6
+2025-12-14T06:14:55.449708Z [error    ] failed_to_collect_node_diagnostics error='404 Client Error for http+docker://localhost/v1.51/containers/cellframe-stage-root--1/json: Not Found ("No such container: cellframe-stage-root--1")' node=root--1
+2025-12-14T06:14:55.452534Z [error    ] failed_to_collect_node_diagnostics error='404 Client Error for http+docker://localhost/v1.51/containers/cellframe-stage-master--1/json: Not Found ("No such container: cellframe-stage-master--1")' node=master--1
+2025-12-14T06:14:55.452656Z [error    ] Network wait failed: Nodes failed to reach ONLINE state after 61.9s. Only 4/6 nodes are online.
+2025-12-14T06:14:55.454959Z [error    ] root_nodes_genesis_failed      error="Network wait failed: Nodes failed to reach ONLINE state after 61.9s. Only 4/6 nodes are online.\nStep: wait_network='online' nodes=['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3'] timeout=60 network='stagenet' chain=None" traceback='Traceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/network_wait.py", line 66, in execute\n    await state_manager.wait_for_nodes_online(node_configs, timeout=step.timeout)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/network/node_states.py", line 151, in wait_for_nodes_online\n    raise TimeoutError(\nTimeoutError: Nodes failed to reach ONLINE state after 61.9s. Only 4/6 nodes are online.\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/network/manager.py", line 394, in start\n    ctx = await executor.execute_scenario(\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 442, in execute_scenario\n    await self._execute_steps(scenario.setup.steps, ctx, section_defaults)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 600, in _execute_steps\n    await self.network_wait_executor.execute(step, ctx)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/network_wait.py", line 126, in execute\n    raise ScenarioExecutionError(error_msg, step=step)\nsrc.scenarios.executor.ScenarioExecutionError: Network wait failed: Nodes failed to reach ONLINE state after 61.9s. Only 4/6 nodes are online.\nStep: wait_network=\'online\' nodes=[\'root-1\', \'root-2\', \'root-3\', \'master-1\', \'master-2\', \'master-3\'] timeout=60 network=\'stagenet\' chain=None\n'
+2025-12-14T06:14:55.455090Z [info     ] keep_running_enabled_containers_not_stopped phase=Phase1

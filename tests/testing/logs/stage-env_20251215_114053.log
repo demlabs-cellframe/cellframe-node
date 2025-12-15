@@ -1,0 +1,508 @@
+2025-12-15T04:40:53.203779Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251215_114053.log
+2025-12-15T04:40:53.359535Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-15T04:40:53.360769Z [info     ] loading_topology_from_template topology=default
+2025-12-15T04:40:53.361236Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-15T04:40:53.366886Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:40:53.384685Z [info     ] docker_connected               version=28.5.1
+2025-12-15T04:40:53.524792Z [info     ] genesis_initializer_created    network=stagenet
+2025-12-15T04:40:53.533578Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-15T04:40:53.536182Z [info     ] filesystem_mode_initialized    rsync_available=True snapshots_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/snapshots
+2025-12-15T04:40:53.536305Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'filesystem', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'full', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots', 'cache_dir': 'cache'} mode=filesystem
+2025-12-15T04:40:53.547082Z [info     ] network_manager_initialized    cache_dir=cache network=stagenet snapshot_mode=filesystem timeouts={'startup': 600, 'health_check': 600, 'command': 30} topology=default
+2025-12-15T04:40:53.547394Z [info     ] starting_network               rebuild=False topology=default
+2025-12-15T04:40:53.547474Z [info     ] stopping_previous_environment 
+2025-12-15T04:40:53.547534Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-15T04:40:53.614395Z [info     ] services_stopped              
+2025-12-15T04:40:53.614548Z [info     ] previous_environment_stopped  
+2025-12-15T04:40:53.614593Z [info     ] cleanup_stale_resources        project=cellframe-stage
+2025-12-15T04:40:53.623850Z [info     ] cleanup_completed             
+2025-12-15T04:40:53.624017Z [info     ] no_phase1_snapshot_cleaning_data_for_fresh_start name=phase1_zerochain_genesis
+2025-12-15T04:40:53.624080Z [info     ] cleaning_node_data_after_stop 
+2025-12-15T04:40:53.624192Z [info     ] removing_node_data_directories path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-15T04:40:53.624264Z [info     ] cleaning_cache_data_with_docker path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-15T04:40:54.024526Z [info     ] cache_data_cleaned             output='Cleanup complete'
+2025-12-15T04:40:54.024674Z [info     ] node_data_removed             
+2025-12-15T04:40:54.024894Z [info     ] node_data_cleaned_and_recreated nodes=0
+2025-12-15T04:40:54.024964Z [info     ] generating_node_configs       
+2025-12-15T04:40:54.025069Z [info     ] node_configs_generated         count=8 seed_nodes=3 validators=3
+2025-12-15T04:40:54.025113Z [info     ] generating_configs_and_certs  
+2025-12-15T04:40:54.025145Z [info     ] generating_configurations      force=False network=stagenet nodes=8
+2025-12-15T04:40:54.027213Z [info     ] generating_certificates        count=8 force=False
+2025-12-15T04:40:54.027376Z [info     ] generating_all_certificates    method=docker network=stagenet nodes=8 validators=3
+• Generating 8 node certificates using Docker...
+2025-12-15T04:40:54.060405Z [info     ] calling_docker_cert_generator  image=cf-cert-generator:latest network_id=0x1234 network_name=stagenet node_count=8 output_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs
+2025-12-15T04:40:54.438381Z [info     ] cert_generator_docker_output   stdout=
+✓ Generated 8 node + 0 validator certificates
+2025-12-15T04:40:54.439433Z [info     ] all_certificates_generated     nodes=8 validators=0
+2025-12-15T04:40:54.441789Z [info     ] organizing_validator_certificates
+2025-12-15T04:40:54.443160Z [info     ] copying_all_private_certs_to_root1_for_centralized_genesis
+2025-12-15T04:40:54.443418Z [info     ] all_private_certs_copied_to_root1 additional_certs=2 note='root-1 can now perform centralized genesis with threshold consensus' own_cert=1 total_pvt_certs=3
+2025-12-15T04:40:54.443861Z [info     ] distributing_public_certs_to_all_nodes network=stagenet total_nodes=8
+2025-12-15T04:40:54.444424Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=1 root_certs=3
+2025-12-15T04:40:54.444925Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=2 root_certs=3
+2025-12-15T04:40:54.445370Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=3 root_certs=3
+2025-12-15T04:40:54.445868Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=4 root_certs=3
+2025-12-15T04:40:54.446349Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=5 root_certs=3
+2025-12-15T04:40:54.446787Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=6 root_certs=3
+2025-12-15T04:40:54.447246Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=7 root_certs=3
+2025-12-15T04:40:54.447672Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=8 root_certs=3
+2025-12-15T04:40:54.447753Z [info     ] certificates_generated         count=8
+2025-12-15T04:40:54.457076Z [info     ] validator_addresses_collected  addresses=[78B8::2E49::52E6::C843,7A56::1B49::49B1::991E,1CC... count=3
+2025-12-15T04:40:54.457451Z [info     ] root_node_addresses_collected  addresses=[775D::CD9B::61A0::5146,C9EE::5ECC::F248::42D5,91A... count=3
+2025-12-15T04:40:54.457620Z [info     ] validator_addresses_collected  addresses=[78B8::2E49::52E6::C843,7A56::1B49::49B1::991E,1CC... count=3
+2025-12-15T04:40:54.457690Z [info     ] mainchain_validators_configured master_validators_count=3 min_validators_count=2 note='Using master node addresses in validators_addrs for mainchain'
+2025-12-15T04:40:54.458154Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-15T04:40:54.462771Z [info     ] configurations_generated       network=stagenet nodes=8
+2025-12-15T04:40:54.462913Z [info     ] generating_docker_compose     
+2025-12-15T04:40:54.463357Z [info     ] generating_compose_file        build_type=debug cache_dir=cache node_count=8 node_source_type=url
+2025-12-15T04:40:54.492623Z [info     ] compose_file_generated         path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml services=8
+2025-12-15T04:40:54.492838Z [info     ] node_distribution              full=2 master=3 root=3
+2025-12-15T04:40:54.492904Z [info     ] === PHASE 1: ROOT Nodes Startup (DAG-PoA Genesis) ===
+2025-12-15T04:40:54.502737Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=3
+2025-12-15T04:40:54.516613Z [info     ] Loaded scenario: PHASE 1 - Zerochain Genesis from genesis/phase1_zerochain.yml
+2025-12-15T04:40:54.532996Z [info     ] executing_phase1_scenario     
+2025-12-15T04:40:54.533171Z [info     ] Starting scenario: PHASE 1 - Zerochain Genesis
+2025-12-15T04:40:54.533222Z [info     ] Description: Initialize ROOT nodes, create token and emission
+2025-12-15T04:40:54.533286Z [info     ] Executing setup phase...      
+2025-12-15T04:40:54.533367Z [info     ] Step 1/4: ConfigStep (cellframe-node)
+2025-12-15T04:40:54.533537Z [info     ] Config: regenerating 'cellframe-node' for nodes [1, 2, 3] with vars ['seed_mode']
+2025-12-15T04:40:54.534440Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:40:54.535794Z [info     ] Regenerated cellframe-node.cfg for node 1
+2025-12-15T04:40:54.536054Z [info     ] Regenerated cellframe-node.cfg for node 2
+2025-12-15T04:40:54.536251Z [info     ] Regenerated cellframe-node.cfg for node 3
+2025-12-15T04:40:54.536320Z [info     ] Step 2/4: DockerOpStep        
+2025-12-15T04:40:54.536399Z [info     ] Docker operation: start on services ['root-1', 'root-2', 'root-3']
+2025-12-15T04:40:54.536475Z [info     ] starting_services              services=['node-1', 'node-2', 'node-3']
+2025-12-15T04:40:55.049200Z [info     ] services_started              
+2025-12-15T04:40:55.049946Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-1', 'cellframe-stage-node-2', 'cellframe-stage-node-3']
+2025-12-15T04:40:55.050090Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-3', 'cellframe-stage-node-1', 'cellframe-stage-node-2'] timeout=30.0
+2025-12-15T04:40:55.064799Z [info     ] all_containers_have_ips        count=3 elapsed=0.0
+2025-12-15T04:40:55.064952Z [info     ] ✅ All containers have IP addresses count=3
+2025-12-15T04:40:55.065003Z [info     ] ✅ Docker operation 'start' completed
+2025-12-15T04:40:55.065047Z [info     ] Step 3/4: NetworkWaitStep     
+2025-12-15T04:40:55.065107Z [info     ] Waiting for network state: online on nodes ['root-1', 'root-2', 'root-3']
+2025-12-15T04:40:55.087405Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60
+2025-12-15T04:41:01.805865Z [info     ] all_nodes_online               count=3 elapsed=6.5s
+2025-12-15T04:41:01.806012Z [info     ] ✅ Network state 'online' achieved
+2025-12-15T04:41:01.806070Z [info     ] Step 4/4: WaitStep            
+2025-12-15T04:41:01.806132Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:41:01.806311Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:41:06.837512Z [info     ] collecting_global_context_after_setup nodes=3
+2025-12-15T04:41:06.837932Z [info     ] global_context_waiting_for_ips containers=['cellframe-stage-node-1', 'cellframe-stage-node-2', 'cellframe-stage-node-3'] count=3
+2025-12-15T04:41:06.838066Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-3', 'cellframe-stage-node-1', 'cellframe-stage-node-2'] timeout=30.0
+2025-12-15T04:41:06.854091Z [info     ] all_containers_have_ips        count=3 elapsed=0.0
+2025-12-15T04:41:06.854244Z [info     ] global_context_ips_collected   count=3 node_ip_map={'node1': '172.20.0.10', 'node2': '172.20.0.11', 'node3': '172.20.0.12'}
+2025-12-15T04:41:06.854311Z [info     ] global_context_injected_into_scenario node_count=3 node_ip_map={'node1': '172.20.0.10', 'node2': '172.20.0.11', 'node3': '172.20.0.12'} variables=['network_name', 'topology_name', 'node_ips', 'node_ip', 'node_count', 'root_count', 'master_count', 'full_count', 'root_nodes', 'master_nodes', 'full_nodes']
+2025-12-15T04:41:06.865388Z [info     ] Loaded CLI commands from cache: 41 commands
+2025-12-15T04:41:06.865509Z [info     ] Executing test phase...       
+2025-12-15T04:41:06.865575Z [info     ] Step 1/28: StepGroup          
+2025-12-15T04:41:06.865625Z [info     ] Step 1/3: CLIStep             
+2025-12-15T04:41:06.865695Z [info     ] CLI: node dump                
+2025-12-15T04:41:06.874228Z [info     ] exec_cli_command_debug         command_original='node dump -net stagenet' command_split=['node', 'dump', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli node dump -net stagenet'] shell_cmd='cellframe-node-cli node dump -net stagenet'
+2025-12-15T04:41:06.963215Z [info     ] cli_save_node_output_debug     command='node dump -net stagenet' output_length=292 output_preview='Record timestamp: Mon, 15 Dec 2025 04:41:05 +0000\nRecord version: 2\nNode version: 5.7-14\nNode addr: 775D::CD9B::61A0::5146\nNet: stagenet\nRole: NODE_ROLE_ROOT\nEvents count: 0\nAtoms count: 0\nUplinks count: 0\nDownlinks count: 0\n-----------------------------------------------------------------\n\n' pattern='Node addr:\\s+([A-Fa-f0-9:]+)'
+2025-12-15T04:41:06.963548Z [info     ] Step 2/3: CLIStep             
+2025-12-15T04:41:06.963630Z [info     ] CLI: node dump                
+2025-12-15T04:41:06.970996Z [info     ] exec_cli_command_debug         command_original='node dump -net stagenet' command_split=['node', 'dump', '-net', 'stagenet'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli node dump -net stagenet'] shell_cmd='cellframe-node-cli node dump -net stagenet'
+2025-12-15T04:41:07.030708Z [info     ] cli_save_node_output_debug     command='node dump -net stagenet' output_length=292 output_preview='Record timestamp: Mon, 15 Dec 2025 04:41:05 +0000\nRecord version: 2\nNode version: 5.7-14\nNode addr: C9EE::5ECC::F248::42D5\nNet: stagenet\nRole: NODE_ROLE_ROOT\nEvents count: 0\nAtoms count: 0\nUplinks count: 0\nDownlinks count: 0\n-----------------------------------------------------------------\n\n' pattern='Node addr:\\s+([A-Fa-f0-9:]+)'
+2025-12-15T04:41:07.030909Z [info     ] Step 3/3: CLIStep             
+2025-12-15T04:41:07.030959Z [info     ] CLI: node dump                
+2025-12-15T04:41:07.038715Z [info     ] exec_cli_command_debug         command_original='node dump -net stagenet' command_split=['node', 'dump', '-net', 'stagenet'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli node dump -net stagenet'] shell_cmd='cellframe-node-cli node dump -net stagenet'
+2025-12-15T04:41:07.106957Z [info     ] cli_save_node_output_debug     command='node dump -net stagenet' output_length=292 output_preview='Record timestamp: Mon, 15 Dec 2025 04:41:05 +0000\nRecord version: 2\nNode version: 5.7-14\nNode addr: 91A8::AEF5::790D::93C2\nNet: stagenet\nRole: NODE_ROLE_ROOT\nEvents count: 0\nAtoms count: 0\nUplinks count: 0\nDownlinks count: 0\n-----------------------------------------------------------------\n\n' pattern='Node addr:\\s+([A-Fa-f0-9:]+)'
+2025-12-15T04:41:07.107158Z [info     ] Step 2/28: StepGroup          
+2025-12-15T04:41:07.107227Z [info     ] Step 1/2: CLIStep             
+2025-12-15T04:41:07.107304Z [info     ] CLI: node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079
+2025-12-15T04:41:07.115397Z [info     ] exec_cli_command_debug         command_original='node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', 'C9EE::5ECC::F248::42D5', '-alias', 'root-2', '-host', '172.20.0.11', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet'
+2025-12-15T04:41:07.169170Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:41:07.169333Z [info     ] CLI: node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079
+2025-12-15T04:41:07.177406Z [info     ] exec_cli_command_debug         command_original='node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', '91A8::AEF5::790D::93C2', '-alias', 'root-3', '-host', '172.20.0.12', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet'
+2025-12-15T04:41:07.264693Z [info     ] Step 3/28: StepGroup          
+2025-12-15T04:41:07.264943Z [info     ] Step 1/2: CLIStep             
+2025-12-15T04:41:07.265013Z [info     ] CLI: node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079
+2025-12-15T04:41:07.273216Z [info     ] exec_cli_command_debug         command_original='node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', '775D::CD9B::61A0::5146', '-alias', 'root-1', '-host', '172.20.0.10', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet'
+2025-12-15T04:41:07.343506Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:41:07.343662Z [info     ] CLI: node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079
+2025-12-15T04:41:07.351245Z [info     ] exec_cli_command_debug         command_original='node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', '91A8::AEF5::790D::93C2', '-alias', 'root-3', '-host', '172.20.0.12', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr 91A8::AEF5::790D::93C2 -alias root-3 -host 172.20.0.12 -port 8079 -net stagenet'
+2025-12-15T04:41:07.445749Z [info     ] Step 4/28: StepGroup          
+2025-12-15T04:41:07.445910Z [info     ] Step 1/2: CLIStep             
+2025-12-15T04:41:07.445973Z [info     ] CLI: node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079
+2025-12-15T04:41:07.457356Z [info     ] exec_cli_command_debug         command_original='node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', '775D::CD9B::61A0::5146', '-alias', 'root-1', '-host', '172.20.0.10', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr 775D::CD9B::61A0::5146 -alias root-1 -host 172.20.0.10 -port 8079 -net stagenet'
+2025-12-15T04:41:07.522680Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:41:07.522837Z [info     ] CLI: node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079
+2025-12-15T04:41:07.530148Z [info     ] exec_cli_command_debug         command_original='node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet' command_split=['node', 'add', '-addr', 'C9EE::5ECC::F248::42D5', '-alias', 'root-2', '-host', '172.20.0.11', '-port', '8079', '-net', 'stagenet'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet'] shell_cmd='cellframe-node-cli node add -addr C9EE::5ECC::F248::42D5 -alias root-2 -host 172.20.0.11 -port 8079 -net stagenet'
+2025-12-15T04:41:07.612569Z [info     ] Step 5/28: DockerOpStep       
+2025-12-15T04:41:07.612728Z [info     ] Docker operation: restart on services ['root-1', 'root-2', 'root-3']
+2025-12-15T04:41:07.612792Z [info     ] restarting_services            services=['node-1', 'node-2', 'node-3']
+2025-12-15T04:41:08.373960Z [info     ] services_restarted            
+2025-12-15T04:41:08.374320Z [info     ] ✅ Docker operation 'restart' completed
+2025-12-15T04:41:08.374427Z [info     ] Step 6/28: WaitStep           
+2025-12-15T04:41:08.374521Z [info     ] Executing WaitStep. Dump: {'wait': '20s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:41:08.374598Z [info     ] Waiting 20s (20s)             
+2025-12-15T04:41:28.638363Z [info     ] Step 7/28: WaitStep           
+2025-12-15T04:41:28.638554Z [info     ] Executing WaitStep. Dump: {'wait': 'cli_ready', 'datum': None, 'node': None, 'nodes': ['root-1', 'root-2', 'root-3'], 'network': None, 'chain': None, 'timeout': 40, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:41:28.638628Z [info     ] Waiting for condition: cli_ready
+2025-12-15T04:41:28.649206Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:41:28.733310Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:41:28.822316Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:41:28.888028Z [info     ] ✅ Waiter 'cli_ready' completed
+2025-12-15T04:41:28.888200Z [info     ] Step 8/28: WaitStep           
+2025-12-15T04:41:28.888268Z [info     ] Executing WaitStep. Dump: {'wait': '45s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:41:28.888315Z [info     ] Waiting 45s (45s)             
+2025-12-15T04:42:09.687852Z [info     ] Step 9/28: CLIStep            
+2025-12-15T04:42:09.688103Z [info     ] CLI: wallet new -w fee_collector
+2025-12-15T04:42:09.697771Z [info     ] exec_cli_command_debug         command_original='wallet new -w fee_collector -net stagenet' command_split=['wallet', 'new', '-w', 'fee_collector', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli wallet new -w fee_collector -net stagenet'] shell_cmd='cellframe-node-cli wallet new -w fee_collector -net stagenet'
+2025-12-15T04:42:09.754669Z [info     ] Step 10/28: CLIStep           
+2025-12-15T04:42:09.754825Z [info     ] CLI: wallet info -w fee_collector
+2025-12-15T04:42:09.762727Z [info     ] exec_cli_command_debug         command_original='wallet info -w fee_collector -net stagenet' command_split=['wallet', 'info', '-w', 'fee_collector', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli wallet info -w fee_collector -net stagenet'] shell_cmd='cellframe-node-cli wallet info -w fee_collector -net stagenet'
+2025-12-15T04:42:09.802199Z [info     ] Step 11/28: StepGroup         
+2025-12-15T04:42:09.802371Z [info     ] Step 1/15: CLIStep            
+2025-12-15T04:42:09.802426Z [info     ] CLI: token_decl -token TCELL -chain zerochain -total_supply 1000000.0e+18 -decimals 18 -signs_emission 2 -signs_total 3 -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2
+2025-12-15T04:42:09.810307Z [info     ] exec_cli_command_debug         command_original='token_decl -token TCELL -chain zerochain -total_supply 1000000.0e+18 -decimals 18 -signs_emission 2 -signs_total 3 -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet' command_split=['token_decl', '-token', 'TCELL', '-chain', 'zerochain', '-total_supply', '1000000.0e+18', '-decimals', '18', '-signs_emission', '2', '-signs_total', '3', '-certs', 'pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli token_decl -token TCELL -chain zerochain -total_supply 1000000.0e+18 -decimals 18 -signs_emission 2 -signs_total 3 -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet'] shell_cmd='cellframe-node-cli token_decl -token TCELL -chain zerochain -total_supply 1000000.0e+18 -decimals 18 -signs_emission 2 -signs_total 3 -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet'
+2025-12-15T04:42:09.903839Z [info     ] Step 2/15: WaitStep           
+2025-12-15T04:42:09.904008Z [info     ] Executing WaitStep. Dump: {'wait': '3s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:09.904076Z [info     ] Waiting 3s (3s)               
+2025-12-15T04:42:12.915030Z [info     ] Step 3/15: CLIStep            
+2025-12-15T04:42:12.915227Z [info     ] CLI: mempool proc -net stagenet -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4
+2025-12-15T04:42:12.925069Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'zerochain', '-datum', '0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4'
+2025-12-15T04:42:12.995128Z [info     ] Step 4/15: WaitStep           
+2025-12-15T04:42:12.995295Z [info     ] Executing WaitStep. Dump: {'wait': '2s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:12.995358Z [info     ] Waiting 2s (2s)               
+2025-12-15T04:42:14.999382Z [info     ] Step 5/15: WaitStep           
+2025-12-15T04:42:14.999616Z [info     ] Executing WaitStep. Dump: {'wait': '30s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:14.999678Z [info     ] Waiting 30s (30s)             
+2025-12-15T04:42:42.816591Z [info     ] Step 6/15: CLIStep            
+2025-12-15T04:42:42.816808Z [info     ] CLI: token list               
+2025-12-15T04:42:42.826285Z [info     ] exec_cli_command_debug         command_original='token list -net stagenet' command_split=['token', 'list', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli token list -net stagenet'] shell_cmd='cellframe-node-cli token list -net stagenet'
+2025-12-15T04:42:42.882750Z [info     ] Step 7/15: CLIStep            
+2025-12-15T04:42:42.882891Z [info     ] CLI: global_db flush          
+2025-12-15T04:42:42.891665Z [info     ] exec_cli_command_debug         command_original='global_db flush' command_split=['global_db', 'flush'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli global_db flush'] shell_cmd='cellframe-node-cli global_db flush'
+2025-12-15T04:42:42.961885Z [info     ] Step 8/15: WaitStep           
+2025-12-15T04:42:42.962048Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:42.962117Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:42:47.898549Z [info     ] Step 9/15: CLIStep            
+2025-12-15T04:42:47.898766Z [info     ] CLI: token_emit -chain zerochain -token TCELL -emission_value 1000000.0e+18 -addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2
+2025-12-15T04:42:47.908979Z [info     ] exec_cli_command_debug         command_original='token_emit -chain zerochain -token TCELL -emission_value 1000000.0e+18 -addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet' command_split=['token_emit', '-chain', 'zerochain', '-token', 'TCELL', '-emission_value', '1000000.0e+18', '-addr', 'WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK', '-certs', 'pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli token_emit -chain zerochain -token TCELL -emission_value 1000000.0e+18 -addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet'] shell_cmd='cellframe-node-cli token_emit -chain zerochain -token TCELL -emission_value 1000000.0e+18 -addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -certs pvt.stagenet.root.0,pvt.stagenet.root.1,pvt.stagenet.root.2 -net stagenet'
+2025-12-15T04:42:47.971974Z [info     ] Step 10/15: WaitStep          
+2025-12-15T04:42:47.972128Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:47.972193Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:42:52.999897Z [info     ] Step 11/15: CLIStep           
+2025-12-15T04:42:53.000100Z [info     ] CLI: mempool proc -net stagenet -chain zerochain -datum 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6
+2025-12-15T04:42:53.009886Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain zerochain -datum 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'zerochain', '-datum', '0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain zerochain -datum 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain zerochain -datum 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6'
+2025-12-15T04:42:53.066615Z [info     ] Step 12/15: WaitStep          
+2025-12-15T04:42:53.066782Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:53.066840Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:42:58.072051Z [info     ] Step 13/15: WaitStep          
+2025-12-15T04:42:58.072279Z [info     ] Executing WaitStep. Dump: {'wait': '45s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:42:58.072336Z [info     ] Waiting 45s (45s)             
+2025-12-15T04:43:42.895411Z [info     ] Step 14/15: CLIStep           
+2025-12-15T04:43:42.895951Z [info     ] CLI: dag event list -chain zerochain
+2025-12-15T04:43:42.910308Z [info     ] exec_cli_command_debug         command_original='dag event list -chain zerochain -net stagenet' command_split=['dag', 'event', 'list', '-chain', 'zerochain', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli dag event list -chain zerochain -net stagenet'] shell_cmd='cellframe-node-cli dag event list -chain zerochain -net stagenet'
+2025-12-15T04:43:40.758640Z [info     ] Step 15/15: CLIStep           
+2025-12-15T04:43:40.758782Z [info     ] CLI: dag event find -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4
+2025-12-15T04:43:40.765792Z [info     ] exec_cli_command_debug         command_original='dag event find -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4 -net stagenet' command_split=['dag', 'event', 'find', '-chain', 'zerochain', '-datum', '0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli dag event find -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4 -net stagenet'] shell_cmd='cellframe-node-cli dag event find -chain zerochain -datum 0x18E1232821FFFD79E3C3D2C35E0D62E826B60329A62B50B1174CFAD258966DD4 -net stagenet'
+2025-12-15T04:43:40.826572Z [info     ] Step 12/28: ConfigStep (cellframe-node)
+2025-12-15T04:43:40.826724Z [info     ] Config: regenerating 'cellframe-node' for nodes [1, 2, 3] with vars ['seed_mode']
+2025-12-15T04:43:40.827643Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:43:40.828845Z [info     ] Regenerated cellframe-node.cfg for node 1
+2025-12-15T04:43:40.829083Z [info     ] Regenerated cellframe-node.cfg for node 2
+2025-12-15T04:43:40.829279Z [info     ] Regenerated cellframe-node.cfg for node 3
+2025-12-15T04:43:40.829342Z [info     ] Step 13/28: ConfigStep (stagenet/zerochain)
+2025-12-15T04:43:40.829412Z [info     ] Config: regenerating 'stagenet/zerochain' for nodes [1, 2, 3] with vars ['static_genesis_event', 'is_static_genesis_event']
+2025-12-15T04:43:40.830156Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:43:40.831356Z [info     ] Regenerated zerochain.cfg for node 1
+2025-12-15T04:43:40.831620Z [info     ] Regenerated zerochain.cfg for node 2
+2025-12-15T04:43:40.831797Z [info     ] Regenerated zerochain.cfg for node 3
+2025-12-15T04:43:40.831855Z [info     ] Step 14/28: DockerOpStep      
+2025-12-15T04:43:40.831914Z [info     ] Docker operation: restart on services ['root-1', 'root-2', 'root-3']
+2025-12-15T04:43:40.831966Z [info     ] restarting_services            services=['node-1', 'node-2', 'node-3']
+2025-12-15T04:43:41.582591Z [info     ] services_restarted            
+2025-12-15T04:43:41.582747Z [info     ] ✅ Docker operation 'restart' completed
+2025-12-15T04:43:41.582806Z [info     ] Step 15/28: NetworkWaitStep   
+2025-12-15T04:43:41.582857Z [info     ] Waiting for network state: online on nodes ['root-1', 'root-2', 'root-3']
+2025-12-15T04:43:41.582931Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60
+2025-12-15T04:43:48.269621Z [info     ] all_nodes_online               count=3 elapsed=6.5s
+2025-12-15T04:43:48.269781Z [info     ] ✅ Network state 'online' achieved
+2025-12-15T04:43:48.269846Z [info     ] Step 16/28: WaitStep          
+2025-12-15T04:43:48.269923Z [info     ] Executing WaitStep. Dump: {'wait': '15s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:43:48.269992Z [info     ] Waiting 15s (15s)             
+2025-12-15T04:44:03.282114Z [info     ] Step 17/28: ConfigStep (cellframe-node)
+2025-12-15T04:44:03.282652Z [info     ] Config: regenerating 'cellframe-node' for nodes [4, 5, 6] with vars ['seed_mode']
+2025-12-15T04:44:03.285161Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:44:03.287741Z [info     ] Regenerated cellframe-node.cfg for node 4
+2025-12-15T04:44:03.288183Z [info     ] Regenerated cellframe-node.cfg for node 5
+2025-12-15T04:44:03.288517Z [info     ] Regenerated cellframe-node.cfg for node 6
+2025-12-15T04:44:03.288612Z [info     ] Step 18/28: ConfigStep (stagenet/zerochain)
+2025-12-15T04:44:03.288730Z [info     ] Config: regenerating 'stagenet/zerochain' for nodes [4, 5, 6] with vars ['static_genesis_event', 'is_static_genesis_event']
+2025-12-15T04:44:03.289880Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:44:03.291233Z [info     ] Regenerated zerochain.cfg for node 4
+2025-12-15T04:44:03.291442Z [info     ] Regenerated zerochain.cfg for node 5
+2025-12-15T04:44:03.291611Z [info     ] Regenerated zerochain.cfg for node 6
+2025-12-15T04:44:03.291672Z [info     ] Step 19/28: DockerOpStep      
+2025-12-15T04:44:03.291733Z [info     ] Docker operation: start on services ['master-1', 'master-2', 'master-3']
+2025-12-15T04:44:03.291798Z [info     ] starting_services              services=['node-4', 'node-5', 'node-6']
+2025-12-15T04:44:03.977775Z [info     ] services_started              
+2025-12-15T04:44:03.978009Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-6']
+2025-12-15T04:44:03.978081Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-6'] timeout=30.0
+2025-12-15T04:44:03.991260Z [info     ] all_containers_have_ips        count=3 elapsed=0.0
+2025-12-15T04:44:03.991409Z [info     ] ✅ All containers have IP addresses count=3
+2025-12-15T04:44:03.991460Z [info     ] ✅ Docker operation 'start' completed
+2025-12-15T04:44:03.991502Z [info     ] Step 20/28: NetworkWaitStep   
+2025-12-15T04:44:03.991537Z [info     ] Waiting for network state: online on nodes ['master-1', 'master-2', 'master-3']
+2025-12-15T04:44:03.991590Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60
+2025-12-15T04:44:10.843889Z [info     ] all_nodes_online               count=3 elapsed=6.5s
+2025-12-15T04:44:10.844033Z [info     ] ✅ Network state 'online' achieved
+2025-12-15T04:44:10.844090Z [info     ] Step 21/28: WaitStep          
+2025-12-15T04:44:10.844145Z [info     ] Executing WaitStep. Dump: {'wait': '30s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:44:10.844200Z [info     ] Waiting 30s (30s)             
+2025-12-15T04:44:36.687867Z [info     ] Step 22/28: WaitStep          
+2025-12-15T04:44:36.688043Z [info     ] Executing WaitStep. Dump: {'wait': '60s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:44:36.688104Z [info     ] Waiting 60s (60s)             
+2025-12-15T04:45:32.327857Z [info     ] Step 23/28: WaitStep          
+2025-12-15T04:45:32.328258Z [info     ] Executing WaitStep. Dump: {'wait': 'cli_ready', 'datum': None, 'node': None, 'nodes': ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3'], 'network': None, 'chain': None, 'timeout': 40, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:45:32.328430Z [info     ] Waiting for condition: cli_ready
+2025-12-15T04:45:32.341661Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.417370Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.493648Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.564759Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.637617Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-5 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-5', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.704203Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-6 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-6', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:45:32.764538Z [info     ] ✅ Waiter 'cli_ready' completed
+2025-12-15T04:45:32.764701Z [info     ] Step 24/28: StepGroup         
+2025-12-15T04:45:32.764767Z [info     ] Step 1/4: LoopStep            
+2025-12-15T04:45:32.764838Z [info     ] Starting loop: 3 iterations   
+2025-12-15T04:45:32.764902Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:32.764966Z [info     ] Set variable 'node_name' = root-1
+2025-12-15T04:45:32.765012Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:32.765048Z [info     ] CLI: global_db sync -net stagenet
+2025-12-15T04:45:32.773368Z [info     ] exec_cli_command_debug         command_original='global_db sync -net stagenet' command_split=['global_db', 'sync', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli global_db sync -net stagenet'] shell_cmd='cellframe-node-cli global_db sync -net stagenet'
+2025-12-15T04:45:32.836556Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:32.836708Z [info     ] Set variable 'node_name' = root-2
+2025-12-15T04:45:32.836753Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:32.836783Z [info     ] CLI: global_db sync -net stagenet
+2025-12-15T04:45:32.844214Z [info     ] exec_cli_command_debug         command_original='global_db sync -net stagenet' command_split=['global_db', 'sync', '-net', 'stagenet'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli global_db sync -net stagenet'] shell_cmd='cellframe-node-cli global_db sync -net stagenet'
+2025-12-15T04:45:32.900739Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:32.900898Z [info     ] Set variable 'node_name' = root-3
+2025-12-15T04:45:32.900945Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:32.900980Z [info     ] CLI: global_db sync -net stagenet
+2025-12-15T04:45:32.909473Z [info     ] exec_cli_command_debug         command_original='global_db sync -net stagenet' command_split=['global_db', 'sync', '-net', 'stagenet'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli global_db sync -net stagenet'] shell_cmd='cellframe-node-cli global_db sync -net stagenet'
+2025-12-15T04:45:32.968031Z [info     ] Step 2/4: WaitStep            
+2025-12-15T04:45:32.968195Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:45:32.968251Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:45:37.985452Z [info     ] Step 3/4: LoopStep            
+2025-12-15T04:45:37.985837Z [info     ] Starting loop: 3 iterations   
+2025-12-15T04:45:37.985957Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:37.986061Z [info     ] Set variable 'node_name' = root-1
+2025-12-15T04:45:37.986140Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:37.986219Z [info     ] CLI: mempool proc -net stagenet -chain zerochain
+2025-12-15T04:45:37.999211Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain zerochain' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'zerochain'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain zerochain'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain zerochain'
+2025-12-15T04:45:38.064892Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:38.065054Z [info     ] Set variable 'node_name' = root-2
+2025-12-15T04:45:38.065102Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:38.065139Z [info     ] CLI: mempool proc -net stagenet -chain zerochain
+2025-12-15T04:45:38.073548Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain zerochain' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'zerochain'] container=cellframe-stage-node-2 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-2', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain zerochain'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain zerochain'
+2025-12-15T04:45:38.136071Z [info     ] Step 1/2: SetStep             
+2025-12-15T04:45:38.136224Z [info     ] Set variable 'node_name' = root-3
+2025-12-15T04:45:38.136269Z [info     ] Step 2/2: CLIStep             
+2025-12-15T04:45:38.136302Z [info     ] CLI: mempool proc -net stagenet -chain zerochain
+2025-12-15T04:45:38.144092Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain zerochain' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'zerochain'] container=cellframe-stage-node-3 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-3', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain zerochain'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain zerochain'
+2025-12-15T04:45:38.195593Z [info     ] Step 4/4: WaitStep            
+2025-12-15T04:45:38.195758Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:45:38.195821Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:45:43.202317Z [info     ] Step 25/28: WaitStep          
+2025-12-15T04:45:43.202823Z [info     ] Executing WaitStep. Dump: {'wait': '10s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:45:43.203000Z [info     ] Waiting 10s (10s)             
+2025-12-15T04:45:53.210943Z [info     ] Step 26/28: StepGroup         
+2025-12-15T04:45:53.211243Z [info     ] Step 1/1: LoopStep            
+2025-12-15T04:45:53.211323Z [info     ] Starting loop: 3 iterations   
+2025-12-15T04:45:53.211389Z [info     ] Step 1/5: SetStep             
+2025-12-15T04:45:53.211457Z [info     ] Set variable 'master_idx' = 0 
+2025-12-15T04:45:53.211508Z [info     ] Step 2/5: SetStep             
+2025-12-15T04:45:53.211641Z [info     ] Set variable 'master_node' = master-1
+2025-12-15T04:45:53.211752Z [info     ] Step 3/5: SetStep             
+2025-12-15T04:45:53.211818Z [info     ] Set variable 'wallet_name' = stagenet_master_0
+2025-12-15T04:45:53.211867Z [info     ] Step 4/5: CLIStep             
+2025-12-15T04:45:53.211919Z [info     ] CLI: wallet new -w stagenet_master_0
+2025-12-15T04:45:53.223680Z [info     ] exec_cli_command_debug         command_original='wallet new -w stagenet_master_0 -net stagenet' command_split=['wallet', 'new', '-w', 'stagenet_master_0', '-net', 'stagenet'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli wallet new -w stagenet_master_0 -net stagenet'] shell_cmd='cellframe-node-cli wallet new -w stagenet_master_0 -net stagenet'
+2025-12-15T04:45:53.284152Z [info     ] Step 5/5: CLIStep             
+2025-12-15T04:45:53.284300Z [info     ] CLI: wallet info -w stagenet_master_0 -net stagenet
+2025-12-15T04:45:53.292338Z [info     ] exec_cli_command_debug         command_original='wallet info -w stagenet_master_0 -net stagenet' command_split=['wallet', 'info', '-w', 'stagenet_master_0', '-net', 'stagenet'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli wallet info -w stagenet_master_0 -net stagenet'] shell_cmd='cellframe-node-cli wallet info -w stagenet_master_0 -net stagenet'
+2025-12-15T04:45:53.348569Z [info     ] Step 1/5: SetStep             
+2025-12-15T04:45:53.348718Z [info     ] Set variable 'master_idx' = 1 
+2025-12-15T04:45:53.348763Z [info     ] Step 2/5: SetStep             
+2025-12-15T04:45:53.348795Z [info     ] Set variable 'master_node' = master-2
+2025-12-15T04:45:53.348821Z [info     ] Step 3/5: SetStep             
+2025-12-15T04:45:53.348847Z [info     ] Set variable 'wallet_name' = stagenet_master_1
+2025-12-15T04:45:53.348871Z [info     ] Step 4/5: CLIStep             
+2025-12-15T04:45:53.348922Z [info     ] CLI: wallet new -w stagenet_master_1
+2025-12-15T04:45:53.356598Z [info     ] exec_cli_command_debug         command_original='wallet new -w stagenet_master_1 -net stagenet' command_split=['wallet', 'new', '-w', 'stagenet_master_1', '-net', 'stagenet'] container=cellframe-stage-node-5 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-5', 'sh', '-c', 'cellframe-node-cli wallet new -w stagenet_master_1 -net stagenet'] shell_cmd='cellframe-node-cli wallet new -w stagenet_master_1 -net stagenet'
+2025-12-15T04:45:53.421039Z [info     ] Step 5/5: CLIStep             
+2025-12-15T04:45:53.421190Z [info     ] CLI: wallet info -w stagenet_master_1 -net stagenet
+2025-12-15T04:45:53.428864Z [info     ] exec_cli_command_debug         command_original='wallet info -w stagenet_master_1 -net stagenet' command_split=['wallet', 'info', '-w', 'stagenet_master_1', '-net', 'stagenet'] container=cellframe-stage-node-5 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-5', 'sh', '-c', 'cellframe-node-cli wallet info -w stagenet_master_1 -net stagenet'] shell_cmd='cellframe-node-cli wallet info -w stagenet_master_1 -net stagenet'
+2025-12-15T04:45:53.480071Z [info     ] Step 1/5: SetStep             
+2025-12-15T04:45:53.480225Z [info     ] Set variable 'master_idx' = 2 
+2025-12-15T04:45:53.480269Z [info     ] Step 2/5: SetStep             
+2025-12-15T04:45:53.480301Z [info     ] Set variable 'master_node' = master-3
+2025-12-15T04:45:53.480326Z [info     ] Step 3/5: SetStep             
+2025-12-15T04:45:53.480351Z [info     ] Set variable 'wallet_name' = stagenet_master_2
+2025-12-15T04:45:53.480390Z [info     ] Step 4/5: CLIStep             
+2025-12-15T04:45:53.480436Z [info     ] CLI: wallet new -w stagenet_master_2
+2025-12-15T04:45:53.488716Z [info     ] exec_cli_command_debug         command_original='wallet new -w stagenet_master_2 -net stagenet' command_split=['wallet', 'new', '-w', 'stagenet_master_2', '-net', 'stagenet'] container=cellframe-stage-node-6 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-6', 'sh', '-c', 'cellframe-node-cli wallet new -w stagenet_master_2 -net stagenet'] shell_cmd='cellframe-node-cli wallet new -w stagenet_master_2 -net stagenet'
+2025-12-15T04:45:53.566231Z [info     ] Step 5/5: CLIStep             
+2025-12-15T04:45:53.566396Z [info     ] CLI: wallet info -w stagenet_master_2 -net stagenet
+2025-12-15T04:45:53.574072Z [info     ] exec_cli_command_debug         command_original='wallet info -w stagenet_master_2 -net stagenet' command_split=['wallet', 'info', '-w', 'stagenet_master_2', '-net', 'stagenet'] container=cellframe-stage-node-6 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-6', 'sh', '-c', 'cellframe-node-cli wallet info -w stagenet_master_2 -net stagenet'] shell_cmd='cellframe-node-cli wallet info -w stagenet_master_2 -net stagenet'
+2025-12-15T04:45:53.636972Z [info     ] Step 27/28: ConfigStep ({{network_name}}/zerochain)
+2025-12-15T04:45:53.637146Z [info     ] Config: regenerating '{{network_name}}/zerochain' for nodes [1, 2, 3, 4, 5, 6] with vars ['static_genesis_event', 'is_static_genesis_event']
+2025-12-15T04:45:53.638060Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:45:53.639617Z [info     ] Regenerated zerochain.cfg for node 1
+2025-12-15T04:45:53.639853Z [info     ] Regenerated zerochain.cfg for node 2
+2025-12-15T04:45:53.640029Z [info     ] Regenerated zerochain.cfg for node 3
+2025-12-15T04:45:53.640196Z [info     ] Regenerated zerochain.cfg for node 4
+2025-12-15T04:45:53.640355Z [info     ] Regenerated zerochain.cfg for node 5
+2025-12-15T04:45:53.640515Z [info     ] Regenerated zerochain.cfg for node 6
+2025-12-15T04:45:53.640576Z [info     ] Step 28/28: ConfigStep ({{network_name}}/main)
+2025-12-15T04:45:53.640654Z [info     ] Config: regenerating '{{network_name}}/main' for nodes [1, 2, 3, 4, 5, 6] with vars ['fee_addr']
+2025-12-15T04:45:53.641536Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:45:53.643348Z [info     ] Regenerated main.cfg for node 1
+2025-12-15T04:45:53.643559Z [info     ] Regenerated main.cfg for node 2
+2025-12-15T04:45:53.643742Z [info     ] Regenerated main.cfg for node 3
+2025-12-15T04:45:53.643919Z [info     ] Regenerated main.cfg for node 4
+2025-12-15T04:45:53.644086Z [info     ] Regenerated main.cfg for node 5
+2025-12-15T04:45:53.644237Z [info     ] Regenerated main.cfg for node 6
+2025-12-15T04:45:53.644293Z [info     ] Executing check phase...      
+2025-12-15T04:45:53.644382Z [info     ] Scenario completed: 65/65 steps passed
+2025-12-15T04:45:53.644450Z [info     ] zerochain_genesis_complete     emission_hash=0xFB93EEEAA5F350 fee_addr=WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK note='Phase1 genesis completed - emission ready for Phase2 transfers' root_addrs_available=(True, True, True)
+2025-12-15T04:45:53.644531Z [info     ] creating_phase1_snapshot_after_zerochain_genesis
+2025-12-15T04:45:53.644585Z [info     ] gracefully_shutting_down_root_containers_for_phase1_snapshot
+2025-12-15T04:45:53.644660Z [info     ] graceful_shutdown_with_gdb_flush services=['node-1', 'node-2', 'node-3'] timeout=60
+2025-12-15T04:45:53.644725Z [info     ] flushing_gdb_and_syncing_filesystem_before_shutdown
+2025-12-15T04:45:53.978292Z [info     ] flushing_gdb_and_syncing_filesystem_before_shutdown
+2025-12-15T04:45:54.418848Z [info     ] sending_exit_commands_to_nodes
+2025-12-15T04:45:54.575743Z [info     ] monitoring_container_shutdown 
+2025-12-15T04:45:54.977402Z [info     ] all_nodes_stopped_gracefully   elapsed=0.4s services_count=3
+2025-12-15T04:45:54.977554Z [info     ] waiting_for_filesystem_sync   
+2025-12-15T04:45:57.999028Z [info     ] verifying_chain_files_and_configs_before_snapshot
+2025-12-15T04:45:58.000424Z [info     ] chain_files_found_before_snapshot count=1 files=['0.dchaincell'] node_id=1
+2025-12-15T04:45:58.001453Z [info     ] zerochain_config_verified_before_snapshot node_id=1 path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/configs/node1/network/stagenet/zerochain.cfg static_genesis_hash=0x5F4C4BA639B5FD
+2025-12-15T04:45:58.001869Z [info     ] chain_files_found_before_snapshot count=1 files=['0.dchaincell'] node_id=2
+2025-12-15T04:45:58.002589Z [info     ] zerochain_config_verified_before_snapshot node_id=2 path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/configs/node2/network/stagenet/zerochain.cfg static_genesis_hash=0x5F4C4BA639B5FD
+2025-12-15T04:45:58.003243Z [info     ] chain_files_found_before_snapshot count=1 files=['0.dchaincell'] node_id=3
+2025-12-15T04:45:58.003849Z [info     ] zerochain_config_verified_before_snapshot node_id=3 path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/configs/node3/network/stagenet/zerochain.cfg static_genesis_hash=0x5F4C4BA639B5FD
+2025-12-15T04:45:58.004016Z [info     ] chain_files_and_configs_verified chain_files_nodes=3 configs_nodes=3 total_nodes=3
+2025-12-15T04:45:58.004152Z [info     ] preserving_data_for_phase1_snapshot note='Squashfs snapshot captures all mounted directories automatically'
+2025-12-15T04:45:58.004251Z [info     ] creating_clean_snapshot        mode=filesystem name=phase1_zerochain_genesis
+2025-12-15T04:45:58.004359Z [info     ] creating_snapshot              mode=filesystem name=phase1_zerochain_genesis
+2025-12-15T04:45:58.004450Z [info     ] filesystem_create_start        name=phase1_zerochain_genesis
+2025-12-15T04:45:58.392020Z [info     ] filesystem_snapshotting_configs nodes=9 note='Including configs to preserve static_genesis_event'
+2025-12-15T04:45:58.815507Z [info     ] filesystem_create_complete     configs=9 name=phase1_zerochain_genesis nodes=8 size=2793605
+2025-12-15T04:45:58.815729Z [info     ] snapshot_created_successfully  name=phase1_zerochain_genesis
+2025-12-15T04:45:58.815851Z [info     ] phase1_snapshot_created        name=phase1_zerochain_genesis note='zerochain genesis and LN ready'
+2025-12-15T04:45:58.815935Z [info     ] restarting_root_containers_after_snapshot_creation
+2025-12-15T04:45:58.816028Z [info     ] starting_services              services=['node-1', 'node-2', 'node-3']
+2025-12-15T04:45:58.877954Z [info     ] removing_conflicting_containers_before_up count=3 names=['cellframe-stage-node-1', 'cellframe-stage-node-3', 'cellframe-stage-node-2']
+2025-12-15T04:46:00.525674Z [info     ] services_started              
+2025-12-15T04:46:00.525886Z [info     ] waiting_for_root_nodes_online_for_phase2
+2025-12-15T04:46:00.525960Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60.0
+2025-12-15T04:46:07.482859Z [info     ] all_nodes_online               count=3 elapsed=6.5s
+2025-12-15T04:46:07.483008Z [info     ] root_nodes_online_for_phase2  
+2025-12-15T04:46:07.483056Z [info     ] === PHASE 2: Start MASTER (ESBocs Genesis with Single Validator) ===
+2025-12-15T04:46:07.490550Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=6
+2025-12-15T04:46:07.500810Z [info     ] Loaded scenario: PHASE 2 - ESBocs Genesis from genesis/phase2_esbocs.yml
+2025-12-15T04:46:07.508818Z [info     ] phase2_initial_variables       emission_hash=0xFB93EEEAA5F350 variables=['emission_hash', 'fee_addr', 'root_addr_0', 'root_addr_1', 'root_addr_2', 'genesis_event_hash', 'token_hash']
+2025-12-15T04:46:07.508972Z [info     ] Starting scenario: PHASE 2 - ESBocs Genesis
+2025-12-15T04:46:07.509017Z [info     ] Description: Delegate keys on zerochain, create mainchain genesis block in seed mode
+2025-12-15T04:46:07.509103Z [info     ] Executing setup phase...      
+2025-12-15T04:46:07.509166Z [info     ] collecting_global_context_after_setup nodes=8
+2025-12-15T04:46:07.509240Z [info     ] global_context_waiting_for_ips containers=['cellframe-stage-node-1', 'cellframe-stage-node-2', 'cellframe-stage-node-3', 'cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-6', 'cellframe-stage-node-7', 'cellframe-stage-node-8'] count=8
+2025-12-15T04:46:07.509305Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-node-2', 'cellframe-stage-node-7', 'cellframe-stage-node-8', 'cellframe-stage-node-6', 'cellframe-stage-node-3', 'cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-1'] timeout=30.0
+2025-12-15T04:46:37.876577Z [warning  ] ip_acquisition_timeout         elapsed=30.4 pending=['cellframe-stage-node-7', 'cellframe-stage-node-8']
+2025-12-15T04:46:37.877077Z [error    ] global_context_ip_timeout      containers=['cellframe-stage-node-1', 'cellframe-stage-node-2', 'cellframe-stage-node-3', 'cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-6', 'cellframe-stage-node-7', 'cellframe-stage-node-8']
+2025-12-15T04:46:37.877273Z [warning  ] failed_to_collect_global_context error="Containers did not receive IP addresses within timeout: ['cellframe-stage-node-1', 'cellframe-stage-node-2', 'cellframe-stage-node-3', 'cellframe-stage-node-4', 'cellframe-stage-node-5', 'cellframe-stage-node-6', 'cellframe-stage-node-7', 'cellframe-stage-node-8']" note='Continuing without global context'
+2025-12-15T04:46:37.877457Z [info     ] Executing test phase...       
+2025-12-15T04:46:37.877671Z [info     ] Step 1/25: DockerOpStep       
+2025-12-15T04:46:37.877857Z [info     ] Docker operation: restart on services ['master-1', 'master-2', 'master-3']
+2025-12-15T04:46:37.877996Z [info     ] restarting_services            services=['node-4', 'node-5', 'node-6']
+2025-12-15T04:46:38.630602Z [info     ] services_restarted            
+2025-12-15T04:46:38.630768Z [info     ] ✅ Docker operation 'restart' completed
+2025-12-15T04:46:38.630828Z [info     ] Step 2/25: NetworkWaitStep    
+2025-12-15T04:46:38.630880Z [info     ] Waiting for network state: online on nodes ['master-1', 'master-2', 'master-3']
+2025-12-15T04:46:38.630958Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60
+2025-12-15T04:46:45.722461Z [info     ] all_nodes_online               count=3 elapsed=6.9s
+2025-12-15T04:46:45.722629Z [info     ] ✅ Network state 'online' achieved
+2025-12-15T04:46:45.722692Z [info     ] Step 3/25: WaitStep           
+2025-12-15T04:46:45.722752Z [info     ] Executing WaitStep. Dump: {'wait': '10s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:46:45.722816Z [info     ] Waiting 10s (10s)             
+2025-12-15T04:46:55.753257Z [info     ] Step 4/25: NetworkWaitStep    
+2025-12-15T04:46:55.753557Z [info     ] Waiting for network state: links_established on nodes ['master-1', 'master-2', 'master-3', 'root-1', 'root-2', 'root-3']
+2025-12-15T04:46:55.764799Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=6
+2025-12-15T04:46:55.764954Z [info     ] waiting_for_links_established  nodes=6 timeout=120.0
+2025-12-15T04:46:56.104356Z [info     ] all_nodes_links_established    elapsed=0.0s
+2025-12-15T04:46:56.104497Z [info     ] ✅ Network state 'links_established' achieved
+2025-12-15T04:46:56.104990Z [info     ] Step 5/25: ConfigStep (cellframe-node)
+2025-12-15T04:46:56.105076Z [info     ] Config: regenerating 'cellframe-node' for nodes [4, 5, 6] with vars ['seed_mode']
+2025-12-15T04:46:56.105940Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:46:56.107294Z [info     ] Regenerated cellframe-node.cfg for node 4
+2025-12-15T04:46:56.107541Z [info     ] Regenerated cellframe-node.cfg for node 5
+2025-12-15T04:46:56.107731Z [info     ] Regenerated cellframe-node.cfg for node 6
+2025-12-15T04:46:56.107796Z [info     ] Step 6/25: ConfigStep (stagenet/main)
+2025-12-15T04:46:56.107868Z [info     ] Config: regenerating 'stagenet/main' for nodes [4] with vars ['blocks_sign_cert']
+2025-12-15T04:46:56.109138Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:46:56.110957Z [info     ] Regenerated main.cfg for node 4
+2025-12-15T04:46:56.111057Z [info     ] Step 7/25: ConfigStep (stagenet/main)
+2025-12-15T04:46:56.111135Z [info     ] Config: regenerating 'stagenet/main' for nodes [5] with vars ['blocks_sign_cert']
+2025-12-15T04:46:56.111888Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:46:56.113890Z [info     ] Regenerated main.cfg for node 5
+2025-12-15T04:46:56.114000Z [info     ] Step 8/25: ConfigStep (stagenet/main)
+2025-12-15T04:46:56.114076Z [info     ] Config: regenerating 'stagenet/main' for nodes [6] with vars ['blocks_sign_cert']
+2025-12-15T04:46:56.114910Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T04:46:56.116795Z [info     ] Regenerated main.cfg for node 6
+2025-12-15T04:46:56.116900Z [info     ] Step 9/25: WaitStep           
+2025-12-15T04:46:56.116977Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:46:56.117040Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:46:58.979623Z [info     ] Step 10/25: DockerOpStep      
+2025-12-15T04:46:58.979879Z [info     ] Docker operation: restart on services ['master-1', 'master-2', 'master-3']
+2025-12-15T04:46:58.979972Z [info     ] restarting_services            services=['node-4', 'node-5', 'node-6']
+2025-12-15T04:46:59.620017Z [info     ] services_restarted            
+2025-12-15T04:46:59.620295Z [info     ] ✅ Docker operation 'restart' completed
+2025-12-15T04:46:59.620388Z [info     ] Step 11/25: NetworkWaitStep   
+2025-12-15T04:46:59.620449Z [info     ] Waiting for network state: online on nodes ['master-1', 'master-2', 'master-3']
+2025-12-15T04:46:59.620511Z [info     ] waiting_for_nodes_online       node_count=3 timeout=60
+2025-12-15T04:47:06.420688Z [info     ] all_nodes_online               count=3 elapsed=6.6s
+2025-12-15T04:47:06.420841Z [info     ] ✅ Network state 'online' achieved
+2025-12-15T04:47:06.420898Z [info     ] Step 12/25: WaitStep          
+2025-12-15T04:47:06.420956Z [info     ] Executing WaitStep. Dump: {'wait': 'cli_ready', 'datum': None, 'node': None, 'nodes': ['master-1', 'master-2', 'master-3'], 'network': None, 'chain': None, 'timeout': 40, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:47:06.421017Z [info     ] Waiting for condition: cli_ready
+2025-12-15T04:47:06.428793Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:47:06.490147Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-5 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-5', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:47:06.570772Z [info     ] exec_cli_command_debug         command_original='net -net stagenet get status' command_split=['net', '-net', 'stagenet', 'get', 'status'] container=cellframe-stage-node-6 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-6', 'sh', '-c', 'cellframe-node-cli net -net stagenet get status'] shell_cmd='cellframe-node-cli net -net stagenet get status'
+2025-12-15T04:47:06.641645Z [info     ] ✅ Waiter 'cli_ready' completed
+2025-12-15T04:47:06.641800Z [info     ] Step 13/25: StepGroup         
+2025-12-15T04:47:06.641865Z [info     ] Step 1/6: CLIStep             
+2025-12-15T04:47:06.641918Z [info     ] CLI: wallet info -w fee_collector
+2025-12-15T04:47:06.650055Z [info     ] exec_cli_command_debug         command_original='wallet info -w fee_collector -net stagenet' command_split=['wallet', 'info', '-w', 'fee_collector', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli wallet info -w fee_collector -net stagenet'] shell_cmd='cellframe-node-cli wallet info -w fee_collector -net stagenet'
+2025-12-15T04:47:06.730665Z [info     ] Step 2/6: CLIStep             
+2025-12-15T04:47:06.730815Z [info     ] CLI: tx_create -from_emission 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6 -value 100000.0 -to_addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -token TCELL -chain main -fee 0 -wallet_fee fee_collector
+2025-12-15T04:47:06.739464Z [info     ] exec_cli_command_debug         command_original='tx_create -from_emission 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6 -value 100000.0 -to_addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -token TCELL -chain main -fee 0 -wallet_fee fee_collector -net stagenet' command_split=['tx_create', '-from_emission', '0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6', '-value', '100000.0', '-to_addr', 'WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK', '-token', 'TCELL', '-chain', 'main', '-fee', '0', '-wallet_fee', 'fee_collector', '-net', 'stagenet'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli tx_create -from_emission 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6 -value 100000.0 -to_addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -token TCELL -chain main -fee 0 -wallet_fee fee_collector -net stagenet'] shell_cmd='cellframe-node-cli tx_create -from_emission 0xFB93EEEAA5F3505462F4E41E27B59F51C797397DF69CD96848DDD386430903A6 -value 100000.0 -to_addr WkojSeUjApyYYy5XGE3SWHycCAgDT1k5iwqDswpwM28YQuXJnwdwiEdhi2NhV2bz5d5SN8Ch3BZrjcyazuhoj79pQjVLc8p9xt1bBNEK -token TCELL -chain main -fee 0 -wallet_fee fee_collector -net stagenet'
+2025-12-15T04:47:06.802385Z [info     ] Step 3/6: WaitStep            
+2025-12-15T04:47:06.802551Z [info     ] Executing WaitStep. Dump: {'wait': '5s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:47:06.802604Z [info     ] Waiting 5s (5s)               
+2025-12-15T04:47:11.826264Z [info     ] Step 4/6: CLIStep             
+2025-12-15T04:47:11.826872Z [info     ] CLI: mempool proc -net stagenet -chain main -datum 0x798AFEBDC24744581F19E184D5A462A0801DE38BFA2AB1368E64C3DE6F1E8FEE
+2025-12-15T04:47:11.840188Z [info     ] exec_cli_command_debug         command_original='mempool proc -net stagenet -chain main -datum 0x798AFEBDC24744581F19E184D5A462A0801DE38BFA2AB1368E64C3DE6F1E8FEE' command_split=['mempool', 'proc', '-net', 'stagenet', '-chain', 'main', '-datum', '0x798AFEBDC24744581F19E184D5A462A0801DE38BFA2AB1368E64C3DE6F1E8FEE'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli mempool proc -net stagenet -chain main -datum 0x798AFEBDC24744581F19E184D5A462A0801DE38BFA2AB1368E64C3DE6F1E8FEE'] shell_cmd='cellframe-node-cli mempool proc -net stagenet -chain main -datum 0x798AFEBDC24744581F19E184D5A462A0801DE38BFA2AB1368E64C3DE6F1E8FEE'
+2025-12-15T04:47:11.909860Z [info     ] Step 5/6: WaitStep            
+2025-12-15T04:47:11.910022Z [info     ] Executing WaitStep. Dump: {'wait': '60s', 'datum': None, 'node': None, 'nodes': None, 'network': None, 'chain': None, 'timeout': 60, 'wallet': None, 'token': None, 'balance': None, 'check_master': True, 'expected_count': None}
+2025-12-15T04:47:11.910081Z [info     ] Waiting 60s (60s)             
+2025-12-15T04:48:07.715473Z [info     ] Step 6/6: CLIStep             
+2025-12-15T04:48:07.715829Z [info     ] CLI: block list -net stagenet -chain main
+2025-12-15T04:48:07.728578Z [info     ] exec_cli_command_debug         command_original='block list -net stagenet -chain main' command_split=['block', 'list', '-net', 'stagenet', '-chain', 'main'] container=cellframe-stage-node-4 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-4', 'sh', '-c', 'cellframe-node-cli block list -net stagenet -chain main'] shell_cmd='cellframe-node-cli block list -net stagenet -chain main'
+2025-12-15T04:48:07.789589Z [info     ] Step 14/25: CLIStep           
+2025-12-15T04:48:07.789751Z [info     ] CLI: block list -net stagenet -chain main
+2025-12-15T04:48:07.797872Z [info     ] exec_cli_command_debug         command_original='block list -net stagenet -chain main' command_split=['block', 'list', '-net', 'stagenet', '-chain', 'main'] container=cellframe-stage-node-1 full_cmd_list=['docker', 'exec', 'cellframe-stage-node-1', 'sh', '-c', 'cellframe-node-cli block list -net stagenet -chain main'] shell_cmd='cellframe-node-cli block list -net stagenet -chain main'
+2025-12-15T04:48:07.856463Z [error    ] hash_extraction_failed         command='block list -net stagenet -chain main' error='Pattern \'(?:New:\\s+|hash["\\\']?\\s*:\\s*["\\\']?|datum_hash["\\\']?\\s*:\\s*["\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\' not found in output (searched 106 characters)' output_preview='    \n        \n            limit: unlimit\n\n\n    \n        stagenet.main with filter - none, have blocks: 0\n\n' variable=genesis_block_hash
+2025-12-15T04:48:07.857936Z [error    ] master_nodes_genesis_failed    error='Failed to extract hash from output: Pattern \'(?:New:\\s+|hash["\\\']?\\s*:\\s*["\\\']?|datum_hash["\\\']?\\s*:\\s*["\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\' not found in output (searched 106 characters)\nStep: block list -net stagenet -chain main\nContext: {\'output\': \'    \\n        \\n            limit: unlimit\\n\\n\\n    \\n        stagenet.main with filter - none, have blocks: 0\\n\\n\', \'pattern\': \'(?:New:\\\\s+|hash["\\\\\\\']?\\\\s*:\\\\s*["\\\\\\\']?|datum_hash["\\\\\\\']?\\\\s*:\\\\s*["\\\\\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\'}' traceback='Traceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/cli.py", line 131, in execute\n    hash_value, error = DataExtractor.extract_and_validate(\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/extractors.py", line 177, in extract_and_validate\n    raise ExtractionError(error_msg)\nsrc.scenarios.extractors.ExtractionError: Pattern \'(?:New:\\s+|hash["\\\']?\\s*:\\s*["\\\']?|datum_hash["\\\']?\\s*:\\s*["\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\' not found in output (searched 106 characters)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/network/manager.py", line 1034, in start\n    ctx = await executor.execute_scenario(\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 511, in execute_scenario\n    await self._execute_steps(scenario.test.steps, ctx, section_defaults)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 589, in _execute_steps\n    await self.cli_executor.execute(step, ctx, defaults)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/cli.py", line 144, in execute\n    raise ScenarioExecutionError(\nsrc.scenarios.executor.ScenarioExecutionError: Failed to extract hash from output: Pattern \'(?:New:\\s+|hash["\\\']?\\s*:\\s*["\\\']?|datum_hash["\\\']?\\s*:\\s*["\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\' not found in output (searched 106 characters)\nStep: block list -net stagenet -chain main\nContext: {\'output\': \'    \\n        \\n            limit: unlimit\\n\\n\\n    \\n        stagenet.main with filter - none, have blocks: 0\\n\\n\', \'pattern\': \'(?:New:\\\\s+|hash["\\\\\\\']?\\\\s*:\\\\s*["\\\\\\\']?|datum_hash["\\\\\\\']?\\\\s*:\\\\s*["\\\\\\\']?)?(?<!Old: )(0x[A-Fa-f0-9]{64})\'}\n'
+2025-12-15T04:48:07.928645Z [info     ] Dumped log for cellframe-stage-node-3 to /tmp/cellframe-stage-node-3.log
+2025-12-15T04:48:07.937681Z [info     ] Dumped log for cellframe-stage-node-1 to /tmp/cellframe-stage-node-1.log
+2025-12-15T04:48:07.946768Z [info     ] Dumped log for cellframe-stage-node-2 to /tmp/cellframe-stage-node-2.log
+2025-12-15T04:48:07.957589Z [info     ] Dumped log for cellframe-stage-node-5 to /tmp/cellframe-stage-node-5.log
+2025-12-15T04:48:07.968151Z [info     ] Dumped log for cellframe-stage-node-6 to /tmp/cellframe-stage-node-6.log
+2025-12-15T04:48:07.978286Z [info     ] Dumped log for cellframe-stage-node-4 to /tmp/cellframe-stage-node-4.log
+2025-12-15T04:48:07.978474Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-15T04:48:09.162426Z [info     ] services_stopped              

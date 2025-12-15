@@ -9,9 +9,9 @@
 #   ./tests/run.sh --clean             # Clean before running
 #
 
-set -e
+set -euo pipefail
 
-# Colors
+# Colors (optional; keep output ASCII-safe)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -20,19 +20,19 @@ NC='\033[0m' # No Color
 
 # Helper functions
 info() {
-    echo -e "${BLUE}ℹ${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 success() {
-    echo -e "${GREEN}✓${NC} $1"
+    echo -e "${GREEN}[ OK ]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}✗${NC} $1" >&2
+    echo -e "${RED}[ERR ]${NC} $1" >&2
 }
 
 warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
 # Directories
@@ -40,11 +40,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
 STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
+TESTNET_DOCKER_DIR="$PROJECT_ROOT/../../tests-in-docker"
+TESTNET_DOCKER_SCRIPT="$TESTNET_DOCKER_DIR/testnet.sh"
 
 # Test directories
-STAGE_ENV_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/base"
+E2E_TESTS="$SCRIPT_DIR/e2e"
+STAGE_ENV_INTEGRATION_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/integration/scenarios/base"
 FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
-SCENARIOS_TESTS="$SCRIPT_DIR/scenarios"
 
 # Build directories
 TEST_BUILD_DIR="$PROJECT_ROOT/test_build"
@@ -53,6 +55,9 @@ TEST_BUILD_DIR="$PROJECT_ROOT/test_build"
 RUN_E2E=false
 RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
+KEEP_RUNNING=false
+BACKEND="stage-env" # stage-env | docker
+PACKAGE_ARG=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -68,6 +73,18 @@ while [[ $# -gt 0 ]]; do
             CLEAN_BEFORE=true
             shift
             ;;
+        --keep-running)
+            KEEP_RUNNING=true
+            shift
+            ;;
+        --backend)
+            BACKEND="${2:-}"
+            shift 2
+            ;;
+        --package)
+            PACKAGE_ARG="${2:-}"
+            shift 2
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -75,6 +92,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
             echo "  --clean         Clean before running"
+            echo "  --keep-running  Do not stop the network after tests"
+            echo "  --backend ARG   stage-env (default) or docker"
+            echo "  --package ARG   Node package URL or path (docker backend)"
             echo "  -h, --help      Show this help message"
             echo ""
             echo "If no test type specified, all tests will run."
@@ -86,6 +106,15 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Validate backend
+case "$BACKEND" in
+    stage-env|docker) ;;
+    *)
+        error "Unsupported backend: $BACKEND (expected: stage-env or docker)"
+        exit 1
+        ;;
+esac
 
 # If neither specified, run both
 if ! $RUN_E2E && ! $RUN_FUNCTIONAL; then
@@ -112,6 +141,7 @@ fi
 success "Prerequisites OK"
 
 # Detect if running in cellframe-node repository and build local package
+DEB_PACKAGE=""
 if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_ROOT/CMakeLists.txt"; then
     info "Detected cellframe-node repository - building local package..."
     
@@ -185,12 +215,26 @@ else
     info "Not in cellframe-node repository - using configured node source"
 fi
 
+# If docker backend is used and no explicit package is provided,
+# prefer the locally built package when available.
+if [[ "$BACKEND" == "docker" ]]; then
+    if [[ -z "$PACKAGE_ARG" && -n "${DEB_PACKAGE:-}" ]]; then
+        PACKAGE_ARG="$DEB_PACKAGE"
+    fi
+fi
+
 # Clean if requested
 if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
-    if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        "$STAGE_ENV_WRAPPER" clean --all || true
+    if [[ "$BACKEND" == "stage-env" ]]; then
+        if [ -x "$STAGE_ENV_WRAPPER" ]; then
+            "$STAGE_ENV_WRAPPER" clean --all || true
+        fi
+    else
+        if [ -x "$TESTNET_DOCKER_DIR/clean.sh" ]; then
+            "$TESTNET_DOCKER_DIR/clean.sh" || true
+        fi
     fi
     
     success "Environment cleaned"
@@ -200,90 +244,104 @@ fi
 E2E_EXIT=0
 FUNCTIONAL_EXIT=0
 
-# Run E2E tests
-if $RUN_E2E; then
+# Docker backend: delegate to the known-good integration script.
+# It starts the network and performs its own checks.
+if [[ "$BACKEND" == "docker" ]]; then
     echo ""
     info "═══════════════════════════════════"
-    info "Running E2E Tests"
+    info "Docker backend (tests-in-docker/testnet.sh)"
     info "═══════════════════════════════════"
     echo ""
     
-    if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
-        error "stage-env wrapper not found or not executable"
-        E2E_EXIT=1
-    else
-        # Start stage environment with config
-        info "Starting stage environment..."
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait || E2E_EXIT=$?
-        
-        if [ $E2E_EXIT -eq 0 ]; then
-            success "Stage environment started"
-            
-            # Collect E2E test directories
-            TEST_DIRS=()
-            
-            # Add stage-env base tests
-            if [ -d "$STAGE_ENV_BASE_TESTS" ]; then
-                TEST_DIRS+=("$STAGE_ENV_BASE_TESTS")
-            fi
-            
-            # Add scenarios tests if exist
-            if [ -d "$SCENARIOS_TESTS" ]; then
-                TEST_DIRS+=("$SCENARIOS_TESTS")
-            fi
-            
-            # Run E2E tests through stage-env
-            if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-                info "Running E2E test scenarios..."
-                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || E2E_EXIT=$?
-            else
-                warning "No E2E test directories found"
-                info "Expected: $SCENARIOS_TESTS (YAML scenarios - phase 14.5.8)"
-            fi
-            
-            # Stop environment
-            info "Stopping stage environment..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
-            success "Stage environment stopped"
-        else
-            error "Failed to start stage environment"
+    if [ ! -x "$TESTNET_DOCKER_SCRIPT" ]; then
+        error "testnet.sh not found or not executable at: $TESTNET_DOCKER_SCRIPT"
+        exit 1
+    fi
+    
+    if [[ -n "$PACKAGE_ARG" ]]; then
+        if [[ -f "$PACKAGE_ARG" ]]; then
+            # testnet.sh accepts only files from its local debs/ directory.
+            mkdir -p "$TESTNET_DOCKER_DIR/debs"
+            cp -f "$PACKAGE_ARG" "$TESTNET_DOCKER_DIR/debs/"
+            PACKAGE_ARG="$(basename "$PACKAGE_ARG")"
         fi
+        info "Starting docker testnet with package: $PACKAGE_ARG"
+        (cd "$TESTNET_DOCKER_DIR" && bash "./testnet.sh" "$PACKAGE_ARG")
+    else
+        info "Starting docker testnet with default package (master/latest)"
+        (cd "$TESTNET_DOCKER_DIR" && bash "./testnet.sh")
+    fi
+    
+    success "Docker testnet script finished successfully"
+    exit 0
+fi
+
+# stage-env backend: start network once, run selected suites, then stop (unless --keep-running).
+if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
+    error "stage-env wrapper not found or not executable at: $STAGE_ENV_WRAPPER"
+    exit 1
+fi
+
+echo ""
+info "═══════════════════════════════════"
+info "stage-env backend"
+info "═══════════════════════════════════"
+echo ""
+
+info "Starting stage environment..."
+if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait; then
+    success "Stage environment started"
+else
+    error "Failed to start stage environment"
+    exit 1
+fi
+
+# Run E2E tests
+if $RUN_E2E; then
+    echo ""
+    info "Running E2E Tests..."
+    
+    TEST_DIRS=()
+    if [ -d "$E2E_TESTS" ]; then
+        TEST_DIRS+=("$E2E_TESTS")
+    fi
+    if [ -d "$STAGE_ENV_INTEGRATION_BASE_TESTS" ]; then
+        TEST_DIRS+=("$STAGE_ENV_INTEGRATION_BASE_TESTS")
+    fi
+    
+    if [ ${#TEST_DIRS[@]} -gt 0 ]; then
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $([[ "$KEEP_RUNNING" == "true" ]] && echo "--keep-running") || E2E_EXIT=$?
+    else
+        warning "No E2E test directories found"
+        E2E_EXIT=1
     fi
 fi
 
 # Run functional tests
 if $RUN_FUNCTIONAL; then
     echo ""
-    info "═══════════════════════════════════"
-    info "Running Functional Tests"
-    info "═══════════════════════════════════"
-    echo ""
+    info "Running Functional Tests..."
     
-    if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
-        error "stage-env wrapper not found or not executable"
-        FUNCTIONAL_EXIT=1
-    else
-        # Collect functional test directories
-        TEST_DIRS=()
-        
-        if [ -d "$FUNCTIONAL_TESTS" ]; then
-            TEST_DIRS+=("$FUNCTIONAL_TESTS")
-        fi
-        
-        # Run functional tests through stage-env
-        if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-            info "Running functional test scenarios..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests "${TEST_DIRS[@]}" || FUNCTIONAL_EXIT=$?
-            
-            if [ $FUNCTIONAL_EXIT -eq 0 ]; then
-                success "Functional tests passed"
-            else
-                error "Functional tests failed"
-            fi
-        else
-            warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
-        fi
+    TEST_DIRS=()
+    if [ -d "$FUNCTIONAL_TESTS" ]; then
+        TEST_DIRS+=("$FUNCTIONAL_TESTS")
     fi
+    
+    if [ ${#TEST_DIRS[@]} -gt 0 ]; then
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $([[ "$KEEP_RUNNING" == "true" ]] && echo "--keep-running") || FUNCTIONAL_EXIT=$?
+    else
+        warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
+        FUNCTIONAL_EXIT=1
+    fi
+fi
+
+# Stop environment (unless --keep-running)
+if [[ "$KEEP_RUNNING" == "true" ]]; then
+    warning "Keeping stage environment running (--keep-running)"
+else
+    info "Stopping stage environment..."
+    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
+    success "Stage environment stopped"
 fi
 
 # Summary

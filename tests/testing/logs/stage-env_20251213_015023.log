@@ -1,0 +1,13 @@
+2025-12-12T18:50:23.463848Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251213_015023.log
+2025-12-12T18:50:23.531792Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/certs docker_mode=True
+2025-12-12T18:50:23.531922Z [info     ] cleaning_certificates         
+• Removing certificates...
+✓ Certificates cleaned
+2025-12-12T18:50:23.533836Z [info     ] certificates_cleaned          
+2025-12-12T18:50:23.558199Z [info     ] docker_connected               version=28.5.1
+2025-12-12T18:50:23.564377Z [info     ] filesystem_mode_initialized    rsync_available=True snapshots_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/snapshots
+2025-12-12T18:50:23.564496Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'filesystem', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'full', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots'} mode=filesystem
+2025-12-12T18:50:23.564725Z [info     ] deleting_snapshot              name=phase1_zerochain_genesis
+2025-12-12T18:50:23.570023Z [info     ] filesystem_snapshot_deleted    name=phase1_zerochain_genesis
+2025-12-12T18:50:23.570136Z [info     ] snapshot_deleted_successfully  name=phase1_zerochain_genesis
+2025-12-12T18:50:27.440801Z [warning  ] pid_file_mismatch              action=not_removing file_pid=17580 our_pid=23037

@@ -1,0 +1,109 @@
+2025-12-14T06:02:52.041595Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251214_130252.log
+2025-12-14T06:02:52.225398Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-14T06:02:52.226699Z [info     ] loading_topology_from_template topology=default
+2025-12-14T06:02:52.227090Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-14T06:02:52.232783Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-14T06:02:52.251385Z [info     ] docker_connected               version=28.5.1
+2025-12-14T06:02:52.391155Z [info     ] genesis_initializer_created    network=stagenet
+2025-12-14T06:02:52.400096Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-14T06:02:52.417471Z [info     ] filesystem_mode_initialized    rsync_available=True snapshots_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/snapshots
+2025-12-14T06:02:52.417633Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'filesystem', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'full', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots', 'cache_dir': 'cache'} mode=filesystem
+2025-12-14T06:02:52.418181Z [info     ] network_manager_initialized    cache_dir=cache network=stagenet snapshot_mode=filesystem timeouts={'startup': 600, 'health_check': 600, 'command': 30} topology=default
+2025-12-14T06:02:52.418451Z [info     ] starting_network               rebuild=False topology=default
+2025-12-14T06:02:52.418573Z [info     ] stopping_previous_environment 
+2025-12-14T06:02:52.418631Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-14T06:02:52.488679Z [info     ] services_stopped              
+2025-12-14T06:02:52.488822Z [info     ] previous_environment_stopped  
+2025-12-14T06:02:52.488875Z [info     ] cleanup_stale_resources        project=cellframe-stage
+2025-12-14T06:02:52.499439Z [info     ] cleanup_completed             
+2025-12-14T06:02:52.499613Z [info     ] phase1_snapshot_found_restoring mode=filesystem name=phase1_zerochain_genesis
+2025-12-14T06:02:52.499688Z [info     ] restoring_snapshot             mode=filesystem name=phase1_zerochain_genesis
+2025-12-14T06:02:52.499741Z [info     ] filesystem_restore_start       name=phase1_zerochain_genesis
+2025-12-14T06:02:52.656431Z [error    ] filesystem_restore_failed      error='rsync failed: rsync: [generator] chgrp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/lib/global_db" failed: Operation not permitted (1)\nrsync: [generator] chgrp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/lib/global_db/gdb-mdbx" failed: Operation not permitted (1)\nrsync: [generator] chgrp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/log" failed: Operation not permitted (1)\nrsync: [generator] chgrp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/run" failed: Operation not permitted (1)\nrsync: [generator] chgrp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/run/node_cli" failed: Operation not permitted (1)\nrsync: [receiver] mkstemp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/log/.cellframe-node.log.jWUcrp" failed: Permission denied (13)\nrsync: [receiver] mkstemp "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data/node4/run/.cellframe-node.pid.UpCLy2" failed: Permission denied (13)\nrsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1338) [sender=3.2.7]\n' name=phase1_zerochain_genesis
+2025-12-14T06:02:52.656675Z [error    ] snapshot_restore_failed        name=phase1_zerochain_genesis
+2025-12-14T06:02:52.656738Z [warning  ] phase1_snapshot_restore_failed_fallback_to_clean name=phase1_zerochain_genesis
+2025-12-14T06:02:52.656790Z [info     ] cleaning_node_data_after_snapshot_restore_failed
+2025-12-14T06:02:52.656911Z [info     ] removing_node_data_directories path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-14T06:02:52.656985Z [info     ] cleaning_cache_data_with_docker path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-14T06:02:53.146504Z [info     ] cache_data_cleaned             output='Cleanup complete'
+2025-12-14T06:02:53.146675Z [info     ] node_data_removed             
+2025-12-14T06:02:53.146979Z [info     ] node_data_cleaned_and_recreated nodes=0
+2025-12-14T06:02:53.147059Z [info     ] generating_node_configs       
+2025-12-14T06:02:53.147200Z [info     ] node_configs_generated         count=7 seed_nodes=3 validators=3
+2025-12-14T06:02:53.147276Z [info     ] generating_configs_and_certs  
+2025-12-14T06:02:53.147328Z [info     ] generating_configurations      force=False network=stagenet nodes=7
+2025-12-14T06:02:53.149325Z [info     ] generating_certificates        count=7 force=False
+2025-12-14T06:02:53.149469Z [info     ] generating_all_certificates    method=docker network=stagenet nodes=7 validators=3
+• Generating 7 node certificates using Docker...
+2025-12-14T06:02:53.178507Z [info     ] calling_docker_cert_generator  image=cf-cert-generator:latest network_id=0x1234 network_name=stagenet node_count=7 output_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs
+2025-12-14T06:02:53.629743Z [info     ] cert_generator_docker_output   stdout=
+✓ Generated 7 node + 0 validator certificates
+2025-12-14T06:02:53.630921Z [info     ] all_certificates_generated     nodes=7 validators=0
+2025-12-14T06:02:53.633029Z [info     ] organizing_validator_certificates
+2025-12-14T06:02:53.634114Z [info     ] copying_all_private_certs_to_root1_for_centralized_genesis
+2025-12-14T06:02:53.634316Z [info     ] all_private_certs_copied_to_root1 additional_certs=2 note='root-1 can now perform centralized genesis with threshold consensus' own_cert=1 total_pvt_certs=3
+2025-12-14T06:02:53.634814Z [info     ] distributing_public_certs_to_all_nodes network=stagenet total_nodes=7
+2025-12-14T06:02:53.635201Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=1 root_certs=3
+2025-12-14T06:02:53.635621Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=2 root_certs=3
+2025-12-14T06:02:53.635991Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=3 root_certs=3
+2025-12-14T06:02:53.636382Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=4 root_certs=3
+2025-12-14T06:02:53.636772Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=5 root_certs=3
+2025-12-14T06:02:53.637132Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=6 root_certs=3
+2025-12-14T06:02:53.637484Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=7 root_certs=3
+2025-12-14T06:02:53.637536Z [info     ] certificates_generated         count=7
+2025-12-14T06:02:53.642141Z [info     ] validator_addresses_collected  addresses=[F2BE::8696::1D42::5985,5202::D368::BB92::72AA,F92... count=3
+2025-12-14T06:02:53.642348Z [info     ] root_node_addresses_collected  addresses=[A356::1E30::07CC::8351,7381::74D7::BDFA::02D2,BE9... count=3
+2025-12-14T06:02:53.642481Z [info     ] validator_addresses_collected  addresses=[F2BE::8696::1D42::5985,5202::D368::BB92::72AA,F92... count=3
+2025-12-14T06:02:53.642595Z [info     ] mainchain_validators_configured master_validators_count=3 min_validators_count=2 note='Using master node addresses in validators_addrs for mainchain'
+2025-12-14T06:02:53.642999Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
+2025-12-14T06:02:53.647571Z [info     ] configurations_generated       network=stagenet nodes=7
+2025-12-14T06:02:53.647685Z [info     ] generating_docker_compose     
+2025-12-14T06:02:53.648227Z [info     ] generating_compose_file        build_type=debug cache_dir=cache node_count=7 node_source_type=url
+2025-12-14T06:02:53.673589Z [info     ] compose_file_generated         path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml services=7
+2025-12-14T06:02:53.673761Z [info     ] node_distribution              full=1 master=3 root=3
+2025-12-14T06:02:53.673829Z [info     ] === PHASE 1: ROOT Nodes Startup (DAG-PoA Genesis) ===
+2025-12-14T06:02:53.682158Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=3
+2025-12-14T06:02:53.700103Z [info     ] Loaded scenario: PHASE 1 - Zerochain Genesis from genesis/phase1_zerochain.yml
+2025-12-14T06:02:53.714124Z [info     ] executing_phase1_scenario     
+2025-12-14T06:02:53.714282Z [info     ] Starting scenario: PHASE 1 - Zerochain Genesis
+2025-12-14T06:02:53.714339Z [info     ] Description: Initialize ROOT nodes, create token and emission
+2025-12-14T06:02:53.714425Z [info     ] Executing setup phase...      
+2025-12-14T06:02:53.714499Z [info     ] Step 1/4: ConfigStep (cellframe-node)
+2025-12-14T06:02:53.714747Z [info     ] Config: regenerating 'cellframe-node' for nodes [0, 1, 2] with vars ['seed_mode']
+2025-12-14T06:02:53.715730Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-14T06:02:53.716797Z [warning  ] Target config file /home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/configs/node0/cellframe-node.cfg does not exist, skipping regeneration for node 0
+2025-12-14T06:02:53.717091Z [info     ] Regenerated cellframe-node.cfg for node 1
+2025-12-14T06:02:53.717312Z [info     ] Regenerated cellframe-node.cfg for node 2
+2025-12-14T06:02:53.717387Z [info     ] Step 2/4: DockerOpStep        
+2025-12-14T06:02:53.717459Z [info     ] Docker operation: start on services ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3']
+2025-12-14T06:02:53.717526Z [info     ] starting_services              services=['root-0', 'root-1', 'root-2', 'master-0', 'master-1', 'master-2']
+2025-12-14T06:02:54.398966Z [info     ] services_started              
+2025-12-14T06:02:54.399647Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-root-0', 'cellframe-stage-root-1', 'cellframe-stage-root-2', 'cellframe-stage-master-0', 'cellframe-stage-master-1', 'cellframe-stage-master-2']
+2025-12-14T06:02:54.399792Z [info     ] waiting_for_container_ips      containers=['cellframe-stage-root-0', 'cellframe-stage-root-2', 'cellframe-stage-master-1', 'cellframe-stage-master-2', 'cellframe-stage-master-0', 'cellframe-stage-root-1'] timeout=30.0
+2025-12-14T06:02:54.433434Z [info     ] all_containers_have_ips        count=6 elapsed=0.0
+2025-12-14T06:02:54.433587Z [info     ] ✅ All containers have IP addresses count=6
+2025-12-14T06:02:54.433651Z [info     ] ✅ Docker operation 'start' completed
+2025-12-14T06:02:54.433722Z [info     ] Step 3/4: NetworkWaitStep     
+2025-12-14T06:02:54.433809Z [info     ] Waiting for network state: online on nodes ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3']
+2025-12-14T06:02:54.461518Z [info     ] waiting_for_nodes_online       node_count=6 timeout=60
+2025-12-14T06:03:02.205165Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.208017Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.210853Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=2 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.213313Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.216145Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=4 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.218881Z [info     ] node_state_check_during_wait   elapsed=10.1s node_id=5 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:02.219009Z [info     ] nodes_online_progress          elapsed=10.1s online=0 total=6
+2025-12-14T06:03:12.339531Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.342299Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.345494Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=2 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.348073Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.350804Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=4 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.353465Z [info     ] node_state_check_during_wait   elapsed=20.2s node_id=5 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:12.353583Z [info     ] nodes_online_progress          elapsed=20.2s online=0 total=6
+2025-12-14T06:03:22.474166Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.477489Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=1 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.480468Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=2 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.483682Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=8 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.486339Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=4 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.488868Z [info     ] node_state_check_during_wait   elapsed=30.4s node_id=5 note='Waiting for node to reach ONLINE state' state=UNKNOWN
+2025-12-14T06:03:22.488972Z [info     ] nodes_online_progress          elapsed=30.4s online=0 total=6

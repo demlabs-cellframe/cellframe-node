@@ -1,0 +1,10 @@
+2025-12-15T17:12:08.207937Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251216_001208.log
+2025-12-15T17:12:08.281063Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-15T17:12:08.281203Z [info     ] cleaning_certificates         
+• Removing certificates...
+✓ Certificates cleaned
+2025-12-15T17:12:08.283989Z [info     ] certificates_cleaned          
+2025-12-15T17:12:08.308330Z [info     ] docker_connected               version=28.5.1
+2025-12-15T17:12:14.129379Z [info     ] cleaning_cache_data_with_docker path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/data
+2025-12-15T17:12:14.520809Z [info     ] cache_data_cleaned             output='Cleanup complete'
+2025-12-15T17:12:14.521726Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'disabled', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'full', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots'} mode=disabled

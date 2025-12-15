@@ -1,0 +1,6 @@
+2025-12-13T04:44:26.669913Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251213_114426.log
+2025-12-13T04:44:26.736923Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
+2025-12-13T04:44:26.737075Z [info     ] cleaning_certificates         
+• Removing certificates...
+✓ Certificates cleaned
+2025-12-13T04:44:26.739702Z [info     ] certificates_cleaned          

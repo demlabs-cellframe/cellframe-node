@@ -1,0 +1,84 @@
+2025-12-12T07:05:19.073477Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251212_140519.log
+2025-12-12T07:05:19.209612Z [info     ] loading_topology_from_template topology=default
+2025-12-12T07:05:19.210092Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env.cfg
+2025-12-12T07:05:19.214943Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/certs docker_mode=True
+2025-12-12T07:05:19.230742Z [info     ] docker_connected               version=28.5.1
+2025-12-12T07:05:19.346133Z [info     ] genesis_initializer_created    network=stagenet
+2025-12-12T07:05:19.353835Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
+2025-12-12T07:05:19.355980Z [info     ] squashfs_mode_initialized      compression=none overlayfs_available=True tools_available=True
+2025-12-12T07:05:19.356086Z [info     ] snapshot_manager_initialized   base_path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env config={'mode': 'squashfs', 'squashfs_compression': 'none', 'auto_create_on_startup': True, 'snapshot_name': 'clean_state', 'genesis_stage': 'none', 'phase1_snapshot_name': 'phase1_zerochain_genesis', 'auto_cleanup': True, 'keep_snapshot_count': 5, 'snapshots_dir': '../testing/snapshots', 'cache_dir': '../testing/cache'} mode=squashfs
+2025-12-12T07:05:19.356380Z [info     ] network_manager_initialized    cache_dir=../testing/cache network=stagenet snapshot_mode=squashfs timeouts={'startup': 600, 'health_check': 600, 'command': 30} topology=default
+2025-12-12T07:05:19.356617Z [info     ] starting_network               rebuild=False topology=default
+2025-12-12T07:05:19.356696Z [info     ] stopping_previous_environment 
+2025-12-12T07:05:19.356750Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-12T07:05:19.417621Z [info     ] services_stopped              
+2025-12-12T07:05:19.417757Z [info     ] previous_environment_stopped  
+2025-12-12T07:05:19.417806Z [info     ] cleanup_stale_resources        project=cellframe-stage
+2025-12-12T07:05:19.427016Z [info     ] cleanup_completed             
+2025-12-12T07:05:19.427194Z [info     ] no_phase1_snapshot_cleaning_data_for_fresh_start name=phase1_zerochain_genesis
+2025-12-12T07:05:19.427260Z [info     ] cleaning_node_data_after_stop 
+2025-12-12T07:05:19.427361Z [info     ] removing_node_data_directories path=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/data
+2025-12-12T07:05:19.427434Z [info     ] cleaning_cache_data_with_docker path=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/data
+2025-12-12T07:05:24.724046Z [info     ] cache_data_cleaned             output='Cleanup complete'
+2025-12-12T07:05:24.724194Z [info     ] node_data_removed             
+2025-12-12T07:05:24.724407Z [info     ] node_data_cleaned_and_recreated nodes=0
+2025-12-12T07:05:24.724486Z [info     ] generating_node_configs       
+2025-12-12T07:05:24.724594Z [info     ] node_configs_generated         count=8 seed_nodes=3 validators=3
+2025-12-12T07:05:24.724667Z [info     ] generating_configs_and_certs  
+2025-12-12T07:05:24.724717Z [info     ] generating_configurations      force=False network=stagenet nodes=8
+2025-12-12T07:05:24.726759Z [info     ] generating_certificates        count=8 force=False
+2025-12-12T07:05:24.726895Z [info     ] generating_all_certificates    method=docker network=stagenet nodes=8 validators=3
+• Generating 8 node certificates using Docker...
+2025-12-12T07:05:24.740808Z [info     ] building_cert_generator_image 
+• Building certificate generator Docker image...
+✓ Certificate generator image built
+2025-12-12T07:05:56.693069Z [info     ] cert_generator_image_built    
+2025-12-12T07:05:56.693200Z [info     ] calling_docker_cert_generator  image=cf-cert-generator:latest network_id=0x1234 network_name=stagenet node_count=8 output_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/certs
+2025-12-12T07:05:57.096341Z [info     ] cert_generator_docker_output   stdout=
+✓ Generated 8 node + 0 validator certificates
+2025-12-12T07:05:57.097307Z [info     ] all_certificates_generated     nodes=8 validators=0
+2025-12-12T07:05:57.099490Z [info     ] organizing_validator_certificates
+2025-12-12T07:05:57.100758Z [info     ] copying_all_private_certs_to_root1_for_centralized_genesis
+2025-12-12T07:05:57.100948Z [info     ] all_private_certs_copied_to_root1 additional_certs=2 note='root-1 can now perform centralized genesis with threshold consensus' own_cert=1 total_pvt_certs=3
+2025-12-12T07:05:57.101360Z [info     ] distributing_public_certs_to_all_nodes network=stagenet total_nodes=8
+2025-12-12T07:05:57.101735Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=1 root_certs=3
+2025-12-12T07:05:57.102069Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=2 root_certs=3
+2025-12-12T07:05:57.102401Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=3 root_certs=3
+2025-12-12T07:05:57.102727Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=4 root_certs=3
+2025-12-12T07:05:57.103099Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=5 root_certs=3
+2025-12-12T07:05:57.103454Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=6 root_certs=3
+2025-12-12T07:05:57.103801Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=7 root_certs=3
+2025-12-12T07:05:57.104140Z [info     ] public_certs_distributed_to_node master_certs=3 node_id=8 root_certs=3
+2025-12-12T07:05:57.104191Z [info     ] certificates_generated         count=8
+2025-12-12T07:05:57.109193Z [info     ] validator_addresses_collected  addresses=[6EB4::AD91::018E::BA55,418D::6B7E::761C::DE65,4B5... count=3
+2025-12-12T07:05:57.109387Z [info     ] root_node_addresses_collected  addresses=[209E::EF51::63E2::E67C,389D::BA9E::ABE9::DFF1,DC6... count=3
+2025-12-12T07:05:57.109517Z [info     ] validator_addresses_collected  addresses=[6EB4::AD91::018E::BA55,418D::6B7E::761C::DE65,4B5... count=3
+2025-12-12T07:05:57.109577Z [info     ] mainchain_validators_configured master_validators_count=3 min_validators_count=2 note='Using master node addresses in validators_addrs for mainchain'
+2025-12-12T07:05:57.109981Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env.cfg
+2025-12-12T07:05:57.115697Z [info     ] configurations_generated       network=stagenet nodes=8
+2025-12-12T07:05:57.115839Z [info     ] generating_docker_compose     
+2025-12-12T07:05:57.116716Z [info     ] generating_compose_file        build_type=debug cache_dir=../testing/cache node_count=8 node_source_type=url
+2025-12-12T07:05:57.142740Z [info     ] compose_file_generated         path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml services=8
+2025-12-12T07:05:57.142909Z [info     ] node_distribution              full=2 master=3 root=3
+2025-12-12T07:05:57.142977Z [info     ] === PHASE 1: ROOT Nodes Startup (DAG-PoA Genesis) ===
+2025-12-12T07:05:57.150608Z [info     ] network_consensus_monitor_initialized network=stagenet nodes=3
+2025-12-12T07:05:57.169905Z [info     ] Loaded scenario: PHASE 1 - Zerochain Genesis from genesis/phase1_zerochain.yml
+2025-12-12T07:05:57.189774Z [info     ] executing_phase1_scenario     
+2025-12-12T07:05:57.189902Z [info     ] Starting scenario: PHASE 1 - Zerochain Genesis
+2025-12-12T07:05:57.189960Z [info     ] Description: Initialize ROOT nodes, create token and emission
+2025-12-12T07:05:57.190048Z [info     ] Executing setup phase...      
+2025-12-12T07:05:57.190118Z [info     ] Step 1/4: ConfigStep (cellframe-node)
+2025-12-12T07:05:57.190277Z [info     ] Config: regenerating 'cellframe-node' for nodes [1, 2, 3] with vars ['seed_mode']
+2025-12-12T07:05:57.191043Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/cache/certs docker_mode=True
+2025-12-12T07:05:57.192141Z [info     ] Regenerated cellframe-node.cfg for node 1
+2025-12-12T07:05:57.192429Z [info     ] Regenerated cellframe-node.cfg for node 2
+2025-12-12T07:05:57.192637Z [info     ] Regenerated cellframe-node.cfg for node 3
+2025-12-12T07:05:57.192708Z [info     ] Step 2/4: DockerOpStep        
+2025-12-12T07:05:57.192778Z [info     ] Docker operation: start on services ['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3']
+2025-12-12T07:05:57.192847Z [info     ] starting_services              services=['node-1', 'node-2', 'node-3', 'node-4', 'node-5', 'node-6']
+2025-12-12T07:08:38.395421Z [error    ] command_failed                 cmd='docker compose -f /home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml -p cellframe-stage up -d node-1 node-2 node-3 node-4 node-5 node-6' exit_code=1 stderr=' node-3 Pulling \n node-4 Pulling \n node-2 Pulling \n node-1 Pulling \n node-6 Pulling \n node-5 Pulling \n node-1 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\n node-3 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\n node-5 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\n node-6 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\n node-2 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\n node-4 Warning pull access denied for cf-node, repository does not exist or may require \'docker login\'\ntarget node-4: failed to solve: image "docker.io/library/cf-node:debug-latest": already exists\n\n'
+2025-12-12T07:08:38.395701Z [error    ] docker_up_failed               error="Command '['docker', 'compose', '-f', '/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml', '-p', 'cellframe-stage', 'up', '-d', 'node-1', 'node-2', 'node-3', 'node-4', 'node-5', 'node-6']' returned non-zero exit status 1."
+2025-12-12T07:08:38.395779Z [error    ] Docker operation failed: Command '['docker', 'compose', '-f', '/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml', '-p', 'cellframe-stage', 'up', '-d', 'node-1', 'node-2', 'node-3', 'node-4', 'node-5', 'node-6']' returned non-zero exit status 1.
+2025-12-12T07:08:38.398154Z [error    ] root_nodes_genesis_failed      error="Docker operation failed: Command '['docker', 'compose', '-f', '/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml', '-p', 'cellframe-stage', 'up', '-d', 'node-1', 'node-2', 'node-3', 'node-4', 'node-5', 'node-6']' returned non-zero exit status 1.\nStep: docker_op='start' services=['root-1', 'root-2', 'root-3', 'master-1', 'master-2', 'master-3'] command=None detach=True wait_for_ip=True wait=None" traceback='Traceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/docker_op.py", line 80, in execute\n    compose_manager.up(services=services, detach=step.detach, wait=False)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/docker/compose.py", line 548, in up\n    run_command(cmd, cwd=self.project_dir)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/utils/cli.py", line 95, in run_command\n    result = subprocess.run(\n             ^^^^^^^^^^^^^^^\n  File "/usr/lib/python3.12/subprocess.py", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command \'[\'docker\', \'compose\', \'-f\', \'/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml\', \'-p\', \'cellframe-stage\', \'up\', \'-d\', \'node-1\', \'node-2\', \'node-3\', \'node-4\', \'node-5\', \'node-6\']\' returned non-zero exit status 1.\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/network/manager.py", line 384, in start\n    ctx = await executor.execute_scenario(\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 437, in execute_scenario\n    await self._execute_steps(scenario.setup.steps, ctx, section_defaults)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/executor.py", line 597, in _execute_steps\n    await self.docker_op_executor.execute(step, ctx)\n  File "/home/olzh/demlabs/second/cellframe-node/tests/stage-env/src/scenarios/step/docker_op.py", line 129, in execute\n    raise ScenarioExecutionError(error_msg, step=step)\nsrc.scenarios.executor.ScenarioExecutionError: Docker operation failed: Command \'[\'docker\', \'compose\', \'-f\', \'/home/olzh/demlabs/second/cellframe-node/tests/stage-env/docker-compose.generated.yml\', \'-p\', \'cellframe-stage\', \'up\', \'-d\', \'node-1\', \'node-2\', \'node-3\', \'node-4\', \'node-5\', \'node-6\']\' returned non-zero exit status 1.\nStep: docker_op=\'start\' services=[\'root-1\', \'root-2\', \'root-3\', \'master-1\', \'master-2\', \'master-3\'] command=None detach=True wait_for_ip=True wait=None\n'
+2025-12-12T07:08:38.398341Z [info     ] stopping_services              remove_images=False volumes=False
+2025-12-12T07:08:38.472311Z [info     ] services_stopped              
