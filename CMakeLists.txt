@@ -119,7 +119,13 @@ if (BUILD_WITH_TPS_TEST)
 endif()
 
 set(BUILD_WITH_ZIP OFF)
+
+# Support both BUILD_PYTHON_PLUGIN and SUPPORT_PYTHON_PLUGINS flags for compatibility
+if(DEFINED BUILD_PYTHON_PLUGIN)
+    set(SUPPORT_PYTHON_PLUGINS ${BUILD_PYTHON_PLUGIN})
+endif()
 option(SUPPORT_PYTHON_PLUGINS "Build with Python plugins support" ON)
+
 option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
