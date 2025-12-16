@@ -119,19 +119,16 @@ if (BUILD_WITH_TPS_TEST)
 endif()
 
 set(BUILD_WITH_ZIP OFF)
-option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
+option(SUPPORT_PYTHON_PLUGINS "Build with Python plugins support" ON)
 option(ADD_UPDATER OFF)
-#if(MACOS)
-#    if(SUPPORT_PYTHON_PLUGINS)
-#        set(BUILD_WITH_PYTHON_ENV ON)
-#    endif()
-#endif()
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX OR WIN32 OR DARWIN)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+# Python plugins: enabled by default on desktop platforms, but respects user flag
+if(SUPPORT_PYTHON_PLUGINS)
+    if(LINUX OR WIN32 OR DARWIN)
+        set(BUILD_WITH_PYTHON_ENV ON)
+    endif()
 endif()
 
 
