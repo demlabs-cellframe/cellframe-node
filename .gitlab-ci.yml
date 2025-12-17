@@ -171,8 +171,6 @@ asan_build:
   stage: diagnostic_builds
   variables:
     DAP_ASAN: "1"
-  dependencies:
-    - amd64:linux.rwd.bld
   image: demlabs/debian/amd64:qt6
   rules:
    - when: manual
