@@ -56,6 +56,8 @@ RUN_E2E=false
 RUN_FUNCTIONAL=false
 CLEAN_BEFORE=false
 KEEP_RUNNING=false
+REBUILD_IMAGES=false
+SKIP_BUILD=false
 BACKEND="stage-env" # stage-env | docker
 PACKAGE_ARG=""
 
@@ -77,6 +79,14 @@ while [[ $# -gt 0 ]]; do
             KEEP_RUNNING=true
             shift
             ;;
+        --rebuild)
+            REBUILD_IMAGES=true
+            shift
+            ;;
+        --skip-build)
+            SKIP_BUILD=true
+            shift
+            ;;
         --backend)
             BACKEND="${2:-}"
             shift 2
@@ -91,8 +101,10 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
-            echo "  --clean         Clean before running"
+            echo "  --clean         Clean before running (includes Docker cleanup)"
             echo "  --keep-running  Do not stop the network after tests"
+            echo "  --rebuild       Force rebuild Docker images"
+            echo "  --skip-build    Skip building cellframe-node (use existing)"
             echo "  --backend ARG   stage-env (default) or docker"
             echo "  --package ARG   Node package URL or path (docker backend)"
             echo "  -h, --help      Show this help message"
@@ -143,45 +155,57 @@ success "Prerequisites OK"
 # Detect if running in cellframe-node repository and build local package
 DEB_PACKAGE=""
 if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_ROOT/CMakeLists.txt"; then
-    info "Detected cellframe-node repository - building local package..."
-    
-    # Create test_build directory
-    mkdir -p "$TEST_BUILD_DIR"
-    cd "$TEST_BUILD_DIR"
-    
-    # Configure with CMake (Debug mode for testing)
-    info "Configuring with CMake (Debug mode)..."
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
-        error "CMake configuration failed"
-        exit 1
-    }
-    
-    # Build
-    info "Building cellframe-node..."
-    make -j$(nproc) cellframe-node || {
-        error "Build failed"
-        exit 1
-    }
-    
-    # Package with cpack
-    info "Creating .deb package..."
-    cpack -G DEB || {
-        error "Packaging failed"
-        exit 1
-    }
-    
-    # Find the generated .deb package
-    DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
-    
-    if [ -z "$DEB_PACKAGE" ]; then
-        error "No .deb package found after build"
-        exit 1
+    if $SKIP_BUILD; then
+        info "Skipping build (--skip-build specified)"
+        # Try to find existing .deb package
+        DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f 2>/dev/null | head -n 1)
+        if [ -n "$DEB_PACKAGE" ]; then
+            success "Using existing package: $(basename "$DEB_PACKAGE")"
+        else
+            warning "No existing package found in $TEST_BUILD_DIR"
+        fi
+    else
+        info "Detected cellframe-node repository - building local package..."
+        
+        # Create test_build directory
+        mkdir -p "$TEST_BUILD_DIR"
+        cd "$TEST_BUILD_DIR"
+        
+        # Configure with CMake (Debug mode for testing)
+        info "Configuring with CMake (Debug mode)..."
+        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
+            error "CMake configuration failed"
+            exit 1
+        }
+        
+        # Build
+        info "Building cellframe-node..."
+        make -j$(nproc) cellframe-node || {
+            error "Build failed"
+            exit 1
+        }
+        
+        # Package with cpack
+        info "Creating .deb package..."
+        cpack -G DEB || {
+            error "Packaging failed"
+            exit 1
+        }
+        
+        # Find the generated .deb package
+        DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
+        
+        if [ -z "$DEB_PACKAGE" ]; then
+            error "No .deb package found after build"
+            exit 1
+        fi
+        
+        success "Package created: $(basename "$DEB_PACKAGE")"
+        cd "$PROJECT_ROOT"
     fi
     
-    success "Package created: $(basename "$DEB_PACKAGE")"
-    
     # Update stage-env.cfg to use local package
-    if [ -f "$STAGE_ENV_CONFIG" ]; then
+    if [ -n "$DEB_PACKAGE" ] && [ -f "$STAGE_ENV_CONFIG" ]; then
         info "Updating stage-env.cfg with local package path..."
         
         # Create temporary config with updated node_source
@@ -206,11 +230,11 @@ with open('$STAGE_ENV_CONFIG', 'w') as f:
         }
         
         success "stage-env.cfg updated to use local package"
+    elif [ -z "$DEB_PACKAGE" ]; then
+        warning "No .deb package to configure"
     else
         warning "stage-env.cfg not found at $STAGE_ENV_CONFIG"
     fi
-    
-    cd "$PROJECT_ROOT"
 else
     info "Not in cellframe-node repository - using configured node source"
 fi
@@ -228,8 +252,20 @@ if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
     if [[ "$BACKEND" == "stage-env" ]]; then
+        # Clean Docker containers, images, and volumes first
+        COMPOSE_FILE="$SCRIPT_DIR/stage-env/docker-compose.generated.yml"
+        if [ -f "$COMPOSE_FILE" ]; then
+            info "Stopping and removing Docker containers/images..."
+            docker compose -f "$COMPOSE_FILE" -p cellframe-stage stop 2>/dev/null || true
+            docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --rmi local --volumes 2>/dev/null || true
+        fi
+        
+        # Also clean the cf-node images directly
+        info "Removing cf-node images..."
+        docker images --filter "reference=cf-node:*" -q | xargs -r docker rmi -f 2>/dev/null || true
+        
         if [ -x "$STAGE_ENV_WRAPPER" ]; then
-            "$STAGE_ENV_WRAPPER" clean --all || true
+            "$STAGE_ENV_WRAPPER" clean --all --yes || true
         fi
     else
         if [ -x "$TESTNET_DOCKER_DIR/clean.sh" ]; then
@@ -288,8 +324,34 @@ info "stage-env backend"
 info "═══════════════════════════════════"
 echo ""
 
+# Pre-cleanup: Stop any running containers and clean up before starting fresh
+# This prevents BuildKit "image already exists" errors
+COMPOSE_FILE="$SCRIPT_DIR/stage-env/docker-compose.generated.yml"
+if [ -f "$COMPOSE_FILE" ]; then
+    info "Cleaning up previous Docker resources..."
+    docker compose -f "$COMPOSE_FILE" -p cellframe-stage stop 2>/dev/null || true
+    
+    if $REBUILD_IMAGES || $CLEAN_BEFORE; then
+        # Full cleanup with image removal
+        docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --rmi local --volumes 2>/dev/null || true
+        # Also remove cf-node images directly
+        docker images --filter "reference=cf-node:*" -q | xargs -r docker rmi -f 2>/dev/null || true
+        success "Docker cleanup completed (with image removal)"
+    else
+        # Quick cleanup without image removal
+        docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --volumes 2>/dev/null || true
+        success "Docker cleanup completed"
+    fi
+fi
+
+# Build stage-env start command
+STAGE_ENV_START_ARGS="--wait"
+if $REBUILD_IMAGES; then
+    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --rebuild"
+fi
+
 info "Starting stage environment..."
-if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait; then
+if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start $STAGE_ENV_START_ARGS; then
     success "Stage environment started"
 else
     error "Failed to start stage environment"
@@ -310,7 +372,9 @@ if $RUN_E2E; then
     fi
     
     if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $([[ "$KEEP_RUNNING" == "true" ]] && echo "--keep-running") || E2E_EXIT=$?
+        KEEP_ARG=""
+        $KEEP_RUNNING && KEEP_ARG="--keep-running"
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $KEEP_ARG || E2E_EXIT=$?
     else
         warning "No E2E test directories found"
         E2E_EXIT=1
@@ -328,7 +392,9 @@ if $RUN_FUNCTIONAL; then
     fi
     
     if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $([[ "$KEEP_RUNNING" == "true" ]] && echo "--keep-running") || FUNCTIONAL_EXIT=$?
+        KEEP_ARG=""
+        $KEEP_RUNNING && KEEP_ARG="--keep-running"
+        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $KEEP_ARG || FUNCTIONAL_EXIT=$?
     else
         warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
         FUNCTIONAL_EXIT=1
@@ -336,7 +402,7 @@ if $RUN_FUNCTIONAL; then
 fi
 
 # Stop environment (unless --keep-running)
-if [[ "$KEEP_RUNNING" == "true" ]]; then
+if $KEEP_RUNNING; then
     warning "Keeping stage environment running (--keep-running)"
 else
     info "Stopping stage environment..."

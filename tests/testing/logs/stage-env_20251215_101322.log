@@ -1,7 +1,0 @@
-2025-12-15T03:13:22.131892Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251215_101322.log
-2025-12-15T03:13:22.132228Z [warning  ] stale_pid_file_found           action=removing old_pid=20209
-2025-12-15T03:13:22.275351Z [info     ] artifacts_manager_initialized  artifacts_dir=/home/olzh/demlabs/second/cellframe-node/tests/testing/artifacts collect_crash_dumps=True collect_health_logs=True collect_node_logs=True
-2025-12-15T03:13:22.276431Z [info     ] loading_topology_from_template topology=default
-2025-12-15T03:13:22.276797Z [info     ] loaded_config                  path=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/config/stage-env.cfg
-2025-12-15T03:13:22.282926Z [info     ] cert_generator_initialized     certs_dir=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/cache/certs docker_mode=True
-2025-12-15T03:13:22.284901Z [error    ] docker_connection_failed       error="Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))"

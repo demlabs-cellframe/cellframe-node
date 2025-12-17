@@ -1,3 +1,0 @@
-2025-12-15T05:54:42.282791Z [info     ] file_logging_enabled           log_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/../testing/logs/stage-env_20251215_125442.log
-2025-12-15T05:54:42.283251Z [error    ] another_instance_running       pid=29213 pid_file=/home/olzh/demlabs/second/cellframe-node/tests/stage-env/.stage-env.pid
-2025-12-15T05:54:42.285941Z [warning  ] pid_file_mismatch              action=not_removing file_pid=29213 our_pid=29815
