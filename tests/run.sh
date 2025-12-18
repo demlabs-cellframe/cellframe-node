@@ -349,6 +349,9 @@ STAGE_ENV_START_ARGS="--wait"
 if $REBUILD_IMAGES; then
     STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --rebuild"
 fi
+if $KEEP_RUNNING; then
+    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --keep-running"
+fi
 
 info "Starting stage environment..."
 if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start $STAGE_ENV_START_ARGS; then
