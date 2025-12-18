@@ -347,8 +347,8 @@ arm32:linux.release:
 
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release --cross-arch arm32
-      - ./prod_build/pack.sh --target linux release --cross-arch arm32
+      - ./prod_build/build.sh --target linux debug --cross-arch arm32
+      - ./prod_build/pack.sh --target linux debug --cross-arch arm32
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
