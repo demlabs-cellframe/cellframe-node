@@ -12,10 +12,6 @@ description: |
   
   This test reproduces the bug in production-like stage environment.
 
-includes:
-  - common/network_full.yml
-  - common/set_net_default.yml
-
 network:
   topology: default
   name: stagenet
@@ -23,17 +19,17 @@ network:
 
 setup:
   - docker_op: start
-    services: [root-1, validator-1, validator-2]
+    services: [node-1, node-4, node-5]
     detach: true
   
   - wait_network: online
-    nodes: [root-1, validator-1, validator-2]
+    nodes: [node-1, node-4, node-5]
     timeout: 120
 
 test:
   - group: Scenario 1 - Baseline (WITHOUT token_update)
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 1. Create wallet
       - cli: "wallet new -w bug20273_baseline"
@@ -126,7 +122,7 @@ test:
 
   - group: Scenario 2 - Bug Reproduction (WITH token_update)
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 1. Create new wallet for bug reproduction
       - cli: "wallet new -w bug20273_bug"
@@ -277,5 +273,5 @@ test:
 
 cleanup:
   - docker_op: stop
-    services: [root-1, validator-1, validator-2]
+    services: [node-1, node-4, node-5]
 

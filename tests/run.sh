@@ -372,7 +372,7 @@ if $RUN_E2E || $RUN_FUNCTIONAL || $RUN_REGRESSION || [ ${#SPECIFIC_TESTS[@]} -gt
                 if $RUN_REGRESSION && [ -d "$REGRESSION_TESTS" ]; then
                     stage_env_dir="$SCRIPT_DIR/stage-env"
                     rel_path=$(realpath --relative-to="$stage_env_dir" "$REGRESSION_TESTS")
-                    info "Adding regression tests: $rel_path"
+                    info "Adding regression tests directory: $rel_path"
                     TEST_DIRS+=("$rel_path")
                 fi
             fi

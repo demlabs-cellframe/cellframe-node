@@ -9,10 +9,6 @@ description: |
   
   This test reproduces the bug in production-like stage environment using Docker containers.
 
-includes:
-  - common/network_full.yml  # Full network with multiple nodes
-  - common/set_net_default.yml
-
 network:
   topology: default
   name: stagenet
@@ -20,17 +16,17 @@ network:
 
 setup:
   - docker_op: start
-    services: [root-1, validator-1, validator-2]  # Multi-node for DAG PoA
+    services: [node-1, node-4, node-5]  # Multi-node for DAG PoA
     detach: true
   
   - wait_network: online
-    nodes: [root-1, validator-1, validator-2]
+    nodes: [node-1, node-4, node-5]
     timeout: 120
 
 test:
   - group: Token Creation with Owner Certificate
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 1. Create wallet for token owner
       - cli: "wallet new -w bug20138_owner"
@@ -68,7 +64,7 @@ test:
 
   - group: Create Base TX from Emission
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 5. Create base TX to generate UTXOs and balance
       # NOTE: Base TX should be created WITHOUT network fee (initial UTXO creation)
@@ -102,7 +98,7 @@ test:
 
   - group: Configure Network Fee
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 7. Get fee address for arbitrage
       - cli: "net -net stagenet get fee"
@@ -118,7 +114,7 @@ test:
 
   - group: Test Arbitrage WITHOUT -cert (Expected to Fail)
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 9. Attempt arbitrage without -cert (should fail with TSD sanity check error)
       - cli: "tx_create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1"
@@ -129,7 +125,7 @@ test:
 
   - group: Test Arbitrage WITH -cert (BUG REPRODUCTION)
     defaults:
-      node: root-1
+      node: node-1
     steps:
       # 10. Create arbitrage transaction WITH -cert parameter
       # CRITICAL: Using SAME certificate as token_decl (pvt.stagenet.root.0)
@@ -192,5 +188,5 @@ test:
 
 cleanup:
   - docker_op: stop
-    services: [root-1, validator-1, validator-2]
+    services: [node-1, node-4, node-5]
 
