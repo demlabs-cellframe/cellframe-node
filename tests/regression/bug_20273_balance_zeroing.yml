@@ -1,0 +1,281 @@
+name: Regression Bug #20273 - Balance Zeroing After UTXO Blocking
+description: |
+  Bug: Arbitrage transaction ignores -value flag and zeroes sender balance
+  
+  CRITICAL TRIGGER: Bug ONLY occurs AFTER token_update (UTXO blocking) operation
+  WITHOUT token_update: arbitrage works correctly
+  WITH token_update: entire balance is zeroed instead of transferring specified amount
+  
+  Symptom: -value and -token flags ignored, balance of sender wallet becomes 0
+  Expected: Balance reduced by specified amount, change output created
+  Actual: Entire balance transferred to fee address, sender balance = 0
+  
+  This test reproduces the bug in production-like stage environment.
+
+includes:
+  - common/network_full.yml
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: stagenet
+  consensus: dag-poa
+
+setup:
+  - docker_op: start
+    services: [root-1, validator-1, validator-2]
+    detach: true
+  
+  - wait_network: online
+    nodes: [root-1, validator-1, validator-2]
+    timeout: 120
+
+test:
+  - group: Scenario 1 - Baseline (WITHOUT token_update)
+    defaults:
+      node: root-1
+    steps:
+      # 1. Create wallet
+      - cli: "wallet new -w bug20273_baseline"
+        expect_success: true
+      
+      - cli: "wallet info -addr -w bug20273_baseline"
+        save_wallet: baseline_owner_addr
+      
+      # 2. Create custom token
+      - cli: "token_decl -token BUG20273A -chain zerochain -total_supply 0 -decimals 18 -signs_emission 1 -signs_total 1 -type CF20 -certs pvt.stagenet.root.0"
+        save_hash: token_baseline_hash
+      
+      - wait_for_datum: "{{token_baseline_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 3. Create emission
+      - cli: "token_emit -chain zerochain -token BUG20273A -no_base_tx -emission_value 100000000000.0 -addr {{baseline_owner_addr}} -certs pvt.stagenet.root.0"
+        save_hash: emission_baseline_hash
+      
+      - wait_for_datum: "{{emission_baseline_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 4. Create base TX
+      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_baseline_hash}} -cert pvt.stagenet.root.0"
+        save_hash: base_tx_baseline_hash
+      
+      - wait_for_datum: "{{base_tx_baseline_hash}}"
+        chain: main
+        timeout: 90
+      
+      # 5. Verify balance
+      - cli: "wallet info -w bug20273_baseline"
+        save_to: baseline_initial_balance
+        expect_contains: ["BUG20273A"]
+      
+      # 6. Set network fee
+      - cli: "net -net stagenet -fee 0.1 -addr {{baseline_owner_addr}}"
+      
+      # 7. Create arbitrage WITHOUT token_update (should work correctly)
+      - cli: "tx_create -net stagenet -chain main -from_wallet bug20273_baseline -token BUG20273A -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+        save_hash: arb_baseline_hash
+        timeout: 30
+      
+      - wait_for_datum: "{{arb_baseline_hash}}"
+        chain: main
+        timeout: 90
+      
+      # 8. Check balance AFTER arbitrage (should be reduced by 100500.0, NOT zeroed)
+      - cli: "wallet info -w bug20273_baseline"
+        save_to: baseline_final_balance
+      
+      - python: |
+          import re
+          from decimal import Decimal
+          
+          # Parse initial and final balances
+          initial = ctx.baseline_initial_balance or ""
+          final = ctx.baseline_final_balance or ""
+          
+          def parse_balance(text, token="BUG20273A"):
+              match = re.search(rf'{token}:\s+([0-9.]+)', text)
+              if match:
+                  return Decimal(match.group(1))
+              return None
+          
+          balance_initial = parse_balance(initial)
+          balance_final = parse_balance(final)
+          
+          if not balance_initial:
+              raise Exception("Could not parse initial balance")
+          if not balance_final:
+              raise Exception("Could not parse final balance")
+          
+          expected = balance_initial - Decimal("100500.0")
+          
+          print(f"Initial balance: {balance_initial}")
+          print(f"Final balance: {balance_final}")
+          print(f"Expected balance: {expected}")
+          
+          if balance_final == 0:
+              print("❌ BASELINE FAILED: Balance zeroed (bug present even without token_update!)")
+              raise Exception("Balance zeroed in baseline scenario")
+          elif abs(balance_final - expected) < Decimal("0.01"):
+              print("✓ BASELINE PASSED: Balance reduced correctly (not zeroed)")
+              ctx.set_variable('baseline_passed', True)
+          else:
+              print(f"⚠️ Balance mismatch: got {balance_final}, expected {expected}")
+
+  - group: Scenario 2 - Bug Reproduction (WITH token_update)
+    defaults:
+      node: root-1
+    steps:
+      # 1. Create new wallet for bug reproduction
+      - cli: "wallet new -w bug20273_bug"
+        expect_success: true
+      
+      - cli: "wallet info -addr -w bug20273_bug"
+        save_wallet: bug_owner_addr
+      
+      # 2. Create custom token
+      - cli: "token_decl -token BUG20273B -chain zerochain -total_supply 0 -decimals 18 -signs_emission 1 -signs_total 1 -type CF20 -certs pvt.stagenet.root.0"
+        save_hash: token_bug_hash
+      
+      - wait_for_datum: "{{token_bug_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 3. Create emission
+      - cli: "token_emit -chain zerochain -token BUG20273B -no_base_tx -emission_value 100000000000.0 -addr {{bug_owner_addr}} -certs pvt.stagenet.root.0"
+        save_hash: emission_bug_hash
+      
+      - wait_for_datum: "{{emission_bug_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 4. Create base TX
+      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_bug_hash}} -cert pvt.stagenet.root.0"
+        save_hash: base_tx_bug_hash
+      
+      - wait_for_datum: "{{base_tx_bug_hash}}"
+        chain: main
+        timeout: 90
+      
+      # 5. Get balance and UTXO info
+      - cli: "wallet info -w bug20273_bug"
+        save_to: bug_initial_balance
+        expect_contains: ["BUG20273B"]
+      
+      # 6. CRITICAL STEP: Get emission UTXO hash for token_update
+      # Extract first UTXO hash from wallet info
+      - python: |
+          import re
+          info = ctx.bug_initial_balance or ""
+          # Extract UTXO hash (format: hash:idx)
+          # wallet info shows UTXOs with hashes
+          match = re.search(r'(0x[0-9A-Fa-f]{64}):(\d+)', info)
+          if match:
+              utxo_hash = match.group(1)
+              utxo_idx = match.group(2)
+              ctx.set_variable('emission_utxo_hash', utxo_hash)
+              ctx.set_variable('emission_utxo_idx', utxo_idx)
+              print(f"✓ Found emission UTXO: {utxo_hash}:{utxo_idx}")
+          else:
+              raise Exception(f"Could not find UTXO hash in wallet info: {info[:300]}")
+      
+      # 7. CRITICAL TRIGGER: Perform token_update (UTXO blocking)
+      # This is what triggers the bug!
+      - cli: "token_update -net stagenet -token BUG20273B -utxo_blocked_add {{emission_utxo_hash}}:{{emission_utxo_idx}} -certs pvt.stagenet.root.0"
+        save_hash: token_update_hash
+        expect_success: true
+      
+      - wait_for_datum: "{{token_update_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 8. Verify UTXO blocking applied
+      - cli: "token info -net stagenet -token BUG20273B"
+        save_to: token_info_after_update
+        timeout: 30
+      
+      # 9. Set network fee
+      - cli: "net -net stagenet -fee 0.1 -addr {{bug_owner_addr}}"
+      
+      # 10. Create arbitrage transaction AFTER token_update
+      # Expected: Transfer 100500.0, create change output
+      # Actual (BUG): Transfer everything, balance becomes 0
+      - cli: "tx_create -net stagenet -chain main -from_wallet bug20273_bug -token BUG20273B -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+        save_hash: arb_bug_hash
+        timeout: 30
+      
+      - wait_for_datum: "{{arb_bug_hash}}"
+        chain: main
+        timeout: 90
+      
+      # 11. Check balance AFTER arbitrage (BUG: should be 0)
+      - cli: "wallet info -w bug20273_bug"
+        save_to: bug_final_balance
+      
+      - python: |
+          import re
+          from decimal import Decimal
+          
+          initial = ctx.bug_initial_balance or ""
+          final = ctx.bug_final_balance or ""
+          
+          def parse_balance(text, token="BUG20273B"):
+              match = re.search(rf'{token}:\s+([0-9.]+)', text)
+              if match:
+                  return Decimal(match.group(1))
+              return Decimal(0)
+          
+          balance_initial = parse_balance(initial)
+          balance_final = parse_balance(final)
+          expected = balance_initial - Decimal("100500.0")
+          
+          print("=" * 60)
+          print("SCENARIO 2 RESULTS (WITH token_update):")
+          print(f"Initial balance: {balance_initial}")
+          print(f"Requested transfer: 100500.0")
+          print(f"Expected final balance: {expected}")
+          print(f"Actual final balance: {balance_final}")
+          print("=" * 60)
+          
+          if balance_final == 0:
+              print("✓ BUG #20273 REPRODUCED!")
+              print("  - Balance zeroed instead of creating change output")
+              print("  - -value flag was ignored")
+              print("  - This ONLY happens AFTER token_update (UTXO blocking)")
+              ctx.set_variable('bug_reproduced', True)
+          elif abs(balance_final - expected) < Decimal("0.01"):
+              print("❌ BUG NOT REPRODUCED: Balance correct (bug may be fixed)")
+              ctx.set_variable('bug_reproduced', False)
+          else:
+              print(f"⚠️ Unexpected balance: {balance_final} (expected {expected} or 0)")
+
+  - group: Final Report
+    steps:
+      - python: |
+          print("\n" + "=" * 70)
+          print("REGRESSION TEST SUMMARY: Bug #20273")
+          print("=" * 70)
+          
+          baseline_ok = ctx.get_variable('baseline_passed', False)
+          bug_found = ctx.get_variable('bug_reproduced', False)
+          
+          print(f"Scenario 1 (WITHOUT token_update): {'PASSED' if baseline_ok else 'FAILED'}")
+          print(f"Scenario 2 (WITH token_update): {'BUG REPRODUCED' if bug_found else 'BUG NOT FOUND'}")
+          
+          if baseline_ok and bug_found:
+              print("\n✓ Test conclusive: Bug occurs ONLY after token_update")
+              print("  - Trigger: UTXO blocking on emission UTXO")
+              print("  - Impact: Balance zeroing, -value flag ignored")
+          elif not baseline_ok:
+              print("\n❌ Baseline failed - cannot determine if bug is specific to token_update")
+          elif not bug_found:
+              print("\n⚠️ Bug not reproduced - may be fixed or test needs adjustment")
+          
+          print("=" * 70)
+
+cleanup:
+  - docker_op: stop
+    services: [root-1, validator-1, validator-2]
+

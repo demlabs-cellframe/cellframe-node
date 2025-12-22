@@ -48,6 +48,7 @@ STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
 STAGE_ENV_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/base"
 FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
 SCENARIOS_TESTS="$SCRIPT_DIR/e2e"  # E2E tests directory
+REGRESSION_TESTS="$SCRIPT_DIR/regression"  # Regression tests directory
 
 # Build directories
 TEST_BUILD_DIR="$PROJECT_ROOT/build"
@@ -55,6 +56,7 @@ TEST_BUILD_DIR="$PROJECT_ROOT/build"
 # Parse arguments
 RUN_E2E=false
 RUN_FUNCTIONAL=false
+RUN_REGRESSION=false
 CLEAN_BEFORE=false
 REBUILD_IMAGES=false
 PKGS_UPDATE=false
@@ -69,6 +71,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --functional)
             RUN_FUNCTIONAL=true
+            shift
+            ;;
+        --regression)
+            RUN_REGRESSION=true
             shift
             ;;
         --clean)
@@ -93,6 +99,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
+            echo "  --regression    Run only regression tests (bug reproduction scenarios)"
             echo "  --clean         Clean cache before running (does NOT rebuild node)"
             echo "  --rebuild       Rebuild Docker images before starting network"
             echo "  --pkgs-update   Update packages in running containers (binary + apt update/upgrade)"
@@ -129,7 +136,10 @@ if [ "$STOP_ENV" = true ]; then
     info "Stopping stage environment..."
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
+        popd > /dev/null
     else
         error "stage-env wrapper not found or not executable"
         exit 1
@@ -143,10 +153,11 @@ fi
 if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
     info "Specific tests requested: ${SPECIFIC_TESTS[*]}"
     # Don't set RUN_E2E or RUN_FUNCTIONAL - we'll use SPECIFIC_TESTS directly
-elif ! $RUN_E2E && ! $RUN_FUNCTIONAL; then
-    # If neither specified and no specific tests, run both
+elif ! $RUN_E2E && ! $RUN_FUNCTIONAL && ! $RUN_REGRESSION; then
+    # If nothing specified and no specific tests, run all
     RUN_E2E=true
     RUN_FUNCTIONAL=true
+    RUN_REGRESSION=true
 fi
 
 info "Cellframe Node Test Runner"
@@ -177,7 +188,10 @@ if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" clean --all || true
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" clean --all || true
+        popd > /dev/null
     fi
     
     # Additional cleanup: snapshot, cache/data, cache/code, config
@@ -238,6 +252,7 @@ fi
 # Track results
 E2E_EXIT=0
 FUNCTIONAL_EXIT=0
+REGRESSION_EXIT=0
 
 # Handle pkgs-update flag
 if [ "$PKGS_UPDATE" = true ]; then
@@ -252,15 +267,21 @@ if [ "$PKGS_UPDATE" = true ]; then
         exit 1
     fi
     
+    pushd "$SCRIPT_DIR/stage-env" > /dev/null
+    STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+    
     info "Updating packages in running containers..."
-    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" pkgs-update || exit $?
+    ./stage-env --config="$STAGE_ENV_CONFIG_ABS" pkgs-update || exit $?
+    
+    popd > /dev/null
     
     success "Package update completed"
     exit 0
 fi
 
-# Run all tests (E2E + Functional) in a single run
-if $RUN_E2E || $RUN_FUNCTIONAL; then
+# Run all tests (E2E + Functional + Regression) in a single run
+# Also run if specific tests are provided
+if $RUN_E2E || $RUN_FUNCTIONAL || $RUN_REGRESSION || [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
     echo ""
     info "═══════════════════════════════════"
     info "Running Tests"
@@ -275,13 +296,22 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
         # Start stage environment with config
         info "Starting stage environment..."
         
+        # CRITICAL: Change to stage-env directory before running wrapper
+        # This ensures relative paths in config (like cache_dir, local_path) work correctly
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        
+        # Convert config path to absolute for safety
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        
         # Build rebuild flag for stage-env start
         if [ "$REBUILD_IMAGES" = true ]; then
             info "Will rebuild Docker images before starting"
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --rebuild --wait || E2E_EXIT=$?
+            ./stage-env --config="$STAGE_ENV_CONFIG_ABS" start --rebuild --wait || E2E_EXIT=$?
         else
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start --wait || E2E_EXIT=$?
+            ./stage-env --config="$STAGE_ENV_CONFIG_ABS" start --wait || E2E_EXIT=$?
         fi
+        
+        popd > /dev/null
         
         if [ $E2E_EXIT -eq 0 ]; then
             success "Stage environment started"
@@ -292,16 +322,22 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             # If specific tests provided, use them
             if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
                 for test_path in "${SPECIFIC_TESTS[@]}"; do
-                    # Convert relative to absolute if needed
+                    # Convert relative path to absolute (relative to PROJECT_ROOT)
                     if [[ "$test_path" == /* ]]; then
                         abs_path="$test_path"
                     else
+                        # Path is relative to PROJECT_ROOT (cellframe-node/)
                         abs_path="$PROJECT_ROOT/$test_path"
                     fi
                     
+                    # For stage-env, paths need to be relative to stage-env directory
+                    # Convert absolute to relative from stage-env/
+                    stage_env_dir="$SCRIPT_DIR/stage-env"
+                    rel_from_stage_env=$(realpath --relative-to="$stage_env_dir" "$abs_path" 2>/dev/null || echo "$abs_path")
+                    
                     if [ -e "$abs_path" ]; then
-                        info "Adding specific test: $test_path"
-                        TEST_DIRS+=("$abs_path")
+                        info "Adding specific test: $test_path (stage-env: $rel_from_stage_env)"
+                        TEST_DIRS+=("$rel_from_stage_env")
                     else
                         warning "Test path not found: $test_path (resolved to $abs_path)"
                     fi
@@ -309,28 +345,49 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             else
                 # Add stage-env base tests (if E2E enabled)
                 if $RUN_E2E && [ -d "$STAGE_ENV_BASE_TESTS" ]; then
-                    info "Adding base tests: $STAGE_ENV_BASE_TESTS"
-                    TEST_DIRS+=("$STAGE_ENV_BASE_TESTS")
+                    # Convert to relative path from stage-env/
+                    stage_env_dir="$SCRIPT_DIR/stage-env"
+                    rel_path=$(realpath --relative-to="$stage_env_dir" "$STAGE_ENV_BASE_TESTS")
+                    info "Adding base tests: $rel_path"
+                    TEST_DIRS+=("$rel_path")
                 fi
                 
                 # Add E2E scenarios tests (if E2E enabled)
                 if $RUN_E2E && [ -d "$SCENARIOS_TESTS" ]; then
-                    info "Adding E2E tests: $SCENARIOS_TESTS"
-                    TEST_DIRS+=("$SCENARIOS_TESTS")
+                    stage_env_dir="$SCRIPT_DIR/stage-env"
+                    rel_path=$(realpath --relative-to="$stage_env_dir" "$SCENARIOS_TESTS")
+                    info "Adding E2E tests: $rel_path"
+                    TEST_DIRS+=("$rel_path")
                 fi
                 
                 # Add functional tests (if functional enabled)
                 if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
-                    info "Adding functional tests: $FUNCTIONAL_TESTS"
-                    TEST_DIRS+=("$FUNCTIONAL_TESTS")
+                    stage_env_dir="$SCRIPT_DIR/stage-env"
+                    rel_path=$(realpath --relative-to="$stage_env_dir" "$FUNCTIONAL_TESTS")
+                    info "Adding functional tests: $rel_path"
+                    TEST_DIRS+=("$rel_path")
+                fi
+                
+                # Add regression tests (if regression enabled)
+                if $RUN_REGRESSION && [ -d "$REGRESSION_TESTS" ]; then
+                    stage_env_dir="$SCRIPT_DIR/stage-env"
+                    rel_path=$(realpath --relative-to="$stage_env_dir" "$REGRESSION_TESTS")
+                    info "Adding regression tests: $rel_path"
+                    TEST_DIRS+=("$rel_path")
                 fi
             fi
             
             # Run ALL tests in one go (single run_id, single artifacts folder)
             if [ ${#TEST_DIRS[@]} -gt 0 ]; then
                 info "Running ${#TEST_DIRS[@]} test suite(s) in unified run..."
+                
+                # CRITICAL: Run from stage-env directory for relative paths
+                pushd "$SCRIPT_DIR/stage-env" > /dev/null
+                
                 # Use --no-start-network since we already started it above
-                "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
+                ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
+                
+                popd > /dev/null
                 
                 # Set individual exit codes based on result
                 if [ $TEST_EXIT -ne 0 ]; then
@@ -340,6 +397,9 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
                     if $RUN_FUNCTIONAL; then
                         FUNCTIONAL_EXIT=$TEST_EXIT
                     fi
+                    if $RUN_REGRESSION; then
+                        REGRESSION_EXIT=$TEST_EXIT
+                    fi
                 fi
             else
                 warning "No test directories found"
@@ -347,7 +407,11 @@ if $RUN_E2E || $RUN_FUNCTIONAL; then
             
             # Stop environment
             info "Stopping stage environment..."
-            "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
+            
+            pushd "$SCRIPT_DIR/stage-env" > /dev/null
+            ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
+            popd > /dev/null
+            
             success "Stage environment stopped"
         else
             error "Failed to start stage environment"
@@ -378,11 +442,19 @@ if $RUN_FUNCTIONAL; then
     fi
 fi
 
+if $RUN_REGRESSION; then
+    if [ $REGRESSION_EXIT -eq 0 ]; then
+        success "Regression Tests: PASSED"
+    else
+        error "Regression Tests: FAILED (exit code: $REGRESSION_EXIT)"
+    fi
+fi
+
 echo "════════════════════════════════════"
 
 # Exit with error if any tests failed
 TOTAL_EXIT=0
-if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ]; then
+if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ] || [ $REGRESSION_EXIT -ne 0 ]; then
     TOTAL_EXIT=1
 fi
 
