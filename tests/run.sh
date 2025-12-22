@@ -349,9 +349,7 @@ STAGE_ENV_START_ARGS="--wait"
 if $REBUILD_IMAGES; then
     STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --rebuild"
 fi
-if $KEEP_RUNNING; then
-    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --keep-running"
-fi
+# Note: --keep-running is handled at the end of the script (stop or keep network)
 
 info "Starting stage environment..."
 if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start $STAGE_ENV_START_ARGS; then
