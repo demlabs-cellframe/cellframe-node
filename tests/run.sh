@@ -39,7 +39,7 @@ warning() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
-STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
+STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env/config/stage-env.cfg"
 TESTNET_DOCKER_DIR="$PROJECT_ROOT/../../tests-in-docker"
 TESTNET_DOCKER_SCRIPT="$TESTNET_DOCKER_DIR/testnet.sh"
 
@@ -349,7 +349,9 @@ STAGE_ENV_START_ARGS="--wait"
 if $REBUILD_IMAGES; then
     STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --rebuild"
 fi
-# Note: --keep-running is handled at the end of the script (stop or keep network)
+if $KEEP_RUNNING; then
+    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --keep-running"
+fi
 
 info "Starting stage environment..."
 if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start $STAGE_ENV_START_ARGS; then
