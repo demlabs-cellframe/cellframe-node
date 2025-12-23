@@ -1,0 +1,31 @@
+# Test: Network Statistics
+# Test network statistics retrieval
+
+name: Network Stats Test
+description: Test getting network transaction statistics
+tags: [functional, network, stats]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 10s
+
+test:
+  # Test: Get network stats
+  - cli: net -net stagenet stats tx
+    node: node1
+    save: net_stats
+    description: "Get transaction statistics"
+
+check:
+  # Verify stats are returned
+  - python: |
+      stats = ctx.get_variable('net_stats')
+      assert stats is not None, "Network stats should be returned"
+    description: "Network stats are accessible"
+

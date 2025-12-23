@@ -1,0 +1,16 @@
+# Functional Test Suite: Token Features
+# Functional testing of advanced token features
+
+suite: "Token Features Suite"
+description: Functional testing of token flags, updates, and special features
+tags: [functional, token, features]
+version: "1.0"
+
+network:
+  topology: default
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
+

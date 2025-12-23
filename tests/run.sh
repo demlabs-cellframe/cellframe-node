@@ -6,60 +6,55 @@
 #   ./tests/run.sh                     # Run all tests
 #   ./tests/run.sh --e2e               # Run only E2E tests
 #   ./tests/run.sh --functional        # Run only functional tests
-#   ./tests/run.sh --clean             # Clean before running
+#   ./tests/run.sh --regression        # Run only regression tests
+#   ./tests/run.sh --clean             # Clean cache before running
+#   ./tests/run.sh --rebuild           # Rebuild Docker images
+#   ./tests/run.sh --keep-running      # Don't stop network after tests
+#   ./tests/run.sh --skip-build        # Skip building cellframe-node
 #
 
 set -euo pipefail
 
-# Colors (optional; keep output ASCII-safe)
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # Helper functions
-info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-success() {
-    echo -e "${GREEN}[ OK ]${NC} $1"
-}
-
-error() {
-    echo -e "${RED}[ERR ]${NC} $1" >&2
-}
-
-warning() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
+info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+success() { echo -e "${GREEN}[ OK ]${NC} $1"; }
+error() { echo -e "${RED}[ERR ]${NC} $1" >&2; }
+warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
 # Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
 STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env/config/stage-env.cfg"
-TESTNET_DOCKER_DIR="$PROJECT_ROOT/../../tests-in-docker"
-TESTNET_DOCKER_SCRIPT="$TESTNET_DOCKER_DIR/testnet.sh"
 
 # Test directories
 E2E_TESTS="$SCRIPT_DIR/e2e"
-STAGE_ENV_INTEGRATION_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/integration/scenarios/base"
+SCENARIOS_TESTS="$SCRIPT_DIR/e2e"
 FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
+REGRESSION_TESTS="$SCRIPT_DIR/regression"
+STAGE_ENV_INTEGRATION_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/integration/scenarios/base"
 
 # Build directories
-TEST_BUILD_DIR="$PROJECT_ROOT/test_build"
+TEST_BUILD_DIR="$PROJECT_ROOT/build"
 
 # Parse arguments
 RUN_E2E=false
 RUN_FUNCTIONAL=false
+RUN_REGRESSION=false
 CLEAN_BEFORE=false
 KEEP_RUNNING=false
 REBUILD_IMAGES=false
 SKIP_BUILD=false
-BACKEND="stage-env" # stage-env | docker
-PACKAGE_ARG=""
+PKGS_UPDATE=false
+STOP_ENV=false
+SPECIFIC_TESTS=()
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -69,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --functional)
             RUN_FUNCTIONAL=true
+            shift
+            ;;
+        --regression)
+            RUN_REGRESSION=true
             shift
             ;;
         --clean)
@@ -87,51 +86,91 @@ while [[ $# -gt 0 ]]; do
             SKIP_BUILD=true
             shift
             ;;
-        --backend)
-            BACKEND="${2:-}"
-            shift 2
+        --pkgs-update)
+            PKGS_UPDATE=true
+            shift
             ;;
-        --package)
-            PACKAGE_ARG="${2:-}"
-            shift 2
+        --stop)
+            STOP_ENV=true
+            shift
             ;;
         -h|--help)
-            echo "Usage: $0 [OPTIONS]"
+            echo "Usage: $0 [OPTIONS] [TEST_PATH...]"
             echo ""
             echo "Options:"
             echo "  --e2e           Run only E2E tests"
             echo "  --functional    Run only functional tests"
-            echo "  --clean         Clean before running (includes Docker cleanup)"
-            echo "  --keep-running  Do not stop the network after tests"
-            echo "  --rebuild       Force rebuild Docker images"
+            echo "  --regression    Run only regression tests"
+            echo "  --clean         Clean cache before running"
+            echo "  --keep-running  Don't stop the network after tests"
+            echo "  --rebuild       Rebuild Docker images"
             echo "  --skip-build    Skip building cellframe-node (use existing)"
-            echo "  --backend ARG   stage-env (default) or docker"
-            echo "  --package ARG   Node package URL or path (docker backend)"
+            echo "  --pkgs-update   Update packages in running containers"
+            echo "  --stop          Stop stage environment"
             echo "  -h, --help      Show this help message"
             echo ""
-            echo "If no test type specified, all tests will run."
+            echo "Examples:"
+            echo "  $0                                    # Run all tests"
+            echo "  $0 --e2e                              # Run all E2E tests"
+            echo "  $0 --clean --e2e                      # Clean cache and run E2E tests"
+            echo "  $0 --rebuild --e2e                    # Rebuild images and run E2E tests"
+            echo "  $0 --keep-running                     # Keep network running after tests"
+            echo "  $0 --stop                             # Stop stage environment"
+            echo "  $0 tests/e2e/token                    # Run specific test suite"
+            echo ""
             exit 0
             ;;
-        *)
+        -*)
             error "Unknown option: $1"
             exit 1
+            ;;
+        *)
+            SPECIFIC_TESTS+=("$1")
+            shift
             ;;
     esac
 done
 
-# Validate backend
-case "$BACKEND" in
-    stage-env|docker) ;;
-    *)
-        error "Unsupported backend: $BACKEND (expected: stage-env or docker)"
+# Handle --stop first
+if [ "$STOP_ENV" = true ]; then
+    info "Stopping stage environment..."
+    if [ -x "$STAGE_ENV_WRAPPER" ]; then
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
+        popd > /dev/null
+    else
+        error "stage-env wrapper not found or not executable"
         exit 1
-        ;;
-esac
+    fi
+    success "Stage environment stopped"
+    exit 0
+fi
 
-# If neither specified, run both
-if ! $RUN_E2E && ! $RUN_FUNCTIONAL; then
+# Handle --pkgs-update
+if [ "$PKGS_UPDATE" = true ]; then
+    info "Updating packages in running containers..."
+    if [ -x "$STAGE_ENV_WRAPPER" ]; then
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" pkgs-update || exit $?
+        popd > /dev/null
+    else
+        error "stage-env wrapper not found or not executable"
+        exit 1
+    fi
+    success "Package update completed"
+    exit 0
+fi
+
+# If specific tests provided, use them directly
+if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
+    info "Specific tests requested: ${SPECIFIC_TESTS[*]}"
+elif ! $RUN_E2E && ! $RUN_FUNCTIONAL && ! $RUN_REGRESSION; then
+    # If nothing specified, run all
     RUN_E2E=true
     RUN_FUNCTIONAL=true
+    RUN_REGRESSION=true
 fi
 
 info "Cellframe Node Test Runner"
@@ -157,7 +196,6 @@ DEB_PACKAGE=""
 if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_ROOT/CMakeLists.txt"; then
     if $SKIP_BUILD; then
         info "Skipping build (--skip-build specified)"
-        # Try to find existing .deb package
         DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f 2>/dev/null | head -n 1)
         if [ -n "$DEB_PACKAGE" ]; then
             success "Using existing package: $(basename "$DEB_PACKAGE")"
@@ -166,33 +204,27 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
         fi
     else
         info "Detected cellframe-node repository - building local package..."
-        
-        # Create test_build directory
         mkdir -p "$TEST_BUILD_DIR"
         cd "$TEST_BUILD_DIR"
         
-        # Configure with CMake (Debug mode for testing)
         info "Configuring with CMake (Debug mode)..."
         cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=On .. || {
             error "CMake configuration failed"
             exit 1
         }
         
-        # Build
         info "Building cellframe-node..."
         make -j$(nproc) cellframe-node || {
             error "Build failed"
             exit 1
         }
         
-        # Package with cpack
         info "Creating .deb package..."
         cpack -G DEB || {
             error "Packaging failed"
             exit 1
         }
         
-        # Find the generated .deb package
         DEB_PACKAGE=$(find "$TEST_BUILD_DIR" -maxdepth 1 -name "cellframe-node*.deb" -type f | head -n 1)
         
         if [ -z "$DEB_PACKAGE" ]; then
@@ -207,8 +239,6 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
     # Update stage-env.cfg to use local package
     if [ -n "$DEB_PACKAGE" ] && [ -f "$STAGE_ENV_CONFIG" ]; then
         info "Updating stage-env.cfg with local package path..."
-        
-        # Create temporary config with updated node_source
         python3 -c "
 import configparser
 config = configparser.ConfigParser()
@@ -224,53 +254,31 @@ with open('$STAGE_ENV_CONFIG', 'w') as f:
     config.write(f)
 " || {
             warning "Failed to update stage-env.cfg automatically"
-            info "Please update [node_source] section manually:"
-            info "  type = local"
-            info "  local_path = $DEB_PACKAGE"
         }
-        
         success "stage-env.cfg updated to use local package"
-    elif [ -z "$DEB_PACKAGE" ]; then
-        warning "No .deb package to configure"
-    else
-        warning "stage-env.cfg not found at $STAGE_ENV_CONFIG"
     fi
 else
     info "Not in cellframe-node repository - using configured node source"
-fi
-
-# If docker backend is used and no explicit package is provided,
-# prefer the locally built package when available.
-if [[ "$BACKEND" == "docker" ]]; then
-    if [[ -z "$PACKAGE_ARG" && -n "${DEB_PACKAGE:-}" ]]; then
-        PACKAGE_ARG="$DEB_PACKAGE"
-    fi
 fi
 
 # Clean if requested
 if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
-    if [[ "$BACKEND" == "stage-env" ]]; then
-        # Clean Docker containers, images, and volumes first
-        COMPOSE_FILE="$SCRIPT_DIR/stage-env/docker-compose.generated.yml"
-        if [ -f "$COMPOSE_FILE" ]; then
-            info "Stopping and removing Docker containers/images..."
-            docker compose -f "$COMPOSE_FILE" -p cellframe-stage stop 2>/dev/null || true
-            docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --rmi local --volumes 2>/dev/null || true
-        fi
-        
-        # Also clean the cf-node images directly
-        info "Removing cf-node images..."
-        docker images --filter "reference=cf-node:*" -q | xargs -r docker rmi -f 2>/dev/null || true
-        
-        if [ -x "$STAGE_ENV_WRAPPER" ]; then
-            "$STAGE_ENV_WRAPPER" clean --all --yes || true
-        fi
-    else
-        if [ -x "$TESTNET_DOCKER_DIR/clean.sh" ]; then
-            "$TESTNET_DOCKER_DIR/clean.sh" || true
-        fi
+    if [ -x "$STAGE_ENV_WRAPPER" ]; then
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" clean --all || true
+        popd > /dev/null
+    fi
+    
+    # Additional cleanup
+    STAGE_ENV_DIR="$SCRIPT_DIR/stage-env"
+    TESTING_DIR="$SCRIPT_DIR/testing"
+    
+    if [ -d "$TESTING_DIR/snapshots" ] && [ "$(ls -A "$TESTING_DIR/snapshots" 2>/dev/null)" ]; then
+        info "Removing remaining snapshots..."
+        docker run --rm -v "$TESTING_DIR:/cleanup" alpine:latest sh -c "rm -rf /cleanup/snapshots/*" 2>/dev/null || true
     fi
     
     success "Environment cleaned"
@@ -279,138 +287,110 @@ fi
 # Track results
 E2E_EXIT=0
 FUNCTIONAL_EXIT=0
+REGRESSION_EXIT=0
+TEST_EXIT=0
 
-# Docker backend: delegate to the known-good integration script.
-# It starts the network and performs its own checks.
-if [[ "$BACKEND" == "docker" ]]; then
-    echo ""
-    info "═══════════════════════════════════"
-    info "Docker backend (tests-in-docker/testnet.sh)"
-    info "═══════════════════════════════════"
-    echo ""
-    
-    if [ ! -x "$TESTNET_DOCKER_SCRIPT" ]; then
-        error "testnet.sh not found or not executable at: $TESTNET_DOCKER_SCRIPT"
-        exit 1
-    fi
-    
-    if [[ -n "$PACKAGE_ARG" ]]; then
-        if [[ -f "$PACKAGE_ARG" ]]; then
-            # testnet.sh accepts only files from its local debs/ directory.
-            mkdir -p "$TESTNET_DOCKER_DIR/debs"
-            cp -f "$PACKAGE_ARG" "$TESTNET_DOCKER_DIR/debs/"
-            PACKAGE_ARG="$(basename "$PACKAGE_ARG")"
-        fi
-        info "Starting docker testnet with package: $PACKAGE_ARG"
-        (cd "$TESTNET_DOCKER_DIR" && bash "./testnet.sh" "$PACKAGE_ARG")
-    else
-        info "Starting docker testnet with default package (master/latest)"
-        (cd "$TESTNET_DOCKER_DIR" && bash "./testnet.sh")
-    fi
-    
-    success "Docker testnet script finished successfully"
-    exit 0
-fi
-
-# stage-env backend: start network once, run selected suites, then stop (unless --keep-running).
+# Ensure stage-env is executable
 if [ ! -x "$STAGE_ENV_WRAPPER" ]; then
-    error "stage-env wrapper not found or not executable at: $STAGE_ENV_WRAPPER"
+    error "stage-env wrapper not found or not executable"
     exit 1
 fi
 
 echo ""
 info "═══════════════════════════════════"
-info "stage-env backend"
+info "Running Tests"
 info "═══════════════════════════════════"
 echo ""
 
-# Pre-cleanup: Stop any running containers and clean up before starting fresh
-# This prevents BuildKit "image already exists" errors
-COMPOSE_FILE="$SCRIPT_DIR/stage-env/docker-compose.generated.yml"
-if [ -f "$COMPOSE_FILE" ]; then
-    info "Cleaning up previous Docker resources..."
-    docker compose -f "$COMPOSE_FILE" -p cellframe-stage stop 2>/dev/null || true
-    
-    if $REBUILD_IMAGES || $CLEAN_BEFORE; then
-        # Full cleanup with image removal
-        docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --rmi local --volumes 2>/dev/null || true
-        # Also remove cf-node images directly
-        docker images --filter "reference=cf-node:*" -q | xargs -r docker rmi -f 2>/dev/null || true
-        success "Docker cleanup completed (with image removal)"
-    else
-        # Quick cleanup without image removal
-        docker compose -f "$COMPOSE_FILE" -p cellframe-stage down --volumes 2>/dev/null || true
-        success "Docker cleanup completed"
-    fi
-fi
+# Start stage environment
+pushd "$SCRIPT_DIR/stage-env" > /dev/null
+STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
 
-# Build stage-env start command
-STAGE_ENV_START_ARGS="--wait"
+# Build start arguments
+START_ARGS="--wait"
 if $REBUILD_IMAGES; then
-    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --rebuild"
+    START_ARGS="$START_ARGS --rebuild"
 fi
 if $KEEP_RUNNING; then
-    STAGE_ENV_START_ARGS="$STAGE_ENV_START_ARGS --keep-running"
+    START_ARGS="$START_ARGS --keep-running"
 fi
 
 info "Starting stage environment..."
-if "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" start $STAGE_ENV_START_ARGS; then
+./stage-env --config="$STAGE_ENV_CONFIG_ABS" start $START_ARGS || E2E_EXIT=$?
+popd > /dev/null
+
+if [ $E2E_EXIT -eq 0 ]; then
     success "Stage environment started"
+    
+    # Collect test directories
+    TEST_DIRS=()
+    
+    if [ ${#SPECIFIC_TESTS[@]} -gt 0 ]; then
+        for test_path in "${SPECIFIC_TESTS[@]}"; do
+            if [[ "$test_path" == /* ]]; then
+                abs_path="$test_path"
+            else
+                abs_path="$PROJECT_ROOT/$test_path"
+            fi
+            stage_env_dir="$SCRIPT_DIR/stage-env"
+            rel_from_stage_env=$(realpath --relative-to="$stage_env_dir" "$abs_path" 2>/dev/null || echo "$abs_path")
+            if [ -e "$abs_path" ]; then
+                TEST_DIRS+=("$rel_from_stage_env")
+            else
+                warning "Test path not found: $test_path"
+            fi
+        done
+    else
+        if $RUN_E2E && [ -d "$E2E_TESTS" ]; then
+            stage_env_dir="$SCRIPT_DIR/stage-env"
+            rel_path=$(realpath --relative-to="$stage_env_dir" "$E2E_TESTS")
+            TEST_DIRS+=("$rel_path")
+        fi
+        
+        if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
+            stage_env_dir="$SCRIPT_DIR/stage-env"
+            rel_path=$(realpath --relative-to="$stage_env_dir" "$FUNCTIONAL_TESTS")
+            TEST_DIRS+=("$rel_path")
+        fi
+        
+        if $RUN_REGRESSION && [ -d "$REGRESSION_TESTS" ]; then
+            stage_env_dir="$SCRIPT_DIR/stage-env"
+            rel_path=$(realpath --relative-to="$stage_env_dir" "$REGRESSION_TESTS")
+            TEST_DIRS+=("$rel_path")
+        fi
+    fi
+    
+    # Run tests
+    if [ ${#TEST_DIRS[@]} -gt 0 ]; then
+        info "Running ${#TEST_DIRS[@]} test suite(s)..."
+        
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
+        popd > /dev/null
+        
+        if [ $TEST_EXIT -ne 0 ]; then
+            E2E_EXIT=$TEST_EXIT
+            FUNCTIONAL_EXIT=$TEST_EXIT
+            REGRESSION_EXIT=$TEST_EXIT
+        fi
+    else
+        warning "No test directories found"
+    fi
+    
+    # Stop environment (unless --keep-running)
+    if $KEEP_RUNNING; then
+        warning "Keeping stage environment running (--keep-running)"
+    else
+        info "Stopping stage environment..."
+        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
+        popd > /dev/null
+        success "Stage environment stopped"
+    fi
 else
     error "Failed to start stage environment"
-    exit 1
-fi
-
-# Run E2E tests
-if $RUN_E2E; then
-    echo ""
-    info "Running E2E Tests..."
-    
-    TEST_DIRS=()
-    if [ -d "$E2E_TESTS" ]; then
-        TEST_DIRS+=("$E2E_TESTS")
-    fi
-    if [ -d "$STAGE_ENV_INTEGRATION_BASE_TESTS" ]; then
-        TEST_DIRS+=("$STAGE_ENV_INTEGRATION_BASE_TESTS")
-    fi
-    
-    if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-        KEEP_ARG=""
-        $KEEP_RUNNING && KEEP_ARG="--keep-running"
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $KEEP_ARG || E2E_EXIT=$?
-    else
-        warning "No E2E test directories found"
-        E2E_EXIT=1
-    fi
-fi
-
-# Run functional tests
-if $RUN_FUNCTIONAL; then
-    echo ""
-    info "Running Functional Tests..."
-    
-    TEST_DIRS=()
-    if [ -d "$FUNCTIONAL_TESTS" ]; then
-        TEST_DIRS+=("$FUNCTIONAL_TESTS")
-    fi
-    
-    if [ ${#TEST_DIRS[@]} -gt 0 ]; then
-        KEEP_ARG=""
-        $KEEP_RUNNING && KEEP_ARG="--keep-running"
-        "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" run-tests --no-start-network "${TEST_DIRS[@]}" $KEEP_ARG || FUNCTIONAL_EXIT=$?
-    else
-        warning "Functional tests directory not found: $FUNCTIONAL_TESTS"
-        FUNCTIONAL_EXIT=1
-    fi
-fi
-
-# Stop environment (unless --keep-running)
-if $KEEP_RUNNING; then
-    warning "Keeping stage environment running (--keep-running)"
-else
-    info "Stopping stage environment..."
-    "$STAGE_ENV_WRAPPER" --config="$STAGE_ENV_CONFIG" stop || true
-    success "Stage environment stopped"
+    FUNCTIONAL_EXIT=$E2E_EXIT
+    REGRESSION_EXIT=$E2E_EXIT
 fi
 
 # Summary
@@ -435,13 +415,20 @@ if $RUN_FUNCTIONAL; then
     fi
 fi
 
+if $RUN_REGRESSION; then
+    if [ $REGRESSION_EXIT -eq 0 ]; then
+        success "Regression Tests: PASSED"
+    else
+        error "Regression Tests: FAILED (exit code: $REGRESSION_EXIT)"
+    fi
+fi
+
 echo "════════════════════════════════════"
 
 # Exit with error if any tests failed
 TOTAL_EXIT=0
-if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ]; then
+if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ] || [ $REGRESSION_EXIT -ne 0 ]; then
     TOTAL_EXIT=1
 fi
 
 exit $TOTAL_EXIT
-

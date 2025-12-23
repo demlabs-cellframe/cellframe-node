@@ -1,0 +1,36 @@
+# Build artifacts
+test_build/
+testing/
+test-in-docker
+# Runtime artifacts
+testing/artifacts/
+testing/cache/
+testing/logs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

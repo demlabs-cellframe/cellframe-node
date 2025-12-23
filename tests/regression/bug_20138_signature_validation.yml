@@ -1,0 +1,192 @@
+name: Regression Bug #20138 - Arbitrage Signature Validation
+description: |
+  Bug: Arbitrage transaction not authorized despite correct certificate
+  
+  Symptom: Arbitrage TX created successfully but stuck in mempool with status='hole'
+  Error: "Arbitrage transaction not authorized: invalid owner signature or arbitrage disabled for token"
+  
+  Key condition: Same certificate used for token_decl AND arbitrage TX, yet validation fails
+  
+  This test reproduces the bug in production-like stage environment using Docker containers.
+
+network:
+  topology: default
+  name: stagenet
+  consensus: dag-poa  # Production consensus for realistic testing
+
+setup:
+  - docker_op: start
+    services: [node-1, node-4, node-5]  # Multi-node for DAG PoA
+    detach: true
+  
+  - wait_network: online
+    nodes: [node-1, node-4, node-5]
+    timeout: 120
+
+test:
+  - group: Token Creation with Owner Certificate
+    defaults:
+      node: node-1
+    steps:
+      # 1. Create wallet for token owner
+      - cli: "wallet new -w bug20138_owner"
+        expect_success: true
+      
+      - cli: "wallet info -addr -w bug20138_owner"
+        save_wallet: owner_addr
+        expect_success: true
+      
+      # 2. Create custom token with certificate (SAME cert will be used for arbitrage)
+      # Using cert: pvt.stagenet.root.0 (token owner certificate)
+      - cli: "token_decl -token BUG20138 -chain zerochain -total_supply 0 -decimals 18 -signs_emission 1 -signs_total 1 -type CF20 -certs pvt.stagenet.root.0 -description 'Bug20138TestToken'"
+        save_hash: token_decl_hash
+        expect_success: true
+      
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout: 90
+      
+      # 3. Verify token declared correctly
+      - cli: "token info -net stagenet -token BUG20138"
+        save_to: token_info
+        expect_contains:
+          - "BUG20138"
+          - "signs_total: 1"
+      
+      # 4. Create emission with -no_base_tx flag (as per bug report)
+      - cli: "token_emit -chain zerochain -token BUG20138 -no_base_tx -emission_value 100000000000.0 -addr {{owner_addr}} -certs pvt.stagenet.root.0"
+        save_hash: emission_hash
+        expect_success: true
+      
+      - wait_for_datum: "{{emission_hash}}"
+        chain: zerochain
+        timeout: 90
+
+  - group: Create Base TX from Emission
+    defaults:
+      node: node-1
+    steps:
+      # 5. Create base TX to generate UTXOs and balance
+      # NOTE: Base TX should be created WITHOUT network fee (initial UTXO creation)
+      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_hash}} -cert pvt.stagenet.root.0"
+        save_hash: base_tx_hash
+        expect_success: true
+      
+      - wait_for_datum: "{{base_tx_hash}}"
+        chain: main
+        timeout: 90
+      
+      # 6. Verify balance created
+      - cli: "wallet info -w bug20138_owner"
+        save_to: wallet_balance_output
+        expect_contains:
+          - "BUG20138"
+      
+      - python: |
+          import re
+          from decimal import Decimal
+          # Extract balance for BUG20138
+          match = re.search(r'BUG20138:\s+([0-9.]+)', ctx.wallet_balance_output)
+          if not match:
+              raise Exception(f"BUG20138 balance not found in wallet info: {ctx.wallet_balance_output}")
+          balance_str = match.group(1)
+          balance = Decimal(balance_str)
+          if balance <= 0:
+              raise Exception(f"Balance is zero or negative: {balance_str}")
+          ctx.set_variable('initial_balance', balance_str)
+          print(f"✓ Token BUG20138 balance: {balance_str}")
+
+  - group: Configure Network Fee
+    defaults:
+      node: node-1
+    steps:
+      # 7. Get fee address for arbitrage
+      - cli: "net -net stagenet get fee"
+        save_to: fee_config
+      
+      # Parse fee address or create one
+      - cli: "wallet info -addr -w bug20138_owner"
+        save_wallet: fee_addr
+      
+      # 8. Set network fee (AFTER token creation to avoid blocking base TX)
+      - cli: "net -net stagenet -fee 0.1 -addr {{fee_addr}}"
+        expect_success: true
+
+  - group: Test Arbitrage WITHOUT -cert (Expected to Fail)
+    defaults:
+      node: node-1
+    steps:
+      # 9. Attempt arbitrage without -cert (should fail with TSD sanity check error)
+      - cli: "tx_create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1"
+        expect_failure: true
+        expect_error_contains:
+          - "Sanity check"
+        on_error: continue
+
+  - group: Test Arbitrage WITH -cert (BUG REPRODUCTION)
+    defaults:
+      node: node-1
+    steps:
+      # 10. Create arbitrage transaction WITH -cert parameter
+      # CRITICAL: Using SAME certificate as token_decl (pvt.stagenet.root.0)
+      # Expected: TX should be authorized
+      # Actual (BUG): TX stuck in mempool with "invalid owner signature" error
+      - cli: "tx_create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+        save_hash: arb_tx_hash
+        timeout: 30
+      
+      # 11. Check transaction status in mempool
+      - cli: "mempool check -net stagenet -datum {{arb_tx_hash}}"
+        save_to: mempool_status
+        timeout: 30
+      
+      # 12. Verify bug reproduction
+      - python: |
+          status = ctx.mempool_status or ""
+          # Bug symptom: status='hole' with error message
+          if "hole" in status.lower():
+              if "invalid owner signature" in status.lower() or "not authorized" in status.lower():
+                  print("✓ BUG REPRODUCED: TX stuck in mempool with 'invalid owner signature' error")
+                  print(f"Status: {status[:200]}")
+                  ctx.set_variable('bug_reproduced', True)
+              else:
+                  print(f"⚠️ TX in mempool but different error: {status[:200]}")
+          elif "accepted" in status.lower() or "processed" in status.lower():
+              print("❌ BUG NOT REPRODUCED: TX was accepted (bug may be fixed)")
+              ctx.set_variable('bug_reproduced', False)
+          else:
+              print(f"⚠️ Unexpected status: {status[:200]}")
+          
+          # For investigation: save full status
+          with open("/tmp/bug20138_mempool_status.txt", "w") as f:
+              f.write(status)
+          print("Full mempool status saved to /tmp/bug20138_mempool_status.txt")
+      
+      # 13. Wait and check if TX processes (it should NOT if bug exists)
+      - wait_for_datum: "{{arb_tx_hash}}"
+        chain: main
+        timeout: 30
+        on_timeout: continue  # Expected to timeout if bug exists
+      
+      # 14. Final verification
+      - cli: "wallet info -w bug20138_owner"
+        save_to: final_wallet_info
+      
+      - python: |
+          if ctx.get_variable('bug_reproduced'):
+              print("=" * 50)
+              print("BUG #20138 SUCCESSFULLY REPRODUCED")
+              print("=" * 50)
+              print("Details:")
+              print("- Arbitrage TX created with correct certificate")
+              print("- TX stuck in mempool with 'invalid owner signature' error")
+              print("- Same certificate used for token_decl and arbitrage")
+              print(f"- TX hash: {ctx.arb_tx_hash}")
+              print("=" * 50)
+          else:
+              print("BUG NOT REPRODUCED - transaction may have been processed")
+
+cleanup:
+  - docker_op: stop
+    services: [node-1, node-4, node-5]
+

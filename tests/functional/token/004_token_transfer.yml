@@ -1,0 +1,56 @@
+# Test: Token Transfer
+# Verify token transfers between wallets
+
+name: Token Transfer Test
+description: Test transferring tokens between two wallets
+tags: [e2e, token, transfer]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+# Global defaults
+defaults:
+  node: node1
+  wait: 1s
+
+setup:
+  - wait: 3s
+  
+  # Create wallets
+  - cli: wallet new -w wallet1
+  
+  - cli: wallet new -w wallet2
+  
+  # Get wallet addresses with validation
+  - cli: wallet info -w wallet1
+    save_wallet: wallet1_addr
+  
+  - cli: wallet info -w wallet2
+    save_wallet: wallet2_addr
+  
+  # Create token
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token XFERTEST -total_supply 1000000 -certs test_cert
+    wait: 3s
+  
+  # Emit tokens to wallet1
+  - cli: token_emit -token XFERTEST -value 10000 -addr {{wallet1_addr}} -certs test_cert
+    save: emit_tx
+  
+  - wait_for_datum: "{{emit_tx}}"
+
+test:
+  # Test: Transfer tokens to wallet2
+  - cli: tx_create -token XFERTEST -from {{emit_tx}}:0 -to_addr {{wallet2_addr}} -value 1000 -fee 0.1
+    save: transfer_tx
+  
+  - wait_for_datum: "{{transfer_tx}}"
+
+check:
+  # Verify transaction in history
+  - cli: tx_history -tx {{transfer_tx}}
+    contains: "{{transfer_tx}}"
+

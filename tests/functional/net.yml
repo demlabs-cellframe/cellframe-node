@@ -1,0 +1,8 @@
+# Functional Test Suite: Network Features
+# Functional testing of advanced network features
+
+suite: "Network Features Suite"
+description: Functional testing of network sync, CA management, and advanced features
+tags: [functional, network, features]
+version: "1.0"
+

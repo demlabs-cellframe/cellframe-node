@@ -1,0 +1,31 @@
+# Test: Network Synchronization
+# Test network sync operations
+
+name: Network Sync Test
+description: Test network synchronization commands
+tags: [functional, network, sync]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 10s
+
+test:
+  # Test: Check sync status before
+  - cli: net -net stagenet get status
+    node: node1
+    save: status_before
+    description: "Get network status"
+
+check:
+  # Verify status is accessible
+  - python: |
+      status = ctx.get_variable('status_before')
+      assert status, "Network status should not be empty"
+    description: "Network status is accessible"
+

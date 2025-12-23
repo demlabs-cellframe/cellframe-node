@@ -1,0 +1,33 @@
+# Test wallet balance checking
+name: Wallet Balance Test
+description: Test checking wallet balance after token emission
+tags: [functional, wallet, balance]
+
+defaults:
+  node: node1
+
+setup:
+  # Create token declaration
+  - cli: token_decl -token BALTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save_hash: token_decl_hash
+  # waiting for its passing on chain       
+  - wait_for_datum: "{{token_decl_hash}}"
+
+  # Do the emission and wait for finalization 
+  - cli: token_emit -token BALTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+    save_hash: token_emit_hash
+  - wait_for_datum: "{{token_emit_hash}}"
+
+test:
+  # Test: Check wallet balance
+  - cli: wallet info -w test_wallet -addr {{wallet_addr}}
+    save: balance_info
+    description: "Check wallet balance"
+
+check:
+  # Verify balance info is returned
+  - python: |
+      balance = ctx.get_variable('balance_info')
+      assert balance, "Balance info should not be empty"
+    description: "Balance info is accessible"
+
