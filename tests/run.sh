@@ -213,11 +213,20 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
             exit 1
         }
         
-        info "Building cellframe-node..."
-        make -j$(nproc) cellframe-node || {
-            error "Build failed"
-            exit 1
-        }
+        info "Building cellframe-node and related tools..."
+        # Use ninja if build.ninja exists, otherwise use make
+        # Build all targets required for .deb package
+        if [ -f "build.ninja" ]; then
+            ninja cellframe-node cellframe-node-cli cellframe-node-tool cellframe-node-config || {
+                error "Build failed"
+                exit 1
+            }
+        else
+            make -j$(nproc) cellframe-node cellframe-node-cli cellframe-node-tool cellframe-node-config || {
+                error "Build failed"
+                exit 1
+            }
+        fi
         
         info "Creating .deb package..."
         cpack -G DEB || {

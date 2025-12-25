@@ -92,6 +92,14 @@ if [ -n "$CONTAINERS" ]; then
 fi
 success "Docker containers stopped"
 
+# Remove Docker networks to avoid "Pool overlaps" errors
+info "Cleaning Docker networks..."
+docker network rm stage-env_stagenet 2>/dev/null || true
+docker network rm cellframe-stage_stagenet 2>/dev/null || true
+# Prune any dangling networks
+docker network prune -f 2>/dev/null || true
+success "Docker networks cleaned"
+
 # Remove Docker images if requested
 if [ "$REMOVE_IMAGES" = true ]; then
     info "Removing Docker images..."
