@@ -80,5 +80,7 @@ cmake-build-*
 .cache
 #slc
 .slc
-slc
+.clangd
 .cursorrules
+.slc/
+slc

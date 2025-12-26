@@ -111,6 +111,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_stake_ext.h"
 #include "dap_chain_wallet_shared.h"
 
 #include "dap_chain_wallet_cache.h"
@@ -392,6 +393,10 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_bridge_init()) {
         log_it(L_ERROR, "Can't provide bridge capability");
     }
+
+    if (dap_chain_net_srv_stake_ext_init()) {
+        log_it(L_ERROR, "Can't provide stake-ext capability");
+    }
     
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
@@ -428,6 +433,11 @@ int main( int argc, const char **argv )
         return -61;
     }
     dap_chain_net_load_all();
+
+    if( (dap_chain_wallet_shared_notify_init()) ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
 
     if( dap_chain_net_srv_order_init() )
         return -67;
