@@ -98,11 +98,13 @@ test:
     steps:
       - cli: "command"
         save_hash: variable_name
-      - wait_for_datum: "{{hash}}"
+      - wait_for_datum: "{{variable_name}}"
         chain: main
-      - python: |
-          # Validation logic
-          ...
+
+check:
+  - cli: ledger info -hash {{variable_name}}
+    contains: "expected_value"
+    not_contains: "ERROR"
 
 cleanup:
   - docker_op: stop
