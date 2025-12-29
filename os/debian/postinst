@@ -8,7 +8,7 @@ DAP_PREFIX="/opt/$DAP_APP_NAME"
 
 #unconditianly create directories on pkg instllation
 echo "[*] Creating run, lib, var dirs...."
-mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
+mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,lib/plugins} || true
 
 if [ -e /.dockerenv ]
 then
