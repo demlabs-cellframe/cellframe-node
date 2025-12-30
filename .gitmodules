@@ -14,5 +14,5 @@
 	url = ../../dap/dap-sdk.git
 	branch = develop
 [submodule "cellframe-stage-env"]
-	path = cellframe-stage-env
-	url = git@gitlab.cellframe.net:cellframe/cellframe-stage-env.git
+	path = tests/stage-env
+	url = ../cellframe-stage-env.git
