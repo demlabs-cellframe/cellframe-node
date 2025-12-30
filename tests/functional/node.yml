@@ -1,0 +1,13 @@
+# Functional Test Suite: Node Features
+# Functional testing of node management
+
+suite: "Node Features Suite"  # Suite name (this field marks it as suite descriptor)
+description: Functional testing of node management and connection operations
+tags: [functional, node, management]
+version: "1.0"
+
+network:
+  topology: default
+
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the node/ subdirectory

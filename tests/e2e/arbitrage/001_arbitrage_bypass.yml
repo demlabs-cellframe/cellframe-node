@@ -1,0 +1,91 @@
+# Arbitrage Bypass Test
+# Verifies that arbitrage transactions can bypass blocked UTXO
+name: Arbitrage Bypass Test
+description: Arbitrage transactions should bypass UTXO blocklist
+author: QA Team
+tags: [arbitrage, utxo-blocking, critical]
+
+
+# Global defaults for all sections
+defaults:
+  certs: test_cert 
+  fee: 0.1
+
+# Setup phase: create token with UTXO blocking enabled
+setup:
+# Create ARBTEST token with UTXO blocking
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ARBTEST -total_supply 1000000 
+    save_hash: token_hash
+  - wait_for_datum: "{{token_hash}}"
+  
+  # Emit ARBTEST tokens 1
+  - cli: token_emit -token ARBTEST -value 500 -addr {{wallet_addr}}
+    save_hash: emission_tx
+  - wait_for_datum: "{{emission_hash_1}}"
+
+
+  # Emit ARBTEST tokens 2
+  - cli: token_emit -token ARBTEST -value 1000 -addr {{wallet_addr}}
+    save_hash: emission_tx
+  - wait_for_datum: "{{emission_hash_2}}"
+
+  # Emit ARBTEST tokens 3
+  - cli: token_emit -token ARBTEST -value 1500 -addr {{wallet_addr}}
+    save_hash: emission_tx
+  - wait_for_datum: "{{emission_hash_3}}"
+  
+  # Create transaction 1 from emission
+  - cli: tx_create -token ARBTEST -from_emission {{emission_tx_1}} -value 500
+    save_hash: tx_hash
+  - wait_for_datum: "{{tx_hash_1}}"
+
+  # Create transaction 2 from emission
+  - cli: tx_create -token ARBTEST -from_emission {{emission_tx_2}} -value 1000
+    save_hash: tx_hash
+  - wait_for_datum: "{{tx_hash_2}}"
+
+  # Create transaction 3 from emission
+  - cli: tx_create -token ARBTEST -from_emission {{emission_tx_3}} -value 1500
+    save_hash: tx_hash
+  - wait_for_datum: "{{tx_hash_3}}"
+  
+  # Block the UTXO 1 and 2 but not 3
+  - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash_1}}:0
+    save_hash: token_update_1
+  - wait_for_datum: "{{token_update_1}}"
+  - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash_1}}:0
+    save_hash: token_update_2
+  - wait_for_datum: "{{token_update_2}}"
+
+# Test phase: verify blocking and arbitrage bypass
+test:
+  # Regular transaction FROM BLOCKED UTXO should fail
+  - cli: tx_create -token ARBTEST -from {{tx_hash_1}}:0 -value 100
+    expect: error
+    contains: "blocked"
+  
+  # Arbitrage transaction FROM BLOCKED UTXO should succeed
+  - cli: tx_create -token ARBTEST -from {{tx_hash_2}}:0 -value 100 -arbitrage
+    save_hash: arb_tx
+
+  - wait_for_datum: "{{arb_tx}}"
+
+# Check phase: verify results
+check:
+# Verify all tx in history
+  - cli: tx_history -tx {{arb_tx}}
+    contains: "{{arb_tx}}"
+  - cli: tx_history -tx {{arb_tx}}
+    contains: "arbitrage"
+  - cli: tx_history -tx {{tx_hash_1}}
+    contains: "{{tx_hash_1}}"
+  - cli: tx_history -tx {{tx_hash_2}}
+    contains: "{{tx_hash_2}}"
+  - cli: tx_history -tx {{tx_hash_3}}
+    contains: "{{tx_hash_3}}"
+  
+  # Verify UTXO is in blocklist
+  - cli: token info -name ARBTEST -history_limit 10
+    contains: "{{tx_hash_1}}"
+
+

@@ -1,0 +1,32 @@
+# Test: Node Balancer
+# Test node balancer functionality
+
+name: Node Balancer Test
+description: Test node balancer operations
+tags: [e2e, node, balancer]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 10s
+
+test:
+  # Test: Get node balancer info
+  - cli: node balancer -net stagenet
+    node: node1
+    expect: success
+    save: balancer_info
+    description: "Get balancer info"
+
+check:
+  # Verify balancer info
+  - python: |
+      balancer = ctx.get_variable('balancer_info')
+      assert balancer is not None, "Balancer info should be returned"
+    description: "Balancer info is accessible"
+

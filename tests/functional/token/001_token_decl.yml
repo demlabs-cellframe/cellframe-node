@@ -1,0 +1,35 @@
+# Test: Token Declaration
+# Verify token creation
+
+name: Token Declaration Test
+description: Test creating new tokens with various parameters
+tags: [e2e, token, declaration]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+
+setup:
+  - wait: 3s
+
+test:
+  # Test: Create simple token
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token E2ETEST -total_supply 1000000 -certs test_cert
+    node: node1
+    expect: success
+    save_hash: token_hash
+    wait: 3s
+    description: "Declare E2ETEST token"
+
+check:
+  # Verify token info is accessible
+  - cli: token info -name E2ETEST
+    node: node1
+    expect: success
+    contains: "E2ETEST"
+    description: "Token info contains token name"
+

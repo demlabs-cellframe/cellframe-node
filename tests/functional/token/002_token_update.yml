@@ -1,0 +1,36 @@
+# Test: Token Update Operations
+# Test various token update commands
+
+name: Token Update Test
+description: Test token update operations (non-UTXO related)
+tags: [functional, token, update]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+
+defaults:
+  node: node1
+  wait: 3s  
+
+setup:
+  # Create token
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token UPDTEST -total_supply 1000000 -certs test_cert
+  # Emit tokens
+  - cli: token_emit -token UPDTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+
+test:
+  # Test: Get token info
+  - cli: token info -name UPDTEST
+    save: token_info
+
+check:
+  # Verify token info
+  - python: |
+      info = ctx.get_variable('token_info')
+      assert 'UPDTEST' in info, "Token info should contain token name"
+

@@ -1,0 +1,33 @@
+# Test: Network List
+# Verify network enumeration
+
+name: Network List Test
+description: Test listing available networks
+tags: [e2e, network, list, fast]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 3s
+
+test:
+  # Test: List all networks
+  - cli: net list
+    node: node1
+    expect: success
+    save: net_list
+    description: "List all networks"
+
+check:
+  # Verify stagenet is in list
+  - python: |
+      net_list = ctx.get_variable('net_list')
+      assert 'stagenet' in net_list.lower(), \
+        "Stagenet should be in network list"
+    description: "Stagenet is available"
+

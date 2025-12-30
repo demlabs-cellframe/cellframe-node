@@ -1,0 +1,122 @@
+name: Regression - Arbitrage Arguments
+description: Verify tx_create -arbitrage respects -value and -token arguments (Bug #2)
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: stagenet
+
+setup:
+  - docker_op: start
+    services: [root-1]
+    detach: true
+  
+  - wait_network: online
+    nodes: [root-1]
+    timeout: 60
+
+test:
+  - group: Setup Wallet and Token
+    defaults:
+      node: root-1
+    steps:
+      - cli: "wallet new -w arb_args_owner"
+      - cli: "wallet info -addr -w arb_args_owner"
+        save_wallet: owner_addr
+      
+      - cli: "wallet new -w fee_wallet_args"
+      - cli: "wallet info -addr -w fee_wallet_args"
+        save_wallet: fee_addr
+
+      - cli: "token_decl -token ARB_ARGS -chain zerochain -total_supply 2000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs pvt.stagenet.root.0"
+        save_hash: token_hash
+      
+      - cli: "token_emit -chain zerochain -token ARB_ARGS -emission_value 2000000000000000000 -addr {{owner_addr}} -certs pvt.stagenet.root.0"
+        save_hash: emission_hash
+      
+      - wait_for_datum: "{{emission_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Create Normal Transaction (Prerequisite workaround for Bug #1 if needed, but we want to test args)
+    defaults:
+      node: root-1
+    steps:
+      # Just in case Bug #1 blocks us, we might need a normal tx. 
+      # But let's try to proceed. If Bug #1 exists, this scenario might fail early, 
+      # but if it passes step 1, we test step 2.
+      # To be safe and isolate Bug #2, let's create a self-transfer first (simulating "normal activity")
+      - cli: "tx_create -net stagenet -chain zerochain -from_wallet arb_args_owner -to_addr {{owner_addr}} -token ARB_ARGS -value 1000000000000000000 -fee 100 -certs pvt.stagenet.root.0"
+        save_hash: normal_tx_hash
+      
+      - wait_for_datum: "{{normal_tx_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Test Arbitrage Arguments
+    defaults:
+      node: root-1
+    steps:
+      # Bug #2: -value and -token ignored.
+      # We specify a specific value (e.g. 500) and check if it is respected.
+      # If ignored, it might use default or everything?
+      - cli: "tx_create -net stagenet -chain zerochain -from_wallet arb_args_owner -to_addr {{owner_addr}} -token ARB_ARGS -value 500 -arbitrage -fee 100 -certs pvt.stagenet.root.0"
+        save_hash: arb_tx_hash
+      
+      - wait_for_datum: "{{arb_tx_hash}}"
+        chain: zerochain
+        timeout: 60
+        
+      # Check the transaction details to verify value.
+      # We inspect the transaction using 'tx_info' or by checking wallet balance if 'fee' was involved?
+      # The bug report says "Balance of both wallets corresponds to specified sum and token".
+      # "Actual: value and token flags ignored".
+      
+      - cli: "tx_history -net stagenet -chain zerochain -tx {{arb_tx_hash}}"
+        save_to: tx_history_output
+      
+      # We need to parse the output or use a python check step to verify the value 500 is present.
+      # A simple grep-like check via python step:
+      - python: |
+          output = ctx.get_variable("tx_history_output") or ""
+          if "500" not in output and "0.000000000000000500" not in output: 
+             # The CLI command used -value 500. 
+             # If ignored, it might use default or everything.
+             # We assume failure if the value 500 is completely missing from the history output.
+             raise Exception(f"Value 500 not found in transaction history output: {output[:200]}...")
+          
+          # Better check: wallet info
+      - cli: "wallet info -w arb_args_owner"
+        save_to: wallet_info_output
+
+      - python: |
+          import re
+          from decimal import Decimal
+          # Extract balance for ARB_ARGS
+          # Output format example: ARB_ARGS: 2.0000...
+          # Or regex for digits.
+          match = re.search(r'ARB_ARGS:\s+([0-9.]+)', ctx.wallet_info_output)
+          if match:
+              balance_str = match.group(1)
+              balance_dec = Decimal(balance_str)
+              balance_datoshi = int(balance_dec * 10**18)
+              ctx.set_variable('final_balance_datoshi', balance_datoshi)
+              print(f"Parsed balance: {balance_str} -> {balance_datoshi} datoshis")
+          else:
+              raise Exception(f"Could not find ARB_ARGS balance in output: {ctx.wallet_info_output}")
+
+      - set: expected_balance_datoshi
+        value: 2000000000000000000 - 500
+        eval: true
+
+      - if: ctx.final_balance_datoshi == ctx.expected_balance_datoshi
+        then:
+          - python: print(f"SUCCESS: Balance matches expected {ctx.expected_balance_datoshi}")
+        else:
+          - python: |
+              diff = ctx.final_balance_datoshi - ctx.expected_balance_datoshi
+              print(f"FAILURE: Balance mismatch! Got {ctx.final_balance_datoshi}, Expected {ctx.expected_balance_datoshi}, Diff {diff}")
+              raise Exception(f"Balance mismatch: {ctx.final_balance_datoshi} != {ctx.expected_balance_datoshi}")
+

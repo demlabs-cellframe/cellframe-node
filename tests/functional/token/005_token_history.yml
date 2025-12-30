@@ -1,0 +1,44 @@
+# Test: Token History
+# Test token transaction history
+
+name: Token History Test
+description: Test retrieving token transaction history
+tags: [e2e, token, history]
+version: "1.0"
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+  - common/set_net_default.yml
+
+defaults:
+    wait: 3s
+    node: node1
+
+setup:
+  # Create test wallet
+  - cli: wallet new -w test_wallet
+    save: wallet_addr
+
+  # Create and emit token
+  - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+  
+  - cli: token_emit -token HISTTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+    save: emit_tx
+  
+  # Create a transaction
+  - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -value 1000 -fee 0.1
+    save_hash: tx_hash
+
+test:
+  # Test: Get token history
+  - cli: token info -name HISTTEST -history_limit 10
+    save: token_history
+
+check:
+  # Verify history contains transactions
+  - python: |
+      history = ctx.get_variable('token_history')
+      assert history, "Token history should not be empty"
+      assert 'HISTTEST' in history, "History should contain token name"
+

@@ -1,0 +1,28 @@
+# Test: Wallet Info Detailed
+# Test detailed wallet information retrieval
+name: Wallet Info Detailed Test
+description: Test retrieving detailed wallet information
+tags: [functional, wallet, info]
+
+defaults: 
+  node: node1
+setup:
+  # Create test wallet
+  - cli: wallet new -w info_test_wallet
+
+test:
+  # Test: Get wallet info with address extraction and validation
+  - cli: wallet info -w info_test_wallet
+    save_wallet: wallet_addr
+  
+  # Test: List wallets
+  - cli: wallet list
+    save: wallet_list
+
+check:
+  # Verify wallet in list
+  - python: |
+      wallet_list = ctx.get_variable('wallet_list')
+      assert 'info_test_wallet' in wallet_list, "Wallet should be in list"
+    description: "Wallet appears in list"
+

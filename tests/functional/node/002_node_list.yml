@@ -1,0 +1,32 @@
+# Test: Node List
+# Test listing nodes in network
+
+name: Node List Test
+description: Test listing all nodes in the network
+tags: [functional, node, list]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 10s
+
+test:
+  # Test: List nodes
+  - cli: node list -net stagenet
+    node: node1
+    expect: success
+    save: node_list
+    description: "List all nodes in network"
+
+check:
+  # Verify node list contains data
+  - python: |
+      nodes = ctx.get_variable('node_list')
+      assert nodes, "Node list should not be empty"
+    description: "Node list is accessible"
+

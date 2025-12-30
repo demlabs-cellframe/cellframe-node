@@ -1,0 +1,13 @@
+# UTXO Blocking E2E Suite
+# End-to-end tests for UTXO blocking scenarios
+
+suite: "UTXO Blocking E2E Suite"
+description: "E2E tests for UTXO blocking and transfer scenarios"
+author: "Cellframe Team"
+tags: [e2e, utxo, blocking]
+
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/set_net_default.yml
+  - common/create_test_cert.yml
+  - common/networks/single_node.yml

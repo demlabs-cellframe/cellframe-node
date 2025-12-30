@@ -1,0 +1,19 @@
+# Functional Test Suite: Mempool Features
+# Functional testing of mempool operations
+
+suite: "Mempool Features Suite"  # Suite name (this field marks it as suite descriptor)
+description: Functional testing of mempool transaction processing and management
+tags: [functional, mempool, transactions]
+version: "1.0"
+
+network:
+  topology: default
+
+# Suite-level setup: executed once before all scenarios in this suite
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/create_test_cert.yml
+  - common/set_net_default.yml
+
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the mempool/ subdirectory

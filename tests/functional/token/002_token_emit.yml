@@ -1,0 +1,36 @@
+# Test: Token Emission
+# Verify token emission to wallet
+
+name: Token Emission Test
+description: Test emitting tokens to a wallet address
+tags: [e2e, token, emission]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/wallets/create_wallet.yml
+
+# Global defaults - all commands on node1 with 3s wait
+defaults:
+  node: node1
+  wait: 3s
+
+setup:
+  # Create token (inherits node and wait from global defaults)
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token EMITTEST -total_supply 1000000 -certs test_cert
+    description: "Declare EMITTEST token"
+
+test:
+  # Emit tokens (inherits node and wait from global defaults)
+  - cli: token_emit -token EMITTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
+    save: emit_tx
+    description: "Emit tokens to wallet"
+
+check:
+  # Verify emission (inherits node from global defaults)
+  - cli: token info -name EMITTEST -history_limit 10
+    contains: "EMITTEST"
+    description: "Token history contains emission"

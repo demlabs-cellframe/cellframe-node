@@ -1,0 +1,26 @@
+# Test: Chain Information
+# Test getting chain information
+
+name: Chain Info Test
+description: Test retrieving chain information
+tags: [functional, chain, info]
+version: "1.0"
+
+includes:
+  - common/networks/single_node.yml
+
+setup:
+  - wait: 10s
+
+test:
+  # Test: Get chain list
+  - cli: net list chains -net stagenet
+    save: chains
+
+check:
+  # Verify chain info
+  - python: |
+      chains = ctx.get_variable('chains')
+      assert chains, "Should have chain data"
+    description: "Chain info is accessible"
+

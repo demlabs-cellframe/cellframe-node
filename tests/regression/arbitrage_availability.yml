@@ -1,0 +1,57 @@
+name: Regression - Arbitrage Availability
+description: Verify arbitrage transaction can be created immediately after token creation (Bug #1)
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: stagenet
+
+setup:
+  - docker_op: start
+    services: [root-1]
+    detach: true
+  
+  - wait_network: online
+    nodes: [root-1]
+    timeout: 60
+
+test:
+  - group: Setup Wallet and Token
+    defaults:
+      node: root-1
+    steps:
+      - cli: "wallet new -w arb_owner"
+      - cli: "wallet info -addr -w arb_owner"
+        save_wallet: owner_addr
+      
+      - cli: "wallet new -w fee_wallet"
+      - cli: "wallet info -addr -w fee_wallet"
+        save_wallet: fee_addr
+
+      - cli: "token_decl -token ARB_TEST -chain zerochain -total_supply 1000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs pvt.stagenet.root.0"
+        save_hash: token_hash
+      
+      - cli: "token_emit -chain zerochain -token ARB_TEST -emission_value 1000000000000000000 -addr {{owner_addr}} -certs pvt.stagenet.root.0"
+        save_hash: emission_hash
+      
+      - wait_for_datum: "{{emission_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Test Arbitrage Creation (Immediate)
+    defaults:
+      node: root-1
+    steps:
+      # Attempt to create arbitrage transaction immediately using the emission as source
+      # Bug expectation: This might fail or be rejected if UTXO isn't considered "mature" or something? 
+      # Or maybe it requires a previous transaction history?
+      - cli: "tx_create -net stagenet -chain zerochain -from_wallet arb_owner -to_addr {{owner_addr}} -token ARB_TEST -value 100 -arbitrage -fee 100 -certs pvt.stagenet.root.0"
+        save_hash: arb_tx_hash
+        expect: success
+
+      - wait_for_datum: "{{arb_tx_hash}}"
+        chain: zerochain
+        timeout: 60
+

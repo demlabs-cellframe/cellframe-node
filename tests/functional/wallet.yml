@@ -1,0 +1,13 @@
+# Functional Test Suite: Wallet Features
+# Functional testing of advanced wallet features
+
+suite: "Wallet Features Suite"  # Suite name (this field marks it as suite descriptor)
+description: Functional testing of wallet export, backup, and recovery
+tags: [functional, wallet, features]
+version: "1.0"
+# Suite-level setup: executed once before all scenarios in this suite
+includes:
+  - common/set_net_default.yml
+  - common/wallets/create_wallet.yml
+  - common/create_test_cert.yml
+
