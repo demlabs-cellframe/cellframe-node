@@ -46,7 +46,7 @@ for arg in "$@"; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --images    Also remove Docker images (cf-node:*)"
+            echo "  --images    Also remove Docker images (cf-node:*, cf-cert-generator:*)"
             echo "  -f, --force Skip confirmation prompt"
             echo "  -h, --help  Show this help message"
             echo ""
@@ -64,6 +64,7 @@ if [ "$FORCE" = false ]; then
     echo "  - All cellframe-stage Docker containers"
     if [ "$REMOVE_IMAGES" = true ]; then
         echo "  - All cf-node Docker images"
+        echo "  - cf-cert-generator Docker image"
     fi
     echo ""
     read -p "Are you sure? (y/N) " -n 1 -r
@@ -96,6 +97,7 @@ success "Docker containers stopped"
 if [ "$REMOVE_IMAGES" = true ]; then
     info "Removing Docker images..."
     docker images --filter "reference=cf-node:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+    docker images --filter "reference=cf-cert-generator:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
     success "Docker images removed"
 fi
 
