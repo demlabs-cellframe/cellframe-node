@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: List network links
-  - cli: net -net stagenet link list
+  - cli: net -net {{network_name}} link list
     node: node1
     expect: success
     save: link_list

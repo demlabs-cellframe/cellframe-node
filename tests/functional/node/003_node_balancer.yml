@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: Get node balancer info
-  - cli: node balancer -net stagenet
+  - cli: node balancer -net {{network_name}}
     node: node1
     expect: success
     save: balancer_info

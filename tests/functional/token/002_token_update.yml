@@ -12,20 +12,31 @@ network:
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml
 
 defaults:
   node: node1
   wait: 3s  
 
 setup:
-  # Create token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token UPDTEST -total_supply 1000000 -certs test_cert
-  # Emit tokens
-  - cli: token_emit -token UPDTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token UPDTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
+  
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  
+  # Emit tokens on zerochain - needs ROOT certs
+  - cli: token_emit -token UPDTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emit_hash
+  
+  # Process emission datum
+  - cli: mempool proc -chain zerochain -datum {{emit_hash}}
 
 test:
   # Test: Get token info
-  - cli: token info -name UPDTEST
+  # Note: -net is explicitly added because CLI defaults may not be injected in test phase
+  - cli: token info -name UPDTEST -net {{network_name}}
     save: token_info
 
 check:

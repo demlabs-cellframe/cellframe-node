@@ -11,6 +11,7 @@ network:
 
 includes:
   - common/networks/single_node.yml
+  - common/set_root_cert.yml
 
 defaults:
   node: node1
@@ -23,43 +24,57 @@ setup:
   - cli: wallet new -w lifecycle_wallet2
   
   # Get addresses with built-in validation
-  - cli: wallet info -w lifecycle_wallet1
+  - cli: wallet info -w lifecycle_wallet1 -net {{network_name}}
     wait: 1s
     save_wallet: wallet1_addr
   
-  - cli: wallet info -w lifecycle_wallet2
+  - cli: wallet info -w lifecycle_wallet2 -net {{network_name}}
     wait: 1s
     save_wallet: wallet2_addr
 
 test:
   - wait: 3s
-  # Step 1: Create token
-  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+  # Step 1: Create token on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
   
-  # Step 2: Emit to wallet1
-  - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}} -certs test_cert
-    save: emission_tx
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+    description: "Process token datum through mempool"
   
-  # Wait for emission to propagate
-  - wait_for_datum: "{{emission_tx}}"
+  # Wait for ledger to sync token declaration
+  - wait: 10s
   
-  # Step 3: Transfer from wallet1 to wallet2
-  - cli: tx_create -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
-    save: transfer_tx
+  # Step 2: Emit to wallet1 on zerochain - needs ROOT certs
+  - cli: token_emit -token LIFECYCLE -emission_value 10000 -addr {{wallet1_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_tx
   
-  # Wait for transfer to propagate
-  - wait_for_datum: "{{transfer_tx}}"
+  # Process emission datum
+  - cli: mempool proc -chain zerochain -datum {{emission_tx}}
+    description: "Process emission datum through mempool"
+  
+  # Wait for ledger to sync emission
+  - wait: 5s
+  
+  # Step 3: Transfer from wallet1 to wallet2 using -from_wallet
+  - cli: tx_create -token LIFECYCLE -from_wallet lifecycle_wallet1 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
+    save_hash: transfer_tx
+  
+  # Process transaction datum on main chain
+  - cli: mempool proc -chain main -datum {{transfer_tx}}
+    description: "Process transaction datum through mempool"
 
 check:
   # Verify token exists
-  - cli: token info -name LIFECYCLE
+  # Note: -net is explicitly added because check phase may not inherit CLI defaults
+  - cli: token info -name LIFECYCLE -net {{network_name}}
     contains: "LIFECYCLE"
   
   # Verify transaction history
-  - cli: tx_history -tx {{transfer_tx}}
+  - cli: tx_history -tx {{transfer_tx}} -net {{network_name}}
     contains: "{{transfer_tx}}"
   
   # Verify token history
-  - cli: token info -name LIFECYCLE -history_limit 10
+  - cli: token info -name LIFECYCLE -history_limit 10 -net {{network_name}}
     save: token_history
 

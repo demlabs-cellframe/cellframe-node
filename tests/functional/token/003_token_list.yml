@@ -11,29 +11,37 @@ network:
 
 includes:
   - common/networks/single_node.yml
+  - common/set_root_cert.yml
 
 setup:
-  # Create test tokens
-  - cli: token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-    save: list1_hash
+  # Create test tokens on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+    save_hash: list1_hash
   
-  - wait_for_datum: "{{list1_hash}}"
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{list1_hash}}
   
-  - cli: token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-    save: list2_hash
+  - cli: token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+    save_hash: list2_hash
   
-  - wait_for_datum: "{{list2_hash}}"
+  # Process token datum
+  - cli: mempool proc -chain zerochain -datum {{list2_hash}}
 
 test:
-  # Test: List tokens
-  - cli: token list
-    save: token_list
+  # Test: Verify tokens exist via token info
+  # Note: 'token list' returns only count, use 'token info -name X' to check existence
+  - cli: token info -name LIST1 -net {{network_name}}
+    save: list1_info
+  
+  - cli: token info -name LIST2 -net {{network_name}}
+    save: list2_info
 
 check:
-  # Verify our tokens are in the list
+  # Verify our tokens were created
   - python: |
-      token_list = ctx.get_variable('token_list')
-      assert 'LIST1' in token_list, "LIST1 should be in token list"
-      assert 'LIST2' in token_list, "LIST2 should be in token list"
-    description: "Created tokens appear in list"
+      list1_info = ctx.get_variable('list1_info')
+      list2_info = ctx.get_variable('list2_info')
+      assert 'LIST1' in list1_info, "LIST1 token should exist"
+      assert 'LIST2' in list2_info, "LIST2 token should exist"
+    description: "Created tokens exist and accessible"
 

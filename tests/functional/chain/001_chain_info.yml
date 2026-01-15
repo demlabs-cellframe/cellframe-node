@@ -6,6 +6,9 @@ description: Test retrieving chain information
 tags: [functional, chain, info]
 version: "1.0"
 
+network:
+  topology: default
+
 includes:
   - common/networks/single_node.yml
 
@@ -14,7 +17,7 @@ setup:
 
 test:
   # Test: Get chain list
-  - cli: net list chains -net stagenet
+  - cli: net list chains -net {{network_name}}
     save: chains
 
 check:

@@ -12,20 +12,41 @@ network:
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml
 
 defaults:
   node: node1
   wait: 3s
 
 setup:
-  # Create and emit token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token MEMPOOLTEST -total_supply 1000000 -certs test_cert
-  - cli: token_emit -token MEMPOOLTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
-    save: emit_tx
+  # Create receiver wallet
+  - cli: wallet new -w mempool_receiver
+  - cli: wallet info -w mempool_receiver -net {{network_name}}
+    save_wallet: receiver_addr
+  
+  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token MEMPOOLTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
+  
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  
+  # Wait for ledger to sync token declaration
+  - wait: 10s
+  
+  # Emit token on zerochain - needs ROOT certs
+  - cli: token_emit -token MEMPOOLTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emit_tx
+  
+  # Process emission datum
+  - cli: mempool proc -chain zerochain -datum {{emit_tx}}
+  
+  # Wait for ledger to sync emission
+  - wait: 5s
 
 test:
-  # Test: Create transaction (should go to mempool)
-  - cli: tx_create -token MEMPOOLTEST -from_emission {{emit_tx}} -value 500
+  # Test: Create transaction to receiver wallet (should go to mempool)
+  - cli: tx_create -token MEMPOOLTEST -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 500 -fee 0.1
     save_hash: tx_hash
  
   # Test: Check mempool

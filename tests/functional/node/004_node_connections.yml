@@ -3,13 +3,20 @@
 name: Node Connections Test
 description: Test listing node connections
 tags: [e2e, node, connections]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
 
 setup:
   - wait: 10s
 
 test:
   # Test: List connections
-  - cli: node connections -net stagenet
+  - cli: node connections -net {{network_name}}
     node: node1
     save: connections
     description: "List node connections"
