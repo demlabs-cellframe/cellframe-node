@@ -42,6 +42,9 @@ setup:
     save_hash: emission_tx_3
   - cli: mempool proc -chain zerochain -datum {{emission_tx_3}}
   
+  # Wait for DAG consensus and ledger sync for all emissions
+  - wait: 30s
+  
   # Create transaction 1 from emission (tx goes to main chain)
   - cli: tx_create -token ARBTEST -from_emission {{emission_tx_1}} -to_addr {{wallet_addr}} -value 500 -fee 0.1 -cert {{root_cert_single}}
     save_hash: tx_hash_1
@@ -57,6 +60,9 @@ setup:
     save_hash: tx_hash_3
   - cli: mempool proc -chain main -datum {{tx_hash_3}}
   
+  # Wait for UTXOs to be indexed
+  - wait: 10s
+  
   # Block the UTXO 1 and 2 but not 3 (token_update goes to zerochain) - needs ROOT certs
   - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash_1}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: token_update_1
@@ -64,6 +70,9 @@ setup:
   - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash_2}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: token_update_2
   - cli: mempool proc -chain zerochain -datum {{token_update_2}}
+  
+  # Wait for blocklist updates to sync
+  - wait: 30s
 
 # Test phase: verify blocking and arbitrage bypass
 test:

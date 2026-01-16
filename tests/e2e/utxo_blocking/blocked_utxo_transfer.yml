@@ -52,17 +52,26 @@ setup:
   
   - cli: mempool proc -chain zerochain -datum {{emission}}
   
+  # Wait for DAG consensus and ledger sync
+  - wait: 30s
+  
   # Create TX from emission - this creates UTXO for sender wallet
   - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -to_addr {{sender_addr}} -value 2000000 -fee 0.1 -cert {{root_cert_single}}
     save_hash: initial_tx
   
   - cli: mempool proc -chain main -datum {{initial_tx}}
   
+  # Wait for UTXO to be indexed
+  - wait: 10s
+  
   # Block this specific UTXO on zerochain - needs ROOT certs
   - cli: token_update -token BLOCKTEST -utxo_blocked_add {{initial_tx}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: block_tx
 
   - cli: mempool proc -chain zerochain -datum {{block_tx}}
+  
+  # Wait for blocklist update to sync
+  - wait: 30s
 
 test:
   # Note: CLI -from_wallet automatically skips blocked UTXOs

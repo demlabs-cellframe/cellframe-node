@@ -42,8 +42,18 @@ setup:
   # Process emission datum
   - cli: mempool proc -chain zerochain -datum {{emission}}
   
-  # Wait for ledger to sync emission
-  - wait: 5s
+  # Wait for DAG consensus and ledger sync
+  - wait: 30s
+  
+  # Convert emission to UTXO
+  - cli: tx_create -token ADDTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 1000 -cert {{root_cert_single}} -chain main
+    save_hash: base_tx_hash
+  
+  # Process base transaction
+  - cli: mempool proc -chain main -datum {{base_tx_hash}}
+  
+  # Wait for UTXO to appear in wallet
+  - wait: 10s
   
   # Create UTXO - transfer to receiver wallet
   - cli: tx_create -token ADDTEST -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 500 -fee 0.1
