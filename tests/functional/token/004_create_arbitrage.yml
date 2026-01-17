@@ -35,8 +35,8 @@ setup:
   # Process token datum (auto_confirmation may not work in test env)
   - cli: mempool proc -chain zerochain -datum {{token_hash}}
   
-  # Wait for ledger to sync token declaration
-  - wait: 10s
+  # Wait for DAG consensus and ledger sync (events go through threshold first)
+  - wait: 30s
   
   # Emit tokens on zerochain - needs ROOT certs
   - cli: token_emit -token ARBCMD -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
@@ -56,16 +56,38 @@ setup:
   - cli: mempool proc -chain main -datum {{base_tx_hash}}
   
   # Wait for UTXO to appear in wallet
-  - wait: 10s
+  - wait: 30s
+  
+  # Get TCELL for fee via emission (TCELL requires 3 signatures)
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+    save_hash: tcell_emission
+  
+  # Process TCELL emission on zerochain
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  
+  - wait: 30s
+  
+  # Convert TCELL emission to UTXO (no fee needed)
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx
+  
+  # Process TCELL tx
+  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  
+  # Wait for TCELL UTXO
+  - wait: 30s
 
 test:
-  # Test: Create arbitrage transaction using -from_wallet
+  # Test: Create arbitrage transaction using -from_wallet (now has TCELL for fee)
   # Note: -certs adds token owner signature for arbitrage
-  - cli: tx_create -token ARBCMD -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 1000 -fee 0.1 -certs {{root_certs}} -arbitrage
+  - cli: tx_create -token ARBCMD -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 1000 -fee 1 -certs {{root_certs}} -arbitrage
     save_hash: arb_tx
   
   # Process transaction datum on main chain
   - cli: mempool proc -chain main -datum {{arb_tx}}
+  
+  # Wait for transaction to be included in block
+  - wait: 30s
 
 check:
   # Verify transaction exists

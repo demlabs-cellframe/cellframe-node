@@ -53,11 +53,28 @@ setup:
   
   # Wait for UTXO to appear in wallet
   - wait: 10s
+  
+  # Get TCELL for fee via emission (TCELL requires 3 signatures)
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+    save_hash: tcell_emission
+  
+  # Process TCELL emission on zerochain
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  
+  - wait: 30s
+  
+  # Convert TCELL emission to UTXO (no fee needed)
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx
+  
+  # Process TCELL tx
+  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  
+  # Wait for TCELL UTXO
+  - wait: 30s
 
 test:
   # Test: Create transaction to receiver wallet (should go to mempool)
-  # Note: Using native token (TCELL) for fee is required, but test_wallet has no TCELL
-  # So we test mempool placement without fee by checking mempool after tx attempt
   - cli: tx_create -token MEMTEST -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 500 -fee 1
     save: tx_result
  

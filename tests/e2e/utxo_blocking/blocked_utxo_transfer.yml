@@ -46,8 +46,12 @@ setup:
 
   - cli: mempool proc -chain zerochain -datum {{token_hash}}
   
+  # Wait for DAG consensus and ledger sync (events go through threshold first)
+  - wait: 30s
+  
   # Emit tokens to sender on zerochain - needs ROOT certs
-  - cli: token_emit -token BLOCKTEST -emission_value 10000000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
+  # IMPORTANT: emission_value MUST equal the tx_create value to avoid creating change UTXO
+  - cli: token_emit -token BLOCKTEST -emission_value 2000000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission
   
   - cli: mempool proc -chain zerochain -datum {{emission}}
@@ -55,14 +59,15 @@ setup:
   # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Create TX from emission - this creates UTXO for sender wallet
-  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -to_addr {{sender_addr}} -value 2000000 -fee 0.1 -cert {{root_cert_single}}
+  # Create TX from emission - this creates UTXO for sender wallet (no fee needed for from_emission)
+  # Value matches emission_value exactly so no change UTXO is created
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -to_addr {{sender_addr}} -value 2000000 -cert {{root_cert_single}}
     save_hash: initial_tx
   
   - cli: mempool proc -chain main -datum {{initial_tx}}
   
   # Wait for UTXO to be indexed
-  - wait: 10s
+  - wait: 30s
   
   # Block this specific UTXO on zerochain - needs ROOT certs
   - cli: token_update -token BLOCKTEST -utxo_blocked_add {{initial_tx}}:0 -certs {{root_certs}} -chain zerochain
@@ -72,11 +77,30 @@ setup:
   
   # Wait for blocklist update to sync
   - wait: 30s
+  
+  # Get TCELL for fee via emission (TCELL requires 3 signatures)
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{sender_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+    save_hash: tcell_emission
+  
+  # Process TCELL emission on zerochain
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  
+  - wait: 30s
+  
+  # Convert TCELL emission to UTXO (no fee needed)
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{sender_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx
+  
+  # Process TCELL tx
+  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  
+  # Wait for TCELL UTXO
+  - wait: 30s
 
 test:
   # Note: CLI -from_wallet automatically skips blocked UTXOs
   # Since all sender's UTXOs are blocked, this should fail
-  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 0.1
+  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1
     expect: error
   
   # Verify blocklist contains the UTXO
