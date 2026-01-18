@@ -425,6 +425,66 @@ fi
 
 echo "════════════════════════════════════"
 
+# Find and display detailed test results from summary.json
+LATEST_RUN_DIR=$(find "$SCRIPT_DIR/testing/artifacts" -maxdepth 1 -type d -name "run_*" 2>/dev/null | sort -r | head -n 1)
+if [ -n "$LATEST_RUN_DIR" ] && [ -f "$LATEST_RUN_DIR/summary.json" ]; then
+    echo ""
+    echo "════════════════════════════════════"
+    echo " Detailed Test Results"
+    echo "════════════════════════════════════"
+    
+    # Parse summary.json and display results
+    python3 << EOF
+import json
+import sys
+
+try:
+    with open("$LATEST_RUN_DIR/summary.json", "r") as f:
+        data = json.load(f)
+    
+    total = data.get("total_scenarios", 0)
+    passed = data.get("passed_scenarios", 0)
+    failed = data.get("failed_scenarios", 0)
+    
+    print(f"Total: {total} | ✅ Passed: {passed} | ❌ Failed: {failed}")
+    print("")
+    
+    scenarios = data.get("scenarios", [])
+    
+    # Show passed tests
+    passed_tests = [s for s in scenarios if s.get("status") == "passed"]
+    if passed_tests:
+        print("✅ PASSED TESTS:")
+        for s in passed_tests:
+            duration = s.get("duration", 0)
+            print(f"   ✓ {s.get('name', 'Unknown')} ({s.get('file', '')})")
+        print("")
+    
+    # Show failed tests with errors
+    failed_tests = [s for s in scenarios if s.get("status") == "failed"]
+    if failed_tests:
+        print("❌ FAILED TESTS:")
+        for s in failed_tests:
+            print(f"   ✗ {s.get('name', 'Unknown')} ({s.get('file', '')})")
+            error = s.get("error", "Unknown error")
+            # Truncate long errors
+            error_lines = error.split('\n')
+            if len(error_lines) > 3:
+                error = '\n'.join(error_lines[:3]) + '\n     ...(truncated)'
+            # Indent error message
+            error_indented = '\n'.join(f"     {line}" for line in error.split('\n'))
+            print(f"     Error: {error_indented.strip()}")
+            print("")
+        
+except Exception as e:
+    print(f"Failed to parse summary.json: {e}", file=sys.stderr)
+EOF
+
+    echo "════════════════════════════════════"
+    echo " Full report: $LATEST_RUN_DIR/reports/report.md"
+    echo "════════════════════════════════════"
+fi
+
 # Exit with error if any tests failed
 TOTAL_EXIT=0
 if [ $E2E_EXIT -ne 0 ] || [ $FUNCTIONAL_EXIT -ne 0 ] || [ $REGRESSION_EXIT -ne 0 ]; then
