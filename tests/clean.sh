@@ -29,13 +29,13 @@ echo "========================================="
 echo ""
 
 # Parse arguments
-REMOVE_IMAGES=false
+REMOVE_IMAGES=true
 FORCE=false
 
 for arg in "$@"; do
     case $arg in
-        --images)
-            REMOVE_IMAGES=true
+        --keep-images)
+            REMOVE_IMAGES=false
             shift
             ;;
         -f|--force)
@@ -46,9 +46,9 @@ for arg in "$@"; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --images    Also remove Docker images (cf-node:*, cf-cert-generator:*)"
-            echo "  -f, --force Skip confirmation prompt"
-            echo "  -h, --help  Show this help message"
+            echo "  --keep-images  Keep Docker images (cf-node:*, cf-cert-generator:*)"
+            echo "  -f, --force    Skip confirmation prompt"
+            echo "  -h, --help     Show this help message"
             echo ""
             exit 0
             ;;
@@ -62,9 +62,11 @@ if [ "$FORCE" = false ]; then
     echo "  - testing/snapshots"
     echo "  - testing/artifacts"
     echo "  - All cellframe-stage Docker containers"
-    if [ "$REMOVE_IMAGES" = true ]; then
-        echo "  - All cf-node Docker images"
-        echo "  - cf-cert-generator Docker image"
+    echo "  - All cf-node Docker images"
+    echo "  - cf-cert-generator Docker image"
+    if [ "$REMOVE_IMAGES" = false ]; then
+        echo ""
+        echo "  (Images will be KEPT due to --keep-images flag)"
     fi
     echo ""
     read -p "Are you sure? (y/N) " -n 1 -r
