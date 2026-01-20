@@ -61,9 +61,13 @@ if [ "$FORCE" = false ]; then
     echo "  - stage-env/cache (configs, data, certs, crash-artifacts)"
     echo "  - testing/snapshots"
     echo "  - testing/artifacts"
+    echo "  - testing/cache (configs, data, certs)"
+    echo "  - testing/logs"
     echo "  - All cellframe-stage Docker containers"
+    echo "  - All cellframe-stage Docker networks"
     echo "  - All cf-node Docker images"
     echo "  - cf-cert-generator Docker image"
+    echo "  - Dangling Docker volumes"
     if [ "$REMOVE_IMAGES" = false ]; then
         echo ""
         echo "  (Images will be KEPT due to --keep-images flag)"
@@ -83,25 +87,52 @@ echo ""
 info "Stopping Docker containers..."
 cd "$STAGE_ENV_DIR"
 if [ -f "docker-compose.generated.yml" ]; then
-    docker compose -f docker-compose.generated.yml -p cellframe-stage down --volumes 2>/dev/null || true
+    docker compose -f docker-compose.generated.yml -p cellframe-stage down --volumes --remove-orphans 2>/dev/null || true
 fi
-docker compose -f docker-compose.yml -p cellframe-stage down --volumes 2>/dev/null || true
+docker compose -f docker-compose.yml -p cellframe-stage down --volumes --remove-orphans 2>/dev/null || true
 
-# Remove any stray containers
-CONTAINERS=$(docker ps -aq --filter "name=cellframe-stage" 2>/dev/null || true)
-if [ -n "$CONTAINERS" ]; then
-    info "Removing stray containers..."
-    echo "$CONTAINERS" | xargs -r docker rm -f 2>/dev/null || true
+# Remove any stray containers (running or stopped)
+info "Force stopping all cellframe-stage containers..."
+docker ps -aq --filter "name=cellframe-stage" 2>/dev/null | xargs -r docker stop 2>/dev/null || true
+docker ps -aq --filter "name=cellframe-stage" 2>/dev/null | xargs -r docker rm -f 2>/dev/null || true
+success "Docker containers stopped and removed"
+
+# Remove Docker networks
+info "Removing Docker networks..."
+NETWORKS=$(docker network ls --filter "name=cellframe-stage" -q 2>/dev/null || true)
+if [ -n "$NETWORKS" ]; then
+    echo "$NETWORKS" | xargs -r docker network rm 2>/dev/null || true
 fi
-success "Docker containers stopped"
+success "Docker networks removed"
 
 # Remove Docker images if requested
 if [ "$REMOVE_IMAGES" = true ]; then
     info "Removing Docker images..."
+    # Remove by various possible reference names
     docker images --filter "reference=cf-node:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+    docker images --filter "reference=cf-node" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
     docker images --filter "reference=cf-cert-generator:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
-    success "Docker images removed"
+    docker images --filter "reference=cf-cert-generator" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+    # Also try with full docker.io prefix
+    docker images --filter "reference=docker.io/library/cf-node:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+    docker images --filter "reference=docker.io/library/cf-cert-generator:*" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+    # Fallback: find by name pattern and remove by ID
+    docker images | grep -E "^cf-node|^cf-cert-generator" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
+    
+    # Verify images are removed
+    REMAINING=$(docker images | grep -E "^cf-node|^cf-cert-generator" 2>/dev/null || true)
+    if [ -n "$REMAINING" ]; then
+        warning "Some images could not be removed (may be in use):"
+        echo "$REMAINING"
+    else
+        success "Docker images removed"
+    fi
 fi
+
+# Remove dangling volumes
+info "Removing dangling Docker volumes..."
+docker volume prune -f 2>/dev/null || true
+success "Dangling volumes removed"
 
 # Clean stage-env cache
 info "Cleaning stage-env cache..."
@@ -138,6 +169,22 @@ info "Cleaning testing artifacts..."
 if [ -d "$TESTING_DIR/artifacts" ]; then
     rm -rf "$TESTING_DIR/artifacts"/* 2>/dev/null || true
     success "testing/artifacts cleaned"
+fi
+
+# Clean testing cache
+info "Cleaning testing cache..."
+if [ -d "$TESTING_DIR/cache" ]; then
+    sudo rm -rf "$TESTING_DIR/cache/configs" 2>/dev/null || rm -rf "$TESTING_DIR/cache/configs" 2>/dev/null || true
+    sudo rm -rf "$TESTING_DIR/cache/data" 2>/dev/null || rm -rf "$TESTING_DIR/cache/data" 2>/dev/null || true
+    sudo rm -rf "$TESTING_DIR/cache/certs" 2>/dev/null || rm -rf "$TESTING_DIR/cache/certs" 2>/dev/null || true
+    success "testing/cache cleaned"
+fi
+
+# Clean testing logs
+info "Cleaning testing logs..."
+if [ -d "$TESTING_DIR/logs" ]; then
+    rm -rf "$TESTING_DIR/logs"/* 2>/dev/null || true
+    success "testing/logs cleaned"
 fi
 
 # Clean generated compose file
