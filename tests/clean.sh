@@ -1,1 +1,1 @@
-/home/naeper/work/cellframe-node/tests/stage-env/scripts/clean.sh
+stage-env/scripts/clean.sh

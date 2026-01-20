@@ -1,1 +1,1 @@
-/home/naeper/work/cellframe-node/tests/stage-env/scripts/run.sh
+stage-env/scripts/run.sh
