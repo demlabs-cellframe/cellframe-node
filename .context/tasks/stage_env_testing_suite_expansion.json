@@ -5,13 +5,14 @@
   "priority": "critical",
   "status": "in_progress",
   "created": "2026-01-19T15:34:00Z",
-  "updated": "2026-01-20T02:30:00Z",
-  "revision": "4",
+  "updated": "2026-01-20T18:45:00Z",
+  "revision": "5",
   "revision_notes": [
     "v1: Создание базовой структуры задачи",
     "v2: Детальное ревью и актуализация под реальную структуру проекта (monitoring 30+ files, scenarios 30+ files, network 13 files)",
     "v3: Phase 1 завершена (100% success rate, 35/35 tests, infrastructure готова, src/docker→docker_ctl, все импорты обновлены)",
-    "v4: Phase 2 завершена (187/187 tests, 100% pass, 152 новых тестов, все 10 модулей src/ покрыты, execution time 0.66s)"
+    "v4: Phase 2 завершена (187/187 tests, 100% pass, 152 новых тестов, все 10 модулей src/ покрыты, execution time 0.66s)",
+    "v5: Phase 7 добавлена (audit выявил 19 stub tests, 6 failing tests, missing coverage); Phase 8 добавлена (bash E2E и функциональные тесты для CLI)"
   ],
   
   "auto_load": [
@@ -25,8 +26,8 @@
     ".context/modules/core/standards.json"
   ],
   
-  "title": "Stage-Env Testing Suite: Полное расширение и актуализация тестовой системы",
-  "description": "Комплексное расширение тестовой системы stage-env с добавлением полного покрытия юнит-тестами (с мокированием), интеграционными тестами (минимум моков) и e2e тестами с использованием scripts/clean.sh и scripts/run.sh",
+  "title": "Stage-Env Testing Suite: Полное расширение и актуализация тестовой системы (8 фаз)",
+  "description": "Комплексное расширение тестовой системы stage-env: юнит-тесты (с мокированием), интеграционные тесты (минимум моков), e2e Python тесты, bash E2E и функциональные тесты для проверки CLI (run.sh, stage-env.py)",
   
   "workflow_rules": {
     "git_commits": "НЕ КОММИТИТЬ БЕЗ ЯВНОГО РАСПОРЯЖЕНИЯ ПОЛЬЗОВАТЕЛЯ",
@@ -2004,10 +2005,12 @@
     {
       "id": "phase_7_test_refinement_expansion",
       "name": "Доводка и расширение тестов",
-      "status": "pending",
+      "status": "in_progress",
       "description": "Устранение stub тестов, исправление failing тестов, расширение покрытия недостаточно протестированных модулей, добавление E2E тестов с разными конфигами",
       "estimated_effort": "5-7 дней",
       "dependencies": ["phase_6_validation_optimization"],
+      "start_date": "2026-01-20",
+      "completion_percentage": "42%",
       "deliverables": [
         "Все stub tests заменены на полноценные тесты",
         "Все failing integration tests исправлены",
@@ -2021,29 +2024,35 @@
         {
           "id": "7.1_stub_tests_expansion",
           "name": "Расширение stub тестов до полноценных",
-          "status": "pending",
+          "status": "completed",
+          "completion_date": "2026-01-20",
           "estimated_tests": "~60-80 новых тестов",
+          "actual_tests": "76 новых тестов",
           "current_stub_tests": 19,
           "tasks": [
             {
               "id": "7.1.1",
-              "description": "Расширить test_monitoring_base.py (4→24-29 тестов)",
-              "status": "pending"
+              "description": "Расширить test_monitoring_base.py (4→16 тестов)",
+              "status": "completed",
+              "actual_result": "4→16 tests (+12)"
             },
             {
               "id": "7.1.2",
-              "description": "Расширить test_monitoring_waiters.py (2→17-22 тестов)",
-              "status": "pending"
+              "description": "Расширить test_monitoring_waiters.py (2→14 тестов)",
+              "status": "completed",
+              "actual_result": "2→14 tests (+12)"
             },
             {
               "id": "7.1.3",
-              "description": "Расширить test_scenarios_modules.py (3→28-33 тестов)",
-              "status": "pending"
+              "description": "Расширить test_scenarios_modules.py (3→24 тестов)",
+              "status": "completed",
+              "actual_result": "3→24 tests (+21)"
             },
             {
               "id": "7.1.4",
-              "description": "Расширить test_network_modules.py (2→17-20 тестов)",
-              "status": "pending"
+              "description": "Расширить test_network_modules.py (2→11 тестов)",
+              "status": "completed",
+              "actual_result": "2→11 tests (+9)"
             },
             {
               "id": "7.1.5",
@@ -2222,6 +2231,425 @@
           "E2E: only default config tested, need variety"
         ]
       }
+    },
+    {
+      "id": "phase_8_bash_e2e_functional_tests",
+      "name": "Bash E2E и функциональные тесты для stage-env",
+      "status": "pending",
+      "description": "Создание полноценных E2E и функциональных тестов на bash для проверки stage-env как CLI инструмента. Тесты представляют собой наборы конфигов и bash скриптов с проверками команд run.sh и stage-env.py",
+      "estimated_effort": "4-6 дней",
+      "dependencies": ["phase_7_test_refinement_expansion"],
+      "deliverables": [
+        "15-20 bash E2E тестов для различных конфигураций",
+        "10-15 функциональных тестов для CLI команд",
+        "Тестовые конфиги для разных сценариев",
+        "Bash скрипты с автоматической проверкой результатов",
+        "Integration с CI/CD через bash runner",
+        "Documentation по написанию bash тестов"
+      ],
+      
+      "rationale": {
+        "why_bash": [
+          "stage-env - это CLI инструмент, его естественно тестировать через shell",
+          "Bash тесты более реалистичны для end-user scenarios",
+          "Проще воспроизвести проблемы пользователей",
+          "Не требуют Python runtime - чистое тестирование CLI",
+          "Быстрее писать для простых сценариев"
+        ],
+        "what_to_test": [
+          "Запуск сети через run.sh с разными конфигами",
+          "stage-env.py команды (status, logs, clean, etc)",
+          "Проверка успешности операций через exit codes",
+          "Валидация output команд (grep, awk проверки)",
+          "Lifecycle тесты (start → operate → stop → clean)",
+          "Error handling (неверные конфиги, недоступный Docker, etc)"
+        ],
+        "structure": [
+          "tests/bash-e2e/ - директория для bash тестов",
+          "Каждый тест - отдельный .sh файл",
+          "configs/ - тестовые конфигурации",
+          "helpers.sh - общие bash функции",
+          "run_all.sh - runner для всех тестов"
+        ]
+      },
+      
+      "subphases": [
+        {
+          "id": "8.1_bash_test_infrastructure",
+          "name": "Инфраструктура для bash тестов",
+          "status": "pending",
+          "tasks": [
+            {
+              "id": "8.1.1",
+              "description": "Создать структуру tests/bash-e2e/",
+              "details": [
+                "tests/bash-e2e/",
+                "├── configs/           # Тестовые конфигурации",
+                "├── scenarios/         # Тестовые сценарии",
+                "├── helpers.sh         # Общие bash функции",
+                "├── run_all.sh         # Master runner",
+                "└── README.md          # Документация"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.1.2",
+              "description": "Создать helpers.sh с общими функциями",
+              "details": [
+                "assert_success() - проверка exit code = 0",
+                "assert_failure() - проверка exit code != 0",
+                "assert_output_contains() - grep проверка",
+                "assert_file_exists() - проверка файлов",
+                "wait_for_condition() - polling с timeout",
+                "cleanup_test_env() - очистка после теста",
+                "log_test() - логирование результатов",
+                "run_with_timeout() - выполнение с таймаутом"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.1.3",
+              "description": "Создать run_all.sh test runner",
+              "details": [
+                "Находит все test_*.sh файлы",
+                "Запускает каждый в изолированной среде",
+                "Собирает результаты (pass/fail)",
+                "Генерирует отчёт",
+                "Поддержка параллельного запуска",
+                "Exit code based on results"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "8.2_run_sh_tests",
+          "name": "Тесты для scripts/run.sh",
+          "status": "pending",
+          "estimated_tests": "8-10 тестов",
+          "tasks": [
+            {
+              "id": "8.2.1",
+              "description": "test_run_basic.sh - базовый запуск сети",
+              "details": [
+                "./scripts/run.sh",
+                "Проверка: exit code 0",
+                "Проверка: контейнеры запущены (docker ps)",
+                "Проверка: логи не содержат FATAL errors",
+                "Cleanup: ./scripts/clean.sh"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.2.2",
+              "description": "test_run_with_config.sh - запуск с custom config",
+              "details": [
+                "./scripts/run.sh configs/custom.yml",
+                "Проверка: использован правильный конфиг",
+                "Проверка: количество нод соответствует конфигу",
+                "Cleanup"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.2.3",
+              "description": "test_run_multiple_configs.sh - разные топологии",
+              "details": [
+                "Тест 1: single node",
+                "Тест 2: two nodes",
+                "Тест 3: multi-node (5 nodes)",
+                "Тест 4: hierarchical (root + masters + full)",
+                "Каждый: start → verify → stop → clean"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.2.4",
+              "description": "test_run_genesis.sh - тесты genesis режима",
+              "details": [
+                "./scripts/run.sh genesis",
+                "Проверка: genesis процесс завершился успешно",
+                "Проверка: genesis блоки созданы",
+                "Проверка: токены эмитированы"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.2.5",
+              "description": "test_run_error_handling.sh - обработка ошибок",
+              "details": [
+                "Несуществующий конфиг → expect failure",
+                "Невалидный конфиг → expect failure + error message",
+                "Docker не запущен → expect failure + helpful error",
+                "Порты заняты → expect failure",
+                "Проверка exit codes и error messages"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "8.3_stage_env_py_tests",
+          "name": "Тесты для stage-env.py CLI",
+          "status": "pending",
+          "estimated_tests": "10-12 тестов",
+          "tasks": [
+            {
+              "id": "8.3.1",
+              "description": "test_cli_help.sh - help и version",
+              "details": [
+                "stage-env.py --help → проверка output",
+                "stage-env.py --version → проверка версии",
+                "stage-env.py status --help → проверка подкоманд"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.3.2",
+              "description": "test_cli_status.sh - команда status",
+              "details": [
+                "Start network",
+                "stage-env.py status → проверка: running",
+                "stage-env.py status --json → проверка JSON format",
+                "Stop network",
+                "stage-env.py status → проверка: stopped"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.3.3",
+              "description": "test_cli_logs.sh - команда logs",
+              "details": [
+                "stage-env.py logs → проверка вывода всех логов",
+                "stage-env.py logs node1 → проверка логов конкретной ноды",
+                "stage-env.py logs --tail 10 → проверка ограничения",
+                "stage-env.py logs --follow → проверка streaming (kill after 5s)"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.3.4",
+              "description": "test_cli_exec.sh - выполнение команд на нодах",
+              "details": [
+                "stage-env.py exec node1 'cli version' → проверка output",
+                "stage-env.py exec --all 'cli version' → на всех нодах",
+                "stage-env.py exec node1 'invalid' → expect failure"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.3.5",
+              "description": "test_cli_clean.sh - команда clean",
+              "details": [
+                "Start network",
+                "stage-env.py clean → проверка: контейнеры остановлены",
+                "Проверка: volumes удалены",
+                "Проверка: network удалена",
+                "Проверка: cache очищен"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.3.6",
+              "description": "test_cli_snapshot.sh - snapshot команды",
+              "details": [
+                "Start network, выполнить операции",
+                "stage-env.py snapshot create test1 → success",
+                "stage-env.py snapshot list → проверка: test1 в списке",
+                "stage-env.py snapshot restore test1 → success",
+                "stage-env.py snapshot delete test1 → success"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "8.4_lifecycle_tests",
+          "name": "Lifecycle и интеграционные тесты",
+          "status": "pending",
+          "estimated_tests": "5-7 тестов",
+          "tasks": [
+            {
+              "id": "8.4.1",
+              "description": "test_full_lifecycle.sh - полный lifecycle",
+              "details": [
+                "1. Clean environment (./scripts/clean.sh)",
+                "2. Start network (./scripts/run.sh)",
+                "3. Wait for network ready",
+                "4. Execute operations (token creation, transfers)",
+                "5. Check results",
+                "6. Create snapshot",
+                "7. Stop network",
+                "8. Restore from snapshot",
+                "9. Verify state",
+                "10. Clean"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.4.2",
+              "description": "test_node_failure_recovery.sh - отказ ноды",
+              "details": [
+                "Start network",
+                "Kill one container (docker kill)",
+                "Проверка: network continues",
+                "Restart container",
+                "Проверка: node rejoins и syncs"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.4.3",
+              "description": "test_config_reload.sh - изменение конфига",
+              "details": [
+                "Start with config A",
+                "Stop network",
+                "Change config to B (add node)",
+                "Start with new config",
+                "Проверка: новая нода запущена",
+                "Проверка: старые ноды сохранили state"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.4.4",
+              "description": "test_parallel_operations.sh - параллельные операции",
+              "details": [
+                "Start network",
+                "Запустить несколько операций параллельно:",
+                "  - Token creation на node1",
+                "  - Balance check на node2",
+                "  - Datum creation на node3",
+                "Проверка: все операции успешны",
+                "Проверка: нет race conditions"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "8.5_performance_tests",
+          "name": "Performance и stress тесты",
+          "status": "pending",
+          "estimated_tests": "3-5 тестов",
+          "tasks": [
+            {
+              "id": "8.5.1",
+              "description": "test_startup_time.sh - время запуска",
+              "details": [
+                "Measure time to start network",
+                "Target: < 30s for 2 nodes",
+                "Target: < 60s for 5 nodes",
+                "Fail if exceeds threshold"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.5.2",
+              "description": "test_high_load.sh - высокая нагрузка",
+              "details": [
+                "Start network",
+                "Send 100 transactions in parallel",
+                "Проверка: все обработаны",
+                "Проверка: нет crashed containers",
+                "Measure throughput"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.5.3",
+              "description": "test_long_running.sh - длительная работа",
+              "details": [
+                "Start network",
+                "Run for 10 minutes with periodic operations",
+                "Проверка: no memory leaks",
+                "Проверка: no container restarts",
+                "Проверка: stable performance"
+              ],
+              "status": "pending"
+            }
+          ]
+        },
+        {
+          "id": "8.6_ci_integration",
+          "name": "CI/CD интеграция bash тестов",
+          "status": "pending",
+          "tasks": [
+            {
+              "id": "8.6.1",
+              "description": "Создать .github/workflows/bash-e2e.yml",
+              "details": [
+                "Trigger: push, PR to main",
+                "Setup: Docker, bash",
+                "Run: ./tests/bash-e2e/run_all.sh",
+                "Artifacts: test reports, logs",
+                "Notification on failure"
+              ],
+              "status": "pending"
+            },
+            {
+              "id": "8.6.2",
+              "description": "Создать test report generator",
+              "details": [
+                "Parse bash test results",
+                "Generate HTML/Markdown report",
+                "Include timing, pass/fail rates",
+                "Upload to CI artifacts"
+              ],
+              "status": "pending"
+            }
+          ]
+        }
+      ],
+      
+      "example_test_structure": {
+        "test_run_basic_sh": [
+          "#!/usr/bin/env bash",
+          "# Test: Basic network startup",
+          "",
+          "source helpers.sh",
+          "",
+          "test_name=\"Basic Network Startup\"",
+          "log_test \"Starting $test_name\"",
+          "",
+          "# Cleanup before test",
+          "cleanup_test_env",
+          "",
+          "# Start network",
+          "log_test \"Starting network...\"",
+          "./scripts/run.sh",
+          "assert_success \"Network startup failed\"",
+          "",
+          "# Wait for containers to be ready",
+          "wait_for_condition \"docker ps | grep -q cellframe-stage\" 30",
+          "assert_success \"Containers not started\"",
+          "",
+          "# Check no fatal errors in logs",
+          "docker logs cellframe-stage-node1 2>&1 | grep -i 'FATAL'",
+          "assert_failure \"Found FATAL errors in logs\"",
+          "",
+          "# Cleanup",
+          "log_test \"Cleaning up...\"",
+          "./scripts/clean.sh",
+          "assert_success \"Cleanup failed\"",
+          "",
+          "log_test \"✅ $test_name PASSED\""
+        ]
+      },
+      
+      "success_criteria": {
+        "coverage": "Все основные CLI команды протестированы",
+        "test_count": "25-35 bash тестов",
+        "pass_rate": "100% в CI",
+        "execution_time": "< 15 минут для всех тестов",
+        "reliability": "Нет flaky тестов",
+        "documentation": "README с примерами написания тестов",
+        "ci_integration": "Автоматический запуск в GitHub Actions"
+      },
+      
+      "priority": "HIGH",
+      "complexity": "medium",
+      "impact": "Provides realistic end-to-end validation of stage-env as CLI tool"
     }
   ],
   
@@ -2229,42 +2657,48 @@
   
   "progress_metrics": {
     "overall_completion": "85%",
-    "phases_completed": "6/7",
+    "phases_completed": "6/8",
     "unit_tests_created": "187/187 (+ 60-80 planned in Phase 7)",
     "integration_tests_created": "19/19 (6 failing, to be fixed in Phase 7)",
     "e2e_tests_created": "33/33 (+ 15-20 planned in Phase 7)",
+    "bash_e2e_tests_planned": "25-35 (Phase 8)",
     "code_coverage": "~85%",
     "target_coverage": "92-95%",
     "total_tests_passing": "200/239",
     "total_tests_existing": "239",
     "estimated_total_after_phase7": "404-474",
+    "estimated_total_after_phase8": "429-509 (включая bash тесты)",
     "stub_tests_identified": "19 (to be replaced)",
     "failing_tests_identified": "6 (to be fixed)",
     "missing_tests_identified": "~40-50 (to be created)",
-    "revision_note": "Phase 7 added after comprehensive audit revealed stubs, failures, and gaps"
+    "revision_note": "Phase 7 added after comprehensive audit; Phase 8 added for bash E2E/functional tests"
   },
   
   "timeline": {
-    "total_estimated_effort": "40-55 дней (8-11 недель)",
-    "note": "Увеличено на 5 дней из-за обнаруженной сложности monitoring и scenarios модулей",
+    "total_estimated_effort": "44-61 дней (9-12 недель)",
+    "note": "Увеличено на 5 дней из-за monitoring/scenarios сложности + 4-6 дней для bash тестов",
     "phase_breakdown": {
       "phase_1": "3-5 дней",
       "phase_2": "18-23 дня (увеличено из-за monitoring 85-105 тестов и scenarios 95-115 тестов)",
       "phase_3": "7-10 дней",
       "phase_4": "5-7 дней",
       "phase_5": "3-5 дней",
-      "phase_6": "2-3 дня"
+      "phase_6": "2-3 дня",
+      "phase_7": "5-7 дней",
+      "phase_8": "4-6 дней"
     },
     "critical_path": [
-      "phase_1 → phase_2 → phase_3 → phase_5 → phase_6"
+      "phase_1 → phase_2 → phase_3 → phase_5 → phase_6 → phase_7 → phase_8"
     ],
     "parallel_possible": [
-      "phase_4 can run in parallel with phase_2/phase_3"
+      "phase_4 can run in parallel with phase_2/phase_3",
+      "phase_8 can start in parallel with late phase_7 subphases"
     ],
     "complexity_notes": {
       "monitoring": "12 waiter modules + 4 checker modules + unified - очень сложная структура",
       "scenarios": "15 step types + 5 check types + 4 schema modules - высокая сложность",
-      "network": "6 genesis подмодулей требуют детального тестирования"
+      "network": "6 genesis подмодулей требуют детального тестирования",
+      "bash_tests": "Требуют реальных Docker контейнеров, медленнее Python тестов"
     }
   },
   
@@ -2296,20 +2730,30 @@
       "coverage": "Все типичные пользовательские сценарии",
       "speed": "< 60s per test (среднее), < 120s максимум",
       "isolation": "Нет мокирования, полный lifecycle",
-      "count": "30-40 сценариев",
+      "count": "30-40 сценариев (Python) + 25-35 bash тестов",
       "pass_rate": "100%",
       "max_retries": "1 retry на failure разрешён"
+    },
+    "bash_e2e_tests": {
+      "coverage": "CLI команды и lifecycle сценарии",
+      "speed": "< 120s per test (среднее), < 300s максимум",
+      "isolation": "Полный Docker lifecycle, нет моков",
+      "count": "25-35 bash скриптов",
+      "pass_rate": "100%",
+      "reliability": "Надёжное выполнение в CI/CD",
+      "ci_integration": "GitHub Actions workflow"
     },
     "overall": {
       "all_tests_pass": "100% pass rate",
       "no_flaky_tests": "Zero tolerance для flaky tests",
-      "ci_integration": "Полная интеграция в GitLab CI",
+      "ci_integration": "Полная интеграция в GitLab CI + GitHub Actions для bash",
       "documentation_complete": "100% модулей документировано",
       "execution_time": {
         "unit_all": "< 5 минут",
         "integration_all": "< 10 минут",
         "e2e_all": "< 40 минут",
-        "full_suite": "< 60 минут"
+        "bash_e2e_all": "< 15 минут",
+        "full_suite": "< 75 минут"
       }
     }
   },
