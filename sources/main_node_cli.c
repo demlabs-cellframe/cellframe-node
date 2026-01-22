@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dap_chain_node_cli.h"
 #include "dap_common.h"
 #include "dap_file_utils.h"
 #include "dap_strfuncs.h"

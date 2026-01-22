@@ -135,9 +135,10 @@ endif()
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
                        srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-stake-ext compose")
 
-if(LINUX OR DARWIN)
-    set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
-endif()
+# VPN module has been removed from the new SDK - disabled for now
+# if(LINUX OR DARWIN)
+#     set(CELLFRAME_MODULES "${CELLFRAME_MODULES} srv-vpn")
+# endif()
 
 if(NEED_TEST_FRAMEWORK)
     # Add test-framework to default modules if not defined
@@ -294,6 +295,7 @@ set(NODE_TOOL_TARGET "${PROJECT_NAME}-tool")
 set( NODE_SOURCES
         sources/cellframe-node.c
   sources/sig_unix_handler.c
+  sources/dap_chain_node_cli_compat.c
 )
 set( NODE_CLI_SOURCES
   sources/main_node_cli.c
@@ -319,7 +321,7 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c")
+    add_executable(${PROJECT_NAME} "sources/cellframe-node.c" "sources/exh_win32.c" "sources/sig_win32_handler.c" "sources/dap_chain_node_cli_compat.c")
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
@@ -378,7 +380,7 @@ if(UNIX AND NOT WIN32)
     endif()
     
     set(NODE_LIBRARIES ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
-    set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
+    set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk dap_app_cli)
     set(NODE_TOOL_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
@@ -485,6 +487,7 @@ if(UNIX AND NOT WIN32)
 endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/datum/tx/include)
 
 if(NOT ANDROID)
     target_include_directories(${NODE_CLI_TARGET} INTERFACE .)

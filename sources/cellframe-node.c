@@ -78,6 +78,7 @@
 
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
+#include "dap_chain_decree_registry.h"
 
 #include "dap_chain_type_blocks.h"
 #include "dap_chain_type_dag.h"
@@ -92,15 +93,16 @@
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-#include "dap_chain_net_srv_vpn.h"
-#include "dap_chain_net_vpn_client.h"
-#endif
+// VPN module has been removed from the new SDK - disabled for now
+// #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+// #include "dap_chain_net_srv_vpn.h"
+// #include "dap_chain_net_vpn_client.h"
+// #endif
 
 #include "dap_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
-#include "dap_chain_node_cli.h"
+#include "dap_chain_node_cli_compat.h"  // Use compatibility layer instead of old SDK header
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -111,7 +113,9 @@
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake.h"
 #include "dap_chain_net_srv_stake_ext.h"
+#include "dap_chain_net_srv_stake_decree.h"
 #include "dap_chain_wallet_shared.h"
+#include "dap_chain_tx_compose_api.h"
 
 #include "dap_chain_wallet_cache.h"
 #include "dap_chain_policy.h"
@@ -326,6 +330,12 @@ int main( int argc, const char **argv )
         return -60;
     }
 
+    // Initialize decree registry before any modules that register decree handlers
+    if( dap_chain_decree_registry_init() ) {
+        log_it(L_CRITICAL,"Can't init decree registry module");
+        return -59;
+    }
+
     if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
@@ -360,6 +370,12 @@ int main( int argc, const char **argv )
         return -72;
     }
 
+    // Register stake decree handlers BEFORE chains are loaded
+    // (chains load during dap_chain_net_init and process decrees)
+    if (dap_chain_net_srv_stake_decree_init()) {
+        log_it(L_ERROR, "Can't register stake decree handlers (non-fatal)");
+    }
+
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
@@ -378,6 +394,11 @@ int main( int argc, const char **argv )
     if( dap_chain_net_srv_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
+    }
+
+    if (dap_chain_tx_compose_init()) {
+        log_it(L_CRITICAL,"Can't init TX compose API module");
+        return -67;
     }
 
     if (dap_chain_net_srv_xchange_init()) {
@@ -401,11 +422,12 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
-#   if !DAP_OS_ANDROID
-    if( dap_chain_net_srv_vpn_pre_init() ){
-        log_it(L_ERROR, "Can't pre-init vpn service");
-    }
-#   endif
+// VPN module has been removed from the new SDK - disabled for now
+// #   if !DAP_OS_ANDROID
+//     if( dap_chain_net_srv_vpn_pre_init() ){
+//         log_it(L_ERROR, "Can't pre-init vpn service");
+//     }
+// #   endif
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -488,27 +510,28 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-    // vpn server
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
-        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
-            log_it(L_ERROR, "Can't init dap chain network service vpn module");
-            return -70;
-        }
-    }
-    // vpn client
-    if(dap_chain_net_vpn_client_init(g_config) != 0) {
-        log_it(L_ERROR, "Can't init dap chain network service vpn client");
-        return -72;
-    }
-
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
-        if(chain_net_geoip_init(g_config) != 0) {
-            log_it(L_CRITICAL, "Can't init geoip module");
-            return -73;
-        }
-    }
-#endif
+// VPN module has been removed from the new SDK - disabled for now
+// #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
+//     // vpn server
+//     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
+//         if(dap_chain_net_srv_vpn_init(g_config) != 0) {
+//             log_it(L_ERROR, "Can't init dap chain network service vpn module");
+//             return -70;
+//         }
+//     }
+//     // vpn client
+//     if(dap_chain_net_vpn_client_init(g_config) != 0) {
+//         log_it(L_ERROR, "Can't init dap chain network service vpn client");
+//         return -72;
+//     }
+// 
+//     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
+//         if(chain_net_geoip_init(g_config) != 0) {
+//             log_it(L_CRITICAL, "Can't init geoip module");
+//             return -73;
+//         }
+//     }
+// #endif
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
