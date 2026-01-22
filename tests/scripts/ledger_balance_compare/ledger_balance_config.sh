@@ -16,9 +16,8 @@ ORIGINAL_CONFIG_PATH="/opt/cellframe-node/etc/cellframe-node.cfg"
 ORIGINAL_BINARY_PATH="/opt/cellframe-node/bin/cellframe-node"
 ORIGINAL_SYNC_LOG_PATH="/opt/cellframe-node/var/log/cellframe-node.log"
 
-CHAINS_BACKUP_ARCHIVE_NAME="mainnets_chains_backup.tar.gz"
-CHAINS_BACKUP_ARCHIVE_PATH="/opt/buildtools/chains/${CHAINS_BACKUP_ARCHIVE_NAME}"
-CHAINS_BACKUP_TEMP_PATH="/tmp/mainnets_chains_backup"
+CHAINS_BACKUP_DIR_NAME="network"
+CHAINS_BACKUP_DIR_PATH="/opt/buildtools/chains/${CHAINS_BACKUP_DIR_NAME}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"

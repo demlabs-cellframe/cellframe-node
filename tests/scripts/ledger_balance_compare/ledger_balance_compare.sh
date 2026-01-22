@@ -78,46 +78,27 @@ install_node_package() {
     return 0
 }
 
-extract_chains_backup() {
-    if [[ ! -f "$CHAINS_BACKUP_ARCHIVE_PATH" ]]; then
-        echo -e "${FAILED}${RED} Error: chains backup archive '$CHAINS_BACKUP_ARCHIVE_PATH' not found.${RESET}"
-        echo "─────────────────────"
-        return 1
-    fi
-
-    echo -ne "${ORANGE}+ Extracting chains backup to temporary directory '$CHAINS_BACKUP_TEMP_PATH'...${RESET}"
-
-    rm -rf "$CHAINS_BACKUP_TEMP_PATH"
-    mkdir -p "$CHAINS_BACKUP_TEMP_PATH"
-
-    if ! tar -xzf "$CHAINS_BACKUP_ARCHIVE_PATH" -C "$CHAINS_BACKUP_TEMP_PATH" 2>/dev/null; then
-        echo -e "${CLEAR_LINE}${FAILED}${RED} Error: failed to extract chains backup archive '$CHAINS_BACKUP_ARCHIVE_NAME'.${RESET}"
-        echo "─────────────────────"
-        return 1
-    fi
-
-    echo -e "${CLEAR_LINE}${CHECKED} Chains backup successfully extracted to temporary directory '$CHAINS_BACKUP_TEMP_PATH'."
-    return 0
-}
 
 preload_chains_backup() {
     local NODE_TAG="$1"
     local CHAINS_BACKUP_TARGET_PATH="/opt/cellframe-node/var/lib"
 
+    if [[ ! -d "$CHAINS_BACKUP_DIR_PATH" ]]; then
+        echo -e "${FAILED}${RED} ${NODE_TAG} Error: chains backup directory '$CHAINS_BACKUP_DIR_PATH' not found.${RESET}"
+        echo "─────────────────────"
+        return 1
+    fi
+
     echo -ne "${ORANGE}+ ${NODE_TAG} Copying mainnets chains backup to '$CHAINS_BACKUP_TARGET_PATH'...${RESET}"
 
-    if ! cp -r "$CHAINS_BACKUP_TEMP_PATH"/* "$CHAINS_BACKUP_TARGET_PATH"/ 2>/dev/null; then
-        echo -e "${CLEAR_LINE}${FAILED}${RED} ${NODE_TAG} Error: failed to copy chains backup archive to '$CHAINS_BACKUP_TARGET_PATH'.${RESET}"
+    if ! cp -r "$CHAINS_BACKUP_DIR_PATH" "$CHAINS_BACKUP_TARGET_PATH"/ 2>/dev/null; then
+        echo -e "${CLEAR_LINE}${FAILED}${RED} ${NODE_TAG} Error: failed to copy chains backup to '$CHAINS_BACKUP_TARGET_PATH'.${RESET}"
         echo "─────────────────────"
         return 1
     fi
 
     echo -e "${CLEAR_LINE}${CHECKED} ${NODE_TAG} Chains backup successfully loaded to '$CHAINS_BACKUP_TARGET_PATH'."
     return 0
-}
-
-cleanup_chains_backup() {
-    rm -rf "$CHAINS_BACKUP_TEMP_PATH"
 }
 
 init_run_node() {
@@ -303,8 +284,8 @@ compare_sync_log_records() {
     local MASTER_FILTERED_LOG=$(mktemp)
     local BUILD_FILTERED_LOG=$(mktemp)
 
-    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$MASTER_SYNC_LOG_PATH" > "$MASTER_FILTERED_LOG" 2>/dev/null
-    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$BUILD_SYNC_LOG_PATH" > "$BUILD_FILTERED_LOG" 2>/dev/null
+    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$MASTER_SYNC_LOG_PATH" 2>/dev/null | sort > "$MASTER_FILTERED_LOG"
+    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$BUILD_SYNC_LOG_PATH" 2>/dev/null | sort > "$BUILD_FILTERED_LOG"
 
     local MASTER_FILTERED_LOG_MD5=$(md5sum "$MASTER_FILTERED_LOG" | awk '{print $1}')
     local BUILD_FILTERED_LOG_MD5=$(md5sum "$BUILD_FILTERED_LOG" | awk '{print $1}')
@@ -341,7 +322,6 @@ compare_sync_log_records() {
 
 execute_sync_logs_comparison() {
     install_dependencies || exit 1
-    extract_chains_backup || exit 1
 
     install_node_package "$MASTER_DEB_FILE_URL" "[MASTER]" || exit 1
     preload_chains_backup "[MASTER]" || exit 1
@@ -353,7 +333,6 @@ execute_sync_logs_comparison() {
     init_run_node "$BUILD_SYNC_LOG_PATH" "[CBUILD]" || exit 1
     uninstall_node_package "[CBUILD]" || exit 1
 
-    cleanup_chains_backup
     compare_sync_log_records
 }
 
