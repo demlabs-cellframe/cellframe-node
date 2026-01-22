@@ -118,16 +118,18 @@ Returns JSON with:
 
 ### 5. history
 
-Shows the transaction history of a specific order.
+Shows history for a trading pair or a specific order.
 
 **Syntax:**
 ```
-srv_dex history -net <network> -order <order_hash>
+srv_dex history -net <network> [-pair <BASE/QUOTE> | -order <order_hash>] [-view events|summary|ohlc|volume]
 ```
 
 **Parameters:**
 - `-net` - Network name (required)
-- `-order` - Order hash (root or any transaction in the chain) (required)
+- `-pair` - Trading pair BASE/QUOTE (optional if `-order` provided)
+- `-order` - Order hash (root or any transaction in the chain) (optional if `-pair` provided)
+- `-view` - Output format: `events` (default), `summary`, `ohlc`, `volume`
 
 **Example:**
 ```
@@ -135,10 +137,12 @@ srv_dex history -net riemann -order 0x1234...abcd
 ```
 
 **Response:**
-Returns a chronological list of all transactions related to this order, including:
-- Order creation
-- Partial or full exchanges
-- Invalidation (if applicable)
+- `events`: chronological list of transactions related to the order
+- `summary`: one record per order with last event and `filled_pct`
+- `ohlc`/`volume`: aggregated series for the pair
+
+**Notes:**
+- `summary` requires `history_cache=true` and `cache_enabled=true`
 
 ### 6. purchase
 
