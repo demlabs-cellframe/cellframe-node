@@ -120,6 +120,11 @@
 #include "dap_chain_wallet_cache.h"
 #include "dap_chain_policy.h"
 
+// External declarations for CLI init functions (headers not in include path)
+extern int dap_chain_wallet_cli_init(void);
+extern int dap_chain_net_tx_init(void);
+extern int dap_chain_ledger_cli_module_init(void);
+
 #include "dap_events_socket.h"
 #include "dap_client.h"
 #include "dap_http_simple.h"
@@ -445,6 +450,21 @@ int main( int argc, const char **argv )
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
+    }
+
+    // Register wallet CLI commands
+    if ( dap_chain_wallet_cli_init() ) {
+        log_it( L_WARNING, "Can't init wallet CLI commands" );
+    }
+
+    // Register token/ledger CLI commands
+    if ( dap_chain_net_tx_init() ) {
+        log_it( L_WARNING, "Can't init net-tx CLI commands" );
+    }
+
+    // Register ledger CLI module (tx create, tx history, etc.)
+    if ( dap_chain_ledger_cli_module_init() ) {
+        log_it( L_WARNING, "Can't init ledger CLI module" );
     }
 
     if( dap_chain_wallet_cache_init() ) {
