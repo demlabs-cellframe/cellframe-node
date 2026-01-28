@@ -35,7 +35,7 @@ test:
       - cli: "wallet new -w bug20273_baseline"
         expect_success: true
       
-      - cli: "wallet info -addr -w bug20273_baseline"
+      - cli: "wallet info -w bug20273_baseline"
         save_wallet: baseline_owner_addr
       
       # 2. Create custom token
@@ -128,7 +128,7 @@ test:
       - cli: "wallet new -w bug20273_bug"
         expect_success: true
       
-      - cli: "wallet info -addr -w bug20273_bug"
+      - cli: "wallet info -w bug20273_bug"
         save_wallet: bug_owner_addr
       
       # 2. Create custom token

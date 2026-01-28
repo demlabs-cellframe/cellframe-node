@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: List mempool
-  - cli: mempool list -net stagenet
+  - cli: mempool list -net {{network_name}}
     node: node1
     expect: success
     save: mempool_list

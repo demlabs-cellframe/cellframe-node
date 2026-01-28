@@ -12,6 +12,7 @@ network:
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml
 
 # Global defaults - all commands on node1 with 3s wait
 defaults:
@@ -19,18 +20,29 @@ defaults:
   wait: 3s
 
 setup:
-  # Create token (inherits node and wait from global defaults)
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token EMITTEST -total_supply 1000000 -certs test_cert
+  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token EMITTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
     description: "Declare EMITTEST token"
+  
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+    description: "Process token datum through mempool"
 
 test:
-  # Emit tokens (inherits node and wait from global defaults)
-  - cli: token_emit -token EMITTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
-    save: emit_tx
+  # Emit tokens on zerochain - needs ROOT certs
+  - cli: token_emit -token EMITTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emit_tx
     description: "Emit tokens to wallet"
+  
+  # Process emission datum
+  - cli: mempool proc -chain zerochain -datum {{emit_tx}}
+    description: "Process emission datum through mempool"
 
 check:
   # Verify emission (inherits node from global defaults)
-  - cli: token info -name EMITTEST -history_limit 10
+  # Note: -net is explicitly added because check phase may not inherit CLI defaults
+  - cli: token info -name EMITTEST -history_limit 10 -net {{network_name}}
     contains: "EMITTEST"
     description: "Token history contains emission"

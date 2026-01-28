@@ -32,7 +32,7 @@ test:
       - cli: "wallet new -w bug20138_owner"
         expect_success: true
       
-      - cli: "wallet info -addr -w bug20138_owner"
+      - cli: "wallet info -w bug20138_owner"
         save_wallet: owner_addr
         expect_success: true
       
@@ -105,7 +105,7 @@ test:
         save_to: fee_config
       
       # Parse fee address or create one
-      - cli: "wallet info -addr -w bug20138_owner"
+      - cli: "wallet info -w bug20138_owner"
         save_wallet: fee_addr
       
       # 8. Set network fee (AFTER token creation to avoid blocking base TX)

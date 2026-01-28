@@ -12,6 +12,7 @@ network:
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml
 
 # Global defaults for all sections
 defaults:
@@ -19,32 +20,81 @@ defaults:
   wait: 3s
 
 setup:
-  # Get wallet address
-  - cli: wallet info -w test_wallet
-    save_wallet: wallet_addr
+  # Note: test_wallet and wallet_addr come from common/wallets/create_wallet.yml include
+  # Note: root_certs comes from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
   
-  # Create token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ARBCMD -total_supply 1000000 -certs test_cert
-    save: token
+  # Create receiver wallet for arbitrage
+  - cli: wallet new -w arb_receiver
+  - cli: wallet info -w arb_receiver -net {{network_name}}
+    save_wallet: receiver_addr
   
-  # Emit tokens
-  - cli: token_emit -token ARBCMD -value 10000 -addr {{wallet_addr}} -certs test_cert
-    save: emission_tx
+  # Create token on zerochain (DAG-PoA) - needs ROOT certs for authorization
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token ARBCMD -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
   
-  - wait_for_datum: "{{emission_tx}}"
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  
+  # Wait for DAG consensus and ledger sync (events go through threshold first)
+  - wait: 30s
+  
+  # Emit tokens on zerochain - needs ROOT certs
+  - cli: token_emit -token ARBCMD -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_tx
+  
+  # Process emission datum
+  - cli: mempool proc -chain zerochain -datum {{emission_tx}}
+  
+  # Wait for DAG consensus and ledger sync
+  - wait: 30s
+  
+  # Convert emission to UTXO
+  - cli: tx_create -token ARBCMD -from_emission {{emission_tx}} -to_addr {{wallet_addr}} -value 10000 -cert {{root_cert_single}} -chain main
+    save_hash: base_tx_hash
+  
+  # Process base transaction
+  - cli: mempool proc -chain main -datum {{base_tx_hash}}
+  
+  # Wait for UTXO to appear in wallet
+  - wait: 30s
+  
+  # Get TCELL for fee via emission (TCELL requires 3 signatures)
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+    save_hash: tcell_emission
+  
+  # Process TCELL emission on zerochain
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  
+  - wait: 30s
+  
+  # Convert TCELL emission to UTXO (no fee needed)
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx
+  
+  # Process TCELL tx
+  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  
+  # Wait for TCELL UTXO
+  - wait: 30s
 
 test:
-  # Test: Create arbitrage transaction
-  - cli: tx_create -token ARBCMD -value 1000 -fee 0.1 -arbitrage
-    save: arb_tx
+  # Test: Create arbitrage transaction using -from_wallet (now has TCELL for fee)
+  # Note: -certs adds token owner signature for arbitrage
+  - cli: tx_create -token ARBCMD -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 1000 -fee 1 -certs {{root_certs}} -arbitrage
+    save_hash: arb_tx
   
-  - wait_for_datum: "{{arb_tx}}"
+  # Process transaction datum on main chain
+  - cli: mempool proc -chain main -datum {{arb_tx}}
+  
+  # Wait for transaction to be included in block
+  - wait: 30s
 
 check:
   # Verify transaction exists
-  - cli: tx_history -tx {{arb_tx}}
+  # Note: -net is explicitly added because check phase may not inherit CLI defaults
+  - cli: tx_history -tx {{arb_tx}} -net {{network_name}}
     contains: "{{arb_tx}}"
   
   # Verify arbitrage marker present (if it's in the output)
-  - cli: tx_info -tx {{arb_tx}}
+  - cli: tx_info -tx {{arb_tx}} -net {{network_name}}
 

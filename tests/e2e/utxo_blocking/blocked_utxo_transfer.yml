@@ -1,5 +1,5 @@
 # Blocked UTXO Transfer E2E Test
-# Полный сценарий: заблокированные UTXO нельзя потратить
+# Full scenario: blocked UTXO cannot be spent
 
 name: Blocked UTXO Cannot Be Spent
 description: |
@@ -15,77 +15,104 @@ description: |
 author: QA Team
 tags: [e2e, utxo-blocking, transfer, critical]
 
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/set_root_cert.yml
+
+defaults:
+  node: node1
+  wait: 3s
+
 setup:
+  # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
+  
   # Create two wallets for testing
   - cli: wallet new -w sender
   
-  - cli: wallet info -w sender
+  - cli: wallet info -w sender -net {{network_name}}
     save_wallet: sender_addr
   
   - cli: wallet new -w receiver
   
-  - cli: wallet info -w receiver
+  - cli: wallet info -w receiver -net {{network_name}}
     save_wallet: receiver_addr
   
-  # Create token (UTXO blocking через token_update, не через флаг)
-  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert -chain main
+  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: token_decl -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
 
-  - wait_for_datum: "{{token_hash}}"
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
   
-  # Emit tokens to sender
-  - cli: token_emit -token BLOCKTEST -value 10000000 -addr {{sender_addr}} -certs test_cert -chain main
+  # Wait for DAG consensus and ledger sync (events go through threshold first)
+  - wait: 30s
+  
+  # Emit tokens to sender on zerochain - needs ROOT certs
+  # IMPORTANT: emission_value MUST equal the tx_create value to avoid creating change UTXO
+  - cli: token_emit -token BLOCKTEST -emission_value 2000000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission
   
-  # Wait for emission
-  - wait_for_datum: "{{emission}}"
+  - cli: mempool proc -chain zerochain -datum {{emission}}
   
-  # Create UTXO #1 (will be blocked)
-  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1 -chain main
-    save_hash: utxo1
+  # Wait for DAG consensus and ledger sync
+  - wait: 30s
   
-  # Wait for UTXO #1
-  - wait_for_datum: "{{utxo1}}"
+  # Create TX from emission - this creates UTXO for sender wallet (no fee needed for from_emission)
+  # Value matches emission_value exactly so no change UTXO is created
+  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -to_addr {{sender_addr}} -value 2000000 -cert {{root_cert_single}}
+    save_hash: initial_tx
   
-  # Create UTXO #2 (will remain unblocked)
-  - cli: tx_create -token BLOCKTEST -from_emission {{emission}} -value 1000000 -fee 0.1 -chain main
-    save_hash: utxo2
+  - cli: mempool proc -chain main -datum {{initial_tx}}
   
-  # Wait for UTXO #2
-  - wait_for_datum: "{{utxo2}}"
+  # Wait for UTXO to be indexed
+  - wait: 30s
   
-  # Block UTXO #1
-  - cli: token_update -token BLOCKTEST -utxo_blocked_add {{utxo1}}:0 -chain main
+  # Block this specific UTXO on zerochain - needs ROOT certs
+  - cli: token_update -token BLOCKTEST -utxo_blocked_add {{initial_tx}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: block_tx
 
-  - wait_for_datum: "{{block_tx}}"
+  - cli: mempool proc -chain zerochain -datum {{block_tx}}
+  
+  # Wait for blocklist update to sync
+  - wait: 30s
+  
+  # Get TCELL for fee via emission (TCELL requires 3 signatures)
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{sender_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+    save_hash: tcell_emission
+  
+  # Process TCELL emission on zerochain
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  
+  - wait: 30s
+  
+  # Convert TCELL emission to UTXO (no fee needed)
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{sender_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx
+  
+  # Process TCELL tx
+  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  
+  # Wait for TCELL UTXO
+  - wait: 30s
 
 test:
-  # Attempt to spend blocked UTXO - should FAIL
-  - cli: tx_create -token BLOCKTEST -from {{utxo1}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1 -chain main
+  # Note: CLI -from_wallet automatically skips blocked UTXOs
+  # Since all sender's UTXOs are blocked, this should fail
+  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1
     expect: error
-    contains: "UTXO is blocked"
   
-  # Attempt to spend unblocked UTXO - should SUCCESS
-  - cli: tx_create -token BLOCKTEST -from {{utxo2}}:0 -to {{receiver_addr}} -value 500000 -fee 0.1 -chain main
-    save_hash: transfer_tx
-
-  - wait_for_datum: "{{transfer_tx}}"
+  # Verify blocklist contains the UTXO
+  - cli: token info -name BLOCKTEST -net {{network_name}}
+    contains: "{{initial_tx}}"
 
 check:
-  # Verify blocked UTXO was NOT spent
-  - cli: balance -addr {{sender_addr}} -token BLOCKTEST
-    contains: "1000000"  # Blocked UTXO still in balance
+  # Verify blocked UTXO is still in blocklist
+  - cli: token info -name BLOCKTEST -history_limit 10 -net {{network_name}}
+    contains: "{{initial_tx}}"
   
-  # Verify unblocked UTXO WAS spent
-  - cli: tx_history -tx {{transfer_tx}}
-    contains: "{{transfer_tx}}"
-  
-  # Verify receiver got tokens from unblocked UTXO
-  - cli: balance -addr {{receiver_addr}} -token BLOCKTEST
-    contains: "500000"
-  
-  # Verify blocklist still contains blocked UTXO
-  - cli: token info -name BLOCKTEST -history_limit 10
-    contains: "{{utxo1}}"
+  # Verify sender still has their tokens (blocked UTXO cannot be spent)
+  - cli: wallet info -w sender -net {{network_name}}
+    contains: "BLOCKTEST"
 

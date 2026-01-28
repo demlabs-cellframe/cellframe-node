@@ -4,15 +4,22 @@ name: Wallet Info Detailed Test
 description: Test retrieving detailed wallet information
 tags: [functional, wallet, info]
 
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+
 defaults: 
   node: node1
+
 setup:
   # Create test wallet
   - cli: wallet new -w info_test_wallet
 
 test:
   # Test: Get wallet info with address extraction and validation
-  - cli: wallet info -w info_test_wallet
+  - cli: wallet info -w info_test_wallet -net {{network_name}}
     save_wallet: wallet_addr
   
   # Test: List wallets

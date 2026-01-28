@@ -11,23 +11,30 @@ network:
 
 includes:
   - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml
 
 setup:
   - wait: 3s
 
 test:
-  # Test: Create simple token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token E2ETEST -total_supply 1000000 -certs test_cert
+  # Test: Create simple token (on zerochain - DAG-PoA)
+  # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token E2ETEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     node: node1
     expect: success
     save_hash: token_hash
-    wait: 3s
     description: "Declare E2ETEST token"
+  
+  # Process datum manually (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+    node: node1
+    expect: success
+    description: "Process token datum through mempool"
 
 check:
   # Verify token info is accessible
-  - cli: token info -name E2ETEST
+  # Note: -net is explicitly added because check phase may not inherit CLI defaults
+  - cli: token info -name E2ETEST -net {{network_name}}
     node: node1
     expect: success
     contains: "E2ETEST"

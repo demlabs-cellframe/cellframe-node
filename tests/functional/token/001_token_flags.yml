@@ -11,36 +11,44 @@ network:
 
 includes:
   - common/networks/single_node.yml
+  - common/set_root_cert.yml
 
 setup:
   - wait: 3s
 
 test:
-  # Test: Create token with ALL_FROZEN flag
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token FROZEN -total_supply 1000000 -flags ALL_FROZEN -certs test_cert
+  # Test: Create token with ALL_FROZEN flag (on zerochain) - needs ROOT certs
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token FROZEN -total_supply 1000000 -flags ALL_FROZEN -certs {{root_certs}} -chain zerochain
     node: node1
     expect: success
-    save: frozen_token
-    wait: 3s
+    save_hash: frozen_token_hash
     description: "Create token with ALL_FROZEN flag"
   
-  # Test: Create token with ALL_ALLOWED_FOR_ALL flag  
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token ALLOWED -total_supply 1000000 -flags ALL_ALLOWED_FOR_ALL -certs test_cert
+  # Process token datum (auto_confirmation may not work in test env)
+  - cli: mempool proc -chain zerochain -datum {{frozen_token_hash}}
+    node: node1
+  
+  # Test: Create token with ALL_ALLOWED flag (on zerochain) - needs ROOT certs
+  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token ALLOWED -total_supply 1000000 -flags ALL_ALLOWED -certs {{root_certs}} -chain zerochain
     node: node1
     expect: success
-    save: allowed_token
-    wait: 3s
-    description: "Create token with ALL_ALLOWED_FOR_ALL flag"
+    save_hash: allowed_token_hash
+    description: "Create token with ALL_ALLOWED flag"
+  
+  # Process token datum
+  - cli: mempool proc -chain zerochain -datum {{allowed_token_hash}}
+    node: node1
 
 check:
   # Verify frozen token info
-  - cli: token info -name FROZEN
+  # Note: -net is explicitly added because check phase may not inherit CLI defaults
+  - cli: token info -name FROZEN -net {{network_name}}
     node: node1
     expect: success
     contains: "FROZEN"
   
   # Verify allowed token info
-  - cli: token info -name ALLOWED
+  - cli: token info -name ALLOWED -net {{network_name}}
     node: node1
     expect: success
     contains: "ALLOWED"

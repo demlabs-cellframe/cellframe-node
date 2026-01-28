@@ -6,3 +6,8 @@ description: Functional testing of network sync, CA management, and advanced fea
 tags: [functional, network, features]
 version: "1.0"
 
+network:
+  topology: default
+
+# This is a suite descriptor file (metadata only, no executable steps)
+# Individual test scenarios are in the net/ subdirectory
