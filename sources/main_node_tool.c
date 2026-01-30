@@ -31,6 +31,7 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_cert.h"
+#include "dap_pkey.h"
 #include "dap_stream.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
@@ -86,6 +87,7 @@ static int s_cert_add_metadata(int argc, const char **argv);
 static int s_cert_sign(int argc, const char **argv);
 static int s_cert_pkey_show(int argc, const char **argv);
 static int s_cert_pkey_show_full(int argc, const char **argv);
+static int s_pkey_show_file(int argc, const char **argv);
 static int s_cert_get_addr(int argc, const char **argv);
 
 struct options {
@@ -108,7 +110,8 @@ struct options {
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
 { "cert", {"pkey", "show_full"}, 2, s_cert_pkey_show_full },
-{ "cert", {"addr", "show"}, 2, s_cert_get_addr }
+{ "cert", {"addr", "show"}, 2, s_cert_get_addr },
+{ "pkey", {"show"}, 1, s_pkey_show_file }
 };
 
 #ifdef __ANDROID__
@@ -699,14 +702,14 @@ static int s_wallet_pkey_show(int argc, const char **argv)
         if (access(l_wallet_path, F_OK) == 0) {
             const char * l_pass_str = argv[5];
             if (!l_pass_str) {
-                printf("Password required for wallet %s .\n", argv[4]);
+                printf("Password required for wallet %s.\n", argv[4]);
                 exit(-134);
             }
             unsigned int res = 0;
             dap_log_level_set(L_CRITICAL);
             l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pass_str, &res);
             if (!l_wallet) {
-                printf("Wrong password for wallet %s .\n", argv[4]);
+                printf("Wrong password for wallet %s.\n", argv[4]);
                 exit(-134);
             }
         } else {
@@ -726,23 +729,31 @@ static int s_wallet_pkey_show(int argc, const char **argv)
     return 0;
 }
 
+/**
+ * @brief Show full public key information for a wallet
+ * @param argc Argument count
+ * @param argv Argument values
+ * @return 0 on success, exits with error code on failure
+ */
 static int s_wallet_pkey_show_full(int argc, const char **argv)
 {
-    if (argc < 5 || argc > 7) {
+    if (argc < 5 || argc > 9) {
         log_it(L_ERROR, "Wrong 'wallet pkey show_full' command params\n");
-        log_it(L_ERROR, "Usage: %s wallet pkey show_full <wallet name> [-encode_type <hex|base58>]\n", dap_get_appname());
+        log_it(L_ERROR, "Usage: %s wallet pkey show_full <wallet name> [-password <password>] [-encode_type <hex|base58>]\n", dap_get_appname());
         exit(-800);
     }
     const char *l_wallet_name = argv[4];
     const char *l_encode_type = "base58"; // Default format
+    const char *l_password = NULL;
     
-    // Parse optional -encode_type parameter
-    if (argc == 7) {
-        for (int i = 5; i < argc - 1; i++) {
-            if (strcmp(argv[i], "-encode_type") == 0) {
-                l_encode_type = argv[i + 1];
-                break;
-            }
+    // Parse optional parameters
+    for (int i = 5; i < argc - 1; i++) {
+        if (strcmp(argv[i], "-encode_type") == 0) {
+            l_encode_type = argv[i + 1];
+            i++;
+        } else if (strcmp(argv[i], "-password") == 0) {
+            l_password = argv[i + 1];
+            i++;
         }
     }
     
@@ -752,10 +763,34 @@ static int s_wallet_pkey_show_full(int argc, const char **argv)
         exit(-801);
     }
     
-    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(l_wallet_name, s_system_wallet_dir, NULL);
+    unsigned int l_wallet_status = 0;
+    dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(l_wallet_name, s_system_wallet_dir, &l_wallet_status);
     if (!l_wallet) {
-        printf("Not found wallet %s\n", l_wallet_name);
-        exit(-134);
+        // Check if wallet file exists but requires password (protected wallet)
+        char l_wallet_path[MAX_PATH] = {0};
+        snprintf(l_wallet_path, sizeof(l_wallet_path), "%s/%s.dwallet", s_system_wallet_dir, l_wallet_name);
+        
+        if (access(l_wallet_path, F_OK) == 0) {
+            // Wallet file exists, check if it's a protected wallet
+            if (l_wallet_status == 4 || !l_password) {
+                if (!l_password) {
+                    printf("Wallet '%s' is protected. Please provide password with -password option.\n", l_wallet_name);
+                    exit(-134);
+                }
+            }
+            // Try to open with password
+            dap_log_level_t l_old_level = dap_log_level_get();
+            dap_log_level_set(L_CRITICAL);
+            l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_password, &l_wallet_status);
+            dap_log_level_set(l_old_level);
+            if (!l_wallet) {
+                printf("Wrong password for wallet '%s'.\n", l_wallet_name);
+                exit(-134);
+            }
+        } else {
+            printf("Wallet '%s' not found in the directory %s.\n", l_wallet_name, s_system_wallet_dir);
+            exit(-136);
+        }
     }
 
     dap_hash_fast_t l_hash;
@@ -768,6 +803,92 @@ static int s_wallet_pkey_show_full(int argc, const char **argv)
     printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
     printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
     DAP_DELETE(l_pkey_str);
+    return 0;
+}
+
+/**
+ * @brief Show public key information from a .pkey file (created by cert create_pkey)
+ * @param argc Argument count
+ * @param argv Argument values
+ * @return 0 on success, exits with error code on failure
+ */
+static int s_pkey_show_file(int argc, const char **argv)
+{
+    if (argc < 4 || argc > 6) {
+        log_it(L_ERROR, "Wrong 'pkey show' command params\n");
+        log_it(L_ERROR, "Usage: %s pkey show <pkey_file_path> [-encode_type <hex|base58>]\n", dap_get_appname());
+        exit(-800);
+    }
+    
+    const char *l_pkey_path = argv[3];
+    const char *l_encode_type = "base58"; // Default format
+    
+    // Parse optional -encode_type parameter
+    for (int i = 4; i < argc - 1; i++) {
+        if (strcmp(argv[i], "-encode_type") == 0) {
+            l_encode_type = argv[i + 1];
+            i++;
+        }
+    }
+    
+    // Validate encode type parameter
+    if (strcmp(l_encode_type, "hex") != 0 && strcmp(l_encode_type, "base58") != 0) {
+        log_it(L_ERROR, "Invalid encode_type '%s'. Valid values: hex, base58\n", l_encode_type);
+        exit(-801);
+    }
+    
+    // Check if file exists
+    if (!dap_file_test(l_pkey_path)) {
+        printf("Public key file '%s' not found.\n", l_pkey_path);
+        exit(-802);
+    }
+    
+    // Read the pkey file
+    size_t l_file_size = 0;
+    char *l_file_data = dap_file_get_contents2(l_pkey_path, &l_file_size);
+    if (!l_file_data || l_file_size < sizeof(dap_pkey_t)) {
+        printf("Failed to read public key file '%s' or file is too small.\n", l_pkey_path);
+        DAP_DEL_Z(l_file_data);
+        exit(-803);
+    }
+    
+    dap_pkey_t *l_pkey = (dap_pkey_t *)l_file_data;
+    
+    // Validate pkey structure
+    size_t l_expected_size = sizeof(l_pkey->header) + l_pkey->header.size;
+    if (l_file_size < l_expected_size) {
+        printf("Invalid public key file format: size mismatch (expected %zu, got %zu).\n", 
+               l_expected_size, l_file_size);
+        DAP_DELETE(l_file_data);
+        exit(-804);
+    }
+    
+    // Get hash of the public key
+    dap_hash_fast_t l_hash;
+    if (!dap_pkey_get_hash(l_pkey, &l_hash)) {
+        printf("Failed to calculate hash of public key.\n");
+        DAP_DELETE(l_file_data);
+        exit(-805);
+    }
+    
+    // Convert pkey to string
+    char *l_pkey_str = dap_pkey_to_str(l_pkey, l_encode_type);
+    if (!l_pkey_str) {
+        printf("Failed to serialize public key.\n");
+        DAP_DELETE(l_file_data);
+        exit(-806);
+    }
+    
+    // Get pkey type string
+    const char *l_pkey_type_str = dap_pkey_type_to_str(l_pkey->header.type);
+    
+    printf("Public key file: %s\n", l_pkey_path);
+    printf("Type: %s\n", l_pkey_type_str ? l_pkey_type_str : "unknown");
+    printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
+    
+    DAP_DELETE(l_pkey_str);
+    DAP_DELETE(l_file_data);
     return 0;
 }
 
@@ -898,7 +1019,7 @@ static void s_help()
     printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);
 
     printf(" * Print full public key information for wallet <wallet name> with optional format\n");
-    printf("\t%s wallet pkey show_full <wallet name> [-encode_type <hex|base58>]\n\n", l_tool_appname); 
+    printf("\t%s wallet pkey show_full <wallet name> [-password <password>] [-encode_type <hex|base58>]\n\n", l_tool_appname); 
 
     printf(" * Create new key file with randomly produced key stored in\n");
     printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
@@ -926,6 +1047,9 @@ static void s_help()
 
     printf(" * Add metadata item to <cert name>\n");
     printf("\t%s cert add_metadata <cert name> <key:type:length:value>\n\n", l_tool_appname);
+
+    printf(" * Print public key info from .pkey file (created by cert create_pkey)\n");
+    printf("\t%s pkey show <pkey_file_path> [-encode_type <hex|base58>]\n\n", l_tool_appname);
 
     DAP_DELETE(l_tool_appname);
 }
