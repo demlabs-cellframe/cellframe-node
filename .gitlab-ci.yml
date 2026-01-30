@@ -220,6 +220,28 @@ tsan_build:
     - ./prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
+ledger_balance_compare:
+  extends: .ci-polygon
+  stage: diagnostic_builds
+  image: demlabs/debian/amd64:qt6
+  timeout: 6 hours
+  dependencies:
+    - amd64:linux.rwd.bld
+  rules:
+    - when: manual
+      allow_failure: true
+  variables:
+    SYNC_TIMEOUT: "10800"
+  script:
+    - chmod +x tests/scripts/ledger_balance_compare/ledger_balance_compare.sh
+    - tests/scripts/ledger_balance_compare/ledger_balance_compare.sh
+  artifacts:
+    paths:
+      - /cellframe-node-master.log
+      - /cellframe-node-build.log
+    expire_in: 1 week
+    when: always
+
 amd64:linux.rwd:
     extends: .build
     stage: build
