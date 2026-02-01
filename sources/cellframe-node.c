@@ -90,6 +90,8 @@
 //#include "dap_chain_bridge_btc.h"
 
 #include "dap_chain_net.h"
+#include "dap_chain_net_api.h"
+#include "dap_chain_net_cli.h"
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_geoip.h"
 
@@ -381,6 +383,12 @@ int main( int argc, const char **argv )
         log_it(L_ERROR, "Can't register stake decree handlers (non-fatal)");
     }
 
+    // Initialize network API registry (Phase 5.3) BEFORE network module
+    if (dap_chain_net_api_init()) {
+        log_it(L_ERROR, "Can't init network API registry");
+        return -75;
+    }
+
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
@@ -450,6 +458,11 @@ int main( int argc, const char **argv )
     if ( dap_chain_node_cli_init(g_config) ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
+    }
+
+    // Register net CLI commands (net get status, net go, etc.)
+    if ( dap_chain_net_cli_init() ) {
+        log_it( L_WARNING, "Can't init net CLI commands" );
     }
 
     // Register wallet CLI commands
