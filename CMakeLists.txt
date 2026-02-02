@@ -380,7 +380,7 @@ if(UNIX AND NOT WIN32)
     endif()
     
     set(NODE_LIBRARIES ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
-    set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk dap_app_cli)
+    set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
     set(NODE_TOOL_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
 
     if (SUPPORT_PYTHON_PLUGINS)
