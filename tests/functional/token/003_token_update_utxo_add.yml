@@ -11,7 +11,6 @@ network:
 
 includes:
   - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
   - common/set_root_cert.yml
 
 # Global defaults for all sections
@@ -20,6 +19,9 @@ defaults:
   wait: 3s
 
 setup:
+  # Wait for network to be fully online
+  - wait: 5s
+  
   # Create token on zerochain (DAG-PoA) - needs ROOT certs
   - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token UPDTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash

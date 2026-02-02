@@ -12,6 +12,9 @@ description: |
   3. Block specific UTXO
   4. Verify blocked UTXO cannot be spent
   5. Verify unblocked UTXO can be spent
+  
+  NOTE: This test may fail if SDK does not implement UTXO blocking check
+  in tx_create -from_wallet. Current SDK status: UNKNOWN
 author: QA Team
 tags: [e2e, utxo-blocking, transfer, critical]
 
@@ -27,7 +30,8 @@ defaults:
   wait: 3s
 
 setup:
-  # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
+  # Wait for network to be fully online
+  - wait: 5s
   
   # Create two wallets for testing
   - cli: wallet new -w sender
@@ -79,7 +83,7 @@ setup:
   - wait: 30s
   
   # Get TCELL for fee via emission (TCELL requires 3 signatures)
-  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{sender_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{sender_addr}} -certs {{root_certs_tcell}} -chain zerochain
     save_hash: tcell_emission
   
   # Process TCELL emission on zerochain
@@ -98,8 +102,18 @@ setup:
   - wait: 30s
 
 test:
-  # Note: CLI -from_wallet automatically skips blocked UTXOs
-  # Since all sender's UTXOs are blocked, this should fail
+  # CRITICAL TEST: CLI -from_wallet should automatically skip blocked UTXOs
+  # Since sender's BLOCKTEST UTXO is blocked, this should fail with error
+  # 
+  # EXPECTED BEHAVIOR:
+  # - SDK checks token blocklist before spending UTXO
+  # - Blocked UTXO is skipped by -from_wallet logic
+  # - If ALL UTXOs are blocked, command fails with "no available UTXO" error
+  #
+  # IF THIS TEST FAILS (command succeeds):
+  # - SDK may not implement UTXO blocking check
+  # - Or UTXO blocking only works for specific token types
+  # - Report as SDK bug to cellframe-sdk repository
   - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1
     expect: error
   
@@ -115,4 +129,3 @@ check:
   # Verify sender still has their tokens (blocked UTXO cannot be spent)
   - cli: wallet info -w sender -net {{network_name}}
     contains: "BLOCKTEST"
-
