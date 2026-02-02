@@ -145,10 +145,16 @@ test:
     contains: "{{initial_tx}}"
 
 check:
-  # Verify blocked UTXO is still in blocklist
+  # Verify blocked UTXO is still in blocklist after failed transfer attempt
   - cli: token info -name BLOCKTEST -history_limit 10 -net {{network_name}}
     contains: "{{initial_tx}}"
+    description: "Confirm UTXO remains blocked"
   
-  # Verify sender still has their tokens (blocked UTXO cannot be spent)
+  # Verify sender still has their full token balance (blocked UTXO was NOT spent)
   - cli: wallet info -w sender -net {{network_name}}
     contains: "BLOCKTEST"
+    description: "Verify sender balance unchanged after blocked TX"
+  
+  # Log final wallet outputs for debugging
+  - cli: wallet list_outs -w sender -addr {{sender_addr}} -token BLOCKTEST -net {{network_name}}
+    description: "Show all sender UTXOs for debugging"
