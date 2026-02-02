@@ -102,20 +102,43 @@ setup:
   - wait: 30s
 
 test:
+  # ============================================================================
+  # UTXO BLOCKING VERIFICATION
+  # ============================================================================
   # CRITICAL TEST: CLI -from_wallet should automatically skip blocked UTXOs
-  # Since sender's BLOCKTEST UTXO is blocked, this should fail with error
+  # Since sender's BLOCKTEST UTXO ({{initial_tx}}:0) is blocked, this should fail
   # 
-  # EXPECTED BEHAVIOR:
-  # - SDK checks token blocklist before spending UTXO
-  # - Blocked UTXO is skipped by -from_wallet logic
-  # - If ALL UTXOs are blocked, command fails with "no available UTXO" error
+  # SDK BEHAVIOR (VERIFIED IN CODE):
+  # 1. dap_chain_wallet_cache_tx_find_outs_with_val() checks UTXO blocklist (line 725)
+  # 2. dap_ledger_get_list_tx_outs_unspent_by_addr() checks UTXO blocklist (line 6155)
+  # 3. Blocked UTXO is skipped by -from_wallet logic
+  # 4. If ALL UTXOs are blocked, command fails with "Not enough funds"
   #
-  # IF THIS TEST FAILS (command succeeds):
-  # - SDK may not implement UTXO blocking check
-  # - Or UTXO blocking only works for specific token types
-  # - Report as SDK bug to cellframe-sdk repository
-  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1
+  # WHY THIS TEST SHOULD PASS:
+  # - Only ONE UTXO exists: {{initial_tx}}:0 (no change output created)
+  # - This UTXO is blocked via token_update
+  # - SDK MUST skip it → no available UTXO → command fails
+  #
+  # IF TEST STILL FAILS (command succeeds):
+  # 1. Check if multiple UTXOs exist (wallet outputs command)
+  # 2. Check if blocklist was applied (token info command)
+  # 3. Check node logs for UTXO selection logic
+  # 4. Verify blockchain_time is set correctly (affects blocklist activation)
+  # ============================================================================
+  
+  # Log current wallet state for debugging
+  - cli: wallet info -w sender -net {{network_name}}
+    description: "Check sender wallet balance before blocked TX attempt"
+  
+  # Log token blocklist state
+  - cli: token info -name BLOCKTEST -net {{network_name}}
+    description: "Verify UTXO is in blocklist"
+    contains: "{{initial_tx}}"
+  
+  # CRITICAL: This MUST fail because only UTXO is blocked
+  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1 -net {{network_name}} -chain main
     expect: error
+    description: "Attempt to spend blocked UTXO should fail with 'Not enough funds'"
   
   # Verify blocklist contains the UTXO
   - cli: token info -name BLOCKTEST -net {{network_name}}
