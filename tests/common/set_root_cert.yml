@@ -10,16 +10,18 @@
 #
 # Usage: Include this file and use -certs {{root_certs}} or {{root_certs_tcell}} as needed.
 
-variables:
-  # Two ROOT certificates (for most operations with auth_certs_number_verify=2)
-  # Use for custom tokens with -signs_total 2 -signs_emission 2
-  root_certs: "{{network_name}}.root.pvt.0,{{network_name}}.root.pvt.1"
+setup:
+  # Define ROOT certificate variables dynamically based on network_name
+  # These execute during runtime when network_name is already set
   
-  # Single ROOT cert (only works if auth_certs_number_verify=1)
-  root_cert_single: "{{network_name}}.root.pvt.0"
-  
-  # Three ROOT certificates (required for TCELL emission)
-  # TCELL has hardcoded requirement for 3 signatures in SDK
-  # NOTE: This assumes genesis creates at least 3 ROOT certificates
-  # If only 2 ROOT certs exist, TCELL emission will FAIL
-  root_certs_tcell: "{{network_name}}.root.pvt.0,{{network_name}}.root.pvt.1,{{network_name}}.root.pvt.2"
+  - set: root_certs
+    value: "f'{network_name}.root.pvt.0,{network_name}.root.pvt.1'"
+    eval: true
+    
+  - set: root_cert_single
+    value: "f'{network_name}.root.pvt.0'"
+    eval: true
+    
+  - set: root_certs_tcell
+    value: "f'{network_name}.root.pvt.0,{network_name}.root.pvt.1,{network_name}.root.pvt.2'"
+    eval: true

@@ -1,16 +1,6 @@
 # Common: Single Node Topology
 # Default single-node configuration for basic testing
 
-network:
-  topology: default
-  
-variables:
-  # Default node for all operations
-  default_node: node1
-  
-  # Network name for test environment
-  network_name: stagenet
-  
-  # Chain names
-  zerochain: zerochain
-  mainchain: main
+# This file is a placeholder for single-node network configuration
+# Network topology is set via network.topology in main scenario
+# network_name is automatically set from scenario.network.name by RuntimeContext
