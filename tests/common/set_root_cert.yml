@@ -1,0 +1,25 @@
+# Common: Set ROOT certificates for testing
+# 
+# IMPORTANT: For zerochain (DAG-PoA), datums must be signed by authorized ROOT certificates.
+# The auth_certs_number_verify parameter determines minimum required signatures.
+# 
+# For TCELL: requires 3 signatures (hardcoded in SDK)
+# For custom tokens: depends on signs_emission/signs_total parameters
+#
+# After genesis, ROOT certificates are available on nodes based on their roles.
+#
+# Usage: Include this file and use -certs {{root_certs}} or {{root_certs_tcell}} as needed.
+
+variables:
+  # Two ROOT certificates (for most operations with auth_certs_number_verify=2)
+  # Use for custom tokens with -signs_total 2 -signs_emission 2
+  root_certs: "{{network_name}}.root.pvt.0,{{network_name}}.root.pvt.1"
+  
+  # Single ROOT cert (only works if auth_certs_number_verify=1)
+  root_cert_single: "{{network_name}}.root.pvt.0"
+  
+  # Three ROOT certificates (required for TCELL emission)
+  # TCELL has hardcoded requirement for 3 signatures in SDK
+  # NOTE: This assumes genesis creates at least 3 ROOT certificates
+  # If only 2 ROOT certs exist, TCELL emission will FAIL
+  root_certs_tcell: "{{network_name}}.root.pvt.0,{{network_name}}.root.pvt.1,{{network_name}}.root.pvt.2"

@@ -1,0 +1,6 @@
+# Common: Create test wallet
+# Simple wallet creation without network dependency
+
+variables:
+  # Default test wallet name
+  test_wallet: test_wallet

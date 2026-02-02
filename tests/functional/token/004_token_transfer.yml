@@ -64,7 +64,7 @@ setup:
   - wait: 30s
   
   # Get TCELL for fee via emission (TCELL requires 3 signatures)
-  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet1_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet1_addr}} -certs {{root_certs_tcell}} -chain zerochain
     save_hash: tcell_emission
   
   # Process TCELL emission on zerochain
