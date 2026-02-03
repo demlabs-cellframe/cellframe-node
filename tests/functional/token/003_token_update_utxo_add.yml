@@ -21,11 +21,11 @@ defaults:
 
 setup:
   # Create token on zerochain (DAG-PoA) - needs ROOT certs
-  - cli: token_decl -decimals 18 -signs_total 2 -signs_emission 2 -token UPDTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+  - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token UPDTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
   # Process token datum
-  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -38,12 +38,12 @@ test:
   # Test: Create token_update to add a hash to blocklist
   # We use token_hash as a placeholder UTXO hash - the command should accept any valid hash format
   # The important thing is that token_update datum is created and processed
-  - cli: token_update -token UPDTEST -utxo_blocked_add {{token_hash}}:0 -certs {{root_certs}} -chain zerochain
+  - cli: token_update -net {{network_name}} -token UPDTEST -utxo_blocked_add {{token_hash}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: update_hash
     contains: "Datum"
   
   # Process token update datum on zerochain
-  - cli: mempool proc -chain zerochain -datum {{update_hash}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{update_hash}}
     contains: "processed"
   
   # Wait for update to sync to ledger

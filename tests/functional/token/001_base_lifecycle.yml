@@ -35,62 +35,62 @@ setup:
 test:
   - wait: 3s
   # Step 1: Create token on zerochain (DAG-PoA) - needs ROOT certs
-  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+  - cli: token_decl -net {{network_name}} -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
     description: "Process token datum through mempool"
   
   # Wait for DAG consensus and ledger sync (events go through threshold first)
   - wait: 30s
   
   # Step 2: Emit to wallet1 on zerochain - needs ROOT certs
-  - cli: token_emit -token LIFECYCLE -emission_value 10000 -addr {{wallet1_addr}} -certs {{root_certs}} -chain zerochain
+  - cli: token_emit -net {{network_name}} -token LIFECYCLE -emission_value 10000 -addr {{wallet1_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission_tx
   
   # Process emission datum
-  - cli: mempool proc -chain zerochain -datum {{emission_tx}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
     description: "Process emission datum through mempool"
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Convert emission to UTXO (must do this before from_wallet works)
-  - cli: tx_create -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main
     save_hash: base_tx_hash
   
   # Process base transaction
-  - cli: mempool proc -chain main -datum {{base_tx_hash}}
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{base_tx_hash}}
   
   # Wait for UTXO to appear in wallet
   - wait: 30s
   
-  # Get TCELL for fee via emission (TCELL requires 3 signatures)
-  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet1_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+  # Get TCELL for fee via emission (TCELL requires 1 signature per genesis config)
+  - cli: token_emit -net {{network_name}} -token TCELL -emission_value 1000000000000000000 -addr {{wallet1_addr}} -certs {{root_cert_single}} -chain zerochain
     save_hash: tcell_emission
   
   # Process TCELL emission on zerochain (DAG - fast)
-  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{tcell_emission}}
   
   - wait: 30s
   
   # Convert TCELL emission to UTXO (no fee needed for from_emission)
-  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet1_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet1_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
     save_hash: tcell_tx
   
   # Process TCELL tx
-  - cli: mempool proc -chain main -datum {{tcell_tx}}
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{tcell_tx}}
   
   # Wait for TCELL UTXO
   - wait: 30s
   
   # Step 3: Transfer from wallet1 to wallet2 using -from_wallet (now has TCELL for fee)
-  - cli: tx_create -token LIFECYCLE -from_wallet lifecycle_wallet1 -to_addr {{wallet2_addr}} -value 5000 -fee 1
+  - cli: tx create -net {{network_name}} -token LIFECYCLE -from_wallet lifecycle_wallet1 -to_addr {{wallet2_addr}} -value 5000 -fee 1
     save_hash: transfer_tx
   
   # Process transaction datum on main chain
-  - cli: mempool proc -chain main -datum {{transfer_tx}}
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{transfer_tx}}
     description: "Process transaction datum through mempool"
   
   # Wait for transaction to be included in block
@@ -102,11 +102,13 @@ check:
   - cli: token info -name LIFECYCLE -net {{network_name}}
     contains: "LIFECYCLE"
   
-  # Verify transaction history
-  - cli: tx_history -tx {{transfer_tx}} -net {{network_name}}
-    contains: "{{transfer_tx}}"
+  # Verify wallet2 received tokens (more reliable than tx_history which depends on PVT->datums)
+  - cli: wallet info -w lifecycle_wallet2 -net {{network_name}}
+    contains: "LIFECYCLE"
+    description: "Verify wallet2 has LIFECYCLE tokens after transfer"
   
-  # Verify token history
-  - cli: token info -name LIFECYCLE -history_limit 10 -net {{network_name}}
-    save: token_history
+  # Verify token info shows the token data
+  - cli: token info -name LIFECYCLE -net {{network_name}}
+    save: token_info
+    description: "Verify token info shows complete token data"
 

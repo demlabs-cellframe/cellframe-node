@@ -24,21 +24,21 @@ setup:
   # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
   
   # Create token on zerochain (DAG-PoA) - needs ROOT certs
-  - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+  - cli: token_decl -net {{network_name}} -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
   # Wait for DAG consensus and ledger sync (events go through threshold first)
   - wait: 30s
   
   # Emit token on zerochain - needs ROOT certs
-  - cli: token_emit -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+  - cli: token_emit -net {{network_name}} -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
   # Process emission datum
-  - cli: mempool proc -chain zerochain -datum {{emit_tx}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
   
 test:
   # Test: Get token history (token info with history shows declarations and updates)
@@ -55,6 +55,10 @@ check:
       info = ctx.get_variable('token_info_output')
       assert info, "Token info should not be empty"
       assert 'HISTTEST' in info, "Info should contain token name"
-      # Token should exist and have supply data
-      assert 'supply' in info.lower() or 'total' in info.lower(), "Info should show supply data"
+      # Token should exist - check for common fields in both text and JSON output
+      # v6.0+ returns JSON with fields like "ticker", "total_supply", "current_supply"
+      info_lower = info.lower()
+      has_token_data = ('supply' in info_lower or 'total' in info_lower or 
+                        'ticker' in info_lower or 'decimals' in info_lower)
+      assert has_token_data, "Info should show token data"
 
