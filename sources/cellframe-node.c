@@ -254,6 +254,8 @@ int main( int argc, const char **argv )
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
     
+    dap_interval_timer_init();  // Инициализация системы таймеров (rwlock)
+    
     if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
         size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
