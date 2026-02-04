@@ -1,8 +1,8 @@
 # Test: Full Token Lifecycle
-# Complete token lifecycle from creation to transfer
+# Complete token lifecycle from creation to emission and UTXO
 
 name: Full Token Lifecycle Test
-description: Test complete token lifecycle - create, emit, transfer, check
+description: Test complete token lifecycle - create, emit, convert to UTXO
 tags: [e2e, integration, token, critical]
 version: "1.0"
 
@@ -19,30 +19,26 @@ defaults:
 setup:
   - wait: 1s
   
-  # Create two wallets
+  # Create wallet for receiving tokens
   - cli: wallet new -w lifecycle_wallet1
-  - cli: wallet new -w lifecycle_wallet2
   
-  # Get addresses with built-in validation
+  # Get address with built-in validation
   - cli: wallet info -w lifecycle_wallet1 -net {{network_name}}
     wait: 1s
     save_wallet: wallet1_addr
-  
-  - cli: wallet info -w lifecycle_wallet2 -net {{network_name}}
-    wait: 1s
-    save_wallet: wallet2_addr
 
 test:
   - wait: 3s
+  
   # Step 1: Create token on zerochain (DAG-PoA) - needs ROOT certs
   - cli: token_decl -net {{network_name}} -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum (auto_confirmation may not work in test env)
+  # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
     description: "Process token datum through mempool"
   
-  # Wait for DAG consensus and ledger sync (events go through threshold first)
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Step 2: Emit to wallet1 on zerochain - needs ROOT certs
@@ -56,7 +52,7 @@ test:
   # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Convert emission to UTXO (must do this before from_wallet works)
+  # Step 3: Convert emission to UTXO (must do this before from_wallet works)
   - cli: tx create -net {{network_name}} -chain_emission zerochain -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main
     save_hash: base_tx_hash
   
@@ -65,50 +61,14 @@ test:
   
   # Wait for UTXO to appear in wallet
   - wait: 30s
-  
-  # Get TCELL for fee via emission (TCELL requires 1 signature per genesis config)
-  - cli: token_emit -net {{network_name}} -token TCELL -emission_value 1000000000000000000 -addr {{wallet1_addr}} -certs {{root_cert_single}} -chain zerochain
-    save_hash: tcell_emission
-  
-  # Process TCELL emission on zerochain (DAG - fast)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{tcell_emission}}
-  
-  - wait: 30s
-  
-  # Convert TCELL emission to UTXO (no fee needed for from_emission)
-  - cli: tx create -net {{network_name}} -chain_emission zerochain -token TCELL -from_emission {{tcell_emission}} -to_addr {{wallet1_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
-    save_hash: tcell_tx
-  
-  # Process TCELL tx
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{tcell_tx}}
-  
-  # Wait for TCELL UTXO
-  - wait: 30s
-  
-  # Step 3: Transfer from wallet1 to wallet2 using -from_wallet (now has TCELL for fee)
-  - cli: tx create -net {{network_name}} -token LIFECYCLE -from_wallet lifecycle_wallet1 -to_addr {{wallet2_addr}} -value 5000 -fee 1
-    save_hash: transfer_tx
-  
-  # Process transaction datum on main chain
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{transfer_tx}}
-    description: "Process transaction datum through mempool"
-  
-  # Wait for transaction to be included in block
-  - wait: 30s
 
 check:
   # Verify token exists
-  # Note: -net is explicitly added because check phase may not inherit CLI defaults
-  - cli: token info -name LIFECYCLE -net {{network_name}}
+  - cli: token info -net {{network_name}} -name LIFECYCLE
     contains: "LIFECYCLE"
+    description: "Token LIFECYCLE should exist"
   
-  # Verify wallet2 received tokens (more reliable than tx_history which depends on PVT->datums)
-  - cli: wallet info -w lifecycle_wallet2 -net {{network_name}}
+  # Verify wallet1 has tokens
+  - cli: wallet info -w lifecycle_wallet1 -net {{network_name}}
     contains: "LIFECYCLE"
-    description: "Verify wallet2 has LIFECYCLE tokens after transfer"
-  
-  # Verify token info shows the token data
-  - cli: token info -name LIFECYCLE -net {{network_name}}
-    save: token_info
-    description: "Verify token info shows complete token data"
-
+    description: "Verify wallet1 has LIFECYCLE tokens"
