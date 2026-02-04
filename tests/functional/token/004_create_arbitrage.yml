@@ -1,8 +1,8 @@
-# tx_create -arbitrage Command Test
-# Test creating token that supports arbitrage
+# tx create -arbitrage Command Test
+# Test creating transaction with arbitrage flag using -from_emission (no fees needed)
 
-name: tx_create -arbitrage Command
-description: Test creating token with arbitrage support
+name: tx create -arbitrage Command
+description: Test creating transaction using -arbitrage flag for cross-chain operations
 tags: [functional, token, arbitrage, fast]
 version: "1.0"
 
@@ -11,7 +11,6 @@ network:
 
 includes:
   - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
   - common/set_root_cert.yml
 
 defaults:
@@ -19,39 +18,40 @@ defaults:
   wait: 3s
 
 setup:
-  # Create receiver wallet for arbitrage
-  - cli: wallet new -w arb_receiver
-  - cli: wallet info -w arb_receiver -net {{network_name}}
-    save_wallet: receiver_addr
+  # Create arbitrage wallet
+  - cli: wallet new -w arb_wallet
+  - cli: wallet info -w arb_wallet -net {{network_name}}
+    save_wallet: arb_addr
   
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  # Create token for arbitrage testing
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token ARBCMD -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit tokens on zerochain - needs ROOT certs
-  - cli: token_emit -net {{network_name}} -token ARBCMD -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+  # Emit tokens for arbitrage
+  - cli: token_emit -net {{network_name}} -token ARBCMD -emission_value 10000 -addr {{arb_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission_tx
   
-  # Process emission datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
 
 test:
-  # Verify token was created
-  - cli: token info -net {{network_name}} -name ARBCMD
-    contains: "ARBCMD"
-    description: "Token ARBCMD should exist"
+  # Test: Create transaction with -arbitrage flag using -from_emission
+  # The -arbitrage flag allows creating transactions for cross-chain arbitrage
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token ARBCMD -from_emission {{emission_tx}} -to_addr {{arb_addr}} -value 10000 -cert {{root_cert_single}} -chain main -arbitrage
+    save_hash: arb_tx
+    description: "Create arbitrage transaction from emission"
+  
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{arb_tx}}
+  
+  - wait: 30s
 
 check:
-  # Verify token exists using token info
-  - cli: token info -net {{network_name}} -name ARBCMD
+  # Verify arbitrage transaction was processed
+  - cli: wallet info -w arb_wallet -net {{network_name}}
     contains: "ARBCMD"
-    description: "Token ARBCMD should exist in ledger"
+    description: "Arbitrage wallet should have ARBCMD tokens"

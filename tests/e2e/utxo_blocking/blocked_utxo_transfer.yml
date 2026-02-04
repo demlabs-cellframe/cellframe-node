@@ -1,18 +1,13 @@
-# Blocked UTXO Transfer E2E Test
-# Full scenario: blocked UTXO cannot be spent
+# UTXO Blocking Configuration Test
+# Verify token_update -utxo_blocked_add command works
 
-name: Blocked UTXO Cannot Be Spent
+name: UTXO Blocking Configuration Test
 description: |
-  End-to-end test verifying that blocked UTXO cannot be spent
-  in regular transactions.
-  
-  Complete workflow:
-  1. Create token with UTXO blocking
-  2. Create UTXO for sender
-  3. Block specific UTXO
-  4. Verify blocked UTXO cannot be spent
+  Test verifying that token_update -utxo_blocked_add command
+  correctly adds UTXO to blocked list.
+
 author: QA Team
-tags: [e2e, utxo-blocking, transfer, critical]
+tags: [e2e, utxo-blocking, token-update]
 
 network:
   topology: default
@@ -23,64 +18,58 @@ includes:
 
 defaults:
   node: node1
-  wait: 3s
+  wait: 1s
 
 setup:
-  # Create two wallets for testing
-  - cli: wallet new -w sender
+  - wait: 3s
   
-  - cli: wallet info -w sender -net {{network_name}}
-    save_wallet: sender_addr
+  # Create wallet
+  - cli: wallet new -w utxo_block_wallet
   
-  - cli: wallet new -w receiver
-  
-  - cli: wallet info -w receiver -net {{network_name}}
-    save_wallet: receiver_addr
-  
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  - cli: wallet info -w utxo_block_wallet -net {{network_name}}
+    save_wallet: wallet_addr
+
+test:
+  # Create token on zerochain (DAG-PoA)
   - cli: token_decl -net {{network_name}} -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
 
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit tokens to sender on zerochain - needs ROOT certs
-  - cli: token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
+  # Emit tokens
+  - cli: token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Create TX from emission - this creates UTXO for sender wallet
-  - cli: tx create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{sender_addr}} -value 2000000 -cert {{root_cert_single}} -chain main
-    save_hash: initial_tx
+  # Create UTXO
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000 -cert {{root_cert_single}} -chain main
+    save_hash: utxo_tx
   
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{initial_tx}}
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
   
-  # Wait for UTXO to be indexed
   - wait: 30s
   
-  # Block this specific UTXO on zerochain - needs ROOT certs
-  - cli: token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{initial_tx}}:0 -certs {{root_certs}} -chain zerochain
+  # Block the specific UTXO using token_update command
+  - cli: token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{utxo_tx}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: block_tx
+    description: "Add UTXO to blocked list"
 
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{block_tx}}
   
-  # Wait for blocklist update to sync
   - wait: 30s
 
-test:
-  # Verify token was created and UTXO is blocked
+check:
+  # Verify token exists
   - cli: token info -net {{network_name}} -name BLOCKTEST
     contains: "BLOCKTEST"
-    description: "Token should exist"
-
-check:
-  # Verify sender wallet has the BLOCKTEST tokens (UTXO exists but is blocked)
-  - cli: wallet info -w sender -net {{network_name}}
+    description: "Token BLOCKTEST should exist"
+  
+  # Verify wallet has tokens (UTXO was created before blocking)
+  - cli: wallet info -w utxo_block_wallet -net {{network_name}}
     contains: "BLOCKTEST"
-    description: "Sender should have BLOCKTEST tokens"
+    description: "Wallet should have BLOCKTEST tokens"

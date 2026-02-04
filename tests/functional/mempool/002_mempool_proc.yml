@@ -1,8 +1,8 @@
 # Test: Mempool Processing
-# Test mempool transaction processing
+# Test mempool proc command functionality
 
 name: Mempool Processing Test
-description: Test creating token and checking mempool processing
+description: Test mempool proc command processes datums correctly
 tags: [functional, mempool, processing]
 version: "1.0"
 
@@ -19,39 +19,29 @@ defaults:
   wait: 3s
 
 setup:
-  # Create receiver wallet
-  - cli: wallet new -w mempool_receiver
-  - cli: wallet info -w mempool_receiver -net {{network_name}}
-    save_wallet: receiver_addr
-  
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  # Create token datum (will go to mempool first)
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token MEMTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
-  
-  # Process token datum
+
+test:
+  # Test: Process token datum through mempool
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+    description: "Process token datum through mempool"
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit token on zerochain - needs ROOT certs
+  # Emit token - creates another datum in mempool
   - cli: token_emit -net {{network_name}} -token MEMTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_hash
   
   # Process emission datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_hash}}
+    description: "Process emission datum through mempool"
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
 
-test:
-  # Test: Check mempool list works
-  - cli: mempool list -net {{network_name}}
-    save: mempool_output
-    description: "Get mempool list"
-
 check:
-  # Verify token was created
+  # Verify datums were processed - token should exist
   - cli: token info -net {{network_name}} -name MEMTEST
     contains: "MEMTEST"
-    description: "Token MEMTEST should exist"
+    description: "Token MEMTEST should exist after mempool processing"

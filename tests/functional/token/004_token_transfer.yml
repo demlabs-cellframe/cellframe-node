@@ -1,8 +1,9 @@
 # Test: Token Transfer
-# Verify token emission and UTXO creation
+# Verify token emission to wallet and UTXO creation
+# Note: Direct wallet-to-wallet transfer requires TCELL for fees which isn't available in test env
 
 name: Token Transfer Test
-description: Test creating token, emitting, and converting to UTXO
+description: Test token emission and UTXO creation (basic transfer flow)
 tags: [e2e, token, transfer]
 version: "1.0"
 
@@ -20,53 +21,37 @@ defaults:
 setup:
   - wait: 3s
   
-  # Create wallets
-  - cli: wallet new -w wallet1
+  # Create wallet to receive tokens
+  - cli: wallet new -w transfer_test_wallet
   
-  - cli: wallet new -w wallet2
-  
-  # Get wallet addresses with validation
-  - cli: wallet info -w wallet1 -net {{network_name}}
-    save_wallet: wallet1_addr
-  
-  - cli: wallet info -w wallet2 -net {{network_name}}
-    save_wallet: wallet2_addr
-  
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  # Get wallet address
+  - cli: wallet info -w transfer_test_wallet -net {{network_name}}
+    save_wallet: wallet_addr
+
+test:
+  # Create token on zerochain (DAG-PoA)
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token XFERTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit tokens to wallet1 on zerochain - needs ROOT certs
-  - cli: token_emit -net {{network_name}} -token XFERTEST -emission_value 10000 -addr {{wallet1_addr}} -certs {{root_certs}} -chain zerochain
+  # Emit tokens to wallet
+  - cli: token_emit -net {{network_name}} -token XFERTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
-  # Process emission datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Convert emission to UTXO
-  - cli: tx create -net {{network_name}} -chain_emission zerochain -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main
-    save_hash: base_tx_hash
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 10000 -cert {{root_cert_single}} -chain main
+    save_hash: utxo_tx
   
-  # Process base transaction
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{base_tx_hash}}
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
   
-  # Wait for UTXO to appear in wallet
   - wait: 30s
-
-test:
-  # Test: Verify wallet1 has the tokens
-  - cli: wallet info -w wallet1 -net {{network_name}}
-    contains: "XFERTEST"
-    description: "Wallet1 should have XFERTEST tokens"
 
 check:
   # Verify token exists
@@ -74,7 +59,7 @@ check:
     contains: "XFERTEST"
     description: "Token XFERTEST should exist"
   
-  # Verify wallet1 has tokens
-  - cli: wallet info -w wallet1 -net {{network_name}}
+  # Verify wallet has tokens
+  - cli: wallet info -w transfer_test_wallet -net {{network_name}}
     contains: "XFERTEST"
-    description: "Verify wallet1 has XFERTEST tokens"
+    description: "Wallet should have XFERTEST tokens"

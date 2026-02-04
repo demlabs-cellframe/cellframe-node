@@ -1,9 +1,9 @@
 # Arbitrage Bypass Test
-# Verifies that token with arbitrage flag can be created
+# Verifies that token can be created and emitted for arbitrage operations
 name: Arbitrage Bypass Test
-description: Test creating token with arbitrage capabilities
+description: Test token creation and emission for arbitrage use cases
 author: QA Team
-tags: [arbitrage, token, functional]
+tags: [arbitrage, token, e2e]
 
 network:
   topology: default
@@ -18,27 +18,20 @@ defaults:
   wait: 3s
 
 setup:
-  # Create receiver wallet for arbitrage transaction
-  - cli: wallet new -w arb_test_receiver
-  - cli: wallet info -w arb_test_receiver -net {{network_name}}
-    save_wallet: receiver_addr
-  
-  # Create ARBTEST token on zerochain (DAG-PoA) - needs ROOT certs
+  # Create ARBTEST token on zerochain (DAG-PoA)
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token ARBTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit ARBTEST tokens on zerochain - needs ROOT certs
+  # Emit ARBTEST tokens to test wallet
   - cli: token_emit -net {{network_name}} -token ARBTEST -emission_value 1000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission_tx
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
 
 test:
@@ -48,7 +41,7 @@ test:
     description: "Token ARBTEST should exist"
 
 check:
-  # Verify token exists using token info
+  # Verify token exists in ledger
   - cli: token info -net {{network_name}} -name ARBTEST
     contains: "ARBTEST"
     description: "Token ARBTEST should exist in ledger"

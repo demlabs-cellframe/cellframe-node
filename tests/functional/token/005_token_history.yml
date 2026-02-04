@@ -1,9 +1,9 @@
 # Test: Token History
-# Test token creation and info retrieval
+# Test transaction history retrieval using tx_history command
 
 name: Token History Test
-description: Test creating token and retrieving token info
-tags: [e2e, token, history]
+description: Test retrieving transaction history for wallet and address
+tags: [e2e, token, history, tx_history]
 version: "1.0"
 
 network:
@@ -19,36 +19,43 @@ defaults:
   node: node1
 
 setup:
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
+  # Create token on zerochain (DAG-PoA)
   - cli: token_decl -net {{network_name}} -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
-  # Emit token on zerochain - needs ROOT certs
+  # Emit token to test wallet (wallet_addr from create_wallet.yml)
   - cli: token_emit -net {{network_name}} -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
-  # Process emission datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
   
-  # Wait for DAG consensus
+  - wait: 30s
+  
+  # Convert emission to UTXO - this creates a transaction in history
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token HISTTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 5000 -cert {{root_cert_single}} -chain main
+    save_hash: utxo_tx
+  
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
+  
   - wait: 30s
 
 test:
-  # Test: Get token info
-  - cli: token info -net {{network_name}} -name HISTTEST
-    expect: success
-    contains: "HISTTEST"
-    save: token_info_output
-    description: "Token info should show HISTTEST token"
+  # Test: Get transaction history for wallet
+  - cli: tx_history -net {{network_name}} -w test_wallet
+    save: wallet_history
+    description: "Get transaction history for test_wallet"
+  
+  # Test: Get transaction history by address
+  - cli: tx_history -net {{network_name}} -addr {{wallet_addr}}
+    save: addr_history
+    description: "Get transaction history by address"
 
 check:
-  # Verify token exists by checking info
-  - cli: token info -net {{network_name}} -name HISTTEST
+  # Verify wallet history contains our token
+  - cli: tx_history -net {{network_name}} -w test_wallet -token HISTTEST
     contains: "HISTTEST"
-    description: "Token info should contain HISTTEST"
+    description: "Wallet history should show HISTTEST transactions"

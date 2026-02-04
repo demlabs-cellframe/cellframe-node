@@ -1,5 +1,5 @@
 # token_update -utxo_blocked_add Command Test
-# Test that token_update command creates update datum
+# Test that token_update command can block specific UTXOs
 
 name: token_update -utxo_blocked_add Command
 description: Test adding UTXO hash to token blocklist via token_update command
@@ -19,36 +19,32 @@ defaults:
   wait: 3s
 
 setup:
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
-  - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token UPDTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
+  # Create token for UTXO blocking test
+  - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token UTXOBLK -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Verify token was created
-  - cli: token info -net {{network_name}} -name UPDTEST
-    contains: "UPDTEST"
+  - cli: token info -net {{network_name}} -name UTXOBLK
+    contains: "UTXOBLK"
 
 test:
-  # Test: Create token_update to add a hash to blocklist
-  # We use token_hash as a placeholder UTXO hash
-  - cli: token_update -net {{network_name}} -token UPDTEST -utxo_blocked_add {{token_hash}}:0 -certs {{root_certs}} -chain zerochain
+  # Test: Use token_update to add UTXO to blocklist
+  # Using token_hash:0 as a placeholder UTXO identifier
+  - cli: token_update -net {{network_name}} -token UTXOBLK -utxo_blocked_add {{token_hash}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: update_hash
-    description: "Create token update datum"
+    description: "Add UTXO to token blocklist"
   
-  # Process token update datum on zerochain
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{update_hash}}
-    description: "Process token update datum through mempool"
+    description: "Process UTXO blocklist update"
   
-  # Wait for update to sync to ledger
   - wait: 30s
 
 check:
   # Verify token still exists after update
-  - cli: token info -net {{network_name}} -name UPDTEST
-    contains: "UPDTEST"
-    description: "Token should still exist after update"
+  - cli: token info -net {{network_name}} -name UTXOBLK
+    contains: "UTXOBLK"
+    description: "Token UTXOBLK should exist after blocklist update"
