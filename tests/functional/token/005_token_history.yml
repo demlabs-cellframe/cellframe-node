@@ -1,9 +1,9 @@
 # Test: Token History
-# Test token transaction history
+# Test transaction history retrieval using tx_history command
 
 name: Token History Test
-description: Test retrieving token transaction history
-tags: [e2e, token, history]
+description: Test retrieving transaction history for wallet and address
+tags: [e2e, token, history, tx_history]
 version: "1.0"
 
 network:
@@ -12,49 +12,50 @@ network:
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
-  - common/set_net_default.yml
   - common/set_root_cert.yml
 
 defaults:
-    wait: 3s
-    node: node1
+  wait: 3s
+  node: node1
 
 setup:
-  # Note: test_wallet and wallet_addr come from common/wallets/create_wallet.yml include
-  # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
-  
-  # Create token on zerochain (DAG-PoA) - needs ROOT certs
-  - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+  # Create token on zerochain (DAG-PoA)
+  - cli: token_decl -net {{network_name}} -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
-  # Wait for DAG consensus and ledger sync (events go through threshold first)
   - wait: 30s
   
-  # Emit token on zerochain - needs ROOT certs
-  - cli: token_emit -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
+  # Emit token to test wallet (wallet_addr from create_wallet.yml)
+  - cli: token_emit -net {{network_name}} -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
-  # Process emission datum
-  - cli: mempool proc -chain zerochain -datum {{emit_tx}}
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
   
+  - wait: 30s
+  
+  # Convert emission to UTXO - this creates a transaction in history
+  - cli: tx create -net {{network_name}} -chain_emission zerochain -token HISTTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 5000 -cert {{root_cert_single}} -chain main
+    save_hash: utxo_tx
+  
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
+  
+  - wait: 30s
+
 test:
-  # Test: Get token history (token info with history shows declarations and updates)
-  # Note: tx_history requires transactions to be in blocks, which may not happen in test env
-  # We test that token info works and shows token data
-  - cli: token info -name HISTTEST -net {{network_name}}
-    save: token_info_output
+  # Test: Get transaction history for wallet
+  - cli: tx_history -net {{network_name}} -w test_wallet
+    save: wallet_history
+    description: "Get transaction history for test_wallet"
+  
+  # Test: Get transaction history by address
+  - cli: tx_history -net {{network_name}} -addr {{wallet_addr}}
+    save: addr_history
+    description: "Get transaction history by address"
 
 check:
-  # Verify token info shows the token with its data
-  # Note: full tx_history requires block confirmation which is unreliable in test env
-  # We verify token exists and has emission data
-  - python: |
-      info = ctx.get_variable('token_info_output')
-      assert info, "Token info should not be empty"
-      assert 'HISTTEST' in info, "Info should contain token name"
-      # Token should exist and have supply data
-      assert 'supply' in info.lower() or 'total' in info.lower(), "Info should show supply data"
-
+  # Verify wallet history contains our token
+  - cli: tx_history -net {{network_name}} -w test_wallet -token HISTTEST
+    contains: "HISTTEST"
+    description: "Wallet history should show HISTTEST transactions"
