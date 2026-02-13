@@ -11,3 +11,4 @@ includes:
   - common/set_net_default.yml
   - common/create_test_cert.yml
   - common/networks/single_node.yml
+  - common/set_root_cert.yml

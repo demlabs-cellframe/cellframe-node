@@ -10,7 +10,6 @@ network:
 
 includes:
   - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
   - common/set_root_cert.yml
 
 # Global defaults for all sections
@@ -22,9 +21,13 @@ defaults:
 setup:
   # Note: root_certs from common/set_root_cert.yml (both ROOT certs for auth_certs_number_verify=2)
   
-  # Create receiver wallet for arbitrage transaction
-  - cli: wallet new -w arb_test_receiver
-  - cli: wallet info -w arb_test_receiver -net {{network_name}}
+  # Create sender and receiver wallets for arbitrage transaction
+  - cli: wallet new -w arb_bypass_sender
+  - cli: wallet info -w arb_bypass_sender -net {{network_name}}
+    save_wallet: wallet_addr
+  
+  - cli: wallet new -w arb_bypass_receiver
+  - cli: wallet info -w arb_bypass_receiver -net {{network_name}}
     save_wallet: receiver_addr
   
   # Create ARBTEST token on zerochain (DAG-PoA) - needs ROOT certs
@@ -83,7 +86,7 @@ setup:
   - wait: 30s
   
   # Get TCELL for fee via emission (TCELL requires 3 signatures)
-  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_addr}} -certs {{root_certs}},{{network_name}}.root.pvt.2 -chain zerochain
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_addr}} -certs {{root_certs_tcell}} -chain zerochain
     save_hash: tcell_emission
   
   # Process TCELL emission on zerochain
@@ -108,7 +111,7 @@ test:
   # But arbitrage flag should allow spending blocked UTXOs
   
   # Arbitrage transaction from wallet should succeed (bypasses blocking, now has TCELL for fee)
-  - cli: tx_create -token ARBTEST -from_wallet {{wallet_name}} -to_addr {{receiver_addr}} -value 100 -fee 1 -certs {{root_certs}} -arbitrage
+  - cli: tx_create -token ARBTEST -from_wallet arb_bypass_sender -to_addr {{receiver_addr}} -value 100 -fee 1 -certs {{root_certs}} -arbitrage -net {{network_name}} -chain main
     save_hash: arb_tx
 
   - cli: mempool proc -chain main -datum {{arb_tx}}

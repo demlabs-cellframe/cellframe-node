@@ -2,9 +2,9 @@
 # End-to-end tests for arbitrage mechanics
 
 suite: "Arbitrage mechanics"
-description: "Arbitrage mechanics scenarios"
+description: "Arbitrage mechanics scenarios including edge cases and bypass tests"
 author: "Cellframe Team"
-tags: [e2e, utxo, blocking]
+tags: [e2e, utxo, arbitrage, blocking]
 
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
@@ -12,3 +12,4 @@ includes:
   - common/set_net_default.yml
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
+  - common/set_root_cert.yml

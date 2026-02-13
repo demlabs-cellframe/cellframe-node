@@ -33,15 +33,15 @@ setup:
   # Wait for network to be fully online
   - wait: 5s
   
-  # Create two wallets for testing
-  - cli: wallet new -w sender
+  # Create two wallets for testing (prefixed to avoid conflicts with other tests)
+  - cli: wallet new -w blk_sender
   
-  - cli: wallet info -w sender -net {{network_name}}
+  - cli: wallet info -w blk_sender -net {{network_name}}
     save_wallet: sender_addr
   
-  - cli: wallet new -w receiver
+  - cli: wallet new -w blk_receiver
   
-  - cli: wallet info -w receiver -net {{network_name}}
+  - cli: wallet info -w blk_receiver -net {{network_name}}
     save_wallet: receiver_addr
   
   # Create token on zerochain (DAG-PoA) - needs ROOT certs
@@ -51,7 +51,7 @@ setup:
   - cli: mempool proc -chain zerochain -datum {{token_hash}}
   
   # Wait for DAG consensus and ledger sync (events go through threshold first)
-  - wait: 30s
+  - wait: 45s
   
   # Emit tokens to sender on zerochain - needs ROOT certs
   # IMPORTANT: emission_value MUST equal the tx_create value to avoid creating change UTXO
@@ -61,7 +61,7 @@ setup:
   - cli: mempool proc -chain zerochain -datum {{emission}}
   
   # Wait for DAG consensus and ledger sync
-  - wait: 30s
+  - wait: 45s
   
   # Create TX from emission - this creates UTXO for sender wallet (no fee needed for from_emission)
   # Value matches emission_value exactly so no change UTXO is created
@@ -71,7 +71,7 @@ setup:
   - cli: mempool proc -chain main -datum {{initial_tx}}
   
   # Wait for UTXO to be indexed
-  - wait: 30s
+  - wait: 45s
   
   # Block this specific UTXO on zerochain - needs ROOT certs
   - cli: token_update -token BLOCKTEST -utxo_blocked_add {{initial_tx}}:0 -certs {{root_certs}} -chain zerochain
@@ -80,7 +80,7 @@ setup:
   - cli: mempool proc -chain zerochain -datum {{block_tx}}
   
   # Wait for blocklist update to sync
-  - wait: 30s
+  - wait: 45s
   
   # Get TCELL for fee via emission (TCELL requires 3 signatures)
   - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{sender_addr}} -certs {{root_certs_tcell}} -chain zerochain
@@ -89,7 +89,7 @@ setup:
   # Process TCELL emission on zerochain
   - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
   
-  - wait: 30s
+  - wait: 45s
   
   # Convert TCELL emission to UTXO (no fee needed)
   - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{sender_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
@@ -99,7 +99,7 @@ setup:
   - cli: mempool proc -chain main -datum {{tcell_tx}}
   
   # Wait for TCELL UTXO
-  - wait: 30s
+  - wait: 45s
 
 test:
   # ============================================================================
@@ -127,7 +127,7 @@ test:
   # ============================================================================
   
   # Log current wallet state for debugging
-  - cli: wallet info -w sender -net {{network_name}}
+  - cli: wallet info -w blk_sender -net {{network_name}}
     description: "Check sender wallet balance before blocked TX attempt"
   
   # Log token blocklist state
@@ -136,7 +136,7 @@ test:
     contains: "{{initial_tx}}"
   
   # CRITICAL: This MUST fail because only UTXO is blocked
-  - cli: tx_create -token BLOCKTEST -from_wallet sender -to_addr {{receiver_addr}} -value 500000 -fee 1 -net {{network_name}} -chain main
+  - cli: tx_create -token BLOCKTEST -from_wallet blk_sender -to_addr {{receiver_addr}} -value 500000 -fee 1 -net {{network_name}} -chain main
     expect: error
     description: "Attempt to spend blocked UTXO should fail with 'Not enough funds'"
   
@@ -151,10 +151,10 @@ check:
     description: "Confirm UTXO remains blocked"
   
   # Verify sender still has their full token balance (blocked UTXO was NOT spent)
-  - cli: wallet info -w sender -net {{network_name}}
+  - cli: wallet info -w blk_sender -net {{network_name}}
     contains: "BLOCKTEST"
     description: "Verify sender balance unchanged after blocked TX"
   
   # Log final wallet outputs for debugging
-  - cli: wallet list_outs -w sender -addr {{sender_addr}} -token BLOCKTEST -net {{network_name}}
+  - cli: wallet list_outs -w blk_sender -addr {{sender_addr}} -token BLOCKTEST -net {{network_name}}
     description: "Show all sender UTXOs for debugging"

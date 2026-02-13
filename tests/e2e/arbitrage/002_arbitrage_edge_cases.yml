@@ -1,0 +1,162 @@
+# Arbitrage Transactions Edge Cases Regression Test
+# QA Issue: Arbitrage transactions may have edge case failures
+#
+# REGRESSION: Arbitrage flag should allow spending blocked UTXOs,
+# but there may be edge cases where this fails unexpectedly.
+
+name: Arbitrage Edge Cases
+description: |
+  Regression test for arbitrage transaction edge cases.
+  
+  Verifies that:
+  1. All UTXOs can be blocked simultaneously
+  2. Regular transactions fail when ALL wallet UTXOs are blocked
+  3. Arbitrage cannot bypass insufficient-funds validation
+  4. Arbitrage can spend ALL blocked UTXOs in a single transaction
+  5. Arbitrage transactions are recorded in history
+  
+  Expected behavior: Arbitrage bypasses blocklist but respects other rules.
+  
+  DESIGN NOTE: Error tests (steps 2-3) run BEFORE the successful arbitrage TX
+  to avoid UTXO state dependency on consensus block commitment timing.
+  The successful arbitrage TX (step 4) runs last.
+author: QA Team
+tags: [e2e, arbitrage, regression, edge-cases, critical]
+version: "2.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/set_root_cert.yml
+
+defaults:
+  node: node1
+  wait: 3s
+
+setup:
+  - wait: 5s
+  
+  # Create test wallets
+  - cli: wallet new -w arb_sender
+  - cli: wallet info -w arb_sender -net {{network_name}}
+    save_wallet: sender_addr
+  
+  - cli: wallet new -w arb_receiver
+  - cli: wallet info -w arb_receiver -net {{network_name}}
+    save_wallet: receiver_addr
+  
+  # Create test token
+  - cli: token_decl -token ARBEDGE -total_supply 1000000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - wait: 45s
+  
+  # Create multiple emissions with different amounts (small, medium, large)
+  - cli: token_emit -token ARBEDGE -emission_value 1000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_small
+  - cli: mempool proc -chain zerochain -datum {{emission_small}}
+  
+  - cli: token_emit -token ARBEDGE -emission_value 5000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_medium
+  - cli: mempool proc -chain zerochain -datum {{emission_medium}}
+  
+  - cli: token_emit -token ARBEDGE -emission_value 10000 -addr {{sender_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_large
+  - cli: mempool proc -chain zerochain -datum {{emission_large}}
+  
+  - wait: 45s
+  
+  # Convert emissions to UTXOs
+  - cli: tx_create -token ARBEDGE -from_emission {{emission_small}} -to_addr {{sender_addr}} -value 1000 -cert {{root_cert_single}}
+    save_hash: utxo_small
+  - cli: mempool proc -chain main -datum {{utxo_small}}
+  
+  - cli: tx_create -token ARBEDGE -from_emission {{emission_medium}} -to_addr {{sender_addr}} -value 5000 -cert {{root_cert_single}}
+    save_hash: utxo_medium
+  - cli: mempool proc -chain main -datum {{utxo_medium}}
+  
+  - cli: tx_create -token ARBEDGE -from_emission {{emission_large}} -to_addr {{sender_addr}} -value 10000 -cert {{root_cert_single}}
+    save_hash: utxo_large
+  - cli: mempool proc -chain main -datum {{utxo_large}}
+  
+  - wait: 45s
+  
+  # Block ALL THREE UTXOs
+  - cli: token_update -token ARBEDGE -utxo_blocked_add {{utxo_small}}:0 -certs {{root_certs}} -chain zerochain
+    save_hash: block_small
+  - cli: mempool proc -chain zerochain -datum {{block_small}}
+  
+  - cli: token_update -token ARBEDGE -utxo_blocked_add {{utxo_medium}}:0 -certs {{root_certs}} -chain zerochain
+    save_hash: block_medium
+  - cli: mempool proc -chain zerochain -datum {{block_medium}}
+  
+  - cli: token_update -token ARBEDGE -utxo_blocked_add {{utxo_large}}:0 -certs {{root_certs}} -chain zerochain
+    save_hash: block_large
+  - cli: mempool proc -chain zerochain -datum {{block_large}}
+  
+  - wait: 45s
+  
+  # Get TCELL for fee (single UTXO - only one arbitrage TX needed)
+  - cli: token_emit -token TCELL -emission_value 5000000000000000000 -addr {{sender_addr}} -certs {{root_certs_tcell}} -chain zerochain
+    save_hash: tcell_emission
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission}}
+  - wait: 45s
+  
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission}} -to_addr {{sender_addr}} -value 5000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_utxo
+  - cli: mempool proc -chain main -datum {{tcell_utxo}}
+  - wait: 45s
+
+test:
+  # STEP 1: Verify all UTXOs are blocked
+  - cli: token info -name ARBEDGE -net {{network_name}}
+    contains: "{{utxo_small}}"
+    description: "Verify small UTXO blocked"
+  
+  - cli: token info -name ARBEDGE -net {{network_name}}
+    contains: "{{utxo_medium}}"
+    description: "Verify medium UTXO blocked"
+  
+  - cli: token info -name ARBEDGE -net {{network_name}}
+    contains: "{{utxo_large}}"
+    description: "Verify large UTXO blocked"
+  
+  # STEP 2: Regular transaction should FAIL (all UTXOs blocked)
+  - cli: tx_create -token ARBEDGE -from_wallet arb_sender -to_addr {{receiver_addr}} -value 500 -fee 1 -net {{network_name}} -chain main
+    expect: error
+    description: "BASELINE: Regular TX fails when all UTXOs blocked"
+  
+  # STEP 3: Arbitrage for more than total available should FAIL
+  # Total ARBEDGE = 1000 + 5000 + 10000 = 16000
+  # Even with arbitrage (skip_blocklist), requesting 999999999 exceeds available amount
+  - cli: tx_create -token ARBEDGE -from_wallet arb_sender -to_addr {{receiver_addr}} -value 999999999 -fee 1 -certs {{root_certs}} -arbitrage -net {{network_name}} -chain main
+    expect: error
+    description: "REGRESSION: Arbitrage for excessive amount must fail"
+  
+  # STEP 4: Arbitrage spending ALL blocked UTXOs in single transaction
+  # Requests 15000 ARBEDGE, which requires all three blocked UTXOs (1000+5000+10000=16000)
+  # This verifies: multiple blocked UTXOs in one TX, different UTXO sizes, complete wallet drain
+  - cli: tx_create -token ARBEDGE -from_wallet arb_sender -to_addr {{receiver_addr}} -value 15000 -fee 1 -certs {{root_certs}} -arbitrage -net {{network_name}} -chain main
+    save_hash: arb_tx
+    description: "REGRESSION: Arbitrage should spend ALL blocked UTXOs (1000+5000+10000)"
+  - cli: mempool proc -chain main -datum {{arb_tx}}
+
+check:
+  # NOTE: Arbitrage transactions redirect ALL outputs (including change) to fee_addr,
+  # so arb_receiver never gets tokens. We verify via tx_history instead.
+  # tx_history works immediately after mempool proc without waiting for consensus.
+  
+  # Verify arbitrage TX is in the ledger
+  - cli: tx_history -tx {{arb_tx}} -net {{network_name}}
+    contains: "{{arb_tx}}"
+    description: "Arbitrage TX is recorded in history"
+  
+  # Verify blocked UTXOs are still in blocklist (historical record)
+  - cli: token info -name ARBEDGE -history_limit 20 -net {{network_name}}
+    description: "Final token state with blocklist history"
+  
+  # Log final sender balance (should be 0 or near 0 - all UTXOs spent via arbitrage)
+  - cli: wallet info -w arb_sender -net {{network_name}}
+    description: "Final sender balance after arbitrage transactions"

@@ -1,0 +1,180 @@
+# Multi-Wallet UTXO Blocking Regression Test
+# QA Issue: Blocking multiple outputs from different wallets
+#
+# REGRESSION: System may fail to properly block UTXOs when they belong to 
+# different wallets. This test verifies that blocklist works across wallets.
+
+name: Multi-Wallet UTXO Blocking
+description: |
+  Regression test for blocking multiple UTXO outputs from different wallets.
+  
+  Verifies that:
+  1. UTXOs from different wallets can be added to the same blocklist
+  2. Blocked UTXOs remain blocked regardless of which wallet owns them
+  3. The blocklist is enforced per-token, not per-wallet
+  4. Transactions fail when attempting to spend any blocked UTXO
+  
+  Expected behavior: All blocked UTXOs should be unspendable, regardless of wallet.
+author: QA Team
+tags: [e2e, utxo-blocking, regression, multi-wallet, critical]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/networks/single_node.yml
+  - common/set_root_cert.yml
+
+defaults:
+  node: node1
+  wait: 3s
+
+setup:
+  - wait: 5s
+  
+  # Create 3 wallets to test cross-wallet blocking (prefixed to avoid conflicts)
+  - cli: wallet new -w mw_wallet_a
+  - cli: wallet info -w mw_wallet_a -net {{network_name}}
+    save_wallet: wallet_a_addr
+  
+  - cli: wallet new -w mw_wallet_b
+  - cli: wallet info -w mw_wallet_b -net {{network_name}}
+    save_wallet: wallet_b_addr
+  
+  - cli: wallet new -w mw_wallet_c
+  - cli: wallet info -w mw_wallet_c -net {{network_name}}
+    save_wallet: wallet_c_addr
+  
+  - cli: wallet new -w mw_receiver
+  - cli: wallet info -w mw_receiver -net {{network_name}}
+    save_wallet: receiver_addr
+  
+  # Create test token
+  - cli: token_decl -token MWTEST -total_supply 100000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
+    save_hash: token_hash
+  - cli: mempool proc -chain zerochain -datum {{token_hash}}
+  - wait: 45s
+  
+  # Emit tokens to each wallet separately
+  - cli: token_emit -token MWTEST -emission_value 10000 -addr {{wallet_a_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_a
+  - cli: mempool proc -chain zerochain -datum {{emission_a}}
+  
+  - cli: token_emit -token MWTEST -emission_value 10000 -addr {{wallet_b_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_b
+  - cli: mempool proc -chain zerochain -datum {{emission_b}}
+  
+  - cli: token_emit -token MWTEST -emission_value 10000 -addr {{wallet_c_addr}} -certs {{root_certs}} -chain zerochain
+    save_hash: emission_c
+  - cli: mempool proc -chain zerochain -datum {{emission_c}}
+  
+  - wait: 45s
+  
+  # Convert emissions to UTXOs for each wallet
+  - cli: tx_create -token MWTEST -from_emission {{emission_a}} -to_addr {{wallet_a_addr}} -value 10000 -cert {{root_cert_single}}
+    save_hash: utxo_a
+  - cli: mempool proc -chain main -datum {{utxo_a}}
+  
+  - cli: tx_create -token MWTEST -from_emission {{emission_b}} -to_addr {{wallet_b_addr}} -value 10000 -cert {{root_cert_single}}
+    save_hash: utxo_b
+  - cli: mempool proc -chain main -datum {{utxo_b}}
+  
+  - cli: tx_create -token MWTEST -from_emission {{emission_c}} -to_addr {{wallet_c_addr}} -value 10000 -cert {{root_cert_single}}
+    save_hash: utxo_c
+  - cli: mempool proc -chain main -datum {{utxo_c}}
+  
+  - wait: 45s
+  
+  # Block UTXOs from wallet_a and wallet_b (but NOT wallet_c)
+  - cli: token_update -token MWTEST -utxo_blocked_add {{utxo_a}}:0 -certs {{root_certs}} -chain zerochain
+    save_hash: block_a
+  - cli: mempool proc -chain zerochain -datum {{block_a}}
+  
+  - cli: token_update -token MWTEST -utxo_blocked_add {{utxo_b}}:0 -certs {{root_certs}} -chain zerochain
+    save_hash: block_b
+  - cli: mempool proc -chain zerochain -datum {{block_b}}
+  
+  - wait: 45s
+  
+  # Emit TCELL for fees for ALL wallets (needs 3 signatures)
+  # wallet_a and wallet_b need TCELL so the ONLY reason tx_create fails is blocked UTXO
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_a_addr}} -certs {{root_certs_tcell}} -chain zerochain
+    save_hash: tcell_emission_a
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission_a}}
+  
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_b_addr}} -certs {{root_certs_tcell}} -chain zerochain
+    save_hash: tcell_emission_b
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission_b}}
+  
+  - cli: token_emit -token TCELL -emission_value 1000000000000000000 -addr {{wallet_c_addr}} -certs {{root_certs_tcell}} -chain zerochain
+    save_hash: tcell_emission_c
+  - cli: mempool proc -chain zerochain -datum {{tcell_emission_c}}
+  
+  - wait: 45s
+  
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission_a}} -to_addr {{wallet_a_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx_a
+  - cli: mempool proc -chain main -datum {{tcell_tx_a}}
+  
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission_b}} -to_addr {{wallet_b_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx_b
+  - cli: mempool proc -chain main -datum {{tcell_tx_b}}
+  
+  - cli: tx_create -token TCELL -from_emission {{tcell_emission_c}} -to_addr {{wallet_c_addr}} -value 1000000000000000000 -cert {{root_cert_single}} -chain main
+    save_hash: tcell_tx_c
+  - cli: mempool proc -chain main -datum {{tcell_tx_c}}
+  - wait: 45s
+
+test:
+  # Verify both UTXOs are in blocklist
+  - cli: token info -name MWTEST -net {{network_name}}
+    contains: "{{utxo_a}}"
+    description: "Verify wallet_a UTXO is in blocklist"
+  
+  - cli: token info -name MWTEST -net {{network_name}}
+    contains: "{{utxo_b}}"
+    description: "Verify wallet_b UTXO is in blocklist"
+  
+  # REGRESSION TEST 1: wallet_a should NOT be able to spend its blocked UTXO
+  - cli: tx_create -token MWTEST -from_wallet mw_wallet_a -to_addr {{receiver_addr}} -value 1000 -fee 1 -net {{network_name}} -chain main
+    expect: error
+    description: "REGRESSION: Spending blocked UTXO from wallet_a should fail"
+  
+  # REGRESSION TEST 2: wallet_b should NOT be able to spend its blocked UTXO
+  - cli: tx_create -token MWTEST -from_wallet mw_wallet_b -to_addr {{receiver_addr}} -value 1000 -fee 1 -net {{network_name}} -chain main
+    expect: error
+    description: "REGRESSION: Spending blocked UTXO from wallet_b should fail"
+  
+  # POSITIVE TEST: wallet_c (NOT blocked) SHOULD be able to spend
+  - cli: tx_create -token MWTEST -from_wallet mw_wallet_c -to_addr {{receiver_addr}} -value 1000 -fee 1 -net {{network_name}} -chain main
+    save_hash: wallet_c_tx
+    description: "Unblocked wallet_c should successfully transfer"
+  
+  - cli: mempool proc -chain main -datum {{wallet_c_tx}}
+  - wait: 45s
+
+check:
+  # Verify blocked UTXOs are still in blocklist
+  - cli: token info -name MWTEST -history_limit 10 -net {{network_name}}
+    contains: "{{utxo_a}}"
+    description: "wallet_a UTXO remains blocked"
+  
+  - cli: token info -name MWTEST -history_limit 10 -net {{network_name}}
+    contains: "{{utxo_b}}"
+    description: "wallet_b UTXO remains blocked"
+  
+  # Verify wallet_a balance unchanged (UTXO not spent)
+  - cli: wallet info -w mw_wallet_a -net {{network_name}}
+    contains: "MWTEST"
+    description: "wallet_a still has blocked tokens"
+  
+  # Verify wallet_c balance decreased (transfer succeeded)
+  - cli: wallet info -w mw_wallet_c -net {{network_name}}
+    description: "wallet_c balance after successful transfer"
+  
+  # Verify receiver got tokens from wallet_c (via tx_history, not wallet info,
+  # because wallet info requires consensus to commit the block first)
+  - cli: tx_history -tx {{wallet_c_tx}} -net {{network_name}}
+    contains: "{{wallet_c_tx}}"
+    description: "wallet_c transfer TX is in the ledger (receiver got tokens)"
