@@ -488,6 +488,7 @@ endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE .)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/datum/tx/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dap-sdk/module/global-db/cli/include)
 
 if(NOT ANDROID)
     target_include_directories(${NODE_CLI_TARGET} INTERFACE .)
