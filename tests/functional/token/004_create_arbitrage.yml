@@ -29,7 +29,12 @@ setup:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
+  
+  # Verify token exists before proceeding
+  - cli: token info -net {{network_name}} -name ARBCMD
+    contains: "ARBCMD"
   
   # Emit tokens for arbitrage
   - cli: token_emit -net {{network_name}} -token ARBCMD -emission_value 10000 -addr {{arb_addr}} -certs {{root_certs}} -chain zerochain
@@ -37,6 +42,7 @@ setup:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
 
 test:
@@ -48,6 +54,7 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain main -datum {{arb_tx}}
   
+  # Wait for UTXO to appear in wallet
   - wait: 30s
 
 check:

@@ -35,7 +35,12 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
+  
+  # Verify token exists before proceeding
+  - cli: token info -net {{network_name}} -name XFERTEST
+    contains: "XFERTEST"
   
   # Emit tokens to wallet
   - cli: token_emit -net {{network_name}} -token XFERTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
@@ -43,6 +48,7 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Convert emission to UTXO
@@ -51,6 +57,7 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
   
+  # Wait for UTXO to appear in wallet
   - wait: 30s
 
 check:

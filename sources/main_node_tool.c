@@ -604,7 +604,7 @@ static int s_cert_pkey_show(int argc, const char **argv)
     }
 
     dap_hash_fast_t l_hash;
-    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t*)&l_hash, sizeof(dap_hash_fast_t))) {
+    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t *)&l_hash, sizeof(dap_hash_fast_t))) {
         printf("Can't serialize cert %s", argv[4]);
         exit(-135);
     }
@@ -654,7 +654,7 @@ static int s_cert_pkey_show_full(int argc, const char **argv)
     
     // Get public key hash
     dap_hash_fast_t l_hash;
-    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t*)&l_hash, sizeof(dap_hash_fast_t))) {
+    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t *)&l_hash, sizeof(dap_hash_fast_t))) {
         printf("Can't get public key hash from certificate '%s'\n", l_cert_name);
         exit(-135);
     }

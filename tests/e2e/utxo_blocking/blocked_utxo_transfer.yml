@@ -36,7 +36,12 @@ test:
 
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
+  
+  # Verify token exists before proceeding
+  - cli: token info -net {{network_name}} -name BLOCKTEST
+    contains: "BLOCKTEST"
   
   # Emit tokens
   - cli: token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
@@ -44,6 +49,7 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
   
   # Create UTXO
@@ -52,7 +58,12 @@ test:
   
   - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
   
+  # Wait for UTXO to be processed
   - wait: 30s
+  
+  # Verify token still exists before update
+  - cli: token info -net {{network_name}} -name BLOCKTEST
+    contains: "BLOCKTEST"
   
   # Block the specific UTXO using token_update command
   - cli: token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{utxo_tx}}:0 -certs {{root_certs}} -chain zerochain
@@ -61,6 +72,7 @@ test:
 
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{block_tx}}
   
+  # Wait for update to be processed
   - wait: 30s
 
 check:

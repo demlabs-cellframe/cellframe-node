@@ -25,6 +25,7 @@ setup:
   
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
+  # Wait for DAG consensus and ledger sync
   - wait: 30s
 
 test:
@@ -41,6 +42,7 @@ test:
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{update_hash}}
     description: "Process token update datum"
   
+  # Wait for update to be processed
   - wait: 30s
 
 check:
