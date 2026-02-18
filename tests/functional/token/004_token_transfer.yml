@@ -33,7 +33,7 @@ test:
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token XFERTEST -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -chain zerochain
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -42,29 +42,47 @@ test:
   - cli: token info -net {{network_name}} -name XFERTEST
     contains: "XFERTEST"
   
+  # Additional wait to ensure ledger in-memory cache is updated
+  - wait: 10s
+  
   # Emit tokens to wallet
   - cli: token_emit -net {{network_name}} -token XFERTEST -emission_value 10000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
+  - cli: mempool proc_all -chain zerochain
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
+  
+  # Verify emission was processed
+  - cli: token info -net {{network_name}} -name XFERTEST
+    contains: "XFERTEST"
   
   # Convert emission to UTXO
   - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 10000 -cert {{root_cert_single}} -chain main"
     save_hash: utxo_tx
   
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
+  - cli: mempool proc_all -chain main
   
   # Wait for UTXO to appear in wallet
   - wait: 30s
+  
+  # Verify transaction was processed
+  - cli: ledger info -net {{network_name}} -hash {{utxo_tx}}
+    contains: "{{utxo_tx}}"
+    description: "Verify UTXO transaction was processed"
+  
+  # Additional wait for wallet balance sync
+  - wait: 20s
 
 check:
   # Verify token exists
   - cli: token info -net {{network_name}} -name XFERTEST
     contains: "XFERTEST"
     description: "Token XFERTEST should exist"
+  
+  # Additional wait for wallet balance to sync after all operations
+  - wait: 10s
   
   # Verify wallet has tokens
   - cli: wallet info -w transfer_test_wallet -net {{network_name}}
