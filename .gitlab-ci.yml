@@ -137,8 +137,8 @@ amd64:linux.rwd.bld:
       - *fill_version_mk
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON 
-      - ./prod_build/pack.sh --target linux rwd
+      - ./tools/prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./tools/prod_build/pack.sh --target linux rwd
     artifacts:
       paths:
         - version.mk
@@ -180,8 +180,8 @@ asan_build:
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
   script:
-    - ./prod_build/build.sh --target linux rwd 
-    - ./prod_build/pack.sh --target linux rwd
+    - ./tools/prod_build/build.sh --target linux rwd 
+    - ./tools/prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 ubsan_build:

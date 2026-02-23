@@ -35,7 +35,7 @@ if(ENABLE_CPPCHECK_ANALYSIS)
                 -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
                 -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
                 -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
-                ${CMAKE_SOURCE_DIR}/conftool
+                ${CMAKE_SOURCE_DIR}/tools/conftool
                 ${CMAKE_SOURCE_DIR}/dist.linux
                 ${CMAKE_SOURCE_DIR}/dist
                 ${CMAKE_SOURCE_DIR}/os
@@ -152,6 +152,7 @@ endif()
 # Enable DAP SDK tests when Cellframe SDK tests are enabled
 if(BUILD_CELLFRAME_SDK_TESTS)
     set(BUILD_TESTS ON)
+    set(BUILD_DAP_TESTS ON)
     set(DAPSDK_MODULES ${DAPSDK_MODULES} "test-framework")
     enable_testing()
     message(STATUS "Cellframe SDK tests enabled - CTest configured")
@@ -159,6 +160,12 @@ endif()
 
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
+
+# dap_tpl for mock framework: use dap-sdk's full version (has build_engine.sh + mocking support)
+if(NOT DEFINED DAP_TPL_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl/dap_tpl.sh")
+    set(DAP_TPL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl" CACHE PATH "Path to dap_tpl template engine")
+    message(STATUS "[+] dap_tpl: ${DAP_TPL_DIR}")
+endif()
 
 add_subdirectory(dap-sdk)
 add_subdirectory(cellframe-sdk)
@@ -343,7 +350,7 @@ if(BSD)
 endif()
 
 
-add_subdirectory(conftool)
+add_subdirectory(tools/conftool)
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
