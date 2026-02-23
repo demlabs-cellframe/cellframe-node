@@ -111,6 +111,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_dex.h"
 #include "dap_chain_net_srv_stake_ext.h"
 #include "dap_chain_wallet_shared.h"
 
@@ -385,6 +386,10 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
+    // Initialize DEX v2 service
+    if (dap_chain_net_srv_dex_init()) {
+        log_it(L_ERROR, "Can't provide DEX v2 capability");
+    }
 
     if (dap_chain_net_srv_voting_init()) {
         log_it(L_ERROR, "Can't provide voting capability");
@@ -555,7 +560,7 @@ int main( int argc, const char **argv )
     }
     dap_chain_net_try_online_all();
     rc = dap_events_wait();
-    log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
+    log_it(L_INFO, "Server loop stopped with return code %d", rc);
     // Deinit modules
 
 //failure:
