@@ -92,15 +92,12 @@
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-#include "dap_chain_net_srv_vpn.h"
-#include "dap_chain_net_vpn_client.h"
-#endif
-
+#include "dap_daemon.h"
+#include "dap_interval_timer.h"
+#include "dap_cli_server.h"
 #include "dap_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
-#include "dap_chain_node_cli.h"
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -123,11 +120,6 @@
 
 #include "dap_file_utils.h"
 #include "dap_plugin.h"
-
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-    #include "dap_chain_plugins.h"
-    #include "dap_plugins_python_app_context.h"
-#endif
 
 #define MAIN_URL "/"
 const char *dap_node_version();
@@ -251,13 +243,13 @@ int main( int argc, const char **argv )
     dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
 
     log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
-    
+
     if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
         size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
-        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+        log_it(L_NOTICE, "Log rotation every %zu min enabled, max log file size %zu MB",
                          l_timeout_minutes, l_max_file_size);
-        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
+        dap_daemon_enable_log_cleaner(l_timeout_minutes * 60000, l_max_file_size);
     }
 
     if ( dap_enc_init() != 0 ){
@@ -401,11 +393,6 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
-#   if !DAP_OS_ANDROID
-    if( dap_chain_net_srv_vpn_pre_init() ){
-        log_it(L_ERROR, "Can't pre-init vpn service");
-    }
-#   endif
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -420,7 +407,7 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if ( dap_chain_node_cli_init(g_config) ) {
+    if ( dap_cli_server_init(false, "conserver") ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
     }
@@ -488,28 +475,6 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-    // vpn server
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
-        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
-            log_it(L_ERROR, "Can't init dap chain network service vpn module");
-            return -70;
-        }
-    }
-    // vpn client
-    if(dap_chain_net_vpn_client_init(g_config) != 0) {
-        log_it(L_ERROR, "Can't init dap chain network service vpn client");
-        return -72;
-    }
-
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
-        if(chain_net_geoip_init(g_config) != 0) {
-            log_it(L_CRITICAL, "Can't init geoip module");
-            return -73;
-        }
-    }
-#endif
-
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
         char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
@@ -523,21 +488,7 @@ int main( int argc, const char **argv )
             DAP_DELETE(l_plugins_path_default);
         } else {
             DAP_DELETE(l_plugins_path_default);
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            //Init python plugins
-            log_it(L_NOTICE, "Loading python plugins");
-            dap_plugins_python_app_content_init(l_server);
-            rc_plugin_init = dap_chain_plugins_init(g_config);
-#endif
             dap_plugin_start_all();
-
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            if (!rc_plugin_init) {
-                dap_chain_plugins_save_thread(g_config);
-            } else {
-                log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
-            }
-#endif
         }
     }
     dap_chain_net_try_online_all();

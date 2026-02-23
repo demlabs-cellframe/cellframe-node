@@ -1,18 +1,18 @@
-[submodule "python-cellframe"]
-	path = python-cellframe
-	url = ../python-cellframe.git
-	branch = develop
 [submodule "cellframe-sdk"]
 	path = cellframe-sdk
 	url = ../cellframe-sdk.git
-	branch = develop
 [submodule "prod_build"]
 	path = prod_build
 	url = ../prod_build_cellframe-node.git
 [submodule "dap-sdk"]
 	path = dap-sdk
 	url = ../../dap/dap-sdk.git
-	branch = develop
 [submodule "cellframe-stage-env"]
 	path = tests/stage-env
 	url = ../cellframe-stage-env.git
+[submodule "tools/dap_tpl"]
+	path = tools/dap_tpl
+	url = ../../dap/dap_tpl
+[submodule "tools/prod_build"]
+	path = tools/prod_build
+	url = ../prod_build_cellframe-node
