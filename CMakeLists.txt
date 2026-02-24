@@ -118,7 +118,7 @@ if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
 endif()
 
-if(NOT DEFINED LINUX)
+if(CELLFRAME_NODE_STANDALONE)
     include(dap-sdk/cmake/OS_Detection.cmake)
 endif()
 
