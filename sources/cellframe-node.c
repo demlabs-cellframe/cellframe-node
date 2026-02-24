@@ -92,10 +92,6 @@
 #include "dap_chain_net_srv.h"
 #include "dap_chain_net_srv_geoip.h"
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-#include "dap_chain_net_srv_vpn.h"
-#endif
-
 #include "dap_global_db.h"
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
@@ -397,11 +393,6 @@ int main( int argc, const char **argv )
     }
 
 #ifndef _WIN32
-#   if !DAP_OS_ANDROID
-    if( dap_chain_net_srv_vpn_pre_init() ){
-        log_it(L_ERROR, "Can't pre-init vpn service");
-    }
-#   endif
     if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
                                                               "resources",
                                                               "pid_path",
@@ -490,22 +481,12 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
-#if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
-    // vpn server
-    if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
-        if(dap_chain_net_srv_vpn_init(g_config) != 0) {
-            log_it(L_ERROR, "Can't init dap chain network service vpn module");
-            return -70;
-        }
-    }
-
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
         if(chain_net_geoip_init(g_config) != 0) {
             log_it(L_CRITICAL, "Can't init geoip module");
             return -73;
         }
     }
-#endif
 
     if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
 #ifdef DAP_OS_WINDOWS
