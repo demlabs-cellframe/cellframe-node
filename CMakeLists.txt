@@ -1,7 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
-include(cellframe-sdk/cmake/ReadMKFile.cmake)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CELLFRAME_NODE_STANDALONE ON)
+else()
+    set(CELLFRAME_NODE_STANDALONE OFF)
+endif()
+
+if(NOT COMMAND ReadVariables)
+    if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
+        include(${CELLFRAME_SDK_SOURCE_DIR}/cmake/ReadMKFile.cmake)
+    else()
+        include(cellframe-sdk/cmake/ReadMKFile.cmake)
+    endif()
+endif()
 include(FetchContent)
 
 set(CMAKE_ENABLE_EXPORTS ON)
@@ -10,11 +23,13 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
         
 # Predefine project
-SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
-SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+if(CELLFRAME_NODE_STANDALONE)
+    SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
+    SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+    SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+    SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+endif()
 
 # Option to enable full cppcheck analysis
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
@@ -67,9 +82,11 @@ else()
 endif()
 
 
-SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(DESTDIR "/opt/${PROJECT_NAME}")
+if(CELLFRAME_NODE_STANDALONE)
+    SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(DESTDIR "/opt/${PROJECT_NAME}")
+endif()
 
 string(TIMESTAMP BUILD_TIMESTAMP "%d.%m.%Y")
 
@@ -107,7 +124,13 @@ if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
 endif()
 
-include (dap-sdk/cmake/OS_Detection.cmake)
+if(CELLFRAME_NODE_STANDALONE)
+    if(DEFINED DAP_SDK_SOURCE_DIR)
+        include(${DAP_SDK_SOURCE_DIR}/cmake/OS_Detection.cmake)
+    else()
+        include(dap-sdk/cmake/OS_Detection.cmake)
+    endif()
+endif()
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 if (NOT ANDROID)
@@ -131,9 +154,11 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+if(CELLFRAME_NODE_STANDALONE)
+    if(LINUX)
+        set(BUILD_WITH_PYTHON_ENV ON)
+        set(SUPPORT_PYTHON_PLUGINS ON)
+    endif()
 endif()
 
 
@@ -161,14 +186,26 @@ endif()
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
 
-# dap_tpl for mock framework: use dap-sdk's full version (has build_engine.sh + mocking support)
+# Standalone: use own tools/dap_tpl. Embedded: parent sets DAP_TPL_DIR before add_subdirectory()
 if(NOT DEFINED DAP_TPL_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl/dap_tpl.sh")
     set(DAP_TPL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl" CACHE PATH "Path to dap_tpl template engine")
     message(STATUS "[+] dap_tpl: ${DAP_TPL_DIR}")
 endif()
 
-add_subdirectory(dap-sdk)
-add_subdirectory(cellframe-sdk)
+if(NOT TARGET dap_core)
+    if(DEFINED DAP_SDK_SOURCE_DIR)
+        add_subdirectory(${DAP_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/dap-sdk)
+    else()
+        add_subdirectory(dap-sdk)
+    endif()
+endif()
+if(NOT TARGET cellframe-sdk)
+    if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
+        add_subdirectory(${CELLFRAME_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/cellframe-sdk)
+    else()
+        add_subdirectory(cellframe-sdk)
+    endif()
+endif()
 if(UNIX)
     if(DARWIN)
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
@@ -658,6 +695,6 @@ else()
 
 
 endif()
-INCLUDE(CPack)
-
-
+if(CELLFRAME_NODE_STANDALONE)
+    INCLUDE(CPack)
+endif()
