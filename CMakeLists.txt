@@ -327,7 +327,7 @@ if(WIN32)
 
     set(WIN32_ALL_LIBS ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
 
-    target_link_libraries(${PROJECT_NAME} ${WIN32_ALL_LIBS} dap_json-c z pthread ${WIN32_SYSLIBS})
+    target_link_libraries(${PROJECT_NAME} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
     target_link_libraries(${NODE_CLI_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
     target_link_libraries(${NODE_TOOL_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
 
