@@ -442,8 +442,8 @@ else()
 
     if(WIN32)
         INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
     endif()
 
     if (NOT ANDROID)
