@@ -31,8 +31,8 @@ warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 # Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
-STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env/config/stage-env.cfg"
+STAGE_ENV_WRAPPER="$SCRIPT_DIR/../tools/stage-env/stage-env"
+STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
 
 # Test directories
 E2E_TESTS="$SCRIPT_DIR/e2e"
