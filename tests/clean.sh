@@ -7,7 +7,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STAGE_ENV_DIR="$SCRIPT_DIR/stage-env"
+STAGE_ENV_DIR="$SCRIPT_DIR/../tools/stage-env"
 TESTING_DIR="$SCRIPT_DIR/testing"
 
 # Colors

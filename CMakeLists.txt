@@ -304,14 +304,35 @@ if(WIN32)
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
-    target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
-            kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
-            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
-    set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-    target_link_libraries(${NODE_TOOL_TARGET} cellframe_sdk )
-    set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    set(WIN32_SYSLIBS kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
+            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv)
 
-    target_link_libraries(${PROJECT_NAME} cellframe_sdk dap_json-c )
+    # Collect OBJECT modules for include directory propagation
+    set(DAP_SDK_OBJECTS "")
+    if(DEFINED DAP_INTERNAL_MODULES)
+        foreach(MODULE ${DAP_INTERNAL_MODULES})
+            if(TARGET ${MODULE})
+                list(APPEND DAP_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
+            endif()
+        endforeach()
+    endif()
+    set(CELLFRAME_SDK_OBJECTS "")
+    if(DEFINED CELLFRAME_INTERNAL_MODULES)
+        foreach(MODULE ${CELLFRAME_INTERNAL_MODULES})
+            if(TARGET ${MODULE})
+                list(APPEND CELLFRAME_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
+            endif()
+        endforeach()
+    endif()
+
+    set(WIN32_ALL_LIBS ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
+
+    target_link_libraries(${PROJECT_NAME} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+    target_link_libraries(${NODE_CLI_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+    target_link_libraries(${NODE_TOOL_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+
+    set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
         set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     else()
@@ -381,7 +402,7 @@ if(NOT ANDROID)
 endif()
 
 if(DARWIN)
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.common/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*")
+    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/common/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*")
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
@@ -421,8 +442,8 @@ else()
 
     if(WIN32)
         INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
     endif()
 
     if (NOT ANDROID)
