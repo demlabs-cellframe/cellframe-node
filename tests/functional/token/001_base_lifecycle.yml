@@ -53,7 +53,7 @@ test:
   - wait: 30s
   
   # Step 3: Convert emission to UTXO (must do this before from_wallet works)
-  - cli: tx create -net {{network_name}} -chain_emission zerochain -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main
+  - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token LIFECYCLE -from_emission {{emission_tx}} -to_addr {{wallet1_addr}} -value 10000 -cert {{root_cert_single}} -chain main"
     save_hash: base_tx_hash
   
   # Process base transaction

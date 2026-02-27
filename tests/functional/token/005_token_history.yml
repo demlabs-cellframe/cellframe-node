@@ -36,7 +36,7 @@ setup:
   - wait: 30s
   
   # Convert emission to UTXO - this creates a transaction in history
-  - cli: tx create -net {{network_name}} -chain_emission zerochain -token HISTTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 5000 -cert {{root_cert_single}} -chain main
+  - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token HISTTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 5000 -cert {{root_cert_single}} -chain main"
     save_hash: utxo_tx
   
   - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
