@@ -697,8 +697,11 @@ if(DARWIN)
         INSTALL(FILES ${PYTHON_PIP} DESTINATION ${PYTHON_VERSION_DIR}/bin/ 
                 PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
         
-        # Install Python standard library
-        INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${PYTHON_VERSION_DIR}/lib/ USE_SOURCE_PERMISSIONS)
+        # Install Python standard library (exclude dev-installed packages from site-packages)
+        INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${PYTHON_VERSION_DIR}/lib/ USE_SOURCE_PERMISSIONS
+                PATTERN "__editable__*" EXCLUDE
+                PATTERN "pycfhelpers*" EXCLUDE
+                PATTERN "base58*" EXCLUDE)
         
         # Install Python headers
         if(EXISTS "${PYTHON_INCLUDE_DIR_SRC}")
@@ -880,7 +883,10 @@ else()
                 INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so.1)")
                 INSTALL(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink libpython3.10.so.1.0 \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/python/lib/libpython3.10.so)")
 
-                INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
+                INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS
+                        PATTERN "__editable__*" EXCLUDE
+                        PATTERN "pycfhelpers*" EXCLUDE
+                        PATTERN "base58*" EXCLUDE)
             endif()
 
             # Common: Install interfaces (path set per-platform above)
