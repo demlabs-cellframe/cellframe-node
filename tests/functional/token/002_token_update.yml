@@ -23,7 +23,7 @@ setup:
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token TOKENUPD -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  - cli: mempool proc_all -chain zerochain
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -34,15 +34,12 @@ test:
     contains: "TOKENUPD"
     description: "Token should exist before update"
   
-  # Additional wait to ensure ledger in-memory cache is updated
-  - wait: 10s
-  
   # Test: Use token_update to modify token (add tx_receiver_blocked address)
   - cli: token_update -net {{network_name}} -token TOKENUPD -tx_receiver_blocked_add {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: update_hash
     description: "Create token update to block receiver address"
   
-  - cli: mempool proc_all -chain zerochain
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{update_hash}}
     description: "Process token update datum"
   
   # Wait for update to be processed
@@ -53,4 +50,3 @@ check:
   - cli: token info -net {{network_name}} -name TOKENUPD
     contains: "TOKENUPD"
     description: "Token TOKENUPD should exist after update"
-

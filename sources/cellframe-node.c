@@ -72,6 +72,8 @@
 #endif
 
 #include "dap_events.h"
+#include "dap_interval_timer.h"
+#include "dap_daemon.h"
 #include "dap_enc.h"
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
@@ -268,7 +270,7 @@ int main( int argc, const char **argv )
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
         log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
                          l_timeout_minutes, l_max_file_size);
-        dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
+        dap_daemon_enable_log_cleaner(l_timeout_minutes * 60000, l_max_file_size);
     }
 
     if ( dap_enc_init() != 0 ){

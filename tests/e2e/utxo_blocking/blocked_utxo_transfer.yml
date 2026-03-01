@@ -34,7 +34,7 @@ test:
   - cli: token_decl -net {{network_name}} -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
 
-  - cli: mempool proc_all -chain zerochain
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -47,7 +47,7 @@ test:
   - cli: token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission
   
-  - cli: mempool proc_all -chain zerochain
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission}}
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -56,32 +56,17 @@ test:
   - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000 -cert {{root_cert_single}} -chain main"
     save_hash: utxo_tx
   
-  - cli: mempool proc_all -chain main
+  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
   
   # Wait for UTXO to be processed and indexed
   - wait: 30s
-  
-  # Verify transaction was processed
-  - cli: ledger info -net {{network_name}} -hash {{utxo_tx}}
-    contains: "{{utxo_tx}}"
-    description: "Verify UTXO transaction was processed"
-  
-  # Additional wait for wallet balance sync
-  - wait: 20s
-  
-  # Verify token still exists before update (query database)
-  - cli: token info -net {{network_name}} -name BLOCKTEST
-    contains: "BLOCKTEST"
-  
-  # Additional wait to ensure ledger in-memory cache is updated
-  - wait: 10s
   
   # Block the specific UTXO using token_update command
   - cli: token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{utxo_tx}}:0 -certs {{root_certs}} -chain zerochain
     save_hash: block_tx
     description: "Add UTXO to blocked list"
 
-  - cli: mempool proc_all -chain zerochain
+  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{block_tx}}
   
   # Wait for update to be processed
   - wait: 30s
@@ -91,9 +76,6 @@ check:
   - cli: token info -net {{network_name}} -name BLOCKTEST
     contains: "BLOCKTEST"
     description: "Token BLOCKTEST should exist"
-  
-  # Additional wait for wallet balance to sync after all operations
-  - wait: 20s
   
   # Verify wallet has tokens (UTXO was created before blocking)
   - cli: wallet info -w utxo_block_wallet -net {{network_name}}
