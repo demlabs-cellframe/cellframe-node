@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
-include(cellframe-sdk/cmake/ReadMKFile.cmake)
+
+if(CELLFRAME_NODE_EMBEDDED AND CELLFRAME_SDK_CMAKE_DIR)
+    include(${CELLFRAME_SDK_CMAKE_DIR}/ReadMKFile.cmake)
+else()
+    include(cellframe-sdk/cmake/ReadMKFile.cmake)
+endif()
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -105,7 +110,11 @@ if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
 endif()
 
-include (dap-sdk/cmake/OS_Detection.cmake)
+if(NOT CELLFRAME_NODE_EMBEDDED)
+    include(dap-sdk/cmake/OS_Detection.cmake)
+else()
+    message(STATUS "[cellframe-node] Embedded mode: OS_Detection already loaded by parent")
+endif()
 
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #option(BUILD_CELLFRAME_SDK_TESTS "Build Cellframe SDK tests" ON)
@@ -119,7 +128,9 @@ if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
 endif()
 
-set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
+if(NOT CELLFRAME_NODE_EMBEDDED)
+    set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
+endif()
 set(BUILD_WITH_ZIP OFF)
 
 option(ADD_UPDATER OFF)
@@ -151,8 +162,17 @@ set(INSTALL_CELLFRAME_SDK OFF CACHE BOOL "Disable Cellframe SDK installation (bu
 
 set(DAP_TPL_DIR "${CMAKE_SOURCE_DIR}/tools/dap_tpl" CACHE PATH "Path to dap_tpl templating engine")
 
-add_subdirectory(dap-sdk)
-add_subdirectory(cellframe-sdk)
+if(NOT TARGET dap_sdk)
+    add_subdirectory(dap-sdk)
+else()
+    message(STATUS "[cellframe-node] Using external DAP SDK (target dap_sdk already exists)")
+endif()
+
+if(NOT TARGET cellframe_sdk)
+    add_subdirectory(cellframe-sdk)
+else()
+    message(STATUS "[cellframe-node] Using external Cellframe SDK (target cellframe_sdk already exists)")
+endif()
 if(UNIX)
     if(DARWIN)
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
