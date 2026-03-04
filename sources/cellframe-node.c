@@ -115,6 +115,10 @@
 #include "dap_client.h"
 #include "dap_http_simple.h"
 #include "dap_process_manager.h"
+#include "dap_net.h"
+#include "dap_net_trans.h"
+#include "dap_net_trans_server.h"
+#include "dap_net_trans_http_server.h"
 
 #include "dap_file_utils.h"
 #include "dap_plugin.h"
@@ -435,18 +439,106 @@ int main( int argc, const char **argv )
     log_it(L_INFO, "Automatic mempool processing %s",
            dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
     
-    uint16_t l_listen_addrs_count = 0;
-    if ( bServerEnabled )
-        l_server = dap_http_server_new("server", dap_get_appname());
+    dap_net_trans_server_t *l_trans_servers[DAP_NET_TRANS_MAX + 1] = {0};
+    size_t l_trans_servers_count = 0;
 
-    if ( l_server ) { // If listener server is initialized
-        // Handshake URL
-        enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
+    if ( bServerEnabled ) {
+        uint16_t l_trans_count = 0;
+        const char **l_trans_strs = dap_config_get_array_str(g_config, "server", "transports", &l_trans_count);
 
-        // Streaming URLs
-        dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
-        dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
+        dap_net_trans_type_t l_enabled[DAP_NET_TRANS_MAX + 1];
+        size_t l_enabled_count = 0;
+        if (l_trans_strs && l_trans_count) {
+            for (uint16_t i = 0; i < l_trans_count; i++) {
+                dap_net_trans_type_t l_type = dap_net_trans_type_from_str(l_trans_strs[i]);
+                bool l_dup = false;
+                for (size_t j = 0; j < l_enabled_count; j++)
+                    if (l_enabled[j] == l_type) { l_dup = true; break; }
+                if (!l_dup)
+                    l_enabled[l_enabled_count++] = l_type;
+            }
+        } else {
+            l_enabled[0] = DAP_NET_TRANS_HTTP;
+            l_enabled_count = 1;
+        }
 
+        uint16_t l_addr_count = 0;
+        const char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_addr_count);
+        char l_base_ip[INET6_ADDRSTRLEN] = "0.0.0.0";
+        uint16_t l_base_port = 8079;
+        if (l_listen_addrs && l_addr_count > 0)
+            dap_net_parse_config_address(l_listen_addrs[0], l_base_ip, &l_base_port, NULL, NULL);
+        if (!l_base_port)
+            l_base_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_tcp", 8079);
+
+        for (size_t t = 0; t < l_enabled_count; t++) {
+            dap_net_trans_type_t l_type = l_enabled[t];
+            const char *l_type_name = "unknown";
+            uint16_t l_port = l_base_port;
+
+            switch (l_type) {
+            case DAP_NET_TRANS_HTTP:
+                l_type_name = "http";
+                break;
+            case DAP_NET_TRANS_UDP_BASIC:
+            case DAP_NET_TRANS_UDP_RELIABLE:
+            case DAP_NET_TRANS_UDP_QUIC_LIKE:
+                l_type_name = "udp";
+                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_udp", l_base_port);
+                break;
+            case DAP_NET_TRANS_WEBSOCKET:
+                l_type_name = "websocket";
+                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_websocket", l_base_port + 1);
+                break;
+            case DAP_NET_TRANS_TLS_DIRECT:
+                l_type_name = "tls";
+                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_tls", l_base_port + 2);
+                break;
+            case DAP_NET_TRANS_DNS_TUNNEL:
+                l_type_name = "dns";
+                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_dns", 53);
+                break;
+            default:
+                log_it(L_WARNING, "Unknown transport type 0x%02X, skipping", l_type);
+                continue;
+            }
+
+            if (!dap_net_trans_server_get_ops(l_type)) {
+                log_it(L_WARNING, "Transport '%s' has no server implementation, skipping", l_type_name);
+                continue;
+            }
+
+            char l_name[64];
+            snprintf(l_name, sizeof(l_name), "%s_%s", dap_get_appname(), l_type_name);
+            dap_net_trans_server_t *l_ts = dap_net_trans_server_new(l_type, l_name);
+            if (!l_ts) {
+                log_it(L_ERROR, "Failed to create %s transport server", l_type_name);
+                continue;
+            }
+
+            const char *l_addrs[] = { l_base_ip };
+            uint16_t l_ports[] = { l_port };
+            int l_ret = dap_net_trans_server_start(l_ts, "server", l_addrs, l_ports, 1);
+            if (l_ret != 0) {
+                log_it(L_ERROR, "Failed to start %s transport server on %s:%u (rc=%d)",
+                       l_type_name, l_base_ip, l_port, l_ret);
+                dap_net_trans_server_delete(l_ts);
+                continue;
+            }
+
+            l_trans_servers[l_trans_servers_count++] = l_ts;
+            log_it(L_NOTICE, "Transport server '%s' started on %s:%u", l_type_name, l_base_ip, l_port);
+
+            if (l_type == DAP_NET_TRANS_HTTP) {
+                dap_net_trans_http_server_t *l_http_ts =
+                    (dap_net_trans_http_server_t *)dap_net_trans_server_get_specific(l_ts);
+                if (l_http_ts)
+                    l_server = l_http_ts->server;
+            }
+        }
+    }
+
+    if ( l_server ) {
         const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
         if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
             dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
@@ -455,10 +547,8 @@ int main( int argc, const char **argv )
         if (dap_json_rpc_init(l_server, g_config)) {
             log_it( L_CRITICAL, "Can't init json-rpc" );
             return -12;
-        } 
+        }
 
-
-        // Built in WWW server
 #if !DAP_OS_ANDROID
         if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
                 dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
@@ -478,7 +568,9 @@ int main( int argc, const char **argv )
             log_it(L_DEBUG, "DNS balancer enabled");
             dap_dns_server_start("bootstrap_balancer");
         }
-    } else
+    } else if ( bServerEnabled )
+        log_it( L_WARNING, "HTTP transport server not available, app-specific HTTP handlers skipped" );
+    else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
@@ -529,6 +621,10 @@ int main( int argc, const char **argv )
         dap_plugin_deinit();
     }
 
+    for (size_t i = 0; i < l_trans_servers_count; i++) {
+        dap_net_trans_server_stop(l_trans_servers[i]);
+        dap_net_trans_server_delete(l_trans_servers[i]);
+    }
     dap_dns_server_stop();
     dap_stream_deinit();
     dap_stream_ctl_deinit();
