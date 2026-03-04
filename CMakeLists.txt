@@ -389,11 +389,11 @@ add_subdirectory(tools/conftool)
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
-    set(NODE_LIBRARIES cellframe-sdk )
+    set(NODE_LIBRARIES -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive )
 
-    set(NODE_CLI_LIBRARIES m cellframe-sdk)
+    set(NODE_CLI_LIBRARIES m -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive)
 
-    set(NODE_TOOL_LIBRARIES m cellframe-sdk)
+    set(NODE_TOOL_LIBRARIES m -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive)
 
     if (SUPPORT_PYTHON_PLUGINS)
         message("[+] Build with python plugins support")

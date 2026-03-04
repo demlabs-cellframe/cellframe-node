@@ -5,27 +5,9 @@
 
 #include "dap_common.h"
 #include "dap_events.h"
-#include "dap_global_db.h"
-#include "dap_chain_node.h"
-#include "dap_chain_net_srv_xchange.h"
-#include "dap_chain_net_srv_stake_pos_delegate.h"
-#include "dap_chain_net_srv_stake_lock.h"
-#include "dap_chain.h"
-#include "dap_stream.h"
-#include "dap_stream_ctl.h"
-#include "dap_enc_ks.h"
-#include "dap_enc_http.h"
-#include "dap_http_server.h"
-#include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
-#include "dap_plugin.h"
-#ifdef DAP_MODULES_DYNAMIC
-#include "dap_modules_dynamic_cdb.h"
-#endif
 
 #define LOG_TAG "sig_unix_handler"
-
-void dap_chain_plugins_deinit();
 
 static const char *s_pid_path = NULL;
 
@@ -38,34 +20,8 @@ static void clear_pid_file() {
 }
 
 static void sig_exit_handler(int sig_code) {
-    log_it(L_DEBUG, "Got exit code: %d", sig_code);
-    fflush(stdout);
-    exit(0);
-    /*clear_pid_file();
-	
-    dap_plugin_deinit();
-    dap_chain_node_mempool_autoproc_deinit();
-    dap_chain_net_srv_xchange_deinit();
-    dap_chain_net_srv_stake_pos_delegate_deinit();
-    dap_chain_net_srv_stake_lock_deinit();
-    dap_chain_net_deinit();
-    dap_global_db_deinit();
-    dap_chain_deinit();
-    dap_stream_ctl_deinit();
-    dap_stream_deinit();
-    dap_enc_ks_deinit();
-    enc_http_deinit();
-    dap_http_deinit();
-#ifdef DAP_MODULES_DYNAMIC
-    dap_modules_dynamic_close_cdb();
-#endif
-    dap_interval_timer_deinit();
-    dap_common_deinit();
-
-    log_it(L_NOTICE,"Stopped Cellframe Node");
-    fflush(stdout);
-
-    exit(0);*/
+    log_it(L_DEBUG, "Got signal: %d, initiating graceful shutdown", sig_code);
+    dap_events_stop_all();
 }
 
 
