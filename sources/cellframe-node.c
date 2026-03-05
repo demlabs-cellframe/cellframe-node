@@ -117,6 +117,7 @@
 #include "dap_chain_mempool_cli.h"
 #include "dap_chain_policy.h"
 #include "dap_chain_ledger_cli.h"
+#include "dap_chain_net_tx_cli.h"
 #include "dap_json_rpc_errors.h"
 
 extern int dap_chain_wallet_cli_init(void);
@@ -450,6 +451,7 @@ int main( int argc, const char **argv )
     dap_chain_token_cli_init();
     dap_chain_mempool_cli_init();
     dap_chain_ledger_cli_init();
+    dap_chain_net_tx_cli_init();
 
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
