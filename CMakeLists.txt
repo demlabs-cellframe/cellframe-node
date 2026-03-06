@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
-include(cellframe-sdk/cmake/ReadMKFile.cmake)
-include(FetchContent)
+
+if(CELLFRAME_NODE_EMBEDDED AND CELLFRAME_SDK_CMAKE_DIR)
+    include(${CELLFRAME_SDK_CMAKE_DIR}/ReadMKFile.cmake)
+else()
+    include(cellframe-sdk/cmake/ReadMKFile.cmake)
+endif()
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -32,10 +36,9 @@ if(ENABLE_CPPCHECK_ANALYSIS)
                 --xml
                 -I ${CMAKE_SOURCE_DIR}/dap-sdk/core/include
                 -I ${CMAKE_SOURCE_DIR}/cellframe-sdk/modules/common/include
-                -I ${CMAKE_SOURCE_DIR}/python-cellframe/include
                 ${CMAKE_SOURCE_DIR}/conftool
-                ${CMAKE_SOURCE_DIR}/dist.linux
-                ${CMAKE_SOURCE_DIR}/dist
+                ${CMAKE_SOURCE_DIR}/dist/linux
+                ${CMAKE_SOURCE_DIR}/dist/common
                 ${CMAKE_SOURCE_DIR}/os
                 ${CMAKE_SOURCE_DIR}/resousrses
                 ${CMAKE_SOURCE_DIR}/sourses
@@ -107,7 +110,11 @@ if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
 endif()
 
-include (dap-sdk/cmake/OS_Detection.cmake)
+if(NOT CELLFRAME_NODE_EMBEDDED)
+    include(dap-sdk/cmake/OS_Detection.cmake)
+else()
+    message(STATUS "[cellframe-node] Embedded mode: OS_Detection already loaded by parent")
+endif()
 
 #set(BUILD_CELLFRAME_NODE_TESTS ON)
 #option(BUILD_CELLFRAME_SDK_TESTS "Build Cellframe SDK tests" ON)
@@ -121,16 +128,13 @@ if (BUILD_WITH_TPS_TEST)
     add_definitions("-DDAP_TPS_TEST")
 endif()
 
-set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
+if(NOT CELLFRAME_NODE_EMBEDDED)
+    set(BUILD_SHARED OFF CACHE BOOL "Build final library as shared" FORCE)
+endif()
 set(BUILD_WITH_ZIP OFF)
 
 option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
-
-option(SUPPORT_PYTHON_PLUGINS DEFAULT OFF)
-if ((LINUX OR MACOS) AND SUPPORT_PYTHON_PLUGINS)
-    set(BUILD_WITH_PYTHON_ENV ON)
-endif()
 
 set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
                        srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-stake-ext compose")
@@ -157,8 +161,19 @@ set(SPHINCSPLUS_FLEX ON)
 set(INSTALL_DAP_SDK OFF CACHE BOOL "Disable DAP SDK installation (build-time dependency)" FORCE)
 set(INSTALL_CELLFRAME_SDK OFF CACHE BOOL "Disable Cellframe SDK installation (build-time dependency)" FORCE)
 
-add_subdirectory(dap-sdk)
-add_subdirectory(cellframe-sdk)
+set(DAP_TPL_DIR "${CMAKE_SOURCE_DIR}/tools/dap_tpl" CACHE PATH "Path to dap_tpl templating engine")
+
+if(NOT TARGET dap_sdk)
+    add_subdirectory(dap-sdk)
+else()
+    message(STATUS "[cellframe-node] Using external DAP SDK (target dap_sdk already exists)")
+endif()
+
+if(NOT TARGET cellframe_sdk)
+    add_subdirectory(cellframe-sdk)
+else()
+    message(STATUS "[cellframe-node] Using external Cellframe SDK (target cellframe_sdk already exists)")
+endif()
 if(UNIX)
     if(DARWIN)
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
@@ -204,10 +219,6 @@ if(UNIX)
     else()
         set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
-
-    #if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-    #    SET( BUILD_WITH_PYTHON_ENV OFF )
-    #endif()
 
     if(NOT CPACK_SYSTEM_NAME)
         set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
@@ -255,15 +266,11 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY "CellFrame Node software https://cellframe.net" )
     SET( CPACK_DEBIAN_PACKAGE_DESCRIPTION   "CellFrame Node" )
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
-    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils, libsqlite3-0")        
-    #have to figure out how to use it properly with custom RPATH for python plugins...
-    if (NOT SUPPORT_PYTHON_PLUGINS)
-        SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-        # For cross-compilation: tell dpkg-shlibdeps where to find target arch libraries
-        if (CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT)
-            SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS 
-                "${CMAKE_SYSROOT}/lib;${CMAKE_SYSROOT}/usr/lib;${CMAKE_SYSROOT}/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/lib/arm-linux-gnueabihf;${CMAKE_SYSROOT}/usr/lib/arm-linux-gnueabihf")
-        endif()
+    SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils, libsqlite3-0")
+    SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    if (CMAKE_CROSSCOMPILING AND CMAKE_SYSROOT)
+        SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS 
+            "${CMAKE_SYSROOT}/lib;${CMAKE_SYSROOT}/usr/lib;${CMAKE_SYSROOT}/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu;${CMAKE_SYSROOT}/lib/arm-linux-gnueabihf;${CMAKE_SYSROOT}/usr/lib/arm-linux-gnueabihf")
     endif()
 
     message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
@@ -281,12 +288,6 @@ else()
     message("[ ] Not UNIX")
 endif()
 
-
-if (CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "armhf")
-    message("[*] ArmHF - no python")
-    set(SUPPORT_PYTHON_PLUGINS OFF)
-    set(BUILD_WITH_PYTHON_ENV OFF)
-endif()
 
 set(NODE_TARGET      "${PROJECT_NAME}"     )
 set(NODE_CLI_TARGET  "${PROJECT_NAME}-cli" )
@@ -325,14 +326,35 @@ if(WIN32)
     add_executable(${NODE_CLI_TARGET} "sources/main_node_cli.c" )
     add_executable(${NODE_TOOL_TARGET} "sources/main_node_tool.c" )
 
-    target_link_libraries(${NODE_CLI_TARGET} dap_chain_net dap_app_cli z pthread
-            kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
-            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv )
-    set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
-    target_link_libraries(${NODE_TOOL_TARGET} cellframe_sdk )
-    set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    set(WIN32_SYSLIBS kernel32 user32 shell32 winmm gdi32 advapi32 ole32 version imm32
+            oleaut32 ws2_32 ntdll psapi shlwapi bcrypt crypt32 secur32 userenv)
 
-    target_link_libraries(${PROJECT_NAME} cellframe_sdk dap_json-c )
+    # Collect OBJECT modules for include directory propagation
+    set(DAP_SDK_OBJECTS "")
+    if(DEFINED DAP_INTERNAL_MODULES)
+        foreach(MODULE ${DAP_INTERNAL_MODULES})
+            if(TARGET ${MODULE})
+                list(APPEND DAP_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
+            endif()
+        endforeach()
+    endif()
+    set(CELLFRAME_SDK_OBJECTS "")
+    if(DEFINED CELLFRAME_INTERNAL_MODULES)
+        foreach(MODULE ${CELLFRAME_INTERNAL_MODULES})
+            if(TARGET ${MODULE})
+                list(APPEND CELLFRAME_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
+            endif()
+        endforeach()
+    endif()
+
+    set(WIN32_ALL_LIBS ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
+
+    target_link_libraries(${PROJECT_NAME} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+    target_link_libraries(${NODE_CLI_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+    target_link_libraries(${NODE_TOOL_TARGET} ${WIN32_ALL_LIBS} z pthread ${WIN32_SYSLIBS})
+
+    set_property(TARGET ${NODE_CLI_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
+    set_property(TARGET ${NODE_TOOL_TARGET} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (DAP_DEBUG))
         set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-mconsole")
     else()
@@ -350,129 +372,42 @@ if(BUILD_DIAGTOOL)
     add_subdirectory(diagtool)
 endif()
 
-add_subdirectory(conftool)
+add_subdirectory(tools/conftool)
 
 if(UNIX AND NOT WIN32)
     message ("[*] Unix library set")
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
     
-    # Collect all DAP SDK OBJECT modules for direct linking (bypass static library issues)
-    set(DAP_SDK_OBJECTS "")
-    if(DEFINED DAP_INTERNAL_MODULES)
-        foreach(MODULE ${DAP_INTERNAL_MODULES})
-            if(TARGET ${MODULE})
-                list(APPEND DAP_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
-            endif()
-        endforeach()
-        list(LENGTH DAP_INTERNAL_MODULES DAP_MOD_COUNT)
-        message("[*] Using ${DAP_MOD_COUNT} DAP SDK OBJECT modules directly")
-    endif()
-    
-    # Collect all Cellframe SDK OBJECT modules for direct linking
-    set(CELLFRAME_SDK_OBJECTS "")
-    if(DEFINED CELLFRAME_INTERNAL_MODULES)
-        foreach(MODULE ${CELLFRAME_INTERNAL_MODULES})
-            if(TARGET ${MODULE})
-                list(APPEND CELLFRAME_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
-            endif()
-        endforeach()
-        message("[*] Using Cellframe SDK OBJECT modules directly")
-    endif()
-    
-    set(NODE_LIBRARIES ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
-    set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
-    set(NODE_TOOL_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
-
-    if (SUPPORT_PYTHON_PLUGINS)
-        message("[+] Build with python plugins support")
-
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDAP_SUPPORT_PYTHON_PLUGINS")
-        add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
-
-        if (BUILD_WITH_PYTHON_ENV)
-            
-            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz")
-
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/python-3.11.11-jammy-aarch64.tar.xz")
-                add_definitions("-DPYTHON_VERSION=\"python3.11\"")
-            else()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
-            endif()
-
-            if (DARWIN)
-                if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16+20250212-aarch64-apple-darwin-install_only.tar.gz")
-                else ()
-                    set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.16%2B20250205-x86_64-apple-darwin-install_only.tar.gz")
+    if(TARGET cellframe_sdk_static AND TARGET dap_sdk_static)
+        message("[*] Using static SDK libraries (no shared lib runtime dependency)")
+        set(NODE_LIBRARIES cellframe_sdk_static dap_sdk_static)
+        set(NODE_CLI_LIBRARIES m cellframe_sdk_static dap_sdk_static)
+        set(NODE_TOOL_LIBRARIES m cellframe_sdk_static dap_sdk_static)
+    else()
+        set(DAP_SDK_OBJECTS "")
+        if(DEFINED DAP_INTERNAL_MODULES)
+            foreach(MODULE ${DAP_INTERNAL_MODULES})
+                if(TARGET ${MODULE})
+                    list(APPEND DAP_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
                 endif()
-                add_definitions("-DPYTHON_VERSION=\"python3.10\"")
-            endif()
-
-            message("[+] Build with python environment")
-            message("    Downloading static prebuild cpython  ${PYTHON_URL}")
-            #this python was build by compiling and installing static python distrip to /opt/cellframe-node/ and
-            # installing pip in it, then tared all back.
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
-                cmake_policy(SET CMP0135 NEW)
-            endif()
-
-            
-            FetchContent_Declare(
-                CPythonStatic
-                URL ${PYTHON_URL}
-            )
-            FetchContent_MakeAvailable(CPythonStatic)
-            set(cpythonstatic_SOURCE_DIR ${cpythonstatic_SOURCE_DIR})
-            
-            set(SAVED_CMAKE_MESSAGE_LOG_LEVEL ${CMAKE_MESSAGE_LOG_LEVEL})
-            set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
-            set(CMAKE_MESSAGE_LOG_LEVEL ${SAVED_CMAKE_MESSAGE_LOG_LEVEL})
-
-            list(APPEND CMAKE_PREFIX_PATH ${cpythonstatic_SOURCE_DIR})
-            
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                find_package(Python EXACT 3.11 COMPONENTS  Development REQUIRED)
-            else()
-                find_package(Python EXACT 3.10 COMPONENTS  Development REQUIRED)
-            endif()
-
-            target_link_options(${NODE_TARGET} PUBLIC "-Wl,-rpath,${CMAKE_INSTALL_PREFIX}/python/lib/")
-
-            add_definitions("-DDAP_BUILD_WITH_PYTHON_ENV")
-        else()
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15")
-                cmake_policy(SET CMP0094 NEW)
-            endif()
-            find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
-            if(MACOS OR IOS)
-                list(APPEND Python_LIBRARIES ssl crypto z util expat)
-            elseif(LINUX OR BSD)
-                if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                    list(APPEND Python_LIBRARIES crypt nsl z util expat)
-                else()
-                    list(APPEND Python_LIBRARIES ssl crypto crypt nsl z util expat)
-                endif()
-            endif()
+            endforeach()
+            list(LENGTH DAP_INTERNAL_MODULES DAP_MOD_COUNT)
+            message("[*] Using ${DAP_MOD_COUNT} DAP SDK OBJECT modules directly")
         endif()
 
-        message("[*] Python version: " ${Python_VERSION})
-        message("[*] Python path: " ${Python_EXECUTABLE})
-        message("[*] Python includes path: " ${Python_INCLUDE_DIRS})
-        message("[*] Python library path: " ${Python_LIBRARY_DIRS})
-        message("[*] Python libraries: " "${Python_LIBRARIES}")
-
-        include_directories(${Python_INCLUDE_DIRS} include/)
-        add_subdirectory(python-cellframe)
-        #this helps
-        #install_name_tool -change /install/lib/libpython3.10.dylib @executable_path/../../python/lib/libpython3.10.dylib ./build_osx_rwd/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
-        list(APPEND NODE_LIBRARIES dap_plugins_python ${Python_LIBRARIES})
-        if (DARWIN)
-        add_custom_command(TARGET ${NODE_TARGET} 
-            POST_BUILD COMMAND 
-            ${CMAKE_INSTALL_NAME_TOOL} -change /install/lib/libpython3.10.dylib @executable_path/../Frameworks/python/lib/libpython3.10.dylib 
-            ${NODE_TARGET})
+        set(CELLFRAME_SDK_OBJECTS "")
+        if(DEFINED CELLFRAME_INTERNAL_MODULES)
+            foreach(MODULE ${CELLFRAME_INTERNAL_MODULES})
+                if(TARGET ${MODULE})
+                    list(APPEND CELLFRAME_SDK_OBJECTS $<TARGET_OBJECTS:${MODULE}>)
+                endif()
+            endforeach()
+            message("[*] Using Cellframe SDK OBJECT modules directly")
         endif()
+
+        set(NODE_LIBRARIES ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
+        set(NODE_CLI_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
+        set(NODE_TOOL_LIBRARIES m ${CELLFRAME_SDK_OBJECTS} ${DAP_SDK_OBJECTS} cellframe_sdk dap_sdk)
     endif()
 
     if(ANDROID )
@@ -495,7 +430,7 @@ if(NOT ANDROID)
 endif()
 
 if(DARWIN)
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*")
+    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/common/ DESTINATION ${SHAREDIR} FILES_MATCHING PATTERN "*"  PATTERN "*")
     INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${BINDIR} )
     INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${BINDIR} )
@@ -506,59 +441,37 @@ if(DARWIN)
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/com.demlabs.cellframe-node.plist DESTINATION ${SHAREDIR} )
     INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/os/macos/Info.plist DESTINATION ${CONTENTSDIR} )
 
-    if (BUILD_WITH_PYTHON_ENV)
-    set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-    set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
-    set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.dylib")
-    set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
-    set(PYTHON_LIB_DIR_PRFX "python3.10")
-    
-    INSTALL(FILES ${PYTHON_PIP} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_BIN} DESTINATION ${RLIBDIR}/python/bin/ )
-    INSTALL(FILES ${PYTHON_LIB} DESTINATION ${RLIBDIR}/python/lib/ )
-    
-    INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
-    
-    # Note: pycfhelpers and pycftools are installed as source packages on macOS
-    # Wheel packages are not yet supported on macOS
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycfhelpers DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/python-modules/pycftools DESTINATION ${RLIBDIR}/python/lib/${PYTHON_LIB_DIR_PRFX}/site-packages USE_SOURCE_PERMISSIONS)
-    INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${RLIBDIR}/python/lib/ USE_SOURCE_PERMISSIONS)
-    endif()
-
-
-
 else()
 
-    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
+    INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/common/ DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*"  PATTERN "*")
     if(LINUX)
         
-        #install all from dist.linux/share except updater files and node-serivice
+        #install all from dist/linux/share except updater files and node-serivice
         if(NOT ADD_UPDATER)
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-updater*" EXCLUDE PATTERN "*cellframe-node*service*" EXCLUDE )
         else()
-            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-node*service*" EXCLUDE)
+            INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/ DESTINATION ${CMAKE_INSTALL_PREFIX} PATTERN "*cellframe-node*service*" EXCLUDE)
         endif()
 
         #install node service depends on sanitasizes values
         if (DEFINED ENV{DAP_ASAN})
-            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.asan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/share/cellframe-node.asan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
         elseif(DEFINED ENV{DAP_UBSAN})
-            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.ubsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/share/cellframe-node.ubsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
         elseif(DEFINED ENV{DAP_TSAN})
-            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.tsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/share/cellframe-node.tsan.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
         else()
-            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist.linux/share/cellframe-node.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
+            INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/linux/share/cellframe-node.service DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ RENAME cellframe-node.service )
         endif()
         
     elseif(BSD)
-        INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist.bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
+        INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/bsd/ DESTINATION ${CMAKE_INSTALL_PREFIX} )
     endif()
 
     if(WIN32)
         INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        INSTALL(FILES dist/common/share/icon/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
     endif()
 
     if (NOT ANDROID)
@@ -573,118 +486,14 @@ else()
     if (NOT ANDROID)
     INSTALL(TARGETS cellframe-node-config DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
     endif()
-    if(NOT ANDROID)
-        #install all python-specific files back to its original location
-        if (SUPPORT_PYTHON_PLUGINS AND BUILD_WITH_PYTHON_ENV)
-
-            set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-            set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.10")
-            set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.10.so.1.0")
-            set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.10")
-            set(PYTHON_LIB_DIR_PRFX "python3.10")
-            
-            if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-                set(PYTHON_PIP "${cpythonstatic_SOURCE_DIR}/bin/pip3")
-                set(PYTHON_BIN "${cpythonstatic_SOURCE_DIR}/bin/python3.11")
-                set(PYTHON_LIB "${cpythonstatic_SOURCE_DIR}/lib/libpython3.11.so.1.0")    
-                set(PYTHON_LIB_DIR "${cpythonstatic_SOURCE_DIR}/lib/python3.11")
-                set(PYTHON_LIB_DIR_PRFX "python3.11")
-            endif()
-
-            INSTALL(FILES ${PYTHON_PIP} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-            INSTALL(FILES ${PYTHON_BIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin/ )
-            INSTALL(FILES ${PYTHON_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ )
-            
-            INSTALL(DIRECTORY ${PYTHON_LIB_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
-            
-            # Download Python wheel files
-            if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24")
-                cmake_policy(SET CMP0135 NEW)
-            endif()
-            
-            
-                        # Function to download and install wheel packages
-            function(download_wheel_package PACKAGE_NAME PACKAGE_URL SUCCESS_VAR)
-                # Download wheel file with temporary name first
-                set(TEMP_WHEEL_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_temp.whl")
-                
-                message(STATUS "Downloading ${PACKAGE_NAME} from ${PACKAGE_URL}")
-                
-                # Download the wheel file (CMake will handle redirects automatically)
-                file(DOWNLOAD 
-                    "${PACKAGE_URL}"
-                    "${TEMP_WHEEL_PATH}"
-                    SHOW_PROGRESS
-                    INACTIVITY_TIMEOUT 30
-                    TIMEOUT 300
-                    STATUS DOWNLOAD_STATUS
-                )
-                
-                # Check download result
-                list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
-                if(DOWNLOAD_RESULT EQUAL 0)
-                    # Read first few bytes to check if it's a valid wheel file
-                    file(READ "${TEMP_WHEEL_PATH}" WHEEL_HEADER LIMIT 100)
-                    
-                    # Check if it starts with PK (zip file signature)
-                    if(WHEEL_HEADER MATCHES "^PK")
-                        # Extract filename from URL
-                        string(REGEX MATCH "([^/]+\\.[^/]+)$" FILENAME_MATCH "${PACKAGE_URL}")
-                        if(FILENAME_MATCH)
-                            set(REAL_FILENAME "${FILENAME_MATCH}")
-                            
-                            # Check if filename matches pip wheel format (package-version-python-tag-platform.whl)
-                            if(NOT "${REAL_FILENAME}" MATCHES "^[a-zA-Z0-9_-]+-[0-9]+\\.[0-9]+\\.[0-9]+.*\\.whl$")
-                                message(FATAL_ERROR "Wheel filename '${REAL_FILENAME}' does not match pip format. Expected: package-version-python-tag-platform.whl")
-                            endif()
-                        else()
-                            message(FATAL_ERROR "Could not extract wheel filename from URL: ${PACKAGE_URL}")
-                        endif()
-                        
-                        # Rename to final filename
-                        set(FINAL_WHEEL_PATH "${CMAKE_BINARY_DIR}/${REAL_FILENAME}")
-                        file(RENAME "${TEMP_WHEEL_PATH}" "${FINAL_WHEEL_PATH}")
-                        
-                        message(STATUS "Using filename: ${REAL_FILENAME}")
-                        
-                        # Install wheel file to wheels directory
-                        INSTALL(FILES ${FINAL_WHEEL_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wheels/)
-                        message(STATUS "Successfully downloaded and installed ${PACKAGE_NAME} as ${REAL_FILENAME}")
-                        set(${SUCCESS_VAR} TRUE PARENT_SCOPE)
-                    else()
-                        message(WARNING "Downloaded file is not a valid wheel file (doesn't start with PK)")
-                        file(REMOVE "${TEMP_WHEEL_PATH}")
-                        set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
-                    endif()
-                else()
-                    message(WARNING "Failed to download ${PACKAGE_NAME}")
-                    set(${SUCCESS_VAR} FALSE PARENT_SCOPE)
-                endif()
-            endfunction()
-            
-            # Try to download wheel packages
-            message(STATUS "[WHEEL] Attempting to download Python wheel packages...")
-            
-            # Download pycfhelpers wheel file/
-            download_wheel_package("pycfhelpers" "https://pub.cellframe.net/python/python-cellframe/pycfhelpers/master/pycfhelpers-1.0.3-py3-none-any.whl" PYCFHELPERS_SUCCESS)
-            
-            # Download pycftools wheel file
-            download_wheel_package("pycftools" "https://pub.cellframe.net/python/python-cellframe/pycftools/master/pycftools-1.0.0-py3-none-any.whl" PYCFTOOLS_SUCCESS)
-            
-            # Check if both packages downloaded successfully
-            if(PYCFHELPERS_SUCCESS AND PYCFTOOLS_SUCCESS)
-                message(STATUS "[WHEEL] All wheel packages downloaded successfully")
-            else()
-                message(FATAL_ERROR "[WHEEL] Failed to download required wheel packages. Build cannot continue.")
-            endif()
-            
-            INSTALL(DIRECTORY python-cellframe/dists/interfaces DESTINATION ${CMAKE_INSTALL_PREFIX}/python/lib/ USE_SOURCE_PERMISSIONS)
-
-        endif()
-    endif()
-
-
+endif()
+if(CELLFRAME_NODE_EMBEDDED)
+    set(CPACK_OUTPUT_CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/CPackConfig.cmake")
+    set(CPACK_DEB_COMPONENT_INSTALL ON)
+    set(CPACK_COMPONENTS_ALL Unspecified)
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+    set(CPACK_DEBIAN_UNSPECIFIED_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}.deb")
 endif()
 INCLUDE(CPack)
-
 

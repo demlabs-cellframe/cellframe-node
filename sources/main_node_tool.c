@@ -31,6 +31,8 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_cert.h"
+#include "dap_hash.h"
+#include "dap_hash_sha3.h"
 #include "dap_stream.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
@@ -603,13 +605,13 @@ static int s_cert_pkey_show(int argc, const char **argv)
         exit(-134);
     }
 
-    dap_hash_fast_t l_hash;
-    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t *)&l_hash, sizeof(dap_hash_fast_t))) {
+    dap_hash_sha3_256_t l_hash;
+    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, l_hash.raw, DAP_HASH_SHA3_256_SIZE)) {
         printf("Can't serialize cert %s", argv[4]);
         exit(-135);
     }
 
-    printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("%s\n", dap_hash_sha3_256_to_str_static(&l_hash));
     return 0;
 }
 static int s_cert_pkey_show_full(int argc, const char **argv)
@@ -653,8 +655,8 @@ static int s_cert_pkey_show_full(int argc, const char **argv)
     }
     
     // Get public key hash
-    dap_hash_fast_t l_hash;
-    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, (byte_t *)&l_hash, sizeof(dap_hash_fast_t))) {
+    dap_hash_sha3_256_t l_hash;
+    if (dap_cert_get_pkey_hash(l_cert, DAP_HASH_TYPE_SHA3_256, l_hash.raw, DAP_HASH_SHA3_256_SIZE)) {
         printf("Can't get public key hash from certificate '%s'\n", l_cert_name);
         exit(-135);
     }
@@ -675,7 +677,7 @@ static int s_cert_pkey_show_full(int argc, const char **argv)
     
     // Output results
     printf("Certificate: %s\n", l_cert_name);
-    printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("Hash: %s\n", dap_hash_sha3_256_to_str_static(&l_hash));
     printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
     
     // Cleanup
@@ -715,13 +717,13 @@ static int s_wallet_pkey_show(int argc, const char **argv)
         }
     }
 
-    dap_hash_fast_t l_hash;
+    dap_hash_sha3_256_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
         printf("Can't serialize wallet %s", argv[4]);
         dap_chain_wallet_close(l_wallet);
         exit(-135);
     }
-    printf("%s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("%s\n", dap_hash_sha3_256_to_str_static(&l_hash));
     dap_chain_wallet_close(l_wallet);
     return 0;
 }
@@ -758,14 +760,14 @@ static int s_wallet_pkey_show_full(int argc, const char **argv)
         exit(-134);
     }
 
-    dap_hash_fast_t l_hash;
+    dap_hash_sha3_256_t l_hash;
     if (dap_chain_wallet_get_pkey_hash(l_wallet, &l_hash)) {
         printf("Can't serialize wallet %s", l_wallet_name);
         exit(-135);
     }
     char *l_pkey_str = dap_chain_wallet_get_pkey_str(l_wallet, l_encode_type);
     printf("Wallet: %s\n", l_wallet_name);
-    printf("Hash: %s\n", dap_chain_hash_fast_to_str_static(&l_hash));
+    printf("Hash: %s\n", dap_hash_sha3_256_to_str_static(&l_hash));
     printf("Public key (%s): %s\n", l_encode_type, l_pkey_str);
     DAP_DELETE(l_pkey_str);
     return 0;
@@ -859,10 +861,10 @@ static void s_fill_hash_key_for_data(dap_enc_key_t *l_key, void *l_data)
             DAP_DELETE(l_sign_ser);
             dap_enc_key_signature_delete(l_key->type, l_sign_unserialized);
             DAP_DELETE(l_pub_key);
-            dap_chain_hash_fast_t fast_hash;
-            dap_hash_fast(l_ret->pkey_n_sign, l_ret->header.sign_pkey_size, &fast_hash);
+            dap_hash_sha3_256_t fast_hash;
+            dap_hash_sha3_256(l_ret->pkey_n_sign, l_ret->header.sign_pkey_size, &fast_hash);
             uint8_t *s = (uint8_t *) l_data;
-            for (int i = 0; i < DAP_CHAIN_HASH_FAST_SIZE; i++) {
+            for (int i = 0; i < DAP_HASH_SHA3_256_SIZE; i++) {
                 s[i] = fast_hash.raw[i];
             }
             DAP_DEL_Z(l_ret);
