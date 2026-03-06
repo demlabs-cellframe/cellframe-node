@@ -312,7 +312,7 @@ info "════════════════════════�
 echo ""
 
 # Start stage environment
-pushd "$SCRIPT_DIR/stage-env" > /dev/null
+pushd "$SCRIPT_DIR/../tools/stage-env" > /dev/null
 STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
 
 # Build start arguments
