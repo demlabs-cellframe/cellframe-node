@@ -38,14 +38,14 @@ test:
   
   # Step 2: Emit to wallet1
   - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}} -certs test_cert
-    save: emission_tx
+    save_hash: emission_tx
   
   # Wait for emission to propagate
   - wait_for_datum: "{{emission_tx}}"
   
   # Step 3: Transfer from wallet1 to wallet2
   - cli: tx_create -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
-    save: transfer_tx
+    save_hash: transfer_tx
   
   # Wait for transfer to propagate
   - wait_for_datum: "{{transfer_tx}}"

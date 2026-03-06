@@ -327,6 +327,8 @@ if $KEEP_RUNNING; then
     START_ARGS="$START_ARGS --keep-running"
 fi
 
+# Log path from tests/stage-env.cfg: log_dir = ../../build/stage-env/logs (resolved from tools/stage-env)
+info "Stage-env log: $PROJECT_ROOT/build/stage-env/logs"
 info "Starting stage environment..."
 ./stage-env --config="$STAGE_ENV_CONFIG_ABS" start $START_ARGS || E2E_EXIT=$?
 popd > /dev/null
@@ -399,6 +401,28 @@ else
     error "Failed to start stage environment"
     FUNCTIONAL_EXIT=$E2E_EXIT
     REGRESSION_EXIT=$E2E_EXIT
+
+    # stage-env writes logs to path from config (tests/stage-env.cfg: log_dir = ../../build/stage-env/logs)
+    LOG_TAIL_LINES=80
+    for LOG_BASE in "$PROJECT_ROOT/build/stage-env/logs" "$PROJECT_ROOT/cache/logs" "$STAGE_ENV_REAL_DIR/logs"; do
+        if [ -d "$LOG_BASE" ]; then
+            LATEST_LOG=$(find "$LOG_BASE" -maxdepth 1 -name "stage-env_*.log" -type f 2>/dev/null | sort -r | head -n 1)
+            if [ -n "$LATEST_LOG" ] && [ -f "$LATEST_LOG" ]; then
+                echo ""
+                echo "════════════════════════════════════"
+                echo " Last $LOG_TAIL_LINES lines of stage-env log (failure context)"
+                echo " $LATEST_LOG"
+                echo "════════════════════════════════════"
+                tail -n "$LOG_TAIL_LINES" "$LATEST_LOG" 2>/dev/null | sed 's/^/  /'
+                echo "════════════════════════════════════"
+                break
+            fi
+        fi
+    done
+    # If no log found, hint where config says logs go
+    if [ ! -d "$PROJECT_ROOT/build/stage-env/logs" ] || [ -z "$(find "$PROJECT_ROOT/build/stage-env/logs" -maxdepth 1 -name "stage-env_*.log" 2>/dev/null)" ]; then
+        info "Log directory (from tests/stage-env.cfg [logging] log_dir): $PROJECT_ROOT/build/stage-env/logs"
+    fi
 fi
 
 # Summary

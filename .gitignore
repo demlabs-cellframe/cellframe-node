@@ -84,3 +84,4 @@ cmake-build-*
 .clangd
 slc
 tools/build/
+cache/
