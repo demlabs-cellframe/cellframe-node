@@ -131,11 +131,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Canonical stage-env directory (always real path, never symlink)
+STAGE_ENV_REAL_DIR="$SCRIPT_DIR/../tools/stage-env"
+
 # Handle --stop first
 if [ "$STOP_ENV" = true ]; then
     info "Stopping stage environment..."
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
         popd > /dev/null
@@ -151,7 +154,7 @@ fi
 if [ "$PKGS_UPDATE" = true ]; then
     info "Updating packages in running containers..."
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" pkgs-update || exit $?
         popd > /dev/null
@@ -275,7 +278,7 @@ if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" clean --all || true
         popd > /dev/null
@@ -312,7 +315,7 @@ info "════════════════════════�
 echo ""
 
 # Start stage environment
-pushd "$SCRIPT_DIR/../tools/stage-env" > /dev/null
+pushd "$STAGE_ENV_REAL_DIR" > /dev/null
 STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
 
 # Build start arguments
@@ -341,8 +344,7 @@ if [ $E2E_EXIT -eq 0 ]; then
             else
                 abs_path="$PROJECT_ROOT/$test_path"
             fi
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_from_stage_env=$(realpath --relative-to="$stage_env_dir" "$abs_path" 2>/dev/null || echo "$abs_path")
+            rel_from_stage_env=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$abs_path" 2>/dev/null || echo "$abs_path")
             if [ -e "$abs_path" ]; then
                 TEST_DIRS+=("$rel_from_stage_env")
             else
@@ -351,20 +353,17 @@ if [ $E2E_EXIT -eq 0 ]; then
         done
     else
         if $RUN_E2E && [ -d "$E2E_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$E2E_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$E2E_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
         
         if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$FUNCTIONAL_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$FUNCTIONAL_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
         
         if $RUN_REGRESSION && [ -d "$REGRESSION_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$REGRESSION_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$REGRESSION_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
     fi
@@ -373,7 +372,7 @@ if [ $E2E_EXIT -eq 0 ]; then
     if [ ${#TEST_DIRS[@]} -gt 0 ]; then
         info "Running ${#TEST_DIRS[@]} test suite(s)..."
         
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
         popd > /dev/null
         
@@ -391,7 +390,7 @@ if [ $E2E_EXIT -eq 0 ]; then
         warning "Keeping stage environment running (--keep-running)"
     else
         info "Stopping stage environment..."
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
         popd > /dev/null
         success "Stage environment stopped"
