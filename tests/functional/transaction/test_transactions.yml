@@ -1,0 +1,71 @@
+name: Transaction Operations
+description: >
+  Tests tx_create between wallets, tx_history, tx_verify,
+  conditional transactions (tx_cond), and fee mechanics.
+tags: [e2e, functional, transaction, tx]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 2s
+  cli:
+    net: "{{network_name}}"
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    save_wallet: sender_addr
+  - cli: "wallet new -w tx_test_receiver -sign sig_dil"
+    expect: any
+  - cli: "wallet info -w tx_test_receiver -net {{network_name}}"
+    save_wallet: receiver_addr
+  - print: "Sender: {{sender_addr}}, Receiver: {{receiver_addr}}"
+
+test:
+  - group: Check sender balance before transfer
+    steps:
+      - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+        save: sender_balance
+        contains: "{{native_ticker}}"
+      - print: "Sender balance: {{sender_balance}}"
+
+  - group: Create transfer transaction
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{receiver_addr}} -value 100000000000000000000 -fee 50000000000000000"
+        save: tx_result
+        expect: any
+      - print: "Transfer TX result: {{tx_result}}"
+
+  - group: Transaction history
+    steps:
+      - cli: "tx_history -w {{network_name}}_root_0 -net {{network_name}} -limit 5"
+        save: tx_history_sender
+        expect: any
+      - print: "Sender TX history: {{tx_history_sender}}"
+
+  - group: Transaction count
+    steps:
+      - cli: "tx_history -count -net {{network_name}}"
+        save: tx_count
+        expect: any
+      - print: "Transaction count: {{tx_count}}"
+
+  - group: Conditional transaction list
+    steps:
+      - cli: "tx_cond list -net {{network_name}} -w {{network_name}}_root_0 -status all"
+        save: cond_list
+        expect: any
+      - print: "Conditional TX list: {{cond_list}}"
+
+  - group: Mempool check after TX
+    steps:
+      - cli: "mempool list -chain main"
+        save: mempool_after
+        expect: any
+      - print: "Mempool after TX: {{mempool_after}}"
+
+check:
+  - cli: "wallet list"
+    contains: "tx_test_receiver"

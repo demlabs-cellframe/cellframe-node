@@ -1,0 +1,119 @@
+name: Network Management
+description: >
+  Tests net list, net get status/fee/id, net sync, net links,
+  node list, node connections, node dump, and CA operations.
+tags: [e2e, functional, network, net, node]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+test:
+  - group: Network listing
+    steps:
+      - cli: "net list"
+        save: net_list
+        contains: "{{network_name}}"
+      - print: "Networks: {{net_list}}"
+
+      - cli: "net list chains -net {{network_name}}"
+        save: chain_list
+        contains: "zerochain"
+      - print: "Chains: {{chain_list}}"
+
+  - group: Network status on all node types
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            save: _status
+            contains: "NET_STATE"
+          - print: "{{_node}} status: {{_status}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            save: _status
+            contains: "NET_STATE"
+          - print: "{{_node}} status: {{_status}}"
+
+  - group: Network ID and fee
+    steps:
+      - cli: "net -net {{network_name}} get id"
+        save: net_id
+        expect: any
+      - print: "Network ID: {{net_id}}"
+
+      - cli: "net -net {{network_name}} get fee"
+        save: net_fee
+        expect: any
+      - print: "Network fee: {{net_fee}}"
+
+  - group: Node dump and list
+    steps:
+      - cli: "node dump"
+        save: node_dump
+        expect: any
+      - print: "Node dump: {{node_dump}}"
+
+      - cli: "node list -net {{network_name}}"
+        save: node_list
+        expect: any
+      - print: "Node list: {{node_list}}"
+
+  - group: Node connections
+    steps:
+      - cli: "node connections -net {{network_name}}"
+        save: node_connections
+        expect: any
+      - print: "Connections: {{node_connections}}"
+
+  - group: Network link management
+    steps:
+      - cli: "net -net {{network_name}} link list"
+        save: link_list
+        expect: any
+      - print: "Links: {{link_list}}"
+
+  - group: Network sync operations
+    steps:
+      - cli: "net -net {{network_name}} sync gdb"
+        expect: any
+      - cli: "net -net {{network_name}} sync chains"
+        expect: any
+
+  - group: PoA certificates listing
+    steps:
+      - cli: "net -net {{network_name}} poa_certs list"
+        save: poa_certs
+        expect: any
+      - print: "PoA certs: {{poa_certs}}"
+
+  - group: CA operations
+    steps:
+      - cli: "net -net {{network_name}} ca list"
+        save: ca_list
+        expect: any
+      - print: "CA list: {{ca_list}}"
+
+  - group: Transaction statistics
+    steps:
+      - cli: "net -net {{network_name}} stats tx"
+        save: tx_stats
+        expect: any
+      - print: "TX stats: {{tx_stats}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"
+  - cli: "net list"
+    contains: "{{network_name}}"

@@ -32,7 +32,7 @@ int callSec (char *tool, char* args[]) {
 }
 
 
-int callSecScript(char *script)
+int callSecScript(const char *script)
 {
     NSDictionary *error = [NSDictionary new];
     NSString *appleScriptString = @"do shell script ";
