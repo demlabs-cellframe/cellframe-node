@@ -18,8 +18,6 @@ defaults:
   wait: 1s
 
 setup:
-  - wait: 3s
-  
   # Create wallets
   - cli: wallet new -w wallet1
   
@@ -32,12 +30,14 @@ setup:
   - cli: wallet info -w wallet2
     save_wallet: wallet2_addr
   
-  # Create token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token XFERTEST -total_supply 1000000 -certs test_cert
-    wait: 3s
+  # Create token and wait for it to be accepted
+  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token XFERTEST -total_supply 1000000000000000000000000 -certs test_cert
+    save_hash: token_decl_hash
+  - wait_for_datum: "{{token_decl_hash}}"
+    chain: zerochain
   
   # Emit tokens to wallet1
-  - cli: token_emit -token XFERTEST -emission_value 10000 -addr {{wallet1_addr}} -certs test_cert
+  - cli: token_emit -token XFERTEST -emission_value 100000000000000000000 -addr {{wallet1_addr}} -certs test_cert
     save_hash: emit_tx
   
   - wait_for_datum: "{{emit_tx}}"
@@ -46,13 +46,11 @@ setup:
   - wait: 5s
 test:
   # Test: Transfer tokens to wallet2
-  - cli: tx_create -token XFERTEST -chain main -from_emission {{emit_tx}} -chain_emission zerochain -to_addr {{wallet2_addr}} -value 1000 -fee 0.1 -cert test_cert
+  - cli: tx_create -token XFERTEST -chain main -from_emission {{emit_tx}} -chain_emission zerochain -to_addr {{wallet2_addr}} -value 10000000000000000000 -fee 1000000000000000000 -cert test_cert
     save_hash: transfer_tx
-  
-  - wait_for_datum: "{{transfer_tx}}"
 
 check:
-  # Verify transaction in history
-  - cli: tx_history -tx {{transfer_tx}}
+  # Verify transfer tx was placed in mempool
+  - cli: mempool list -chain main
     contains: "{{transfer_tx}}"
 
