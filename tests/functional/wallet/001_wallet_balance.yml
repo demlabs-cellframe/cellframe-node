@@ -10,13 +10,15 @@ setup:
   # Create token declaration
   - cli: token_decl -token BALTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
     save_hash: token_decl_hash
-  # waiting for its passing on chain       
+  # waiting for its passing on chain (token datums on zerochain)
   - wait_for_datum: "{{token_decl_hash}}"
+    chain: zerochain
 
   # Do the emission and wait for finalization 
-  - cli: token_emit -token BALTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+  - cli: token_emit -token BALTEST -emission_value 5000 -addr {{wallet_addr}} -certs test_cert
     save_hash: token_emit_hash
   - wait_for_datum: "{{token_emit_hash}}"
+    chain: zerochain
 
 test:
   # Test: Check wallet balance
