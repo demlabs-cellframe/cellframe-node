@@ -12,15 +12,13 @@ CAbstractScriptCommand::Registrar<CNetworkListCommand> net_list_registrar("net_l
 CNetworkListCommand::CNetworkListCommand(std::vector <std::string> cmd_tokens)
     : CAbstractScriptCommand(cmd_tokens)
 {   
-    if (cmd_tokens.size() >= 2)
-        if(cmd_tokens[1] == "on")
-        {
+    if (cmd_tokens.size() >= 2) {
+        if(cmd_tokens[1] == "on") {
             m_state = ON;
-        }
-        else if(cmd_tokens[1] == "off")
-        {
+        } else if(cmd_tokens[1] == "off") {
             m_state = OFF;
         }
+    }
 }
 
 
