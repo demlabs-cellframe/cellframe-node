@@ -258,7 +258,7 @@ int main( int argc, const char **argv )
     if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
         size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
-        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+        log_it(L_NOTICE, "Log rotation every %zu min enabled, max log file size %zu MB",
                          l_timeout_minutes, l_max_file_size);
         dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
     }
