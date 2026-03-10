@@ -1,7 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(cellframe-node C)
-include(cellframe-sdk/cmake/ReadMKFile.cmake)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CELLFRAME_NODE_STANDALONE ON)
+else()
+    set(CELLFRAME_NODE_STANDALONE OFF)
+endif()
+
+if(NOT COMMAND ReadVariables)
+    include(cellframe-sdk/cmake/ReadMKFile.cmake)
+endif()
 include(FetchContent)
 
 set(CMAKE_ENABLE_EXPORTS ON)
@@ -10,8 +19,8 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_C_STANDARD 11)
         
 # Predefine project
-SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 ReadVariables(version.mk)
+SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
 SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
 SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
@@ -65,9 +74,11 @@ else()
 endif()
 
 
-SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
-SET(DESTDIR "/opt/${PROJECT_NAME}")
+if(CELLFRAME_NODE_STANDALONE)
+    SET(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(CPACK_INSTALL_PREFIX "/opt/${PROJECT_NAME}")
+    SET(DESTDIR "/opt/${PROJECT_NAME}")
+endif()
 
 string(TIMESTAMP BUILD_TIMESTAMP "%d.%m.%Y")
 
@@ -105,7 +116,9 @@ if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
 endif()
 
-include (dap-sdk/cmake/OS_Detection.cmake)
+if(CELLFRAME_NODE_STANDALONE)
+    include(dap-sdk/cmake/OS_Detection.cmake)
+endif()
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
 if (NOT ANDROID)
@@ -129,9 +142,11 @@ option(ADD_UPDATER OFF)
 
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-if(LINUX OR WIN32 OR DARWIN)
-    set(BUILD_WITH_PYTHON_ENV ON)
-    set(SUPPORT_PYTHON_PLUGINS ON)
+if(CELLFRAME_NODE_STANDALONE)
+    if(LINUX OR WIN32 OR DARWIN)
+        set(BUILD_WITH_PYTHON_ENV ON)
+        set(SUPPORT_PYTHON_PLUGINS ON)
+    endif()
 endif()
 
 
@@ -158,8 +173,12 @@ endif()
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
 
-add_subdirectory(dap-sdk)
-add_subdirectory(cellframe-sdk)
+if(NOT TARGET dap_core)
+    add_subdirectory(dap-sdk)
+endif()
+if(NOT TARGET cellframe-sdk)
+    add_subdirectory(cellframe-sdk)
+endif()
 if(UNIX)
     if(DARWIN)
         SET(CMAKE_INSTALL_PREFIX "/Applications/CellframeNode.app")
@@ -205,10 +224,6 @@ if(UNIX)
     else()
         set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
-
-    #if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-    #    SET( BUILD_WITH_PYTHON_ENV OFF )
-    #endif()
 
     if(NOT CPACK_SYSTEM_NAME)
         set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
@@ -262,10 +277,14 @@ if(UNIX)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
+    SET( CPACK_DEBIAN_FILE_NAME
+        "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}.deb")
+
     message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
 
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/config;")
+    "${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postrm;")
+
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)
@@ -890,4 +909,21 @@ else()
 
 
 endif()
-INCLUDE(CPack)
+
+if(NOT CELLFRAME_NODE_STANDALONE)
+    foreach(_v
+            CPACK_PACKAGE_NAME CPACK_PACKAGE_VERSION
+            CPACK_PACKAGE_VERSION_MAJOR CPACK_PACKAGE_VERSION_MINOR CPACK_PACKAGE_VERSION_PATCH
+            CPACK_GENERATOR CPACK_SYSTEM_NAME
+            CPACK_DEBIAN_PACKAGE_ARCHITECTURE CPACK_DEBIAN_PACKAGE_MAINTAINER
+            CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY CPACK_DEBIAN_PACKAGE_DESCRIPTION
+            CPACK_DEBIAN_PACKAGE_SECTION CPACK_DEBIAN_PACKAGE_DEPENDS
+            CPACK_DEBIAN_PACKAGE_SHLIBDEPS CPACK_DEBIAN_FILE_NAME
+            CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA)
+        if(DEFINED ${_v})
+            set(${_v} "${${_v}}" PARENT_SCOPE)
+        endif()
+    endforeach()
+else()
+    INCLUDE(CPack)
+endif()
