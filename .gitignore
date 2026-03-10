@@ -83,3 +83,5 @@ cmake-build-*
 .cursorrules
 .clangd
 slc
+tools/build/
+cache/

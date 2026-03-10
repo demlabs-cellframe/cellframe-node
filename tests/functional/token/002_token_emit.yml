@@ -25,8 +25,8 @@ setup:
 
 test:
   # Emit tokens (inherits node and wait from global defaults)
-  - cli: token_emit -token EMITTEST -value 10000 -addr {{wallet_addr}} -certs test_cert
-    save: emit_tx
+  - cli: token_emit -token EMITTEST -emission_value 10000 -addr {{wallet_addr}} -certs test_cert
+    save_hash: emit_tx
     description: "Emit tokens to wallet"
 
 check:

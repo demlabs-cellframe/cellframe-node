@@ -891,10 +891,8 @@ static void s_help()
     printf(" * Create a new key wallet and generate signatures with the same names plus index. The wallet will be password protected. \n" );
     printf("\t%s wallet create_wp <wallet name> <password> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
-#if 0
     printf(" * Create new key wallet from existent certificates in the system\n");
     printf("\t%s wallet create_from <network name> <wallet name> <wallet ca1> [<wallet ca2> [...<wallet caN>]]\n\n", l_tool_appname);
-#endif
 
     printf(" * Print hash of public key for wallet <wallet name>\n");
     printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);

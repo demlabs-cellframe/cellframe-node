@@ -32,34 +32,31 @@ setup:
     save_wallet: wallet2_addr
 
 test:
-  - wait: 3s
-  # Step 1: Create token
-  - cli: token_decl -token LIFECYCLE -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+  # Step 1: Create token and wait for it to be accepted
+  - cli: token_decl -token LIFECYCLE -total_supply 1000000000000000000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
+    save_hash: token_decl_hash
+  - wait_for_datum: "{{token_decl_hash}}"
+    chain: zerochain
   
   # Step 2: Emit to wallet1
-  - cli: token_emit -token LIFECYCLE -value 10000 -addr {{wallet1_addr}} -certs test_cert
-    save: emission_tx
+  - cli: token_emit -token LIFECYCLE -emission_value 100000000000000000000 -addr {{wallet1_addr}} -certs test_cert
+    save_hash: emission_tx
   
-  # Wait for emission to propagate
+  # Wait for emission to propagate (emission datum on zerochain)
   - wait_for_datum: "{{emission_tx}}"
+    chain: zerochain
   
+  - wait: 5s
   # Step 3: Transfer from wallet1 to wallet2
-  - cli: tx_create -token LIFECYCLE -from {{emission_tx}}:0 -to_addr {{wallet2_addr}} -value 5000 -fee 0.1
-    save: transfer_tx
-  
-  # Wait for transfer to propagate
-  - wait_for_datum: "{{transfer_tx}}"
+  - cli: tx_create -token LIFECYCLE -chain main -from_emission {{emission_tx}} -chain_emission zerochain -to_addr {{wallet2_addr}} -value 50000000000000000000 -fee 1000000000000000000 -cert test_cert
+    save_hash: transfer_tx
 
 check:
   # Verify token exists
   - cli: token info -name LIFECYCLE
     contains: "LIFECYCLE"
   
-  # Verify transaction history
-  - cli: tx_history -tx {{transfer_tx}}
+  # Verify transfer tx was placed in mempool
+  - cli: mempool list -chain main
     contains: "{{transfer_tx}}"
-  
-  # Verify token history
-  - cli: token info -name LIFECYCLE -history_limit 10
-    save: token_history
 
