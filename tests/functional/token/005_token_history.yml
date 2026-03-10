@@ -16,20 +16,16 @@ defaults:
     node: node1
 
 setup:
-  # Create test wallet and get its address
-  - cli: wallet new -w test_wallet
-  
-  - cli: wallet info -w test_wallet
-    save_wallet: wallet_addr
+  # wallet_addr from include common/wallets/create_wallet.yml (wallet new + wallet info)
 
   # Create and emit token
   - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
   
-  - cli: token_emit -token HISTTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+  - cli: token_emit -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs test_cert
     save_hash: emit_tx
   
   # Create a transaction
-  - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -value 1000 -fee 0.1
+  - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -chain_emission zerochain -value 1000 -fee 0.1 -cert test_cert
     save_hash: tx_hash
 
 test:

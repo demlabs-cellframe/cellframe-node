@@ -21,7 +21,7 @@ setup:
   # Create token
   - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token UPDTEST -total_supply 1000000 -certs test_cert
   # Emit tokens
-  - cli: token_emit -token UPDTEST -value 5000 -addr {{wallet_addr}} -certs test_cert
+  - cli: token_emit -token UPDTEST -emission_value 5000 -addr {{wallet_addr}} -certs test_cert
 
 test:
   # Test: Get token info

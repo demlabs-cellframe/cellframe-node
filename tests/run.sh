@@ -396,6 +396,11 @@ if [ $E2E_EXIT -eq 0 ]; then
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
         popd > /dev/null
         success "Stage environment stopped"
+        # Print scenario summary at the very end (written by stage-env run-tests)
+        if [ -f "$PROJECT_ROOT/build/stage-env/logs/last_final_summary.txt" ]; then
+            echo ""
+            cat "$PROJECT_ROOT/build/stage-env/logs/last_final_summary.txt"
+        fi
     fi
 else
     error "Failed to start stage environment"
@@ -404,6 +409,7 @@ else
 
     # stage-env writes logs to path from config (tests/stage-env.cfg: log_dir = ../../build/stage-env/logs)
     LOG_TAIL_LINES=80
+    LOG_FOUND=
     for LOG_BASE in "$PROJECT_ROOT/build/stage-env/logs" "$PROJECT_ROOT/cache/logs" "$STAGE_ENV_REAL_DIR/logs"; do
         if [ -d "$LOG_BASE" ]; then
             LATEST_LOG=$(find "$LOG_BASE" -maxdepth 1 -name "stage-env_*.log" -type f 2>/dev/null | sort -r | head -n 1)
@@ -415,12 +421,12 @@ else
                 echo "════════════════════════════════════"
                 tail -n "$LOG_TAIL_LINES" "$LATEST_LOG" 2>/dev/null | sed 's/^/  /'
                 echo "════════════════════════════════════"
+                LOG_FOUND=1
                 break
             fi
         fi
     done
-    # If no log found, hint where config says logs go
-    if [ ! -d "$PROJECT_ROOT/build/stage-env/logs" ] || [ -z "$(find "$PROJECT_ROOT/build/stage-env/logs" -maxdepth 1 -name "stage-env_*.log" 2>/dev/null)" ]; then
+    if [ -z "$LOG_FOUND" ]; then
         info "Log directory (from tests/stage-env.cfg [logging] log_dir): $PROJECT_ROOT/build/stage-env/logs"
     fi
 fi

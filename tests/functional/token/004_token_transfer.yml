@@ -37,14 +37,16 @@ setup:
     wait: 3s
   
   # Emit tokens to wallet1
-  - cli: token_emit -token XFERTEST -value 10000 -addr {{wallet1_addr}} -certs test_cert
+  - cli: token_emit -token XFERTEST -emission_value 10000 -addr {{wallet1_addr}} -certs test_cert
     save_hash: emit_tx
   
   - wait_for_datum: "{{emit_tx}}"
+    chain: zerochain
 
+  - wait: 5s
 test:
   # Test: Transfer tokens to wallet2
-  - cli: tx_create -token XFERTEST -from {{emit_tx}}:0 -to_addr {{wallet2_addr}} -value 1000 -fee 0.1
+  - cli: tx_create -token XFERTEST -chain main -from_emission {{emit_tx}} -chain_emission zerochain -to_addr {{wallet2_addr}} -value 1000 -fee 0.1 -cert test_cert
     save_hash: transfer_tx
   
   - wait_for_datum: "{{transfer_tx}}"
