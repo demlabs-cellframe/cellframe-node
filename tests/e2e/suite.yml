@@ -1,0 +1,21 @@
+suite: Cellframe Node E2E Tests
+description: >
+  End-to-end tests requiring a full multi-node cluster.
+  Voting (poll), edge cases, concurrent operations,
+  recovery and failover scenarios.
+
+network:
+  topology: default
+
+variables:
+  first_root: "node-1"
+  first_master: "node-4"
+
+scenarios:
+  # Voting
+  - voting/test_poll_lifecycle.yml
+  - voting/test_poll_edge_cases.yml
+  # Edge cases (potentially destructive, run last)
+  - edge_cases/test_invalid_inputs.yml
+  - edge_cases/test_concurrent_operations.yml
+  - edge_cases/test_recovery_scenarios.yml
