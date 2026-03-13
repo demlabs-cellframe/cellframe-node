@@ -353,6 +353,31 @@ int main( int argc, const char **argv )
         return -60;
     }
 
+    bool l_plugins_enabled = dap_config_get_item_bool_default(g_config, "plugins", "enabled", false);
+    if (l_plugins_enabled) {
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
+        int rc_plugin_init = 0;
+        rc_plugin_init = dap_plugin_init(l_plugins_path_override
+            ? l_plugins_path_override
+            : dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default));
+        if (rc_plugin_init) {
+            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);
+            l_plugins_enabled = false;
+        } else {
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            log_it(L_NOTICE, "Registering python plugin type");
+            rc_plugin_init = dap_chain_plugins_init(g_config);
+#endif
+            dap_plugin_load_all();
+            dap_plugin_preinit_all();
+        }
+        DAP_DELETE(l_plugins_path_default);
+    }
+
     if (dap_chain_net_srv_stake_pos_delegate_init()) {
         log_it(L_ERROR, "Can't start delegated PoS stake service");
     }
@@ -455,31 +480,6 @@ int main( int argc, const char **argv )
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
-    }
-
-    bool l_plugins_enabled = dap_config_get_item_bool_default(g_config, "plugins", "enabled", false);
-    if (l_plugins_enabled) {
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
-        int rc_plugin_init = 0;
-        rc_plugin_init = dap_plugin_init(l_plugins_path_override
-            ? l_plugins_path_override
-            : dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default));
-        if (rc_plugin_init) {
-            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);
-            l_plugins_enabled = false;
-        } else {
-#ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            log_it(L_NOTICE, "Registering python plugin type");
-            rc_plugin_init = dap_chain_plugins_init(g_config);
-#endif
-            dap_plugin_load_all();
-            dap_plugin_preinit_all();
-        }
-        DAP_DELETE(l_plugins_path_default);
     }
 
     dap_chain_net_load_all();
