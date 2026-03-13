@@ -353,6 +353,25 @@ int main( int argc, const char **argv )
         return -60;
     }
 
+    if (dap_chain_net_srv_stake_pos_delegate_init()) {
+        log_it(L_ERROR, "Can't start delegated PoS stake service");
+    }
+
+    if( dap_chain_cs_dag_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
+        return -62;
+    }
+
+    if( dap_chain_cs_dag_poa_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
+        return -63;
+    }
+
+    if( dap_chain_cs_blocks_init() ) {
+        log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
+        return -62;
+    }
+
     bool l_plugins_enabled = dap_config_get_item_bool_default(g_config, "plugins", "enabled", false);
     if (l_plugins_enabled) {
 #ifdef DAP_OS_WINDOWS
@@ -376,25 +395,6 @@ int main( int argc, const char **argv )
             dap_plugin_preinit_all();
         }
         DAP_DELETE(l_plugins_path_default);
-    }
-
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
-
-    if( dap_chain_cs_dag_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
-        return -62;
-    }
-
-    if( dap_chain_cs_dag_poa_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
-        return -63;
-    }
-
-    if( dap_chain_cs_blocks_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
-        return -62;
     }
 
     if( dap_chain_cs_esbocs_init() ){
