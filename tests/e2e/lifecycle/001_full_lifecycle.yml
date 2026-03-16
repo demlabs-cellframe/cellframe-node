@@ -1,0 +1,91 @@
+name: Full blockchain lifecycle
+description: |
+  End-to-end test covering the complete lifecycle:
+  network online → wallet creation → token declaration → emission →
+  transfer → ledger state verification
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+variables:
+  token_name: E2E_LIFECYCLE
+  total_supply: "1000000"
+  emission_value: "50000"
+  transfer_value: "1000"
+
+test:
+  - group: Verify network is operational
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+      - cli: "net get links"
+        expect: success
+
+  - group: Create wallets
+    steps:
+      - cli: "wallet new -w e2e_alice -sign_type sig_dil"
+        expect: success
+        save_wallet: alice_addr
+
+      - cli: "wallet new -w e2e_bob -sign_type sig_dil"
+        expect: success
+        save_wallet: bob_addr
+
+  - group: Declare token
+    steps:
+      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_hash
+
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token info -name {{token_name}}"
+        expect: success
+        contains: "{{token_name}}"
+
+  - group: Emit tokens to Alice
+    steps:
+      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - wait: 10s
+
+      - cli: "wallet info -w e2e_alice -net {{network_name}}"
+        expect: success
+        contains: "{{token_name}}"
+
+  - group: Transfer from Alice to Bob
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{token_name}} -value {{transfer_value}} -from_wallet e2e_alice -addr {{bob_addr}}"
+        expect: success
+        save_hash: tx_hash
+
+      - wait_for_datum: "{{tx_hash}}"
+        chain: main
+        timeout: 120
+
+      - wait: 10s
+
+  - group: Verify final ledger state
+    steps:
+      - cli: "wallet info -w e2e_bob -net {{network_name}}"
+        expect: success
+        contains: "{{token_name}}"
+
+      - cli: "wallet info -w e2e_alice -net {{network_name}}"
+        expect: success
+        contains: "{{token_name}}"
+
+      - cli: "ledger list coins -net {{network_name}} -token {{token_name}}"
+        expect: success

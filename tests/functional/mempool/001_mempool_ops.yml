@@ -1,0 +1,32 @@
+name: Mempool operations
+description: Add datum to mempool, list and verify processing
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+test:
+  - group: Verify mempool list
+    steps:
+      - cli: "mempool list -net {{network_name}} -chain zerochain"
+        expect: success
+
+  - group: Add token declaration to mempool and track
+    steps:
+      - cli: "token_decl -token FTMEM01 -total_supply 500000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: mempool_hash
+
+      - cli: "mempool list -net {{network_name}} -chain zerochain"
+        expect: success
+
+      - wait_for_datum: "{{mempool_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Verify datum processed
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "FTMEM01"

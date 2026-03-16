@@ -783,8 +783,8 @@ static int s_cert_get_addr(int argc, const char **argv) {
         printf("Not found cert %s\n", argv[4]);
         exit(-134);
     }
-    dap_stream_node_addr_t l_addr = dap_stream_node_addr_from_cert(l_cert);
-    printf("%s\n", dap_stream_node_addr_to_str_static(l_addr));
+    dap_cluster_node_addr_t l_addr = dap_cluster_node_addr_from_cert(l_cert);
+    printf("%s\n", dap_cluster_node_addr_to_str(l_addr));
     return 0;
 }
 

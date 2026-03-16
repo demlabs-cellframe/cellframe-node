@@ -1,36 +1,37 @@
-# Test: Token Emission
-# Verify token emission to wallet
-
-name: Token Emission Test
-description: Test emitting tokens to a wallet address
-tags: [e2e, token, emission]
+name: Token emission
+description: Emit tokens to a wallet and verify balance
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
-
-# Global defaults - all commands on node1 with 3s wait
-defaults:
-  node: node1
-  wait: 3s
-
-setup:
-  # Create token (inherits node and wait from global defaults)
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token EMITTEST -total_supply 1000000 -certs test_cert
-    description: "Declare EMITTEST token"
+  - common/defaults.yml
+  - common/create_test_cert.yml
+  - common/create_wallet.yml
 
 test:
-  # Emit tokens (inherits node and wait from global defaults)
-  - cli: token_emit -token EMITTEST -emission_value 10000 -addr {{wallet_addr}} -certs test_cert
-    save_hash: emit_tx
-    description: "Emit tokens to wallet"
+  - group: Declare token for emission test
+    steps:
+      - cli: "token_decl -token FTEMIT01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
 
-check:
-  # Verify emission (inherits node from global defaults)
-  - cli: token info -name EMITTEST -history_limit 10
-    contains: "EMITTEST"
-    description: "Token history contains emission"
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Emit tokens
+    steps:
+      - cli: "token_emit -token FTEMIT01 -emission_value 5000 -addr {{wallet_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Verify balance
+    steps:
+      - wait: 5s
+
+      - cli: "wallet info -w test_wallet -net {{network_name}}"
+        expect: success
+        contains: "FTEMIT01"

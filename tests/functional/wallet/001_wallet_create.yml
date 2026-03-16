@@ -1,0 +1,33 @@
+name: Wallet creation and basic operations
+description: Create wallets, verify info, check address format
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+
+test:
+  - group: Create new wallet
+    steps:
+      - cli: "wallet new -w func_wallet_01 -sign_type sig_dil"
+        expect: success
+        save_wallet: w1_addr
+
+      - cli: "wallet info -w func_wallet_01"
+        expect: success
+        contains: "func_wallet_01"
+
+  - group: Create second wallet with different sign type
+    steps:
+      - cli: "wallet new -w func_wallet_02 -sign_type sig_ecdsa"
+        expect: success
+        save_wallet: w2_addr
+
+      - cli: "wallet info -w func_wallet_02"
+        expect: success
+        contains: "func_wallet_02"
+
+  - group: Verify wallet list
+    steps:
+      - cli: "wallet list"
+        expect: success
+        contains: "func_wallet_01"

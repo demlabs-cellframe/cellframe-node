@@ -102,6 +102,7 @@
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
+#include "dap_cluster.h"
 #include "dap_chain_net_srv_order.h"
 #include "dap_chain_net_srv_xchange.h"
 #include "dap_chain_net_srv_voting.h"
@@ -327,6 +328,11 @@ int main( int argc, const char **argv )
     if ( dap_stream_init(g_config) != 0 ) {
         log_it( L_CRITICAL, "Can't init stream server module" );
         return -82;
+    }
+
+    if ( dap_cluster_init() != 0 ) {
+        log_it( L_CRITICAL, "Can't init cluster module" );
+        return -820;
     }
 
     if ( dap_stream_ctl_init() != 0 ){

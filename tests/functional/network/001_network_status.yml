@@ -1,0 +1,25 @@
+name: Network status and connectivity
+description: Verify nodes are online and connected
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+
+test:
+  - group: Check root node status
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+  - group: Check node connections
+    steps:
+      - cli: "net get links"
+        expect: success
+
+  - group: Verify on multiple nodes
+    steps:
+      - cli: "net get status"
+        node: "{{second_root}}"
+        expect: success
+        contains: "NET_STATE_ONLINE"

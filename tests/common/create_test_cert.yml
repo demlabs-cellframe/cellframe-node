@@ -1,0 +1,4 @@
+setup:
+  - cli: "cert create -type sig_dil test_cert"
+    expect: success
+    wait: 2s
