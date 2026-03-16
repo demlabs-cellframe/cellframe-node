@@ -156,7 +156,8 @@ stage_env_tests:
       when: manual
       allow_failure: true
   variables:
-    GIT_STRATEGY: none
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: none
   dependencies:
     - amd64:linux.rwd.bld
   script:
