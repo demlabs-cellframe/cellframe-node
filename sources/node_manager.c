@@ -28,15 +28,17 @@
 #define LOG_TAG "node_manager"
 
 
+static bool s_debug_more = false;
+
 void channel_new(struct stream_ch* ch,void* arg)
 {
-    log_it(L_INFO,"Channel new");
+    debug_if(s_debug_more, L_INFO,"Channel new");
 }
 
 
 void channel_delete(struct stream_ch* ch,void* arg)
 {
-    log_it(L_INFO,"Channel delete");
+    debug_if(s_debug_more, L_INFO,"Channel delete");
 }
 
 void channel_packet_in(struct stream_ch* ch,void* arg)
@@ -57,11 +59,11 @@ void channel_packet_out(struct stream_ch* ch,void* arg)
 
 
 void client_new(dap_server_client_t *client,void * arg){
-    log_it(L_INFO,"Client connected");
+    debug_if(s_debug_more, L_INFO,"Client connected");
 }
 
 void client_read(dap_server_client_t *client,void * arg){
-    log_it(L_INFO,"Client read %u",client->buf_in_size);
+    debug_if(s_debug_more, L_INFO,"Client read %u",client->buf_in_size);
     unsigned char* data = (char*)malloc(client->buf_in_size);
     data[client->buf_in_size] = 0;
     if(client->_ready_to_read)
