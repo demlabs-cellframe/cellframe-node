@@ -144,7 +144,32 @@ amd64:linux.rwd.bld:
         - version.mk
         - build_*/*.deb
 
-autotests:
+stage_env_tests:
+  extends: .ci-test
+  interruptible: true
+  stage: diagnostic_builds
+  timeout: 30 minutes
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - amd64:linux.rwd.bld
+  script:
+    - source version.mk
+    - DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
+    - /opt/cellframe-stage-env/artifacts.sh "$DEB_FILE"
+  artifacts:
+    when: always
+    paths:
+      - test_logs/
+    expire_in: 7 days
+    
+.autotests:
   extends: .ci-test
   interruptible: true
   stage: diagnostic_builds
@@ -165,6 +190,11 @@ autotests:
       DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
       echo "Using package: $DEB_FILE"
       /opt/tests-in-docker/artifacts.sh "$DEB_FILE"
+  artifacts:
+    when: always
+    paths:
+      - test_logs/
+    expire_in: 7 days
 
 asan_build:
   extends: .build
