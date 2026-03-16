@@ -502,8 +502,8 @@ int main( int argc, const char **argv )
         return -133;
     }
 
-    log_it(L_INFO, "Automatic mempool processing %s",
-           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
+    bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
+    log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
     
     uint16_t l_listen_addrs_count = 0;
     if ( bServerEnabled )
