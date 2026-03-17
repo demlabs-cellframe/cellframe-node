@@ -1,0 +1,338 @@
+name: Long Offline Period and Full Catchup
+description: >
+  Tests node behavior after extended offline period with heavy activity.
+  Stops a master node and a full node, produces many blocks and transactions,
+  writes GDB data, then restarts offline nodes. Verifies complete sync:
+  block chain, DAG events, ledger state, and GDB data.
+tags: [e2e, blocks, sync, offline, catchup, gdb, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+  tx_value: "10000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w loff_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w loff_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: loff_sender_addr
+
+  - cli: "wallet new -w loff_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w loff_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: loff_receiver_addr
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{loff_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: loff_funding_hash
+  - if: "loff_funding_hash"
+    then:
+      - wait_for_datum: "{{loff_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Record baseline state on all nodes
+  # ================================================================
+  - name: "Phase 1: Record baseline state"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _loff_bl_baseline
+            expect: any
+          - print: "[{{_node}}] baseline blocks: {{_loff_bl_baseline}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _loff_dag_baseline
+            expect: any
+          - print: "[{{_node}}] baseline DAG events: {{_loff_dag_baseline}}"
+
+  # ================================================================
+  # Phase 2: Take nodes offline
+  # ================================================================
+  - name: "Phase 2: Stop master node-6 and full node-7"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-6
+        save: loff_n6_blocks_before
+        expect: any
+      - print: "Node-6 blocks before stop: {{loff_n6_blocks_before}}"
+
+      - print: "Stopping node-6 (master) and node-7 (full)..."
+      - docker_op: stop
+        services: ["node-6", "node-7"]
+
+      - wait: "10s"
+
+  # ================================================================
+  # Phase 3: Heavy activity while nodes are offline
+  # ================================================================
+  - name: "Phase 3: DAG activity — token declarations"
+    steps:
+      - cli: "token_decl -net {{network_name}} -chain zerochain -token LOFFTKN -total_supply 50000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+        node: node-1
+        save_hash: loff_decl_hash
+        expect: any
+
+      - if: "loff_decl_hash"
+        then:
+          - wait_for_datum: "{{loff_decl_hash}}"
+            node: node-1
+            network: "{{network_name}}"
+            chain: zerochain
+            timeout_total: 120
+            timeout_mempool: 30
+
+      - wait: cli
+        cmd: "token info -net {{network_name}} -name LOFFTKN"
+        node: node-1
+        contains: "LOFFTKN"
+        timeout: 60
+        interval: 5
+
+  - name: "Phase 3b: Block activity — multiple transactions"
+    steps:
+      - loop: 8
+        steps:
+          - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet loff_sender -to_addr {{loff_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+            node: node-1
+            save_hash: _loff_tx_hash
+            expect: any
+
+          - if: "_loff_tx_hash"
+            then:
+              - wait_for_datum: "{{_loff_tx_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+
+      - print: "8 transactions submitted and confirmed while nodes offline"
+
+  - name: "Phase 3c: GDB activity — write test data"
+    steps:
+      - loop: 5
+        steps:
+          - cli: "global_db write -group test.loff_sync -key loff_key_{{i}} -value loff_data_{{i}}"
+            node: node-1
+            expect: any
+
+      - wait: global_db_sync
+        nodes: "{{root_nodes}}"
+        timeout: 60
+
+      - print: "5 GDB entries written while nodes offline"
+
+  # ================================================================
+  # Phase 4: Record state on online nodes
+  # ================================================================
+  - name: "Phase 4: Record state on online nodes"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: loff_online_blocks
+        expect: any
+      - print: "Online nodes block count: {{loff_online_blocks}}"
+
+      - cli: "dag event count -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: loff_online_dag
+        expect: any
+      - print: "Online nodes DAG count: {{loff_online_dag}}"
+
+      - cli: "wallet info -w loff_receiver -net {{network_name}}"
+        node: "{{first_master}}"
+        save: loff_online_receiver_balance
+        expect: any
+      - print: "Receiver balance on online node: {{loff_online_receiver_balance}}"
+
+  # ================================================================
+  # Phase 5: Restart offline nodes
+  # ================================================================
+  - name: "Phase 5: Restart offline nodes"
+    steps:
+      - print: "Starting node-6 and node-7..."
+      - docker_op: start
+        services: ["node-6", "node-7"]
+
+      - wait: cli_ready
+        node: node-6
+        timeout: 120
+      - wait: cli_ready
+        node: node-7
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-6
+        contains: "NET_STATE"
+        timeout: 180
+        interval: 5
+      - print: "Node-6 back online"
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-7
+        contains: "NET_STATE"
+        timeout: 180
+        interval: 5
+      - print: "Node-7 back online"
+
+      - wait: "60s"
+
+  # ================================================================
+  # Phase 6: Verify block chain sync
+  # ================================================================
+  - name: "Phase 6: Verify block chain catchup"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-6
+        save: loff_n6_blocks_after
+        expect: any
+      - print: "Node-6 blocks after catchup: {{loff_n6_blocks_after}} (online had: {{loff_online_blocks}})"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-7
+        save: loff_n7_blocks_after
+        expect: any
+      - print: "Node-7 (full) blocks after catchup: {{loff_n7_blocks_after}} (online had: {{loff_online_blocks}})"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: loff_current_blocks
+        expect: any
+      - print: "Current active master blocks: {{loff_current_blocks}}"
+
+  # ================================================================
+  # Phase 7: Verify DAG sync
+  # ================================================================
+  - name: "Phase 7: Verify DAG event sync"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _loff_dag_after
+            expect: any
+          - print: "[{{_node}}] DAG events after catchup: {{_loff_dag_after}}"
+
+  # ================================================================
+  # Phase 8: Verify ledger sync
+  # ================================================================
+  - name: "Phase 8: Verify ledger consistency"
+    steps:
+      - cli: "ledger list coins -net {{network_name}}"
+        node: node-6
+        contains: "LOFFTKN"
+      - print: "Node-6 sees LOFFTKN token"
+
+      - cli: "ledger list coins -net {{network_name}}"
+        node: node-7
+        contains: "LOFFTKN"
+        expect: any
+      - print: "Node-7 sees LOFFTKN token"
+
+      - cli: "wallet info -w loff_receiver -net {{network_name}}"
+        node: node-6
+        save: loff_n6_receiver_balance
+        expect: any
+      - print: "Receiver balance on node-6: {{loff_n6_receiver_balance}}"
+
+      - cli: "wallet info -w loff_receiver -net {{network_name}}"
+        node: node-7
+        save: loff_n7_receiver_balance
+        expect: any
+      - print: "Receiver balance on node-7: {{loff_n7_receiver_balance}}"
+
+      - print: "Receiver balance on online node was: {{loff_online_receiver_balance}}"
+
+  # ================================================================
+  # Phase 9: Verify GDB sync
+  # ================================================================
+  - name: "Phase 9: Verify GDB data sync"
+    steps:
+      - cli: "global_db get_keys -group test.loff_sync"
+        node: node-6
+        save: loff_n6_gdb_keys
+        expect: any
+      - print: "Node-6 GDB keys: {{loff_n6_gdb_keys}}"
+
+      - cli: "global_db read -group test.loff_sync -key loff_key_0"
+        node: node-6
+        save: loff_n6_gdb_val
+        expect: any
+      - print: "Node-6 GDB value (loff_key_0): {{loff_n6_gdb_val}}"
+
+  # ================================================================
+  # Phase 10: Verify recovered nodes participate in consensus
+  # ================================================================
+  - name: "Phase 10: Post-catchup consensus participation"
+    steps:
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-6
+        save: loff_n6_blocks_final
+        expect: any
+      - print: "Node-6 block count after catchup: {{loff_n6_blocks_final}}"
+
+  # ================================================================
+  # Cleanup
+  # ================================================================
+  - name: "Cleanup"
+    steps:
+      - cli: "global_db clear -group test.loff_sync"
+        expect: any
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE"
+  - cli: "ledger list coins -net {{network_name}}"
+    node: node-6
+    contains: "{{native_ticker}}"

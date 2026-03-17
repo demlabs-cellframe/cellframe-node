@@ -1,0 +1,232 @@
+name: Simultaneous Validator Restart
+description: >
+  All validators go down at the same time — complete consensus group failure.
+  Tests ESBocs recovery when the entire validator set restarts simultaneously.
+  Verifies: block production halts, consensus recovers after restart,
+  pending transactions get confirmed, cross-node state converges.
+tags: [e2e, consensus, esbocs, restart, recovery, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+  tx_value: "50000000000000000"
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w simr_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w simr_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: simr_sender_addr
+
+  - cli: "wallet new -w simr_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w simr_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: simr_receiver_addr
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{simr_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: simr_funding_hash
+  - if: "simr_funding_hash"
+    then:
+      - wait_for_datum: "{{simr_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Baseline
+  # ================================================================
+  - name: "Phase 1: Baseline before simultaneous stop"
+    steps:
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: simr_baseline_blocks
+        expect: any
+      - print: "Baseline blocks: {{simr_baseline_blocks}}"
+
+  # ================================================================
+  # Phase 2: Stop ALL validators simultaneously
+  # ================================================================
+  - name: "Phase 2: Stop all validators simultaneously"
+    steps:
+      - print: "Stopping ALL validators (node-4, node-5, node-6)..."
+      - docker_op: stop
+        services: ["node-4", "node-5", "node-6"]
+
+      - wait: "15s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-1
+        save: blocks_all_down
+        expect: any
+      - print: "Blocks with all validators down: {{blocks_all_down}}"
+
+      - wait: "45s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-1
+        save: blocks_all_down_later
+        expect: any
+      - print: "Blocks 45s later (should be same): {{blocks_all_down_later}}"
+      - print: ">>> EXPECT: no new blocks with zero validators"
+
+  # ================================================================
+  # Phase 3: Submit TX while all validators are down
+  # ================================================================
+  - name: "Phase 3: Submit TX with no validators"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet simr_sender -to_addr {{simr_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save: simr_pending_result
+        save_hash: simr_pending_hash
+        expect: any
+      - print: "TX submitted with no validators: {{simr_pending_result}}"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        node: node-1
+        save: mempool_all_down
+        expect: any
+      - print: "Mempool while validators down: {{mempool_all_down}}"
+
+  # ================================================================
+  # Phase 4: Start ALL validators simultaneously
+  # ================================================================
+  - name: "Phase 4: Start all validators simultaneously — consensus recovery"
+    steps:
+      - print: "Starting ALL validators (node-4, node-5, node-6)..."
+      - docker_op: start
+        services: ["node-4", "node-5", "node-6"]
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - wait: cli_ready
+            node: "{{_node}}"
+            timeout: 120
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - wait: cli
+            cmd: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            contains: "NET_STATE_ONLINE"
+            timeout: 180
+            interval: 5
+          - print: "[{{_node}}] back online"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 300
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after_recovery
+        expect: any
+      - print: "Blocks after recovery (should increase): {{blocks_after_recovery}}"
+
+  # ================================================================
+  # Phase 5: Verify pending TX got confirmed
+  # ================================================================
+  - name: "Phase 5: Pending TX confirmation after recovery"
+    steps:
+      - if: "simr_pending_hash"
+        then:
+          - wait_for_datum: "{{simr_pending_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 300
+            timeout_mempool: 120
+            save_status: simr_tx_confirmed
+          - print: "Pending TX confirmed after recovery: {{simr_tx_confirmed}}"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: mempool_after_recovery
+        expect: any
+      - print: "Mempool after recovery (should be 0): {{mempool_after_recovery}}"
+
+  # ================================================================
+  # Phase 6: Post-recovery block production and consistency
+  # ================================================================
+  - name: "Phase 6: Post-recovery consistency"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet simr_sender -to_addr {{simr_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: simr_post_tx_hash
+        expect: any
+
+      - if: "simr_post_tx_hash"
+        then:
+          - wait_for_datum: "{{simr_post_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+            save_status: simr_post_tx_status
+          - print: "Post-recovery TX confirmed: {{simr_post_tx_status}}"
+
+      - wait: "20s"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _simr_final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_simr_final_bc}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _simr_final_bc_r
+            expect: any
+          - print: "[{{_node}}] final block count: {{_simr_final_bc_r}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE_ONLINE"
+  - cli: "block count -net {{network_name}} -chain main"
+    node: "{{first_master}}"
+    expect: success

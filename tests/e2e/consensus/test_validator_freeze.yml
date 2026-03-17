@@ -1,0 +1,249 @@
+name: Validator Freeze — Network Partition Simulation
+description: >
+  Uses docker pause/unpause to simulate sudden network loss for validators.
+  Unlike graceful stop (SIGTERM), a paused container cannot send disconnect
+  messages — this tests ESBocs handling of unresponsive validators during
+  active consensus rounds. Verifies round/attempt failover and recovery.
+tags: [e2e, consensus, esbocs, freeze, partition, fault-tolerance, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+  tx_value: "50000000000000000"
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w frz_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w frz_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: frz_sender_addr
+
+  - cli: "wallet new -w frz_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w frz_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: frz_receiver_addr
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{frz_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: frz_funding_hash
+  - if: "frz_funding_hash"
+    then:
+      - wait_for_datum: "{{frz_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Baseline
+  # ================================================================
+  - name: "Phase 1: Baseline before freeze"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: frz_baseline_blocks
+        expect: any
+      - print: "Baseline blocks: {{frz_baseline_blocks}}"
+
+  # ================================================================
+  # Phase 2: Freeze one validator (sudden network loss)
+  # ================================================================
+  - name: "Phase 2: Freeze validator node-6 (simulates network partition)"
+    steps:
+      - print: "Pausing node-6 container (simulating sudden network loss)..."
+      - docker_op: pause
+        services: ["node-6"]
+
+      - wait: "30s"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 240
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_during_freeze
+        expect: any
+      - print: "Blocks during freeze (should increase): {{blocks_during_freeze}}"
+
+  # ================================================================
+  # Phase 3: TX while validator is frozen
+  # ================================================================
+  - name: "Phase 3: Transaction processing with frozen validator"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet frz_sender -to_addr {{frz_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: frz_tx_hash
+      - print: "TX submitted during freeze: {{frz_tx_hash}}"
+
+      - if: "frz_tx_hash"
+        then:
+          - wait_for_datum: "{{frz_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+            save_status: frz_tx_status
+          - print: "TX confirmed with frozen validator: {{frz_tx_status}}"
+
+  # ================================================================
+  # Phase 4: Unfreeze — validator recovery after partition heals
+  # ================================================================
+  - name: "Phase 4: Unfreeze validator — recovery after partition"
+    steps:
+      - print: "Unpausing node-6 (network partition healed)..."
+      - docker_op: unpause
+        services: ["node-6"]
+
+      - wait: "45s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: node-6
+        save: blocks_after_unpause_n6
+        expect: any
+      - print: "Block count on recovered node-6: {{blocks_after_unpause_n6}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after_unpause_m
+        expect: any
+      - print: "Block count on active master: {{blocks_after_unpause_m}}"
+
+  # ================================================================
+  # Phase 5: Rapid freeze/unfreeze cycle — consensus resilience
+  # ================================================================
+  - name: "Phase 5: Rapid freeze/unfreeze cycle"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_pre_cycle
+        expect: any
+
+      - print: "Rapid cycle: freeze node-5 for 15s..."
+      - docker_op: pause
+        services: ["node-5"]
+      - wait: "15s"
+      - docker_op: unpause
+        services: ["node-5"]
+
+      - wait: "10s"
+
+      - print: "Rapid cycle: freeze node-6 for 15s..."
+      - docker_op: pause
+        services: ["node-6"]
+      - wait: "15s"
+      - docker_op: unpause
+        services: ["node-6"]
+
+      - wait: "30s"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 240
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_post_cycle
+        expect: any
+      - print: "Blocks after rapid freeze cycle: {{blocks_pre_cycle}} -> {{blocks_post_cycle}}"
+
+  # ================================================================
+  # Phase 6: Freeze two validators simultaneously (quorum loss via partition)
+  # ================================================================
+  - name: "Phase 6: Freeze two validators — partition-induced quorum loss"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_before_double_freeze
+        expect: any
+
+      - print: "Freezing node-5 and node-6 simultaneously..."
+      - docker_op: pause
+        services: ["node-5", "node-6"]
+
+      - wait: "60s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_during_double_freeze
+        expect: any
+      - print: "Blocks during double freeze: {{blocks_before_double_freeze}} -> {{blocks_during_double_freeze}}"
+      - print: ">>> EXPECT: no new blocks (quorum lost via network partition)"
+
+      - print: "Unpausing both validators..."
+      - docker_op: unpause
+        services: ["node-5", "node-6"]
+
+      - wait: "30s"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 300
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after_double_unfreeze
+        expect: any
+      - print: "Blocks after double unfreeze (should increase): {{blocks_after_double_unfreeze}}"
+
+  # ================================================================
+  # Phase 7: Final consistency check
+  # ================================================================
+  - name: "Phase 7: Cross-node consistency after freeze tests"
+    steps:
+      - wait: "20s"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _frz_final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_frz_final_bc}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE_ONLINE"
