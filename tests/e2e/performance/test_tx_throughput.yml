@@ -27,6 +27,9 @@ setup:
       - node-6
     timeout: 300
 
+  # Allow consensus to stabilize after previous tests' node restarts
+  - wait: "60s"
+
   # Create 5 sender wallets and 1 receiver
   - cli: "wallet new -w thrpt_w0 -sign sig_dil"
     node: node-1

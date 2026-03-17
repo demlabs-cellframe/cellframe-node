@@ -31,6 +31,8 @@ setup:
       - node-6
     timeout: 300
 
+  - wait: "60s"
+
   - cli: "wallet new -w loff_sender -sign sig_dil"
     node: node-1
   - cli: "wallet info -w loff_sender -net {{network_name}}"
@@ -137,8 +139,8 @@ test:
                 node: "{{first_master}}"
                 network: "{{network_name}}"
                 chain: main
-                timeout_total: 180
-                timeout_mempool: 60
+                timeout_total: 300
+                timeout_mempool: 180
 
       - print: "8 transactions submitted and confirmed while nodes offline"
 

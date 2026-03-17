@@ -27,6 +27,8 @@ setup:
       - node-6
     timeout: 300
 
+  - wait: "60s"
+
   - cli: "wallet new -w frz_sender -sign sig_dil"
     node: node-1
   - cli: "wallet info -w frz_sender -net {{network_name}}"
