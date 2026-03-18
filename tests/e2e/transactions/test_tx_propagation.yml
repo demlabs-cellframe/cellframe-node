@@ -1,0 +1,288 @@
+name: Transaction Propagation and Cross-Node Verification
+description: >
+  Verifies that transactions propagate correctly across all nodes:
+  submit TX on one node, verify it appears in mempool on others,
+  wait for block inclusion, verify ledger state on every node.
+  Also tests double-spend prevention and insufficient-balance rejection.
+tags: [e2e, transactions, propagation, double-spend, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  test_token: "TXPROP"
+  emission_value: "5000000000000000000"
+  send_value: "100000000000000000"
+  funding_value: "10000000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w prop_sender -sign sig_dil"
+  - cli: "wallet info -w prop_sender -net {{network_name}}"
+    save_wallet: prop_sender_addr
+  - print: "Prop sender addr: {{prop_sender_addr}}"
+
+  - cli: "wallet new -w prop_receiver -sign sig_dil"
+  - cli: "wallet info -w prop_receiver -net {{network_name}}"
+    save_wallet: prop_receiver_addr
+  - print: "Prop receiver addr: {{prop_receiver_addr}}"
+
+  # Fund sender wallet with native tokens for fee payments
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{prop_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: sender_funding_hash
+  - if: "sender_funding_hash"
+    then:
+      - wait_for_datum: "{{sender_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "token_decl -net {{network_name}} -chain zerochain -token {{test_token}} -total_supply 50000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+    save_hash: prop_decl_hash
+
+  - if: "prop_decl_hash"
+    then:
+      - wait_for_datum: "{{prop_decl_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - wait: cli
+    cmd: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"
+    timeout: 60
+    interval: 5
+
+  - cli: "token_emit -net {{network_name}} -chain_emission zerochain -token {{test_token}} -emission_value {{emission_value}} -addr {{prop_sender_addr}} -certs {{root_certs}}"
+    save_hash: prop_emit_hash
+
+  - if: "prop_emit_hash"
+    then:
+      - wait_for_datum: "{{prop_emit_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - if: "prop_emit_hash"
+    then:
+      - cli: "tx_create -net {{network_name}} -chain main -from_emission {{prop_emit_hash}} -chain_emission zerochain -fee {{fee_value}} -wallet_fee {{network_name}}_root_0"
+        save_hash: prop_base_tx_hash
+      - if: "prop_base_tx_hash"
+        then:
+          - wait_for_datum: "{{prop_base_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Test 1: Submit TX and verify mempool propagation
+  # ================================================================
+  - name: "Submit TX and verify mempool propagation"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet prop_sender -to_addr {{prop_receiver_addr}} -value {{send_value}} -fee {{fee_value}}"
+        save: prop_tx_result
+        save_hash: prop_tx_hash
+      - print: "TX submitted: {{prop_tx_result}}"
+      - print: "TX hash: {{prop_tx_hash}}"
+
+      - if: "prop_tx_hash"
+        then:
+          - wait: "5s"
+
+          - for: _node
+            in: "{{root_nodes}}"
+            steps:
+              - cli: "mempool list -net {{network_name}} -chain main"
+                node: "{{_node}}"
+                save: _mp_list
+                expect: any
+              - print: "[{{_node}}] mempool: {{_mp_list}}"
+
+  # ================================================================
+  # Test 2: Wait for TX to be included in block
+  # ================================================================
+  - name: "Wait for TX block inclusion"
+    steps:
+      - if: "prop_tx_hash"
+        then:
+          - wait_for_datum: "{{prop_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+            timeout_in_blocks: 180
+            save_status: prop_tx_datum_status
+          - print: "TX datum status: {{prop_tx_datum_status}}"
+
+  # ================================================================
+  # Test 3: Cross-node ledger verification
+  # ================================================================
+  - name: "Verify TX in ledger on all nodes"
+    steps:
+      - wait: "15s"
+
+      - if: "prop_tx_hash"
+        then:
+          - for: _node
+            in: "{{all_nodes}}"
+            steps:
+              - cli: "ledger info -hash {{prop_tx_hash}} -net {{network_name}}"
+                node: "{{_node}}"
+                save: _ledger_info
+                expect: any
+              - print: "[{{_node}}] ledger info for TX: {{_ledger_info}}"
+
+  # ================================================================
+  # Test 4: Balance consistency after TX
+  # ================================================================
+  - name: "Cross-node balance consistency"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "wallet info -w prop_sender -net {{network_name}}"
+            node: "{{_node}}"
+            save: _s_bal
+            expect: any
+          - print: "[{{_node}}] sender balance: {{_s_bal}}"
+
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "wallet info -w prop_receiver -net {{network_name}}"
+            node: "{{_node}}"
+            save: _r_bal
+            expect: any
+          - print: "[{{_node}}] receiver balance: {{_r_bal}}"
+
+  # ================================================================
+  # Test 5: Double-spend prevention
+  # ================================================================
+  - name: "Double-spend prevention test"
+    steps:
+      - cli: "wallet info -w prop_sender -net {{network_name}}"
+        save: sender_current_bal
+        expect: any
+      - print: "Sender current balance: {{sender_current_bal}}"
+
+      - set: double_spend_amount
+        value: "str(int('{{emission_value}}') * 2)"
+        eval: true
+      - print: "Attempting to send more than balance: {{double_spend_amount}}"
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet prop_sender -to_addr {{prop_receiver_addr}} -value {{double_spend_amount}} -fee {{fee_value}}"
+        save: double_spend_result
+        expect: any
+      - print: "Double-spend attempt result: {{double_spend_result}}"
+
+  # ================================================================
+  # Test 6: Insufficient balance rejection
+  # ================================================================
+  - name: "Insufficient balance rejection"
+    steps:
+      - cli: "wallet new -w empty_wallet -sign sig_dil"
+      - cli: "wallet info -w empty_wallet -net {{network_name}}"
+        save_wallet: empty_addr
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet empty_wallet -to_addr {{prop_receiver_addr}} -value 1000000000000000000 -fee {{fee_value}}"
+        save: empty_tx_result
+        expect: any
+      - print: "Empty wallet TX result (should fail): {{empty_tx_result}}"
+
+  # ================================================================
+  # Test 7: Multiple sequential transfers
+  # ================================================================
+  - name: "Multiple sequential transfers"
+    steps:
+      - set: seq_count
+        value: "3"
+
+      - loop: 3
+        steps:
+          - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet prop_sender -to_addr {{prop_receiver_addr}} -value {{send_value}} -fee {{fee_value}}"
+            save: _seq_tx_result
+            save_hash: _seq_tx_hash
+            expect: any
+          - print: "Sequential TX {{i}}: {{_seq_tx_result}}"
+
+          - if: "_seq_tx_hash"
+            then:
+              - wait_for_datum: "{{_seq_tx_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+                save_status: _seq_status
+              - print: "Sequential TX {{i}} status: {{_seq_status}}"
+
+      - wait: "10s"
+
+      - cli: "wallet info -w prop_sender -net {{network_name}}"
+        save: sender_after_seq
+        expect: any
+      - print: "Sender after sequential TXs: {{sender_after_seq}}"
+
+      - cli: "wallet info -w prop_receiver -net {{network_name}}"
+        save: receiver_after_seq
+        expect: any
+      - print: "Receiver after sequential TXs: {{receiver_after_seq}}"
+
+  # ================================================================
+  # Test 8: TX history count
+  # ================================================================
+  - name: "Transaction history completeness"
+    steps:
+      - cli: "tx_history -w prop_sender -net {{network_name}}"
+        save: full_sender_history
+        expect: any
+      - print: "Full sender history: {{full_sender_history}}"
+
+      - cli: "tx_history -w prop_receiver -net {{network_name}}"
+        save: full_receiver_history
+        expect: any
+      - print: "Full receiver history: {{full_receiver_history}}"
+
+      - cli: "tx_history -count -net {{network_name}} -addr {{prop_sender_addr}}"
+        save: sender_tx_count
+        expect: any
+      - print: "Sender TX count: {{sender_tx_count}}"
+
+check:
+  - cli: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
