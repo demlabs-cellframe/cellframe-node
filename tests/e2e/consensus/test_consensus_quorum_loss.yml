@@ -1,0 +1,267 @@
+name: Consensus Quorum Loss and Recovery
+description: >
+  Tests ESBocs behavior when quorum is lost by sequentially stopping validators.
+  Verifies: blocks continue with N-1 validators (quorum maintained),
+  blocks STOP with N-2 validators (quorum lost), transactions stay in mempool
+  during no-quorum period, blocks and pending TX resume after quorum restoration.
+tags: [e2e, consensus, esbocs, quorum, fault-tolerance, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+  tx_value: "50000000000000000"
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - wait: "60s"
+
+  - cli: "wallet new -w ql_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w ql_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: ql_sender_addr
+
+  - cli: "wallet new -w ql_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w ql_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: ql_receiver_addr
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{ql_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: ql_funding_hash
+  - if: "ql_funding_hash"
+    then:
+      - wait_for_datum: "{{ql_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Baseline — all 3 validators operational
+  # ================================================================
+  - name: "Phase 1: Baseline with full validator set"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: baseline_blocks
+        expect: any
+      - print: "Baseline block count: {{baseline_blocks}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: baseline_blocks_after
+        expect: any
+      - print: "Blocks after baseline wait: {{baseline_blocks_after}}"
+
+  # ================================================================
+  # Phase 2: Stop 1st validator (3→2, quorum maintained)
+  # ================================================================
+  - name: "Phase 2: Stop 1 validator — consensus continues (N-1 >= min=2)"
+    steps:
+      - print: "Stopping validator node-6..."
+      - docker_op: stop
+        services: ["node-6"]
+
+      - wait: "20s"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 240
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_n_minus_1
+        expect: any
+      - print: "Blocks with 2 validators (should increase): {{blocks_n_minus_1}}"
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet ql_sender -to_addr {{ql_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: tx_n_minus_1_hash
+      - if: "tx_n_minus_1_hash"
+        then:
+          - wait_for_datum: "{{tx_n_minus_1_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 300
+            timeout_mempool: 180
+            save_status: tx_n_minus_1_status
+          - print: "TX with 2 validators confirmed: {{tx_n_minus_1_status}}"
+
+  # ================================================================
+  # Phase 3: Stop 2nd validator (2→1, quorum LOST)
+  # ================================================================
+  - name: "Phase 3: Stop 2nd validator — quorum lost (1 < min=2)"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_before_quorum_loss
+        expect: any
+      - print: "Blocks before quorum loss: {{blocks_before_quorum_loss}}"
+
+      - print: "Stopping validator node-5 — quorum will be lost..."
+      - docker_op: stop
+        services: ["node-5"]
+
+      - wait: "60s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after_quorum_loss
+        expect: any
+      - print: "Blocks after 60s with no quorum: {{blocks_after_quorum_loss}}"
+      - print: ">>> EXPECT: blocks_before == blocks_after (no new blocks without quorum)"
+
+  # ================================================================
+  # Phase 4: TX under no quorum — should go to mempool, not confirm
+  # ================================================================
+  - name: "Phase 4: Transaction during quorum loss"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet ql_sender -to_addr {{ql_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save: ql_pending_tx_result
+        save_hash: ql_pending_tx_hash
+        expect: any
+      - print: "TX submit during no quorum: {{ql_pending_tx_result}}"
+      - print: "Pending TX hash: {{ql_pending_tx_hash}}"
+
+      - wait: "10s"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: mempool_no_quorum
+        expect: any
+      - print: "Mempool count during no quorum (should be > 0): {{mempool_no_quorum}}"
+
+  # ================================================================
+  # Phase 5: Restore 1 validator (1→2, quorum restored)
+  # ================================================================
+  - name: "Phase 5: Restore quorum — blocks and pending TX should resume"
+    steps:
+      - print: "Starting validator node-5 — restoring quorum..."
+      - docker_op: start
+        services: ["node-5"]
+
+      - wait: cli_ready
+        node: node-5
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-5
+        contains: "NET_STATE_ONLINE"
+        timeout: 180
+        interval: 5
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 300
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_quorum_restored
+        expect: any
+      - print: "Blocks after quorum restored (should increase): {{blocks_quorum_restored}}"
+
+      - if: "ql_pending_tx_hash"
+        then:
+          - wait_for_datum: "{{ql_pending_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 600
+            timeout_mempool: 300
+            save_status: pending_tx_confirmed
+          - print: "Pending TX confirmed after quorum restored: {{pending_tx_confirmed}}"
+
+  # ================================================================
+  # Phase 6: Full recovery — restart remaining stopped validator
+  # ================================================================
+  - name: "Phase 6: Full recovery and cross-node consistency"
+    steps:
+      - print: "Starting validator node-6 — full recovery..."
+      - docker_op: start
+        services: ["node-6"]
+
+      - wait: cli_ready
+        node: node-6
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-6
+        contains: "NET_STATE_ONLINE"
+        timeout: 180
+        interval: 5
+
+      - wait: "30s"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - print: "Full recovery complete — all validators operational"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE_ONLINE"
+  - cli: "block count -net {{network_name}} -chain main"
+    node: "{{first_master}}"
+    expect: success

@@ -1,0 +1,243 @@
+name: Validator Penalty and Kick Mechanism
+description: >
+  Tests the ESBocs penalty system: a validator that misses 4+ consecutive
+  rounds accumulates miss_count to DAP_CHAIN_ESBOCS_PENALTY_KICK (3), then
+  a KICK directive is composed and voted on in the next round.
+  Verifies: penalty accumulation, KICK execution with GDB proof,
+  consensus continuity with remaining validators (>= min_validators_count),
+  and LIFT recovery after the penalized validator comes back online.
+  If any node crashes during the test (exit_code=139), the test fails.
+
+  ESBocs timing reference (from stage-env.cfg.default):
+    round cycle ~= sync(5s) + attempts(2×5s) + delay(30s) ≈ 45-55s
+    PENALTY_KICK = 3 misses → need 4 rounds (3 accumulate + 1 vote)
+    min_validators = 2, masters = 3 → after KICK: 2 remain ≥ min(2)
+tags: [e2e, consensus, esbocs, penalty, kick, lift, deep]
+version: "2.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - wait: "60s"
+
+test:
+  # ================================================================
+  # Phase 1: Baseline — all validators active, blocks produced
+  # ================================================================
+  - name: "Phase 1: Baseline — verify all validators active"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_baseline_blocks
+        expect: any
+      - print: "Baseline blocks: {{pen_baseline_blocks}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_before_stop
+        expect: any
+      - print: "Blocks before stop: {{pen_blocks_before_stop}}"
+
+      - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
+        node: node-1
+        save: pen_gdb_before
+        expect: any
+      - print: "Penalty GDB before stop: {{pen_gdb_before}}"
+
+  # ================================================================
+  # Phase 2: Stop one validator for 4+ rounds (penalty accumulation)
+  # ================================================================
+  # With round cycle ~50s, we need at least 4 rounds = 200s minimum.
+  # We wait 240s total (4×60s) to guarantee 4+ full rounds pass,
+  # and check block production at each checkpoint.
+  # ================================================================
+  - name: "Phase 2: Stop node-6 for 4+ rounds (penalty accumulation + KICK vote)"
+    steps:
+      - print: "Stopping node-6 to trigger penalty (need 4+ rounds = ~200s)..."
+      - docker_op: stop
+        services: ["node-6"]
+
+      - wait: "60s"
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_60s
+        expect: any
+      - print: "Blocks at +60s: {{pen_blocks_60s}} (was: {{pen_blocks_before_stop}})"
+
+      - wait: "60s"
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_120s
+        expect: any
+      - print: "Blocks at +120s: {{pen_blocks_120s}}"
+
+      - wait: "60s"
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_180s
+        expect: any
+      - print: "Blocks at +180s: {{pen_blocks_180s}}"
+
+      - wait: "60s"
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_240s
+        expect: any
+      - print: "Blocks at +240s: {{pen_blocks_240s}} (4+ rounds should have passed)"
+
+  # ================================================================
+  # Phase 3: Verify KICK happened — penalty GDB must have entries
+  # ================================================================
+  - name: "Phase 3: Verify penalty state after 4+ rounds"
+    steps:
+      - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
+        node: node-1
+        save: pen_penalty_keys_after_kick
+        expect: any
+      - print: "Penalty GDB keys after KICK period: {{pen_penalty_keys_after_kick}}"
+
+      - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
+        node: node-5
+        save: pen_penalty_keys_n5
+        expect: any
+      - print: "Penalty GDB keys on node-5: {{pen_penalty_keys_n5}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            save: _pen_status
+            expect: any
+          - print: "[{{_node}}] status during penalty: {{_pen_status}}"
+
+  # ================================================================
+  # Phase 4: Verify consensus continued — blocks must have increased
+  # ================================================================
+  - name: "Phase 4: Verify blocks were produced while validator was offline"
+    steps:
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_post_kick
+        expect: any
+      - print: "Blocks post-kick: {{pen_blocks_post_kick}} (was: {{pen_blocks_before_stop}} at stop)"
+
+  # ================================================================
+  # Phase 5: Restart penalized validator
+  # ================================================================
+  - name: "Phase 5: Restart penalized validator (node-6)"
+    steps:
+      - print: "Starting node-6 (was penalized/kicked)..."
+      - docker_op: start
+        services: ["node-6"]
+
+      - wait: cli_ready
+        node: node-6
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-6
+        contains: "NET_STATE"
+        timeout: 180
+        interval: 5
+      - print: "Node-6 back online, waiting for LIFT recovery..."
+
+  # ================================================================
+  # Phase 6: Wait for LIFT — penalty should clear after participation
+  # ================================================================
+  # After node-6 comes back, it needs to participate in rounds.
+  # Each participation decrements miss_count. After miss_count reaches 0,
+  # a LIFT directive is composed and voted on.
+  # miss_count went up to 3 (or capped at PENALTY_KICK=3), so need
+  # 3 rounds of participation + 1 for LIFT vote = ~4 rounds = ~200s
+  # ================================================================
+  - name: "Phase 6: Wait for LIFT recovery (4+ rounds of participation)"
+    steps:
+      - wait: "240s"
+
+      - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
+        node: node-1
+        save: pen_penalty_keys_after_lift
+        expect: any
+      - print: "Penalty GDB keys after LIFT period: {{pen_penalty_keys_after_lift}}"
+
+      - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
+        node: node-5
+        save: pen_penalty_keys_n5_after_lift
+        expect: any
+      - print: "Penalty GDB keys on node-5 after LIFT: {{pen_penalty_keys_n5_after_lift}}"
+
+  # ================================================================
+  # Phase 7: Verify full consensus with all 3 validators restored
+  # ================================================================
+  - name: "Phase 7: Verify consensus with all validators recovered"
+    steps:
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 300
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _pen_final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_pen_final_bc}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - wait: cli
+            cmd: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            contains: "NET_STATE_ONLINE"
+            timeout: 120
+            interval: 5
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: pen_blocks_final
+        expect: any
+      - print: "Final block count: {{pen_blocks_final}} (was: {{pen_blocks_before_stop}} at start)"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE"

@@ -148,7 +148,7 @@ stage_env_tests:
   extends: .ci-test
   interruptible: true
   stage: diagnostic_builds
-  timeout: 30 minutes
+  timeout: 2 hours
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
@@ -156,7 +156,8 @@ stage_env_tests:
       when: manual
       allow_failure: true
   variables:
-    GIT_STRATEGY: none
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: none
   dependencies:
     - amd64:linux.rwd.bld
   script:
