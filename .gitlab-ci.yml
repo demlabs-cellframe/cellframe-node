@@ -158,8 +158,16 @@ stage_env_tests:
   variables:
     GIT_STRATEGY: fetch
     GIT_SUBMODULE_STRATEGY: none
+    GIT_CLEAN_FLAGS: -ffdx -e .stage-env-run/
   dependencies:
     - amd64:linux.rwd.bld
+  before_script:
+    - |
+      if [ -d ".stage-env-run/cache" ]; then
+        echo "Cleaning root-owned Docker artifacts..."
+        docker run --rm -v "$PWD/.stage-env-run/cache:/cleanup" alpine sh -c "rm -rf /cleanup/*" 2>/dev/null || true
+        rm -rf .stage-env-run/ 2>/dev/null || true
+      fi
   script:
     - source version.mk
     - DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
