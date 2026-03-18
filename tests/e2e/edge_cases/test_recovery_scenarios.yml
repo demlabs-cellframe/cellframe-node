@@ -184,9 +184,6 @@ check:
   - cli: "net -net {{network_name}} get status"
     node: "{{first_master}}"
     contains: "NET_STATE"
-  - wait: cli
-    cmd: "ledger list coins -net {{network_name}}"
+  - cli: "ledger list coins -net {{network_name}}"
     node: node-1
     contains: "{{native_ticker}}"
-    timeout: 60
-    interval: 10

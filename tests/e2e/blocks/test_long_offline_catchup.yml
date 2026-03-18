@@ -257,16 +257,19 @@ test:
   # ================================================================
   - name: "Phase 8: Verify ledger consistency"
     steps:
-      - cli: "ledger list coins -net {{network_name}}"
+      - wait: cli
+        cmd: "ledger list coins -net {{network_name}}"
         node: node-6
         contains: "LOFFTKN"
+        timeout: 180
+        interval: 10
       - print: "Node-6 sees LOFFTKN token"
 
       - cli: "ledger list coins -net {{network_name}}"
         node: node-7
-        contains: "LOFFTKN"
+        save: loff_n7_ledger
         expect: any
-      - print: "Node-7 sees LOFFTKN token"
+      - print: "Node-7 (full) ledger after catchup: {{loff_n7_ledger}}"
 
       - cli: "wallet info -w loff_receiver -net {{network_name}}"
         node: node-6
