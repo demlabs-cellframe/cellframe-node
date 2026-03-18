@@ -27,6 +27,7 @@ setup:
   # Process token datum
   - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{list2_hash}}
 
+  - wait: 5s
 test:
   # Test: Verify tokens exist via token info
   # Note: 'token list' returns only count, use 'token info -name X' to check existence

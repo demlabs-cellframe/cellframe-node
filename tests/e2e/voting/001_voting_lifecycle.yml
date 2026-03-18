@@ -1,0 +1,68 @@
+name: Voting service lifecycle
+description: |
+  End-to-end test for the voting service:
+  create vote → cast votes from multiple nodes → tally → verify result
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+  - common/create_wallet.yml
+
+variables:
+  vote_question: "Test proposal for E2E voting"
+  option_a: "Approve"
+  option_b: "Reject"
+
+test:
+  - group: Setup voting prerequisites
+    steps:
+      - cli: "token_decl -token EVOTE01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_hash
+
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token_emit -token EVOTE01 -emission_value 100000 -addr {{wallet_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - wait: 10s
+
+  - group: Create voting
+    steps:
+      - cli: 'srv_voting create -net {{network_name}} -question "{{vote_question}}" -option "{{option_a}}" -option "{{option_b}}" -max_votes_count 10 -token EVOTE01 -from_wallet test_wallet -fee 0'
+        expect: success
+        save_hash: voting_hash
+
+      - wait_for_datum: "{{voting_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Cast vote from first node
+    steps:
+      - cli: "srv_voting vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -from_wallet test_wallet -fee 0"
+        expect: success
+        save_hash: vote_hash_1
+
+      - wait_for_datum: "{{vote_hash_1}}"
+        chain: main
+        timeout: 120
+
+  - group: Verify voting results
+    steps:
+      - wait: 10s
+
+      - cli: "srv_voting list -net {{network_name}}"
+        expect: success
+        contains: "{{vote_question}}"
+
+      - cli: "srv_voting dump -net {{network_name}} -hash {{voting_hash}}"
+        expect: success
+        contains: "{{option_a}}"

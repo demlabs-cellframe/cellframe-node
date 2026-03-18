@@ -1,0 +1,8 @@
+defaults:
+  node: "{{first_root}}"
+  wait: 3s
+  expect: success
+  timeout: 30
+  cli:
+    net: "{{network_name}}"
+    port: "8079"

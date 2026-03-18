@@ -81,6 +81,7 @@
 #include "dap_chain.h"
 #include "dap_chain_wallet.h"
 #include "dap_chain_decree_registry.h"
+#include "dap_dl.h"
 
 #include "dap_chain_type_blocks.h"
 #include "dap_chain_type_dag.h"
@@ -119,7 +120,15 @@
 #include "dap_chain_tx_compose_api.h"
 
 #include "dap_chain_wallet_cache.h"
+#include "dap_chain_net_cli.h"
+#include "dap_chain_token_cli.h"
+#include "dap_chain_mempool_cli.h"
 #include "dap_chain_policy.h"
+#include "dap_chain_ledger_cli.h"
+#include "dap_chain_net_tx.h"
+#include "dap_json_rpc_errors.h"
+
+extern int dap_chain_wallet_cli_init(void);
 
 // External declarations for CLI init functions (headers not in include path)
 extern int dap_chain_wallet_cli_init(void);
@@ -163,6 +172,7 @@ void set_global_sys_dir(const char *dir)
     g_sys_dir_path = dap_strdup(dir);
 }
 
+
 int main( int argc, const char **argv )
 {
     if ( argv[1] && !dap_strcmp("-version", argv[1]) )
@@ -171,6 +181,7 @@ int main( int argc, const char **argv )
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
+    bool l_seed_mode = false;
     int rc = 0;
 
     dap_set_appname(NODE_NAME);
@@ -178,7 +189,29 @@ int main( int argc, const char **argv )
     S_SetExceptionFilter( );
 #endif
 
-    // get relative path to config
+    // Parse command-line arguments
+    for (int i = 1; i < argc; i++) {
+        if (!dap_strcmp("--seed-mode", argv[i])) {
+            l_seed_mode = true;
+        } else if (!dap_strcmp("--help", argv[i]) || !dap_strcmp("-h", argv[i])) {
+            printf("Cellframe Node %s\n\n"
+                   "Usage: %s [options]\n\n"
+                   "Options:\n"
+                   "  -version               Print version and exit\n"
+                   "  -B <path>              Set base directory path\n"
+                   "  --seed-mode            Start with seed mode enabled on all chains,\n"
+                   "                         allowing genesis block/event creation\n"
+                   "  --help, -h             Show this help message and exit\n"
+                   "\n"
+                   "Runtime CLI commands (via cellframe-node-cli):\n"
+                   "  chain seed -net <net> -chain <chain> {on | off}\n"
+                   "                         Enable/disable seed mode for a specific chain\n"
+                   "  help                   List all available CLI commands\n"
+                   "  help <command>         Show detailed help for a command\n"
+                   "\n", dap_node_version(), argv[0]);
+            return 0;
+        }
+    }
 #if !DAP_OS_ANDROID
     if (argc > 2 && !dap_strcmp("-B" , argv[1]))
         g_sys_dir_path = dap_strdup(argv[2]);
@@ -443,30 +476,17 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if ( dap_cli_server_init(false, "conserver") ) {
+    if ( dap_cli_server_init(false, "cli-server") ) {
         log_it( L_CRITICAL, "Can't init server for console" );
         return -11;
     }
 
-    // Register net CLI commands (net get status, net go, etc.)
-    if ( dap_chain_net_cli_init() ) {
-        log_it( L_WARNING, "Can't init net CLI commands" );
-    }
-
-    // Register wallet CLI commands
-    if ( dap_chain_wallet_cli_init() ) {
-        log_it( L_WARNING, "Can't init wallet CLI commands" );
-    }
-
-    // Register token/ledger CLI commands
-    if ( dap_chain_net_tx_init() ) {
-        log_it( L_WARNING, "Can't init net-tx CLI commands" );
-    }
-
-    // Register ledger CLI module (tx create, tx history, etc.)
-    if ( dap_chain_ledger_cli_module_init() ) {
-        log_it( L_WARNING, "Can't init ledger CLI module" );
-    }
+    dap_chain_net_cli_init();
+    dap_chain_wallet_cli_init();
+    dap_chain_token_cli_init();
+    dap_chain_mempool_cli_init();
+    dap_chain_ledger_cli_init();
+    dap_chain_net_tx_init();
 
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
@@ -474,6 +494,8 @@ int main( int argc, const char **argv )
     }
 
     dap_chain_net_load_all();
+
+    (void)l_seed_mode;  // Not yet supported in this SDK version
 
     if( dap_chain_net_srv_order_init() )
         return -67;

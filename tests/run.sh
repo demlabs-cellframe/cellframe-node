@@ -131,11 +131,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Canonical stage-env directory (always real path, never symlink)
+STAGE_ENV_REAL_DIR="$SCRIPT_DIR/../tools/stage-env"
+
 # Handle --stop first
 if [ "$STOP_ENV" = true ]; then
     info "Stopping stage environment..."
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
         popd > /dev/null
@@ -151,7 +154,7 @@ fi
 if [ "$PKGS_UPDATE" = true ]; then
     info "Updating packages in running containers..."
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" pkgs-update || exit $?
         popd > /dev/null
@@ -275,7 +278,7 @@ if $CLEAN_BEFORE; then
     warning "Cleaning test environment..."
     
     if [ -x "$STAGE_ENV_WRAPPER" ]; then
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" clean --all || true
         popd > /dev/null
@@ -312,7 +315,7 @@ info "════════════════════════�
 echo ""
 
 # Start stage environment
-pushd "$SCRIPT_DIR/stage-env" > /dev/null
+pushd "$STAGE_ENV_REAL_DIR" > /dev/null
 STAGE_ENV_CONFIG_ABS="$(cd "$(dirname "$STAGE_ENV_CONFIG")" && pwd)/$(basename "$STAGE_ENV_CONFIG")"
 
 # Build start arguments
@@ -324,6 +327,8 @@ if $KEEP_RUNNING; then
     START_ARGS="$START_ARGS --keep-running"
 fi
 
+# Log path from tests/stage-env.cfg: log_dir = ../../build/stage-env/logs (resolved from tools/stage-env)
+info "Stage-env log: $PROJECT_ROOT/build/stage-env/logs"
 info "Starting stage environment..."
 ./stage-env --config="$STAGE_ENV_CONFIG_ABS" start $START_ARGS || E2E_EXIT=$?
 popd > /dev/null
@@ -341,8 +346,7 @@ if [ $E2E_EXIT -eq 0 ]; then
             else
                 abs_path="$PROJECT_ROOT/$test_path"
             fi
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_from_stage_env=$(realpath --relative-to="$stage_env_dir" "$abs_path" 2>/dev/null || echo "$abs_path")
+            rel_from_stage_env=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$abs_path" 2>/dev/null || echo "$abs_path")
             if [ -e "$abs_path" ]; then
                 TEST_DIRS+=("$rel_from_stage_env")
             else
@@ -351,20 +355,17 @@ if [ $E2E_EXIT -eq 0 ]; then
         done
     else
         if $RUN_E2E && [ -d "$E2E_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$E2E_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$E2E_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
         
         if $RUN_FUNCTIONAL && [ -d "$FUNCTIONAL_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$FUNCTIONAL_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$FUNCTIONAL_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
         
         if $RUN_REGRESSION && [ -d "$REGRESSION_TESTS" ]; then
-            stage_env_dir="$SCRIPT_DIR/stage-env"
-            rel_path=$(realpath --relative-to="$stage_env_dir" "$REGRESSION_TESTS")
+            rel_path=$(realpath --relative-to="$STAGE_ENV_REAL_DIR" "$REGRESSION_TESTS")
             TEST_DIRS+=("$rel_path")
         fi
     fi
@@ -373,7 +374,7 @@ if [ $E2E_EXIT -eq 0 ]; then
     if [ ${#TEST_DIRS[@]} -gt 0 ]; then
         info "Running ${#TEST_DIRS[@]} test suite(s)..."
         
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
         popd > /dev/null
         
@@ -391,15 +392,43 @@ if [ $E2E_EXIT -eq 0 ]; then
         warning "Keeping stage environment running (--keep-running)"
     else
         info "Stopping stage environment..."
-        pushd "$SCRIPT_DIR/stage-env" > /dev/null
+        pushd "$STAGE_ENV_REAL_DIR" > /dev/null
         ./stage-env --config="$STAGE_ENV_CONFIG_ABS" stop || true
         popd > /dev/null
         success "Stage environment stopped"
+        # Print scenario summary at the very end (written by stage-env run-tests)
+        if [ -f "$PROJECT_ROOT/build/stage-env/logs/last_final_summary.txt" ]; then
+            echo ""
+            cat "$PROJECT_ROOT/build/stage-env/logs/last_final_summary.txt"
+        fi
     fi
 else
     error "Failed to start stage environment"
     FUNCTIONAL_EXIT=$E2E_EXIT
     REGRESSION_EXIT=$E2E_EXIT
+
+    # stage-env writes logs to path from config (tests/stage-env.cfg: log_dir = ../../build/stage-env/logs)
+    LOG_TAIL_LINES=80
+    LOG_FOUND=
+    for LOG_BASE in "$PROJECT_ROOT/build/stage-env/logs" "$PROJECT_ROOT/cache/logs" "$STAGE_ENV_REAL_DIR/logs"; do
+        if [ -d "$LOG_BASE" ]; then
+            LATEST_LOG=$(find "$LOG_BASE" -maxdepth 1 -name "stage-env_*.log" -type f 2>/dev/null | sort -r | head -n 1)
+            if [ -n "$LATEST_LOG" ] && [ -f "$LATEST_LOG" ]; then
+                echo ""
+                echo "════════════════════════════════════"
+                echo " Last $LOG_TAIL_LINES lines of stage-env log (failure context)"
+                echo " $LATEST_LOG"
+                echo "════════════════════════════════════"
+                tail -n "$LOG_TAIL_LINES" "$LATEST_LOG" 2>/dev/null | sed 's/^/  /'
+                echo "════════════════════════════════════"
+                LOG_FOUND=1
+                break
+            fi
+        fi
+    done
+    if [ -z "$LOG_FOUND" ]; then
+        info "Log directory (from tests/stage-env.cfg [logging] log_dir): $PROJECT_ROOT/build/stage-env/logs"
+    fi
 fi
 
 # Summary

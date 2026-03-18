@@ -1,23 +1,11 @@
-# Test: Token Emission
-# Verify token emission to wallet
-
-name: Token Emission Test
-description: Test emitting tokens to a wallet address
-tags: [e2e, token, emission]
+name: Token emission
+description: Emit tokens to a wallet and verify balance
 version: "1.0"
-
-network:
-  topology: default
 
 includes:
   - common/networks/single_node.yml
   - common/wallets/create_wallet.yml
   - common/set_root_cert.yml
-
-# Global defaults - all commands on node1 with 3s wait
-defaults:
-  node: node1
-  wait: 3s
 
 setup:
   # Create token on zerochain (DAG-PoA) - needs ROOT certs
