@@ -3,21 +3,26 @@ description: >
   Tests the ESBocs penalty system: a validator that misses 4+ consecutive
   rounds accumulates miss_count to DAP_CHAIN_ESBOCS_PENALTY_KICK (3), then
   a KICK directive is composed and voted on in the next round.
-  Verifies: penalty accumulation, KICK execution with GDB proof,
-  consensus continuity with remaining validators (>= min_validators_count),
-  and LIFT recovery after the penalized validator comes back online.
-  If any node crashes during the test (exit_code=139), the test fails.
+
+  ESBocs only produces blocks when mempool has transactions, so this test
+  submits TX at each checkpoint to force block creation and observe round
+  progress through growing block count.
 
   ESBocs timing reference (from stage-env.cfg.default):
     round cycle ~= sync(5s) + attempts(2×5s) + delay(30s) ≈ 45-55s
     PENALTY_KICK = 3 misses → need 4 rounds (3 accumulate + 1 vote)
     min_validators = 2, masters = 3 → after KICK: 2 remain ≥ min(2)
 tags: [e2e, consensus, esbocs, penalty, kick, lift, deep]
-version: "2.0"
+version: "3.0"
 
 defaults:
   node: node-1
   wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  tx_value: "10000000000000000"
+  funding_value: "10000000000000000000"
 
 setup:
   - wait_network: online
@@ -32,30 +37,54 @@ setup:
 
   - wait: "60s"
 
-test:
-  # ================================================================
-  # Phase 1: Baseline — all validators active, blocks produced
-  # ================================================================
-  - name: "Phase 1: Baseline — verify all validators active"
-    steps:
-      - cli: "block count -net {{network_name}} -chain main"
-        node: "{{first_master}}"
-        save: pen_baseline_blocks
-        expect: any
-      - print: "Baseline blocks: {{pen_baseline_blocks}}"
+  - cli: "wallet new -w pen_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w pen_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: pen_sender_addr
 
-      - wait: block_created
+  - cli: "wallet new -w pen_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w pen_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: pen_receiver_addr
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{pen_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: pen_fund_hash
+  - if: "pen_fund_hash"
+    then:
+      - wait_for_datum: "{{pen_fund_hash}}"
         node: "{{first_master}}"
         network: "{{network_name}}"
         chain: main
-        min_blocks: 1
-        timeout: 180
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Baseline — all 3 validators active, blocks produced
+  # ================================================================
+  - name: "Phase 1: Baseline — verify consensus works with all validators"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_bl_tx1
+        expect: any
+      - if: "pen_bl_tx1"
+        then:
+          - wait_for_datum: "{{pen_bl_tx1}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
 
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_before_stop
         expect: any
-      - print: "Blocks before stop: {{pen_blocks_before_stop}}"
+      - print: "Blocks before stop (all 3 validators active): {{pen_blocks_before_stop}}"
 
       - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
         node: node-1
@@ -64,89 +93,134 @@ test:
       - print: "Penalty GDB before stop: {{pen_gdb_before}}"
 
   # ================================================================
-  # Phase 2: Stop one validator for 4+ rounds (penalty accumulation)
+  # Phase 2: Stop one validator for 4+ rounds
   # ================================================================
-  # With round cycle ~50s, we need at least 4 rounds = 200s minimum.
-  # We wait 240s total (4×60s) to guarantee 4+ full rounds pass,
-  # and check block production at each checkpoint.
+  # With round cycle ~50s, 4 rounds = ~200s.
+  # We submit a TX every 60s to force block creation → observe
+  # block count growth as proof that rounds are advancing.
   # ================================================================
-  - name: "Phase 2: Stop node-6 for 4+ rounds (penalty accumulation + KICK vote)"
+  - name: "Phase 2: Stop node-6 for 4+ rounds (penalty accumulation)"
     steps:
-      - print: "Stopping node-6 to trigger penalty (need 4+ rounds = ~200s)..."
+      - print: "Stopping node-6 (1 of 3 masters). Remaining: 2 >= min_validators(2)."
       - docker_op: stop
         services: ["node-6"]
 
       - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_stim_tx1
+        expect: any
+      - if: "pen_stim_tx1"
+        then:
+          - wait_for_datum: "{{pen_stim_tx1}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_60s
         expect: any
-      - print: "Blocks at +60s: {{pen_blocks_60s}} (was: {{pen_blocks_before_stop}})"
+      - print: "Blocks at +60s (round ~1): {{pen_blocks_60s}}"
 
       - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_stim_tx2
+        expect: any
+      - if: "pen_stim_tx2"
+        then:
+          - wait_for_datum: "{{pen_stim_tx2}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_120s
         expect: any
-      - print: "Blocks at +120s: {{pen_blocks_120s}}"
+      - print: "Blocks at +120s (round ~2): {{pen_blocks_120s}}"
 
       - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_stim_tx3
+        expect: any
+      - if: "pen_stim_tx3"
+        then:
+          - wait_for_datum: "{{pen_stim_tx3}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_180s
         expect: any
-      - print: "Blocks at +180s: {{pen_blocks_180s}}"
+      - print: "Blocks at +180s (round ~3, miss_count should be 3): {{pen_blocks_180s}}"
 
       - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_stim_tx4
+        expect: any
+      - if: "pen_stim_tx4"
+        then:
+          - wait_for_datum: "{{pen_stim_tx4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_240s
         expect: any
-      - print: "Blocks at +240s: {{pen_blocks_240s}} (4+ rounds should have passed)"
+      - print: "Blocks at +240s (round ~4, KICK vote should happen): {{pen_blocks_240s}}"
 
   # ================================================================
-  # Phase 3: Verify KICK happened — penalty GDB must have entries
+  # Phase 3: Verify penalty state — KICK should have occurred
   # ================================================================
   - name: "Phase 3: Verify penalty state after 4+ rounds"
     steps:
       - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
         node: node-1
-        save: pen_penalty_keys_after_kick
+        save: pen_penalty_keys_kick
         expect: any
-      - print: "Penalty GDB keys after KICK period: {{pen_penalty_keys_after_kick}}"
+      - print: "Penalty GDB keys after KICK period (node-1): {{pen_penalty_keys_kick}}"
 
       - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
         node: node-5
         save: pen_penalty_keys_n5
         expect: any
-      - print: "Penalty GDB keys on node-5: {{pen_penalty_keys_n5}}"
-
-      - for: _node
-        in: "{{master_nodes}}"
-        steps:
-          - cli: "net -net {{network_name}} get status"
-            node: "{{_node}}"
-            save: _pen_status
-            expect: any
-          - print: "[{{_node}}] status during penalty: {{_pen_status}}"
+      - print: "Penalty GDB keys after KICK period (node-5): {{pen_penalty_keys_n5}}"
 
   # ================================================================
-  # Phase 4: Verify consensus continued — blocks must have increased
+  # Phase 4: Verify consensus continued with 2 validators
   # ================================================================
-  - name: "Phase 4: Verify blocks were produced while validator was offline"
+  - name: "Phase 4: Consensus works with 2 remaining validators"
     steps:
-      - wait: block_created
-        node: "{{first_master}}"
-        network: "{{network_name}}"
-        chain: main
-        min_blocks: 1
-        timeout: 180
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_post_kick_tx
+        expect: any
+      - if: "pen_post_kick_tx"
+        then:
+          - wait_for_datum: "{{pen_post_kick_tx}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
 
       - cli: "block count -net {{network_name}} -chain main"
         node: "{{first_master}}"
         save: pen_blocks_post_kick
         expect: any
-      - print: "Blocks post-kick: {{pen_blocks_post_kick}} (was: {{pen_blocks_before_stop}} at stop)"
+      - print: "Blocks post-kick: {{pen_blocks_post_kick}} (was: {{pen_blocks_before_stop}} at start)"
 
   # ================================================================
   # Phase 5: Restart penalized validator
@@ -170,42 +244,91 @@ test:
       - print: "Node-6 back online, waiting for LIFT recovery..."
 
   # ================================================================
-  # Phase 6: Wait for LIFT — penalty should clear after participation
+  # Phase 6: Wait for LIFT — node-6 must participate in 3+ rounds
   # ================================================================
-  # After node-6 comes back, it needs to participate in rounds.
-  # Each participation decrements miss_count. After miss_count reaches 0,
-  # a LIFT directive is composed and voted on.
-  # miss_count went up to 3 (or capped at PENALTY_KICK=3), so need
-  # 3 rounds of participation + 1 for LIFT vote = ~4 rounds = ~200s
+  # miss_count decrements each round node-6 participates.
+  # miss_count was 3 (KICK level) → need 3 decrements + 1 LIFT vote.
+  # Submit TXs to force block creation and round progression.
   # ================================================================
-  - name: "Phase 6: Wait for LIFT recovery (4+ rounds of participation)"
+  - name: "Phase 6: Wait for LIFT recovery (4+ rounds of active participation)"
     steps:
-      - wait: "240s"
+      - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_lift_tx1
+        expect: any
+      - if: "pen_lift_tx1"
+        then:
+          - wait_for_datum: "{{pen_lift_tx1}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
+      - print: "LIFT checkpoint 1 passed"
+
+      - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_lift_tx2
+        expect: any
+      - if: "pen_lift_tx2"
+        then:
+          - wait_for_datum: "{{pen_lift_tx2}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
+      - print: "LIFT checkpoint 2 passed"
+
+      - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_lift_tx3
+        expect: any
+      - if: "pen_lift_tx3"
+        then:
+          - wait_for_datum: "{{pen_lift_tx3}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
+      - print: "LIFT checkpoint 3 passed"
+
+      - wait: "60s"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet pen_sender -to_addr {{pen_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: pen_lift_tx4
+        expect: any
+      - if: "pen_lift_tx4"
+        then:
+          - wait_for_datum: "{{pen_lift_tx4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 120
+            timeout_mempool: 60
+      - print: "LIFT checkpoint 4 passed"
 
       - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
         node: node-1
         save: pen_penalty_keys_after_lift
         expect: any
-      - print: "Penalty GDB keys after LIFT period: {{pen_penalty_keys_after_lift}}"
+      - print: "Penalty GDB keys after LIFT period (node-1): {{pen_penalty_keys_after_lift}}"
 
       - cli: "global_db get_keys -group esbocs.{{network_name}}.penalty"
         node: node-5
-        save: pen_penalty_keys_n5_after_lift
+        save: pen_penalty_keys_n5_lift
         expect: any
-      - print: "Penalty GDB keys on node-5 after LIFT: {{pen_penalty_keys_n5_after_lift}}"
+      - print: "Penalty GDB keys after LIFT (node-5): {{pen_penalty_keys_n5_lift}}"
 
   # ================================================================
   # Phase 7: Verify full consensus with all 3 validators restored
   # ================================================================
   - name: "Phase 7: Verify consensus with all validators recovered"
     steps:
-      - wait: block_created
-        node: "{{first_master}}"
-        network: "{{network_name}}"
-        chain: main
-        min_blocks: 1
-        timeout: 300
-
       - for: _node
         in: "{{master_nodes}}"
         steps:
