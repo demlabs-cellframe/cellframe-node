@@ -1,6 +1,7 @@
 # Prerequisites
 build/*
 debug/*
+cache/
 test_build/
 build_stretch/*
 test/build
