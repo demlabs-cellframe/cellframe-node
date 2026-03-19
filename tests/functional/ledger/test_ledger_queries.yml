@@ -1,0 +1,86 @@
+name: Ledger Queries
+description: >
+  Tests ledger list (coins, balance, threshold),
+  ledger info for transaction lookup, and event operations.
+tags: [e2e, functional, ledger]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+test:
+  - group: Ledger list coins
+    steps:
+      - cli: "ledger list coins -net {{network_name}}"
+        save: coins_list
+        contains: "{{native_ticker}}"
+      - print: "Coins: {{coins_list}}"
+
+  - group: Ledger list balance
+    steps:
+      - cli: "ledger list balance -net {{network_name}}"
+        save: balance_list
+        expect: any
+      - print: "Balances: {{balance_list}}"
+
+  - group: Ledger list balance with pagination
+    steps:
+      - cli: "ledger list balance -net {{network_name}} -limit 5"
+        save: balance_limited
+        expect: any
+      - print: "Limited balances: {{balance_limited}}"
+
+      - cli: "ledger list balance -net {{network_name}} -limit 5 -offset 5"
+        save: balance_offset
+        expect: any
+      - print: "Offset balances: {{balance_offset}}"
+
+  - group: Ledger list threshold
+    steps:
+      - cli: "ledger list threshold -net {{network_name}}"
+        save: threshold_list
+        expect: any
+      - print: "Threshold: {{threshold_list}}"
+
+  - group: Ledger info on first block TX
+    steps:
+      - cli: "block list -net {{network_name}} -chain main -limit 1"
+        save: first_block
+        expect: any
+      - print: "First block: {{first_block}}"
+
+  - group: Ledger event operations
+    steps:
+      - cli: "ledger event list -net {{network_name}}"
+        save: event_list
+        expect: any
+      - print: "Ledger events: {{event_list}}"
+
+      - cli: "ledger event key list -net {{network_name}}"
+        save: event_keys
+        expect: any
+      - print: "Event keys: {{event_keys}}"
+
+  - group: Ledger queries across nodes
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+
+check:
+  - cli: "ledger list coins -net {{network_name}}"
+    contains: "{{native_ticker}}"

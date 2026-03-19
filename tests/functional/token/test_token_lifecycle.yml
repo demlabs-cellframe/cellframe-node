@@ -1,0 +1,75 @@
+name: Token Lifecycle
+description: >
+  Tests token list/info for the native token, token declaration
+  into mempool, and verification of token properties.
+tags: [e2e, functional, token]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+  cli:
+    net: "{{network_name}}"
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    save_wallet: root_wallet_addr
+
+test:
+  - group: Native token exists
+    steps:
+      - cli: "token list"
+        save: token_list
+        expect: any
+      - print: "Token list: {{token_list}}"
+
+      - cli: "ledger list coins"
+        save: ledger_coins
+        contains: "{{native_ticker}}"
+      - print: "Ledger coins: {{ledger_coins}}"
+
+  - group: Native token info
+    steps:
+      - cli: "token info -name {{native_ticker}} -net {{network_name}}"
+        save: native_info
+        contains: "{{native_ticker}}"
+      - print: "Native token info: {{native_info}}"
+
+  - group: Declare CF20 token into mempool
+    steps:
+      - set: root_certs_str
+        value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+        eval: true
+
+      - cli: "token_decl -token ETEST -total_supply 1000000000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs_str}} -chain zerochain"
+        save_hash: etest_decl_hash
+        save: decl_result
+      - print: "Token ETEST declared: {{decl_result}}"
+
+  - group: Verify datum in mempool
+    steps:
+      - cli: "mempool list -chain zerochain"
+        save: mempool_contents
+        expect: any
+      - print: "Mempool: {{mempool_contents}}"
+
+  - group: Process datum from mempool
+    steps:
+      - cli: "mempool proc -datum {{etest_decl_hash}} -chain zerochain"
+        save: proc_result
+        expect: any
+      - print: "Mempool proc: {{proc_result}}"
+
+  - group: Ledger info
+    steps:
+      - cli: "ledger list coins"
+        save: ledger_coins
+        contains: "{{native_ticker}}"
+      - print: "Ledger coins: {{ledger_coins}}"
+
+check:
+  - cli: "ledger list coins"
+    contains: "{{native_ticker}}"

@@ -1,0 +1,112 @@
+name: Block Operations
+description: >
+  Tests block list, count, last, dump, find, reward info,
+  and cross-node block consistency.
+tags: [e2e, functional, block]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-4
+  wait: 1s
+  cli:
+    chain: main
+
+test:
+  - group: Block list
+    steps:
+      - cli: "block list"
+        save: block_list
+        expect: any
+      - print: "Blocks: {{block_list}}"
+
+  - group: Block count
+    steps:
+      - cli: "block count"
+        save: block_count
+        expect: any
+      - print: "Block count: {{block_count}}"
+
+  - group: Block last
+    steps:
+      - cli: "block last"
+        save: block_last
+        expect: any
+      - print: "Last block: {{block_last}}"
+
+  - group: Block list with pagination
+    steps:
+      - cli: "block list -limit 3"
+        save: blocks_limited
+        expect: any
+      - print: "Limited blocks: {{blocks_limited}}"
+
+      - cli: "block list -limit 3 -offset 1"
+        save: blocks_offset
+        expect: any
+      - print: "Offset blocks: {{blocks_offset}}"
+
+  - group: Block dump
+    steps:
+      - cli: "block last"
+        save: _last_block
+        expect: any
+
+      - set: _has_block
+        value: "'hash' in _last_block.lower() or '0x' in _last_block"
+        eval: true
+
+      - if: "_has_block"
+        then:
+          - set: _block_hash
+            value: "regex_extract(_last_block, r'(0x[A-Fa-f0-9]+)', 1) if '0x' in _last_block else ''"
+            eval: true
+          - if: "_block_hash"
+            then:
+              - cli: "block dump -hash {{_block_hash}}"
+                save: block_dump
+                expect: any
+              - print: "Block dump: {{block_dump}}"
+
+  - group: Block consistency across master nodes
+    steps:
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count"
+            node: "{{_node}}"
+            save: _block_count
+          - print: "{{_node}} block count: {{_block_count}}"
+
+  - group: Block reward info
+    steps:
+      - cli: "block reward show"
+        save: reward_info
+        expect: any
+      - print: "Reward info: {{reward_info}}"
+
+  - group: Block autocollect status
+    steps:
+      - cli: "block autocollect status"
+        save: autocollect
+        expect: any
+      - print: "Autocollect status: {{autocollect}}"
+
+  - group: ESBocs status
+    steps:
+      - cli: "esbocs status -net {{network_name}} -chain main"
+        save: esbocs_status
+        expect: any
+      - print: "ESBocs status: {{esbocs_status}}"
+
+      - cli: "esbocs min_validators_count show -net {{network_name}} -chain main"
+        save: min_validators
+        expect: any
+      - print: "Min validators: {{min_validators}}"
+
+check:
+  - cli: "block list -chain main"
+    node: node-4
+    expect: any

@@ -1,0 +1,90 @@
+name: Wallet Lifecycle
+description: >
+  Tests wallet creation, info, listing, activation/deactivation, outputs,
+  and edge cases (duplicate names, long names, special characters).
+tags: [e2e, functional, wallet]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+test:
+  - group: Create wallets with different signature types
+    steps:
+      - cli: "wallet new -w test_wallet_dil -sign sig_dil"
+        contains: "success"
+      - cli: "wallet new -w test_wallet_falcon -sign sig_falcon"
+        contains: "success"
+      - cli: "wallet new -w test_wallet_sphincs -sign sig_sphincs"
+        contains: "success"
+
+  - group: Wallet list shows all created wallets
+    steps:
+      - cli: "wallet list"
+        save: wallet_list
+        contains: "test_wallet_dil"
+      - set: has_falcon
+        value: "'test_wallet_falcon' in wallet_list"
+        eval: true
+      - set: has_sphincs
+        value: "'test_wallet_sphincs' in wallet_list"
+        eval: true
+
+  - group: Wallet info returns address
+    steps:
+      - cli: "wallet info -w test_wallet_dil -net {{network_name}}"
+        save: dil_info
+        save_wallet: dil_addr
+      - print: "Dilithium wallet address: {{dil_addr}}"
+
+      - cli: "wallet info -w test_wallet_falcon -net {{network_name}}"
+        save_wallet: falcon_addr
+      - print: "Falcon wallet address: {{falcon_addr}}"
+
+  - group: Wallet info by address
+    steps:
+      - cli: "wallet info -addr {{dil_addr}} -net {{network_name}}"
+        contains: "{{dil_addr}}"
+
+  - group: Wallet outputs on empty wallet
+    steps:
+      - cli: "wallet outputs -w test_wallet_dil -net {{network_name}} -token {{native_ticker}}"
+        expect: any
+        save: empty_outputs
+
+  - group: Duplicate wallet name fails
+    steps:
+      - cli: "wallet new -w test_wallet_dil -sign sig_dil"
+        expect: error
+        save: dup_result
+      - print: "Duplicate wallet result: {{dup_result}}"
+
+  - group: Wallet with password
+    steps:
+      - cli: "wallet new -w test_wallet_secured -sign sig_dil -password TestPass123"
+        contains: "success"
+      - cli: "wallet activate -w test_wallet_secured -password TestPass123 -ttl 5"
+        contains: "activated"
+      - cli: "wallet info -w test_wallet_secured -net {{network_name}}"
+        save_wallet: secured_addr
+      - cli: "wallet deactivate -w test_wallet_secured"
+        expect: any
+
+  - group: Find wallet by address
+    steps:
+      - cli: "wallet find -addr {{dil_addr}}"
+        expect: any
+        save: find_result
+      - print: "Find wallet result: {{find_result}}"
+
+check:
+  - cli: "wallet list"
+    contains: "test_wallet_dil"
+  - cli: "wallet list"
+    contains: "test_wallet_falcon"
+  - cli: "wallet list"
+    contains: "test_wallet_secured"

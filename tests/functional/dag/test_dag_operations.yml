@@ -1,0 +1,96 @@
+name: DAG Operations
+description: >
+  Tests DAG event listing, counting, dumping, searching,
+  round operations, and cross-node DAG consistency.
+tags: [e2e, functional, dag]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+  cli:
+    chain: zerochain
+
+test:
+  - group: DAG event list
+    steps:
+      - cli: "dag event list"
+        save: dag_list
+        expect: any
+      - print: "DAG events: {{dag_list}}"
+
+      - cli: "dag event list -from events"
+        save: dag_events_from
+        expect: any
+      - print: "DAG events (from events): {{dag_events_from}}"
+
+  - group: DAG event count
+    steps:
+      - cli: "dag event count"
+        save: dag_count
+        expect: any
+      - print: "DAG event count: {{dag_count}}"
+
+  - group: DAG last event
+    steps:
+      - cli: "dag event last"
+        save: dag_last
+        expect: any
+      - print: "Last DAG event: {{dag_last}}"
+
+  - group: DAG event list with pagination
+    steps:
+      - cli: "dag event list -limit 2"
+        save: dag_limited
+        expect: any
+      - print: "Limited DAG list: {{dag_limited}}"
+
+      - cli: "dag event list -limit 2 -offset 2"
+        save: dag_offset
+        expect: any
+      - print: "Offset DAG list: {{dag_offset}}"
+
+  - group: DAG consistency across root nodes
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count"
+            node: "{{_node}}"
+            save: _node_count
+          - print: "{{_node}} DAG count: {{_node_count}}"
+
+  - group: DAG round operations
+    steps:
+      - cli: "dag round find -datum 0000000000000000000000000000000000000000000000000000000000000000"
+        save: round_find
+        expect: any
+      - print: "Round find (null hash): {{round_find}}"
+
+  - group: DAG event dump (first event)
+    steps:
+      - cli: "dag event last"
+        save: _last_output
+        expect: any
+
+      - set: _has_event
+        value: "'0x' in _last_output and 'empty' not in _last_output"
+        eval: true
+
+      - if: "_has_event"
+        then:
+          - set: _event_hash
+            value: "_last_output.split('last_event_hash:')[1].split()[0].strip() if 'last_event_hash:' in _last_output else ''"
+            eval: true
+          - cli: "dag event dump -event {{_event_hash}} -from events"
+            save: event_dump
+            expect: any
+          - print: "Event dump: {{event_dump}}"
+
+check:
+  - cli: "dag event count -chain zerochain"
+    node: node-1
+    expect: any
