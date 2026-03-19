@@ -1,157 +1,79 @@
 /*
+ * Cellframe Node — thin loader
+ *
+ * All module initialization is delegated to dap_sdk_init() / cellframe_sdk_init().
+ * The node only handles CLI arguments, config loading, HTTP proc registration,
+ * signal handlers, and the main event loop.
+ *
  * Authors:
- * Dmitriy A. Gerasimov <kahovski@gmail.com>
- * DeM Labs Ltd.   https://demlabs.net
- * CellFrame         https://cellframe.net
- * Copyright  (c) 2017-2020
- * All rights reserved.
+ *   Dmitriy A. Gerasimov <kahovski@gmail.com>
+ *   DeM Labs Ltd.   https://demlabs.net
+ * Copyright (c) 2017-2026
+ * License: GPLv3
+ */
 
- This file is part of DAP (Distributed Applications Platform) the open source project
-
-    DAP (Distributed Applications Platform) is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    DAP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with any DAP based project.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#include "dap_strfuncs.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <getopt.h>
-#include <signal.h>
 #include <errno.h>
-#include <unistd.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
-#include <mswsock.h>
-#include <ws2tcpip.h>
 #include <io.h>
-#include <pthread.h>
 #include "userenv.h"
+#endif
 
+#include "dap_common.h"
+#include "dap_strfuncs.h"
+#include "dap_file_utils.h"
+#include "dap_config.h"
+#include "dap_events.h"
+#include "dap_sdk.h"
+#include "cellframe-sdk.h"
+
+#ifndef _WIN32
+#include "sig_unix_handler.h"
+#else
+#include "sig_win32_handler.h"
+#include "registry.h"
+void S_SetExceptionFilter(void);
+#endif
+
+#ifndef DAP_OS_WASM
+#include "dap_daemon.h"
+#include "dap_server.h"
+#include "dap_http_server.h"
+#include "dap_http_folder.h"
+#include "dap_http_simple.h"
+#include "dap_enc_http.h"
+#include "dap_stream.h"
+#include "dap_stream_ctl.h"
+#include "dap_net_trans_http_stream.h"
+#include "dap_dns_server.h"
+#include "dap_chain_net.h"
+#include "dap_chain_net_cli.h"
+#include "dap_chain_net_balancer.h"
+#include "dap_chain_net_node_list.h"
+#include "dap_plugin.h"
+#include "dap_dl.h"
+#include "dap_chain.h"
 #endif
 
 #define LOG_TAG "main"
-
-#ifndef _WIN32
-  #include "sig_unix_handler.h"
-#else
-    #include "sig_win32_handler.h"
-    #include "registry.h"
-    void  S_SetExceptionFilter( void );
-#endif
-#include "dap_common.h"
-#include "dap_config.h"
-#include "dap_server.h"
-#include "dap_notify_srv.h"
-#include "dap_http_server.h"
-#include "dap_http_folder.h"
-#include "dap_dns_client.h"
-#include "dap_dns_server.h"
-#include "dap_chain_net_balancer.h"
-#include "dap_chain_net_node_list.h"
-
-#ifdef DAP_MODULES_DYNAMIC
-#include "dap_modules_dynamic_cdb.h"
-#endif
-
-#include "dap_events.h"
-#include "dap_enc.h"
-#include "dap_enc_ks.h"
-#include "dap_enc_http.h"
-
-#include "dap_chain.h"
-#include "dap_chain_wallet.h"
-#include "dap_dl.h"
-
-#include "dap_chain_type_blocks.h"
-#include "dap_chain_type_dag.h"
-#include "dap_chain_type_dag_poa.h"
-#include "dap_chain_type_none.h"
-#include "dap_chain_cs_esbocs.h"
-
-//#include "dap_chain_bridge.h"
-//#include "dap_chain_bridge_btc.h"
-
-#include "dap_chain_net.h"
-#include "dap_chain_net_srv.h"
-#include "dap_chain_net_srv_geoip.h"
-
-#include "dap_daemon.h"
-#include "dap_interval_timer.h"
-#include "dap_cli_server.h"
-#include "dap_global_db.h"
-#include "dap_chain_mempool.h"
-#include "dap_chain_node.h"
-
-#include "dap_stream.h"
-#include "dap_stream_ctl.h"
-#include "dap_cluster.h"
-#include "dap_chain_net_srv_order.h"
-#include "dap_chain_net_srv_xchange.h"
-#include "dap_chain_net_srv_voting.h"
-#include "dap_chain_net_srv_bridge.h"
-#include "dap_chain_net_srv_stake_pos_delegate.h"
-#include "dap_chain_net_srv_stake.h"
-#include "dap_chain_net_srv_stake_ext.h"
-#include "dap_chain_wallet_shared.h"
-
-#include "dap_chain_wallet_cache.h"
-#include "dap_chain_net_cli.h"
-#include "dap_chain_token_cli.h"
-#include "dap_chain_mempool_cli.h"
-#include "dap_chain_policy.h"
-#include "dap_chain_ledger_cli.h"
-#include "dap_chain_net_tx_cli.h"
-#include "dap_json_rpc_errors.h"
-
-extern int dap_chain_wallet_cli_init(void);
-
-#include "dap_events_socket.h"
-#include "dap_client.h"
-#include "dap_http_simple.h"
-#include "dap_process_manager.h"
-
-#include "dap_file_utils.h"
-#include "dap_plugin.h"
-
-#define MAIN_URL "/"
-const char *dap_node_version();
-static int s_proc_running_check(const char *a_path);
-
-#ifdef DAP_OS_ANDROID
-#include "dap_app_cli.h"
-#include <android/log.h>
-#include <jni.h>
-#endif
+#define NODE_NAME "cellframe-node"
 
 #ifndef BUILD_HASH
-#define BUILD_HASH "0000000" // 0000000 means uninitialized
+#define BUILD_HASH "0000000"
 #endif
-
 #ifndef BUILD_TS
 #define BUILD_TS "undefined"
 #endif
 
-#define NODE_NAME "cellframe-node"
-
-const char *dap_node_version() {
+const char *dap_node_version(void)
+{
     return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
 }
 
@@ -160,508 +82,216 @@ void set_global_sys_dir(const char *dir)
     g_sys_dir_path = dap_strdup(dir);
 }
 
+static int s_proc_running_check(const char *a_path);
 
-int main( int argc, const char **argv )
+int main(int argc, const char **argv)
 {
-    if ( argv[1] && !dap_strcmp("-version", argv[1]) )
+    if (argv[1] && !dap_strcmp("-version", argv[1]))
         return printf("%s\n", dap_node_version()), 0;
-        
-    dap_server_t *l_server = NULL; // DAP Server instance
-    bool l_debug_mode = true;
-    bool bServerEnabled = false;
+
     bool l_seed_mode = false;
     int rc = 0;
 
     dap_set_appname(NODE_NAME);
 #if defined(_WIN32) && defined(NDEBUG)
-    S_SetExceptionFilter( );
+    S_SetExceptionFilter();
 #endif
 
-    // Parse command-line arguments
     for (int i = 1; i < argc; i++) {
-        if (!dap_strcmp("--seed-mode", argv[i])) {
+        if (!dap_strcmp("--seed-mode", argv[i]))
             l_seed_mode = true;
-        } else if (!dap_strcmp("--help", argv[i]) || !dap_strcmp("-h", argv[i])) {
-            printf("Cellframe Node %s\n\n"
-                   "Usage: %s [options]\n\n"
+        else if (!dap_strcmp("--help", argv[i]) || !dap_strcmp("-h", argv[i])) {
+            printf("Cellframe Node %s\n\nUsage: %s [options]\n\n"
                    "Options:\n"
                    "  -version               Print version and exit\n"
                    "  -B <path>              Set base directory path\n"
-                   "  --seed-mode            Start with seed mode enabled on all chains,\n"
-                   "                         allowing genesis block/event creation\n"
-                   "  --help, -h             Show this help message and exit\n"
-                   "\n"
-                   "Runtime CLI commands (via cellframe-node-cli):\n"
-                   "  chain seed -net <net> -chain <chain> {on | off}\n"
-                   "                         Enable/disable seed mode for a specific chain\n"
-                   "  help                   List all available CLI commands\n"
-                   "  help <command>         Show detailed help for a command\n"
-                   "\n", dap_node_version(), argv[0]);
+                   "  --seed-mode            Start seed mode on all chains\n"
+                   "  --help, -h             Show this help\n\n",
+                   dap_node_version(), argv[0]);
             return 0;
         }
     }
+
+    /* ---------- 1. Determine base directory ---------- */
 #if !DAP_OS_ANDROID
-    if (argc > 2 && !dap_strcmp("-B" , argv[1]))
+    if (argc > 2 && !dap_strcmp("-B", argv[1]))
         g_sys_dir_path = dap_strdup(argv[2]);
 #endif
-
     if (!g_sys_dir_path) {
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
+#elif defined(DAP_OS_WASM)
+        g_sys_dir_path = dap_strdup("/dap");
 #elif DAP_OS_MAC
         g_sys_dir_path = dap_strdup_printf("/Library/Application Support/CellframeNode/");
 #elif DAP_OS_UNIX
         g_sys_dir_path = dap_strdup_printf("/opt/%s", dap_get_appname());
 #endif
     }
-    if ( !dap_dir_test(g_sys_dir_path) ) {
-        printf("Invalid path \"%s\"", g_sys_dir_path);
-        rc = -1;
-    } else {
-        char l_path[MAX_PATH + 1];
-        int pos = snprintf(l_path, sizeof(l_path), "%s/var/log", g_sys_dir_path);
-        if ( dap_mkdir_with_parents(l_path) ) {
-            printf("Can't create directory %s, error %d", l_path, errno);
-            rc = -2;
-        } else {
-            snprintf(l_path + pos, sizeof(l_path) - pos, "/%s.log", dap_get_appname());
-            if ( dap_common_init(dap_get_appname(), l_path) ) {
-                printf("Fatal Error: Can't init common functions module");
-                rc = -3;
-            } else {
-#if defined (DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
-                dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
-#else
-                dap_log_set_external_output(LOGGER_OUTPUT_NONE, NULL);
+
+    if (!dap_dir_test(g_sys_dir_path))
+        return printf("Invalid path \"%s\"\n", g_sys_dir_path), DAP_DELETE(g_sys_dir_path), -1;
+
+    /* ---------- 2. Prepare log path and config dir ---------- */
+    char l_log_path[MAX_PATH + 1];
+    char l_config_dir[MAX_PATH + 1];
+    snprintf(l_log_path, sizeof(l_log_path), "%s/var/log", g_sys_dir_path);
+    if (dap_mkdir_with_parents(l_log_path))
+        return printf("Can't create %s (errno %d)\n", l_log_path, errno), DAP_DELETE(g_sys_dir_path), -2;
+
+    {
+        size_t n = strlen(l_log_path);
+        snprintf(l_log_path + n, sizeof(l_log_path) - n, "/%s.log", dap_get_appname());
+    }
+    snprintf(l_config_dir, sizeof(l_config_dir), "%s/etc", g_sys_dir_path);
+
+    /* ---------- 3. DAP SDK init ---------- */
+    dap_sdk_config_t l_sdk_cfg = {
+        .modules     = DAP_SDK_MODULE_FULL_NET | DAP_SDK_MODULE_NET_DNS | DAP_SDK_MODULE_PLUGIN,
+        .app_name    = dap_get_appname(),
+        .log_level   = L_NOTICE,
+        .sys_dir     = g_sys_dir_path,
+        .config_dir  = l_config_dir,
+        .config_name = dap_get_appname(),
+        .log_file    = l_log_path,
+    };
+    if ((rc = dap_sdk_init(&l_sdk_cfg)) != 0) {
+        printf("dap_sdk_init failed: %d\n", rc);
+        return DAP_DELETE(g_sys_dir_path), rc;
+    }
+
+#if defined(DAP_DEBUG) || !defined(DAP_OS_WINDOWS)
+    dap_log_set_external_output(LOGGER_OUTPUT_STDOUT, NULL);
 #endif
 #ifdef DAP_OS_ANDROID
-                dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
+    dap_log_set_external_output(LOGGER_OUTPUT_ALOG, "NativeCellframeNode");
 #endif
-                log_it(L_DEBUG, "Use main path: %s", g_sys_dir_path);
-                snprintf(l_path, sizeof(l_path), "%s/etc", g_sys_dir_path);
-                if ( dap_config_init(l_path) ) {
-                    log_it( L_CRITICAL,"Can't init general config \"%s/%s.cfg\"\n", l_path, NODE_NAME );
-                    rc = -4;
-                }
-            }
-        }
-    }
-    if ( rc )
-        return DAP_DELETE(g_sys_dir_path), rc;
 
-    if (!( g_config = dap_config_open(dap_get_appname()) ))
-        return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
+    log_it(L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION);
+
+#ifndef DAP_OS_WASM
+    if (g_config && dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false)) {
+        size_t l_timeout = dap_config_get_item_int64(g_config, "log", "rotate_timeout");
+        size_t l_maxsize = dap_config_get_item_int64(g_config, "log", "rotate_size");
+        dap_daemon_enable_log_cleaner(l_timeout * 60000, l_maxsize);
+    }
+#endif
+
+    /* ---------- 4. PID file check ---------- */
 #ifndef DAP_OS_WINDOWS
-    char l_default_dir[MAX_PATH + 1];
-    snprintf(l_default_dir, MAX_PATH + 1, "%s/tmp", g_sys_dir_path);
-    char *l_pid_file_path = dap_config_get_item_str_path_default(g_config,  "resources", "pid_path", l_default_dir);
-    int l_pid_check = s_proc_running_check(l_pid_file_path);
-    DAP_DELETE(l_pid_file_path);
-    if (l_pid_check)
-        return 2;
+    {
+        char l_default_pid[MAX_PATH + 1];
+        snprintf(l_default_pid, sizeof(l_default_pid), "%s/tmp", g_sys_dir_path);
+        char *l_pid_path = dap_config_get_item_str_path_default(g_config, "resources", "pid_path", l_default_pid);
+        int l_check = s_proc_running_check(l_pid_path);
+        DAP_DELETE(l_pid_path);
+        if (l_check)
+            return dap_sdk_deinit(), DAP_DELETE(g_sys_dir_path), 2;
+    }
 #else
-    if ( s_proc_running_check("DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94"
-                              "B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56") )
-        return DAP_DELETE(g_sys_dir_path), 2;
+    if (s_proc_running_check("DAP_CELLFRAME_NODE_74E9201D33F7F7F684D2FEF1982799A79B6BF94"
+                              "B568446A8D1DE947B00E3C75060F3FD5BF277592D02F77D7E50935E56"))
+        return dap_sdk_deinit(), DAP_DELETE(g_sys_dir_path), 2;
 #endif
 
-    log_it(L_DEBUG, "Parsing command line args");
-
-    l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
-
-    if ( l_debug_mode )
-        log_it( L_ATT, "*** DEBUG MODE ***" );
-    else
-       log_it( L_ATT, "*** NORMAL MODE ***" );
-
-    dap_log_level_set( l_debug_mode ? L_DEBUG : L_NOTICE );
-
-    log_it( L_DAP, "*** CellFrame Node version: %s ***", DAP_VERSION );
-
-    if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
-        size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
-                l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
-        log_it(L_NOTICE, "Log rotation every %zu min enabled, max log file size %zu MB",
-                         l_timeout_minutes, l_max_file_size);
-        dap_daemon_enable_log_cleaner(l_timeout_minutes * 60000, l_max_file_size);
-    }
-
-    if ( dap_enc_init() != 0 ){
-        log_it( L_CRITICAL, "Can't init encryption module" );
-        return -56;
-    }
-    // change to dap_config_get_item_int_default when it's will be possible
-    uint32_t l_thread_cnt = dap_config_get_item_int32_default(g_config, "resources", "threads_cnt", 0);
-    // New event loop init
-    dap_events_init(l_thread_cnt, 0);
-    dap_events_start();
-
-    bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
-
-    if ( bServerEnabled && dap_server_init() != 0 ) {
-        log_it( L_CRITICAL, "Can't init socket server module" );
-        return -4;
-    }
-
-    if ( dap_http_init() != 0 ) {
-        log_it( L_CRITICAL, "Can't init http server module" );
-        return -5;
-    }
-
-#if !DAP_OS_ANDROID
-    if ( dap_http_folder_init() != 0 ){
-        log_it( L_CRITICAL, "Can't init http server module" );
-        return -55;
-    }
-#endif
-    
-    if ( dap_http_simple_module_init() != 0 ) {
-        log_it(L_CRITICAL,"Can't init http simple module");
-        return -9;
-    }
-
-    if ( enc_http_init() != 0 ) {
-        log_it( L_CRITICAL, "Can't init encryption http session storage module" );
-        return -81;
-    }
-
-    if ( dap_stream_init(g_config) != 0 ) {
-        log_it( L_CRITICAL, "Can't init stream server module" );
-        return -82;
-    }
-
-    if ( dap_cluster_init() != 0 ) {
-        log_it( L_CRITICAL, "Can't init cluster module" );
-        return -820;
-    }
-
-    if ( dap_stream_ctl_init() != 0 ){
-        log_it( L_CRITICAL, "Can't init stream control module" );
-        return -83;
-    }
-
-    dap_client_init();
-
-    // Create and init notify server
-    if ( dap_notify_server_init() != 0 ){
-        log_it( L_ERROR, "Can't init notify server module" );
-    }
-
-    if ( dap_global_db_init() != 0 ) {
-        log_it( L_CRITICAL, "Can't init global db module" );
-        return -58;
-    }
-
-    if( dap_chain_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain modules");
-        return -60;
-    }
-
-    if (dap_chain_net_srv_stake_pos_delegate_init()) {
-        log_it(L_ERROR, "Can't start delegated PoS stake service");
-    }
-
-    if( dap_chain_type_dag_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus module");
-        return -62;
-    }
-
-    if( dap_chain_type_dag_poa_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain dag consensus PoA module");
-        return -63;
-    }
-
-    if( dap_chain_type_blocks_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain blocks consensus module");
-        return -62;
-    }
-
-    if( dap_chain_cs_esbocs_init() ){
-        log_it(L_CRITICAL,"Can't init enhanced stake-based blocks operating consensus module");
-        return -69;
-    }
-
-    if( dap_nonconsensus_init() ) {
-        log_it(L_CRITICAL, "Can't init nonconsensus chain module");
-        return -71;
-    }
-
-    if (dap_net_common_init()) {
-        log_it(L_CRITICAL, "Can't init net common module");
-        return -72;
-    }
-
-    if( dap_chain_net_init() ){
-        log_it(L_CRITICAL,"Can't init dap chain network module");
-        return -65;
-    }
-
-    if( dap_chain_policy_init() ){
-        log_it(L_CRITICAL,"Can't init dap chain policy module");
-        return -66;
-    }
-
-    if( dap_chain_wallet_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
-    if( dap_chain_net_srv_init() ){
-        log_it(L_CRITICAL,"Can't init dap chain network service module");
-        return -66;
-    }
-
-    if (dap_chain_net_srv_xchange_init()) {
-        log_it(L_ERROR, "Can't provide exchange capability");
-    }
-
-    if (dap_chain_net_srv_voting_init()) {
-        log_it(L_ERROR, "Can't provide voting capability");
-    }
-    
-    if (dap_chain_net_srv_bridge_init()) {
-        log_it(L_ERROR, "Can't provide bridge capability");
-    }
-
-    if (dap_chain_net_srv_stake_ext_init()) {
-        log_it(L_ERROR, "Can't provide stake_ext capability");
-    }
-    
-    if (dap_chain_net_srv_stake_init()) {
-        log_it(L_ERROR, "Can't start stake lock service");
-    }
-
+    /* ---------- 5. Signal handlers ---------- */
 #ifndef _WIN32
-    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config,
-                                                              "resources",
-                                                              "pid_path",
-                                                              "/tmp")) != 0) {
-        log_it(L_CRITICAL,"Can't init sig unix handler module");
-        return -12;
+    if (sig_unix_handler_init(dap_config_get_item_str_default(g_config, "resources", "pid_path", "/tmp")) != 0) {
+        log_it(L_CRITICAL, "Can't init sig unix handler");
+        return dap_sdk_deinit(), -12;
     }
 #else
-    if ( sig_win32_handler_init( NULL ) ) {
-        log_it( L_CRITICAL,"Can't init sig win32 handler module" );
-        return -12;
+    if (sig_win32_handler_init(NULL)) {
+        log_it(L_CRITICAL, "Can't init sig win32 handler");
+        return dap_sdk_deinit(), -12;
     }
 #endif
 
-    if ( dap_cli_server_init(false, "cli-server") ) {
-        log_it( L_CRITICAL, "Can't init server for console" );
-        return -11;
+    /* ---------- 6. Cellframe SDK init ---------- */
+    if ((rc = cellframe_sdk_init(CF_MODULE_NODE)) != 0) {
+        log_it(L_CRITICAL, "cellframe_sdk_init failed: %d", rc);
+        return dap_sdk_deinit(), rc;
     }
 
+#ifndef DAP_OS_WASM
     dap_chain_net_cli_set_version_info(dap_node_version());
-    dap_chain_net_cli_init();
-    dap_chain_wallet_cli_init();
-    dap_chain_token_cli_init();
-    dap_chain_mempool_cli_init();
-    dap_chain_ledger_cli_init();
-    dap_chain_net_tx_cli_init();
 
-    if( dap_chain_wallet_cache_init() ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
-    dap_chain_net_load_all();
-
+    /* ---------- 7. Seed mode ---------- */
     if (l_seed_mode) {
-        log_it(L_NOTICE, "Seed mode enabled via --seed-mode, activating on all chains");
-        for (dap_chain_net_t *l_net = dap_chain_net_iterate(NULL); l_net; l_net = dap_chain_net_iterate(l_net)) {
-            dap_chain_t *l_chain;
-            dap_dl_foreach(l_net->pub.chains, l_chain) {
-                l_chain->seed_mode = true;
-                log_it(L_NOTICE, "  Seed mode ON: net '%s' chain '%s'", l_net->pub.name, l_chain->name);
+        log_it(L_NOTICE, "Seed mode enabled via --seed-mode");
+        for (dap_chain_net_t *net = dap_chain_net_iterate(NULL); net; net = dap_chain_net_iterate(net)) {
+            dap_chain_t *chain;
+            dap_dl_foreach(net->pub.chains, chain) {
+                chain->seed_mode = true;
+                log_it(L_NOTICE, "  Seed mode ON: net '%s' chain '%s'", net->pub.name, chain->name);
             }
         }
     }
 
-    if( dap_chain_net_srv_order_init() )
-        return -67;
+    /* ---------- 8. HTTP server setup (node-specific) ---------- */
+    bool l_server_enabled = g_config && dap_config_get_item_bool_default(g_config, "server", "enabled", false);
+    dap_server_t *l_server = l_server_enabled ? dap_http_server_new("server", dap_get_appname()) : NULL;
 
-    if ( dap_datum_mempool_init() ) {
-        log_it( L_CRITICAL, "Can't init mempool module" );
-        return -134;
-    }
-
-    if (dap_chain_node_list_clean_init()) {
-        log_it( L_CRITICAL, "Can't init node list clean" );
-        return -131;
-    }
-
-    if (dap_global_db_clean_init()) {
-        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
-        return -133;
-    }
-
-    log_it(L_INFO, "Automatic mempool processing %s",
-           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
-    
-    uint16_t l_listen_addrs_count = 0;
-    if ( bServerEnabled )
-        l_server = dap_http_server_new("server", dap_get_appname());
-
-    if ( l_server ) { // If listener server is initialized
-        // Handshake URL
-        enc_http_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_ENC_INIT );
-
-        // Streaming URLs
-        dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
-        dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
-
-        // Built in WWW server
+    if (l_server) {
+        enc_http_add_proc(DAP_HTTP_SERVER(l_server), "/" DAP_UPLINK_PATH_ENC_INIT);
+        dap_stream_add_proc_http(DAP_HTTP_SERVER(l_server), "/" DAP_UPLINK_PATH_STREAM);
+        dap_stream_ctl_add_proc(DAP_HTTP_SERVER(l_server), "/" DAP_UPLINK_PATH_STREAM_CTL);
 #if !DAP_OS_ANDROID
-        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
-                                dap_config_get_item_str(g_config,
-                                                            "resources",
-                                                            "www_root") );
-        }
+        if (dap_config_get_item_bool_default(g_config, "www", "enabled", false))
+            dap_http_folder_add(DAP_HTTP_SERVER(l_server), "/",
+                                dap_config_get_item_str(g_config, "resources", "www_root"));
 #endif
         dap_server_set_default(l_server);
-        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false) ) {
-            log_it(L_DEBUG, "HTTP balancer enabled");
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER,
+        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/" DAP_UPLINK_PATH_NODE_LIST,
+                                 2048, dap_chain_net_node_check_http_issue_link);
+        if (dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false))
+            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/" DAP_UPLINK_PATH_BALANCER,
                                      DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
-        }
-        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false) ) {
-            log_it(L_DEBUG, "DNS balancer enabled");
-            dap_dns_server_start("bootstrap_balancer");
-        }
-    } else
-        log_it( L_INFO, "No enabled server, working in client mode only" );
-
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
-        int rc_plugin_init = 0;
-        rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        if (rc_plugin_init) {
-            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);    
-            DAP_DELETE(l_plugins_path_default);
-        } else {
-            DAP_DELETE(l_plugins_path_default);
-            dap_plugin_start_all();
-        }
+    } else {
+        log_it(L_INFO, "No enabled server, client mode only");
     }
+
+    /* ---------- 9. Plugins ---------- */
+    if (g_config && dap_config_get_item_bool_default(g_config, "plugins", "enabled", false))
+        dap_plugin_start_all();
+
+    /* ---------- 10. Bring networks online ---------- */
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all(NULL);
-    rc = dap_events_wait();
-    log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
-    // Deinit modules
+#endif /* !DAP_OS_WASM */
 
-//failure or exit:
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-        dap_plugin_stop_all();
-        dap_plugin_deinit();
-    }
-    dap_events_deinit();
-    dap_dns_server_stop();
-    dap_stream_deinit();
-    dap_stream_ctl_deinit();
-#if !DAP_OS_ANDROID
-    dap_http_folder_deinit();
-#endif
-    dap_http_deinit();
-    if (bServerEnabled) dap_server_deinit();
-    dap_enc_ks_deinit();
-    dap_chain_node_mempool_autoproc_deinit();
-    dap_chain_net_srv_xchange_deinit();
-    dap_chain_net_srv_stake_pos_delegate_deinit();
-    dap_chain_net_srv_stake_deinit();
-    dap_chain_net_srv_bridge_deinit();
-    dap_chain_net_srv_voting_deinit();
-    dap_chain_net_deinit();
-    dap_global_db_deinit();
-    dap_chain_deinit();
-    dap_config_close( g_config );
-    dap_interval_timer_deinit();
-    dap_common_deinit();
+    /* ---------- 11. Main event loop ---------- */
+    rc = dap_events_wait();
+    log_it(rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc);
+
+    /* ---------- 12. Cleanup ---------- */
+    cellframe_sdk_deinit();
+    dap_config_close(g_config);
+    dap_sdk_deinit();
 
     return rc * 10;
 }
 
-static struct option long_options[] = {
-
-    { "stop", 0, NULL, 0 },
-    { NULL,   0, NULL, 0 } // must be a last element
-};
-
-/*void parse_args( int argc, const char **argv ) {
-
-    int opt, option_index = 0, is_daemon = 0;
-
-    while ( (opt = getopt_long(argc, (char *const *)argv, "D0",
-                              long_options, &option_index)) != -1) {
-        switch ( opt ) {
-
-        case 0: // --stop
-        {
-#ifndef DAP_OS_WINDOWS
-            pid_t pid = get_pid_from_file(s_pid_file_path);
-
-            if ( pid == 0 ) {
-                log_it( L_ERROR, "Can't read pid from file" );
-                exit( -20 );
-            }
-
-            if ( kill_process(pid) ) {
-                log_it( L_INFO, "Server successfully stopped" );
-                exit( 0 );
-            }
-
-            log_it( L_WARNING, "Server not stopped. Maybe he is not running now?" );
-            exit( -21 );
-#else
-    // TODO OpenEvent + SetEvent
-                exit (-22);
-#endif
-
-        }
-
-        case 'D':
-        {
-            log_it( L_INFO, "Daemonize server starting..." );
-            //exit_if_server_already_running( );
-            is_daemon = 1;
-            daemonize_process( );
-            break;
-        }
-
-        default:
-        log_it( L_WARNING, "Unknown option from command line" );
-        }
-    }
-
-    //if( !is_daemon )
-    //    exit_if_server_already_running( );
-}*/
-
-int s_proc_running_check(const char *a_path) {
+static int s_proc_running_check(const char *a_path)
+{
 #ifdef DAP_OS_WINDOWS
     CreateEvent(0, TRUE, FALSE, a_path);
-    return GetLastError() == ERROR_ALREADY_EXISTS ? ( log_it(L_ERROR, "dap_server is already running"), 1 ) : 0;
+    return GetLastError() == ERROR_ALREADY_EXISTS ? (log_it(L_ERROR, "dap_server is already running"), 1) : 0;
 #else
     FILE *l_pidfile = fopen(a_path, "r");
     if (l_pidfile) {
         pid_t f_pid = 0;
-        if ( fscanf( l_pidfile, "%d", &f_pid ) && lockf(fileno(l_pidfile), F_TEST, 0) == -1 ) {
-            return log_it(L_ERROR, "Error %d: \"%s\", dap_server is already running with PID %d",
-                           errno, dap_strerror(errno), f_pid), 1;
-        }
+        if (fscanf(l_pidfile, "%d", &f_pid) && lockf(fileno(l_pidfile), F_TEST, 0) == -1)
+            return log_it(L_ERROR, "Error %d: \"%s\", dap_server already running PID %d",
+                          errno, dap_strerror(errno), f_pid), 1;
         else
             l_pidfile = freopen(a_path, "w", l_pidfile);
     } else
         l_pidfile = fopen(a_path, "w");
-    
+
     if (!l_pidfile)
-        return log_it(L_ERROR, "Can't open file %s for writing, error %d: %s", 
-                                a_path, errno, dap_strerror(errno)), 2;
+        return log_it(L_ERROR, "Can't open %s for writing, errno %d: %s",
+                       a_path, errno, dap_strerror(errno)), 2;
     fprintf(l_pidfile, "%d", getpid());
     fflush(l_pidfile);
     return lockf(fileno(l_pidfile), F_TLOCK, sizeof(pid_t));
