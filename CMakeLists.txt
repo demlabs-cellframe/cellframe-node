@@ -111,6 +111,7 @@ add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
 
 set(SUBMODULES_NO_BUILD ON)
 option(CELLFRAME_NO_OPTIMIZATION "Build without BMI BMI2 CPU instruction." ON)
+option(DAP_MANAGE_CFLAGS "Let dap-sdk manage compiler and linker flags internally" ON)
 
 if( CELLFRAME_NO_OPTIMIZATION )
     set(DAP_CRYPTO_XKCP_PLAINC ON)
