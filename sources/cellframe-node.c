@@ -160,11 +160,17 @@ void set_global_sys_dir(const char *dir)
     g_sys_dir_path = dap_strdup(dir);
 }
 
+static void s_atexit_handler(void) {
+    log_it(L_ATT, "atexit: cellframe-node process is terminating");
+}
+
 int main( int argc, const char **argv )
 {
+    atexit(s_atexit_handler);
+
     if ( argv[1] && !dap_strcmp("-version", argv[1]) )
         return printf("%s\n", dap_node_version()), 0;
-        
+
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;

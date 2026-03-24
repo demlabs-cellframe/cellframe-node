@@ -20,7 +20,13 @@ static void clear_pid_file() {
 }
 
 static void sig_exit_handler(int sig_code) {
-    log_it(L_DEBUG, "Got signal: %d, initiating graceful shutdown", sig_code);
+    log_it(L_ATT, "Got signal %d (%s), initiating graceful shutdown",
+           sig_code,
+           sig_code == SIGTERM ? "SIGTERM" :
+           sig_code == SIGINT  ? "SIGINT" :
+           sig_code == SIGHUP  ? "SIGHUP" :
+           sig_code == SIGQUIT ? "SIGQUIT" :
+           sig_code == SIGTSTP ? "SIGTSTP" : "unknown");
     dap_events_stop_all();
 }
 
