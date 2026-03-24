@@ -1,15 +1,10 @@
-suite:
-  name: ConfCall E2E Tests
-  description: |
-    End-to-end tests that exercise the full blockchain lifecycle.
-    Tests run against a multi-node stage environment with Docker isolation.
-  version: "1.0"
+suite: "ConfCall E2E Tests"
+description: |
+  End-to-end tests that exercise the full blockchain lifecycle.
+  Tests run against a multi-node stage environment with Docker isolation.
+version: "1.0"
 
-  includes:
-    - common/defaults.yml
-    - common/create_test_cert.yml
-    - common/create_wallet.yml
-
-  categories:
-    - lifecycle
-    - voting
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+  - common/create_wallet.yml

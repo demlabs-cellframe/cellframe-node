@@ -11,7 +11,7 @@ network:
 
 includes:
   - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
+  - common/create_wallet.yml
 
 setup:
   - wait: 3s

@@ -1,0 +1,105 @@
+operand: cert
+description: "Certificate management via cf-cert-generator (Docker cf-tools image)"
+
+actions:
+  create:
+    description: >
+      Generate certificate and copy to node CA directory.
+      Runs cf-cert-generator --single inside cf-tools Docker container,
+      then docker-cp's the .dcert into the target node.
+    params:
+      cert_name: "test_cert"
+      cert_type: "sig_dil"
+    steps:
+      - bash: |
+          set -e
+          WORKDIR=/tmp/cf-cert-op-$$
+          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
+          docker run --rm \
+            -v "$WORKDIR:/output" \
+            cf-tools:latest \
+            /usr/local/bin/cf-cert-generator --single /output {{cert_name}} --type {{cert_type}}
+          echo "CERT_DIR=$WORKDIR"
+        expect: success
+        save: _cert_workdir
+        save_regex: "CERT_DIR=(.*)"
+
+      - docker_op: cp
+        src: "{{_cert_workdir}}/{{cert_name}}.dcert"
+        dst: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
+
+      - bash: "rm -rf {{_cert_workdir}}"
+
+  dump:
+    description: >
+      Dump certificate info from a node container.
+      Copies .dcert from node to host, runs cf-cert-generator --dump.
+    params:
+      cert_name: "test_cert"
+    steps:
+      - bash: |
+          set -e
+          WORKDIR=/tmp/cf-cert-op-$$
+          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
+          echo "CERT_DIR=$WORKDIR"
+        save: _cert_workdir
+        save_regex: "CERT_DIR=(.*)"
+
+      - docker_op: cp
+        src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
+        dst: "{{_cert_workdir}}/{{cert_name}}.dcert"
+
+      - bash: |
+          set -e
+          docker run --rm \
+            -v "{{_cert_workdir}}:/input:ro" \
+            cf-tools:latest \
+            /usr/local/bin/cf-cert-generator --dump /input/{{cert_name}}.dcert
+          rm -rf "{{_cert_workdir}}"
+        expect: success
+
+  read_addr:
+    description: >
+      Read node address from certificate on a node.
+      Copies .dcert from node to host, runs cf-cert-generator --read-addr.
+    params:
+      cert_name: "node-addr"
+    steps:
+      - bash: |
+          set -e
+          WORKDIR=/tmp/cf-cert-op-$$
+          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
+          echo "CERT_DIR=$WORKDIR"
+        save: _cert_workdir
+        save_regex: "CERT_DIR=(.*)"
+
+      - docker_op: cp
+        src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
+        dst: "{{_cert_workdir}}/{{cert_name}}.dcert"
+
+      - bash: |
+          set -e
+          docker run --rm \
+            -v "{{_cert_workdir}}:/input:ro" \
+            cf-tools:latest \
+            /usr/local/bin/cf-cert-generator --read-addr /input/{{cert_name}}.dcert
+          rm -rf "{{_cert_workdir}}"
+        expect: success
+
+  generate:
+    description: >
+      Generate certificate to a host directory (no node required).
+      Useful for pre-genesis setup or offline cert preparation.
+    params:
+      cert_name: "node-addr"
+      cert_type: "sig_falcon"
+      output_dir: "/tmp/certs"
+    steps:
+      - bash: |
+          set -e
+          mkdir -p {{output_dir}}
+          docker run --rm \
+            -v "{{output_dir}}:/output" \
+            cf-tools:latest \
+            /usr/local/bin/cf-cert-generator --single /output {{cert_name}} --type {{cert_type}}
+        expect: success

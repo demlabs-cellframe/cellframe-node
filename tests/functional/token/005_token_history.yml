@@ -7,16 +7,15 @@ tags: [e2e, token, history]
 version: "1.0"
 
 includes:
-  - common/networks/single_node.yml
-  - common/wallets/create_wallet.yml
-  - common/set_net_default.yml
+  - common/defaults.yml
+  - common/create_wallet.yml
 
 defaults:
     wait: 3s
     node: node1
 
 setup:
-  # wallet_addr from include common/wallets/create_wallet.yml (wallet new + wallet info)
+  # wallet_addr from include common/create_wallet.yml (wallet new + wallet info)
 
   # Create and emit token
   - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert

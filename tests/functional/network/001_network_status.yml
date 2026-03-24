@@ -20,6 +20,6 @@ test:
   - group: Verify on multiple nodes
     steps:
       - cli: "net get status"
-        node: "{{second_root}}"
+        node: "node-2"
         expect: success
         contains: "NET_STATE_ONLINE"

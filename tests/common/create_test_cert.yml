@@ -1,4 +1,7 @@
 setup:
-  - cli: "cert create -type sig_dil test_cert"
-    expect: success
-    wait: 2s
+  - cert: create
+    cert_name: test_cert
+    cert_type: sig_dil
+
+variables:
+  test_cert: "test_cert"
