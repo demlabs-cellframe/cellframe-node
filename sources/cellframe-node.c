@@ -255,7 +255,9 @@ int main(int argc, const char **argv)
     if (g_config && dap_config_get_item_bool_default(g_config, "plugins", "enabled", false))
         dap_plugin_start_all();
 
-    /* ---------- 10. Bring networks online ---------- */
+    /* ---------- 10. Register transports & bring networks online ---------- */
+    if (dap_net_trans_http_stream_register() != 0)
+        log_it(L_ERROR, "HTTP transport registration failed");
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all(NULL);
 #endif /* !DAP_OS_WASM */
