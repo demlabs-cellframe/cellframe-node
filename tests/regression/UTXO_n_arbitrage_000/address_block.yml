@@ -1,0 +1,113 @@
+name: "Regression - Address Blocking via token_update"
+description: |
+  After adding an address to the sender/receiver blocklist via token_update,
+  the ledger must reject transactions from/to that address ("address is forbidden").
+
+  tx_create CLI puts the TX in mempool and returns a hash. tx_verify then calls
+  the ledger validation which should detect the forbidden address.
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  - docker_op: start
+    services: "{{all_nodes}}"
+    detach: true
+
+  - wait_network: online
+    nodes: "{{all_nodes}}"
+    timeout: 120
+
+test:
+  - group: Setup Wallets and Fund with TCELL
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "wallet new -w ablk_sender"
+      - cli: "wallet info -w ablk_sender"
+        save_wallet: sender_addr
+
+      - cli: "wallet new -w ablk_receiver"
+      - cli: "wallet info -w ablk_receiver"
+        save_wallet: receiver_addr
+
+      - cli: "wallet new -w ablk_thirdparty"
+      - cli: "wallet info -w ablk_thirdparty"
+        save_wallet: thirdparty_addr
+
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{sender_addr}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund_sender
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{thirdparty_addr}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund_thirdparty
+      - wait_for_datum: "{{fund_sender}}"
+        chain: main
+        timeout: 120
+      - wait_for_datum: "{{fund_thirdparty}}"
+        chain: main
+        timeout: 120
+
+  - group: Declare Token, Emit, and Create Base TXs
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_decl -token ABLK -type CF20 -total_supply 4000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs {{network_name}}.root.pvt.0"
+        save_hash: token_hash
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "token_emit -token ABLK -emission_value 2000000000000000000 -addr {{sender_addr}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission_sender
+      - wait_for_datum: "{{emission_sender}}"
+        chain: zerochain
+        timeout: 60
+      - cli: "tx_create -from_emission {{emission_sender}} -wallet_fee ablk_sender -value 2000000000000000000 -token ABLK -fee 50000000000000000"
+        save_hash: base_sender
+      - wait_for_datum: "{{base_sender}}"
+        chain: main
+        timeout: 120
+
+      - cli: "token_emit -token ABLK -emission_value 2000000000000000000 -addr {{thirdparty_addr}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission_thirdparty
+      - wait_for_datum: "{{emission_thirdparty}}"
+        chain: zerochain
+        timeout: 60
+      - cli: "tx_create -from_emission {{emission_thirdparty}} -wallet_fee ablk_thirdparty -value 2000000000000000000 -token ABLK -fee 50000000000000000"
+        save_hash: base_thirdparty
+      - wait_for_datum: "{{base_thirdparty}}"
+        chain: main
+        timeout: 120
+
+  - group: "Test 1: Blocked sender must not be able to send"
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_update -token ABLK -type CF20 -certs {{network_name}}.root.pvt.0 -tx_sender_blocked {{sender_addr}}"
+        save_hash: sender_block_hash
+      - wait_for_datum: "{{sender_block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_wallet ablk_sender -to_addr {{receiver_addr}} -value 100 -token ABLK -fee 50000000000000000"
+        save_hash: blocked_sender_tx
+      - cli: "tx_verify -tx {{blocked_sender_tx}}"
+        contains: "forbidden"
+
+  - group: "Test 2: Blocked receiver must not receive"
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_update -token ABLK -type CF20 -certs {{network_name}}.root.pvt.0 -tx_receiver_blocked {{receiver_addr}}"
+        save_hash: receiver_block_hash
+      - wait_for_datum: "{{receiver_block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_wallet ablk_thirdparty -to_addr {{receiver_addr}} -value 100 -token ABLK -fee 50000000000000000"
+        save_hash: blocked_receiver_tx
+      - cli: "tx_verify -tx {{blocked_receiver_tx}}"
+        contains: "forbidden"

@@ -1,0 +1,25 @@
+suite: "UTXO & Arbitrage Regression"
+description: |
+  Regression scenarios for UTXO blocking and arbitrage bugs.
+  All scenarios FAIL while the corresponding bugs are present
+  and PASS once fixed.
+
+  Bugs covered:
+    - Multiple -utxo_blocked_add in single token_update (only first processed)
+    - Delayed UTXO blocking via CLI timestamp (immediate instead of deferred)
+    - Address blocking via -tx_sender_blocked / -tx_receiver_blocked (not enforced)
+    - Cert-only arbitrage without -from_wallet (CLI mandates wallet)
+    - Arbitrage -value/-token argument handling
+    - Arbitrage availability immediately after token creation
+tags: [regression, utxo, blocking, arbitrage]
+version: "1.0"
+
+restore_snapshot: "clean_state"
+
+scenarios:
+  - utxo_multi_block.yml
+  - utxo_delayed_block.yml
+  - address_block.yml
+  - arbitrage_no_wallet.yml
+  - arbitrage_arguments.yml
+  - arbitrage_availability.yml

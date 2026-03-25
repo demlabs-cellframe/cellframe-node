@@ -1,0 +1,147 @@
+name: "Regression - Delayed UTXO Blocking via CLI Timestamp"
+description: |
+  Delayed UTXO blocking via becomes_effective timestamp.
+
+  Test 1: A UTXO blocked with a future becomes_effective timestamp must remain
+  spendable until the blockchain time reaches that timestamp.
+
+  Test 2: An immediately blocked UTXO with a future unblock timestamp must stay
+  blocked until the unblock time arrives.
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  - docker_op: start
+    services: "{{all_nodes}}"
+    detach: true
+
+  - wait_network: online
+    nodes: "{{all_nodes}}"
+    timeout: 120
+
+test:
+  - group: Setup Wallets and Fund
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "wallet new -w dblk_wallet1"
+      - cli: "wallet info -w dblk_wallet1"
+        save_wallet: dblk_addr1
+
+      - cli: "wallet new -w dblk_wallet2"
+      - cli: "wallet info -w dblk_wallet2"
+        save_wallet: dblk_addr2
+
+      - cli: "wallet new -w dblk_aux"
+      - cli: "wallet info -w dblk_aux"
+        save_wallet: dblk_aux_addr
+
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{dblk_addr1}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund1_hash
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{dblk_addr2}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund2_hash
+
+      - wait_for_datum: "{{fund1_hash}}"
+        chain: main
+        timeout: 120
+      - wait_for_datum: "{{fund2_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Declare Token and Two Emissions
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_decl -token DBLK -type CF20 -total_supply 4000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs {{network_name}}.root.pvt.0"
+        save_hash: token_hash
+
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "token_emit -token DBLK -emission_value 2000000000000000000 -addr {{dblk_addr1}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission1_hash
+      - wait_for_datum: "{{emission1_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_emission {{emission1_hash}} -wallet_fee dblk_wallet1 -value 2000000000000000000 -token DBLK -fee 50000000000000000"
+        save_hash: base1_hash
+      - wait_for_datum: "{{base1_hash}}"
+        chain: main
+        timeout: 120
+
+      - cli: "token_emit -token DBLK -emission_value 2000000000000000000 -addr {{dblk_addr2}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission2_hash
+      - wait_for_datum: "{{emission2_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_emission {{emission2_hash}} -wallet_fee dblk_wallet2 -value 2000000000000000000 -token DBLK -fee 50000000000000000"
+        save_hash: base2_hash
+      - wait_for_datum: "{{base2_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Create Transactions to Generate UTXOs
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "tx_create -from_wallet dblk_wallet1 -to_addr {{dblk_aux_addr}} -value 1000000000000000000 -token DBLK -fee 50000000000000000"
+        save_hash: tx1_hash
+      - wait_for_datum: "{{tx1_hash}}"
+        chain: main
+        timeout: 60
+
+      - cli: "tx_create -from_wallet dblk_wallet2 -to_addr {{dblk_aux_addr}} -value 1000000000000000000 -token DBLK -fee 50000000000000000"
+        save_hash: tx2_hash
+      - wait_for_datum: "{{tx2_hash}}"
+        chain: main
+        timeout: 60
+
+  - group: "Test 1: Block with Future Timestamp"
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - python: |
+          import time
+          future_ts = str(int(time.time()) + 86400)
+          ctx.set_variable('future_ts', future_ts)
+
+      - cli: "token_update -token DBLK -type CF20 -certs {{network_name}}.root.pvt.0 -utxo_blocked_add {{tx1_hash}}:0:{{future_ts}}"
+        save_hash: delayed_block_hash
+      - wait_for_datum: "{{delayed_block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_wallet dblk_wallet1 -to_addr {{dblk_aux_addr}} -value 100 -token DBLK -fee 50000000000000000"
+        save_hash: spend1_hash
+
+  - group: "Test 2: Immediate Block + Future Unblock"
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_update -token DBLK -type CF20 -certs {{network_name}}.root.pvt.0 -utxo_blocked_add {{tx2_hash}}:0"
+        save_hash: imm_block_hash
+      - wait_for_datum: "{{imm_block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - python: |
+          import time
+          future_unblock_ts = str(int(time.time()) + 86400)
+          ctx.set_variable('future_unblock_ts', future_unblock_ts)
+
+      - cli: "token_update -token DBLK -type CF20 -certs {{network_name}}.root.pvt.0 -utxo_blocked_remove {{tx2_hash}}:0:{{future_unblock_ts}}"
+        save_hash: delayed_unblock_hash
+      - wait_for_datum: "{{delayed_unblock_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_wallet dblk_wallet2 -to_addr {{dblk_aux_addr}} -value 100 -token DBLK -fee 50000000000000000"
+        expect: error

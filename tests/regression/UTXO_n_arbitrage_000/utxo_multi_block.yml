@@ -1,0 +1,95 @@
+name: "Regression - Multiple UTXO Blocking in Single Command"
+description: |
+  token_update with multiple -utxo_blocked_add parameters in a single command
+  must block ALL specified UTXOs. After blocking, no spendable UTXO should remain
+  and tx_create must fail.
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  - docker_op: start
+    services: "{{all_nodes}}"
+    detach: true
+
+  - wait_network: online
+    nodes: "{{all_nodes}}"
+    timeout: 120
+
+test:
+  - group: Setup Wallets and Fund with TCELL
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "wallet new -w mblk_wallet"
+      - cli: "wallet info -w mblk_wallet"
+        save_wallet: mblk_addr
+
+      - cli: "wallet new -w mblk_aux"
+      - cli: "wallet info -w mblk_aux"
+        save_wallet: mblk_aux_addr
+
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{mblk_addr}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund_hash
+
+      - wait_for_datum: "{{fund_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Declare and Emit Token
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_decl -token MBLK -type CF20 -total_supply 2000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs {{network_name}}.root.pvt.0"
+        save_hash: token_hash
+
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "token_emit -token MBLK -emission_value 2000000000000000000 -addr {{mblk_addr}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission_hash
+
+      - wait_for_datum: "{{emission_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_emission {{emission_hash}} -wallet_fee mblk_wallet -value 2000000000000000000 -token MBLK -fee 50000000000000000"
+        save_hash: base_tx_hash
+
+      - wait_for_datum: "{{base_tx_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Create Transaction to Get Two UTXOs
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "tx_create -from_wallet mblk_wallet -to_addr {{mblk_aux_addr}} -value 1000000000000000000 -token MBLK -fee 50000000000000000"
+        save_hash: tx_hash
+
+      - wait_for_datum: "{{tx_hash}}"
+        chain: main
+        timeout: 60
+
+  - group: Block Both UTXOs in Single Command
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_update -token MBLK -type CF20 -certs {{network_name}}.root.pvt.0 -utxo_blocked_add {{tx_hash}}:0 -utxo_blocked_add {{tx_hash}}:1"
+        save_hash: block_hash
+
+      - wait_for_datum: "{{block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: Verify Both UTXOs Are Blocked
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "tx_create -from_wallet mblk_wallet -to_addr {{mblk_aux_addr}} -value 100 -token MBLK -fee 50000000000000000"
+        expect: error

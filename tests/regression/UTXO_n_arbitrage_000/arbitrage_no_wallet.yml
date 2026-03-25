@@ -1,0 +1,89 @@
+name: "Regression - Arbitrage Without Wallet (Cert-Only)"
+description: |
+  Token owners must be able to perform arbitrage using only their certificates,
+  without providing -from_wallet. tx_create -arbitrage with -certs alone should
+  create and place the arbitrage transaction successfully.
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  - docker_op: start
+    services: "{{all_nodes}}"
+    detach: true
+
+  - wait_network: online
+    nodes: "{{all_nodes}}"
+    timeout: 120
+
+test:
+  - group: Setup Wallet and Fund
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "wallet new -w arbnw_holder"
+      - cli: "wallet info -w arbnw_holder"
+        save_wallet: holder_addr
+
+      - cli: "wallet new -w arbnw_aux"
+      - cli: "wallet info -w arbnw_aux"
+        save_wallet: aux_addr
+
+      - cli: "tx_create -from_wallet stagenet_root_0 -to_addr {{holder_addr}} -value 10000000000000000000 -token {{native_ticker}} -fee 50000000000000000"
+        save_hash: fund_hash
+      - wait_for_datum: "{{fund_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Declare Token and Emit
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "token_decl -token ARBNW -type CF20 -total_supply 2000000000000000000 -decimals 18 -signs_emission 1 -signs_total 1 -certs {{network_name}}.root.pvt.0"
+        save_hash: token_hash
+      - wait_for_datum: "{{token_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "token_emit -token ARBNW -emission_value 2000000000000000000 -addr {{holder_addr}} -certs {{network_name}}.root.pvt.0"
+        save_hash: emission_hash
+      - wait_for_datum: "{{emission_hash}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -from_emission {{emission_hash}} -wallet_fee arbnw_holder -value 2000000000000000000 -token ARBNW -fee 50000000000000000"
+        save_hash: base_hash
+      - wait_for_datum: "{{base_hash}}"
+        chain: main
+        timeout: 120
+
+  - group: Create TX and Block UTXO
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "tx_create -from_wallet arbnw_holder -to_addr {{aux_addr}} -value 1000000000000000000 -token ARBNW -fee 50000000000000000"
+        save_hash: tx_hash
+      - wait_for_datum: "{{tx_hash}}"
+        chain: main
+        timeout: 60
+
+      - cli: "token_update -token ARBNW -type CF20 -certs {{network_name}}.root.pvt.0 -utxo_blocked_add {{tx_hash}}:0"
+        save_hash: block_hash
+      - wait_for_datum: "{{block_hash}}"
+        chain: zerochain
+        timeout: 60
+
+  - group: "Attempt Cert-Only Arbitrage (No Wallet)"
+    defaults:
+      node: "{{first_root}}"
+    steps:
+      - cli: "tx_create -arbitrage -value 1000000000000000000 -token ARBNW -certs {{network_name}}.root.pvt.0 -fee 0"
+        save_hash: arb_hash
+
+      - wait_for_datum: "{{arb_hash}}"
+        chain: main
+        timeout: 60
