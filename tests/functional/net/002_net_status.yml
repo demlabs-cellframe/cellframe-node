@@ -17,14 +17,13 @@ setup:
 
 test:
   # Test: Get network status
-  - cli: net -net stagenet get status
+  - cli: "net -net {{network_name}} get status"
     node: node1
     expect: success
     save: net_status
     description: "Get network status"
   
-  # Test: Get network ID
-  - cli: net -net stagenet get id
+  - cli: "net -net {{network_name}} get id"
     node: node1
     expect: success
     save: net_id

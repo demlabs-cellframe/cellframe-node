@@ -9,7 +9,7 @@ setup:
 
 test:
   # Test: List connections
-  - cli: node connections -net stagenet
+  - cli: "node connections -net {{network_name}}"
     node: node1
     save: connections
     description: "List node connections"

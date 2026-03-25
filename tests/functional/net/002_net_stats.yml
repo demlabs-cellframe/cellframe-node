@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: Get network stats
-  - cli: net -net stagenet stats tx
+  - cli: "net -net {{network_name}} stats tx"
     node: node1
     save: net_stats
     description: "Get transaction statistics"

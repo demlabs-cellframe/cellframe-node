@@ -17,11 +17,11 @@ setup:
 
 test:
   # Test: List chains
-  - cli: net list chains -net stagenet
+  - cli: "net list chains -net {{network_name}}"
     node: node1
     expect: success
     save: chain_list
-    description: "List chains in stagenet"
+    description: "List chains in network"
 
 check:
   # Verify chains are returned

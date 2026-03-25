@@ -11,6 +11,6 @@ network:
 
 # Suite-level setup: executed once before all scenarios in this suite
 includes:
-  - common/create_test_cert.yml
   - common/defaults.yml
+  - common/create_test_cert.yml
 

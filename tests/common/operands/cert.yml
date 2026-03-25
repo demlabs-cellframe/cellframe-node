@@ -13,22 +13,18 @@ actions:
     steps:
       - bash: |
           set -e
-          WORKDIR=/tmp/cf-cert-op-$$
-          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
+          rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}
           docker run --rm \
-            -v "$WORKDIR:/output" \
+            -v /tmp/cf-cert-{{node_ip}}:/output \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --single /output {{cert_name}} --type {{cert_type}}
-          echo "CERT_DIR=$WORKDIR"
         expect: success
-        save: _cert_workdir
-        save_regex: "CERT_DIR=(.*)"
 
       - docker_op: cp
-        src: "{{_cert_workdir}}/{{cert_name}}.dcert"
+        src: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
         dst: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
 
-      - bash: "rm -rf {{_cert_workdir}}"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip}}"
 
   dump:
     description: >
@@ -37,25 +33,19 @@ actions:
     params:
       cert_name: "test_cert"
     steps:
-      - bash: |
-          set -e
-          WORKDIR=/tmp/cf-cert-op-$$
-          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
-          echo "CERT_DIR=$WORKDIR"
-        save: _cert_workdir
-        save_regex: "CERT_DIR=(.*)"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}"
 
       - docker_op: cp
         src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
-        dst: "{{_cert_workdir}}/{{cert_name}}.dcert"
+        dst: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
 
       - bash: |
           set -e
           docker run --rm \
-            -v "{{_cert_workdir}}:/input:ro" \
+            -v /tmp/cf-cert-{{node_ip}}:/input:ro \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --dump /input/{{cert_name}}.dcert
-          rm -rf "{{_cert_workdir}}"
+          rm -rf /tmp/cf-cert-{{node_ip}}
         expect: success
 
   read_addr:
@@ -65,25 +55,19 @@ actions:
     params:
       cert_name: "node-addr"
     steps:
-      - bash: |
-          set -e
-          WORKDIR=/tmp/cf-cert-op-$$
-          rm -rf "$WORKDIR" && mkdir -p "$WORKDIR"
-          echo "CERT_DIR=$WORKDIR"
-        save: _cert_workdir
-        save_regex: "CERT_DIR=(.*)"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}"
 
       - docker_op: cp
         src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
-        dst: "{{_cert_workdir}}/{{cert_name}}.dcert"
+        dst: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
 
       - bash: |
           set -e
           docker run --rm \
-            -v "{{_cert_workdir}}:/input:ro" \
+            -v /tmp/cf-cert-{{node_ip}}:/input:ro \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --read-addr /input/{{cert_name}}.dcert
-          rm -rf "{{_cert_workdir}}"
+          rm -rf /tmp/cf-cert-{{node_ip}}
         expect: success
 
   generate:

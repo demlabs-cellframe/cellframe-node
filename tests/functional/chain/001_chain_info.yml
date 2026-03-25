@@ -14,7 +14,7 @@ setup:
 
 test:
   # Test: Get chain list
-  - cli: net list chains -net stagenet
+  - cli: "net list chains -net {{network_name}}"
     save: chains
 
 check:

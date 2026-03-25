@@ -24,11 +24,11 @@ test:
     description: "List all networks"
 
 check:
-  # Verify stagenet is in list (CLI may return YAML/text; accept stagenet, stage_net, stage-net)
   - python: |
       net_list = ctx.get_variable('net_list')
+      net_name = ctx.get_variable('network_name')
       net_lower = net_list.lower() if net_list else ''
-      assert any(s in net_lower for s in ('stagenet', 'stage_net', 'stage-net')), \
-        "Stagenet should be in network list (got: %s)" % (net_list[:200] if net_list else '')
-    description: "Stagenet is available"
+      assert net_name.lower() in net_lower, \
+        "Network '%s' should be in network list (got: %s)" % (net_name, net_list[:200] if net_list else '')
+    description: "Network is available"
 

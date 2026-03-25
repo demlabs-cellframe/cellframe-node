@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: List nodes
-  - cli: node list -net stagenet
+  - cli: "node list -net {{network_name}}"
     node: node1
     expect: success
     save: node_list

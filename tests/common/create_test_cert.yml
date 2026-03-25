@@ -2,6 +2,7 @@ setup:
   - cert: create
     cert_name: test_cert
     cert_type: sig_dil
+    node: "{{first_root}}"
 
 variables:
   test_cert: "test_cert"

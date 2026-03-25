@@ -17,7 +17,7 @@ setup:
 
 test:
   # Test: Check initial status
-  - cli: net -net stagenet get status
+  - cli: "net -net {{network_name}} get status"
     node: node1
     save: status_initial
     description: "Get initial status"
