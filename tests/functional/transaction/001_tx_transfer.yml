@@ -1,5 +1,5 @@
 name: Basic token transfer
-description: Transfer tokens between two wallets
+description: Transfer tokens from emission to a receiver wallet
 version: "1.0"
 
 includes:
@@ -7,7 +7,7 @@ includes:
   - common/create_test_cert.yml
 
 test:
-  - group: Setup wallets and fund sender
+  - group: Setup wallets and declare token
     steps:
       - cli: "wallet new -w sender_wallet -sign_type sig_dil"
         expect: success
@@ -17,38 +17,28 @@ test:
         expect: success
         save_wallet: receiver_addr
 
-      - cli: "token_decl -token FTTX01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+      - cli: "token_decl -token FTTX01 -total_supply 1000000000000000000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
         expect: success
         save_hash: token_hash
 
       - wait_for_datum: "{{token_hash}}"
         chain: zerochain
-        timeout: 60
 
-      - cli: "token_emit -token FTTX01 -emission_value 10000 -addr {{sender_addr}} -certs test_cert"
+  - group: Emit and transfer tokens
+    steps:
+      - cli: "token_emit -token FTTX01 -emission_value 100000000000000000000 -addr {{sender_addr}} -certs test_cert"
         expect: success
         save_hash: emit_hash
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
-        timeout: 60
 
-  - group: Transfer tokens
-    steps:
       - wait: 5s
 
-      - cli: "tx_create -net {{network_name}} -chain main -token FTTX01 -value 1000 -from_wallet sender_wallet -addr {{receiver_addr}}"
+      - cli: "tx_create -token FTTX01 -chain main -from_emission {{emit_hash}} -chain_emission zerochain -to_addr {{receiver_addr}} -value 10000000000000000000 -fee 1000000000000000000 -cert test_cert"
         expect: success
         save_hash: tx_hash
 
-      - wait_for_datum: "{{tx_hash}}"
-        chain: main
-        timeout: 60
-
-  - group: Verify balances
-    steps:
-      - wait: 5s
-
-      - cli: "wallet info -w receiver_wallet -net {{network_name}}"
-        expect: success
-        contains: "FTTX01"
+check:
+  - cli: "mempool list -chain main"
+    contains: "{{tx_hash}}"

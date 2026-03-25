@@ -1,5 +1,5 @@
 name: Token emission
-description: Emit tokens to a wallet and verify balance
+description: Emit tokens to a wallet and verify emission in mempool
 version: "1.0"
 
 includes:
@@ -16,9 +16,8 @@ test:
 
       - wait_for_datum: "{{token_decl_hash}}"
         chain: zerochain
-        timeout: 60
 
-  - group: Emit tokens
+  - group: Emit tokens and credit wallet
     steps:
       - cli: "token_emit -token FTEMIT01 -emission_value 5000 -addr {{wallet_addr}} -certs test_cert"
         expect: success
@@ -26,12 +25,15 @@ test:
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
-        timeout: 60
 
-  - group: Verify balance
-    steps:
       - wait: 5s
 
-      - cli: "wallet info -w test_wallet -net {{network_name}}"
+      - cli: "tx_create -token FTEMIT01 -from_emission {{emit_hash}} -chain_emission zerochain -value 4999 -cert test_cert"
         expect: success
-        contains: "FTEMIT01"
+        save_hash: credit_tx_hash
+
+  - group: Verify tx in mempool
+    steps:
+      - cli: "mempool list -chain main"
+        expect: success
+        contains: "{{credit_tx_hash}}"

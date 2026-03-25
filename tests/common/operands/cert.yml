@@ -13,18 +13,18 @@ actions:
     steps:
       - bash: |
           set -e
-          rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}
+          rm -rf /tmp/cf-cert-{{node_ip_root-1}} && mkdir -p /tmp/cf-cert-{{node_ip_root-1}}
           docker run --rm \
-            -v /tmp/cf-cert-{{node_ip}}:/output \
+            -v /tmp/cf-cert-{{node_ip_root-1}}:/output \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --single /output {{cert_name}} --type {{cert_type}}
         expect: success
 
       - docker_op: cp
-        src: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
+        src: "/tmp/cf-cert-{{node_ip_root-1}}/{{cert_name}}.dcert"
         dst: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
 
-      - bash: "rm -rf /tmp/cf-cert-{{node_ip}}"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip_root-1}}"
 
   dump:
     description: >
@@ -33,19 +33,19 @@ actions:
     params:
       cert_name: "test_cert"
     steps:
-      - bash: "rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip_root-1}} && mkdir -p /tmp/cf-cert-{{node_ip_root-1}}"
 
       - docker_op: cp
         src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
-        dst: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
+        dst: "/tmp/cf-cert-{{node_ip_root-1}}/{{cert_name}}.dcert"
 
       - bash: |
           set -e
           docker run --rm \
-            -v /tmp/cf-cert-{{node_ip}}:/input:ro \
+            -v /tmp/cf-cert-{{node_ip_root-1}}:/input:ro \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --dump /input/{{cert_name}}.dcert
-          rm -rf /tmp/cf-cert-{{node_ip}}
+          rm -rf /tmp/cf-cert-{{node_ip_root-1}}
         expect: success
 
   read_addr:
@@ -55,19 +55,19 @@ actions:
     params:
       cert_name: "node-addr"
     steps:
-      - bash: "rm -rf /tmp/cf-cert-{{node_ip}} && mkdir -p /tmp/cf-cert-{{node_ip}}"
+      - bash: "rm -rf /tmp/cf-cert-{{node_ip_root-1}} && mkdir -p /tmp/cf-cert-{{node_ip_root-1}}"
 
       - docker_op: cp
         src: "{{node}}:/opt/cellframe-node/var/lib/ca/{{cert_name}}.dcert"
-        dst: "/tmp/cf-cert-{{node_ip}}/{{cert_name}}.dcert"
+        dst: "/tmp/cf-cert-{{node_ip_root-1}}/{{cert_name}}.dcert"
 
       - bash: |
           set -e
           docker run --rm \
-            -v /tmp/cf-cert-{{node_ip}}:/input:ro \
+            -v /tmp/cf-cert-{{node_ip_root-1}}:/input:ro \
             cf-tools:latest \
             /usr/local/bin/cf-cert-generator --read-addr /input/{{cert_name}}.dcert
-          rm -rf /tmp/cf-cert-{{node_ip}}
+          rm -rf /tmp/cf-cert-{{node_ip_root-1}}
         expect: success
 
   generate:
