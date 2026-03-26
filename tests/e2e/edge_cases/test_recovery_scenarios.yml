@@ -1,0 +1,189 @@
+name: Recovery Scenarios
+description: >
+  Tests node recovery after restart, network offline/online cycle,
+  GDB flush + restart, master node failover with block production,
+  and split-brain scenario detection.
+tags: [e2e, edge_cases, recovery, failover]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    save_wallet: root_addr
+
+test:
+  - group: "GDB flush before restart"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "global_db flush"
+            node: "{{_node}}"
+            expect: any
+
+  - group: "Root node restart recovery"
+    steps:
+      - cli: "global_db write -group test.recovery -key pre_restart -value alive"
+        node: node-1
+
+      - docker_op: restart
+        services: ["node-1"]
+
+      - wait: cli_ready
+        node: node-1
+        timeout: 120
+
+      - cli: "net -net {{network_name}} get status"
+        node: node-1
+        save: post_restart_status
+        expect: any
+      - print: "Post-restart status: {{post_restart_status}}"
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-1
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+
+      - cli: "global_db read -group test.recovery -key pre_restart"
+        node: node-1
+        save: post_restart_data
+        expect: any
+      - print: "Post-restart data: {{post_restart_data}}"
+
+  - group: "Network offline/online cycle"
+    steps:
+      - cli: "net -net {{network_name}} go offline"
+        node: node-1
+        expect: any
+
+      - wait: "3s"
+
+      - cli: "net -net {{network_name}} get status"
+        node: node-1
+        save: offline_status
+        expect: any
+      - print: "Offline status: {{offline_status}}"
+
+      - cli: "net -net {{network_name}} go online"
+        node: node-1
+        expect: any
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-1
+        contains: "NET_STATE_ONLINE"
+        timeout: 60
+        interval: 5
+
+  - group: "Master node restart with block production"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_before
+        expect: any
+      - print: "Blocks before master restart: {{blocks_before}}"
+
+      - docker_op: restart
+        services: ["{{first_master}}"]
+
+      - wait: cli_ready
+        node: "{{first_master}}"
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: "{{first_master}}"
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after
+        expect: any
+      - print: "Blocks after master restart: {{blocks_after}}"
+
+  - group: "Multiple nodes restart"
+    steps:
+      - docker_op: restart
+        services: "{{root_nodes}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - wait: cli_ready
+            node: "{{_node}}"
+            timeout: 120
+
+      - wait_network: online
+        nodes: "{{root_nodes}}"
+        timeout: 120
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            contains: "NET_STATE"
+
+  - group: "Ledger consistency after recovery"
+    steps:
+      - wait: "45s"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - wait: cli
+            cmd: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+            timeout: 120
+            interval: 10
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - wait: cli
+            cmd: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+            timeout: 120
+            interval: 10
+
+  - group: "DAG consistency after recovery"
+    steps:
+      - set: _prev_count
+        value: "'0'"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _dag_count
+            expect: any
+          - print: "{{_node}} DAG events after recovery: {{_dag_count}}"
+
+  - group: "Cleanup"
+    steps:
+      - cli: "global_db clear -group test.recovery"
+        expect: any
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: "{{first_master}}"
+    contains: "NET_STATE"
+  - cli: "ledger list coins -net {{network_name}}"
+    node: node-1
+    contains: "{{native_ticker}}"

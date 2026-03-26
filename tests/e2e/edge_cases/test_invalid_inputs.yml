@@ -1,0 +1,179 @@
+name: Invalid Inputs
+description: >
+  Tests that all CLI commands handle invalid inputs gracefully:
+  missing required params, wrong types, non-existent networks/tokens/wallets,
+  malformed hashes, negative values, overflow values.
+tags: [e2e, edge_cases, invalid_inputs]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+test:
+  - group: "Wallet commands — invalid inputs"
+    steps:
+      - cli: "wallet info -w nonexistent_wallet_xyz -net {{network_name}}"
+        save: no_wallet
+        expect: any
+      - print: "Non-existent wallet: {{no_wallet}}"
+
+      - cli: "wallet info -w {{network_name}}_root_0 -net nonexistent_network"
+        save: no_net_wallet
+        expect: any
+      - print: "Non-existent network: {{no_net_wallet}}"
+
+      - cli: "wallet new"
+        save: wallet_no_args
+        expect: any
+      - print: "Wallet new (no args): {{wallet_no_args}}"
+
+      - cli: "wallet info"
+        save: wallet_info_no_args
+        expect: any
+      - print: "Wallet info (no args): {{wallet_info_no_args}}"
+
+      - cli: "wallet activate -w {{network_name}}_root_0 -password wrong_password"
+        save: wrong_password
+        expect: any
+      - print: "Wrong password: {{wrong_password}}"
+
+  - group: "Token commands — invalid inputs"
+    steps:
+      - cli: "token info -name NONEXISTENT_TOKEN_XYZ -net {{network_name}}"
+        save: no_token
+        expect: any
+      - print: "Non-existent token: {{no_token}}"
+
+      - cli: "token list -net nonexistent_network"
+        save: token_no_net
+        expect: any
+      - print: "Token list bad net: {{token_no_net}}"
+
+      - cli: "token_decl -net {{network_name}} -chain zerochain"
+        save: token_decl_no_args
+        expect: any
+      - print: "Token decl (missing args): {{token_decl_no_args}}"
+
+  - group: "Transaction commands — invalid inputs"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet nonexistent_wallet -to_addr INVALID_ADDR -value 100 -fee 1"
+        save: tx_bad_wallet
+        expect: any
+      - print: "TX bad wallet: {{tx_bad_wallet}}"
+
+      - cli: "tx_create -net {{network_name}} -chain main -token NONEXISTENT_TOKEN -from_wallet {{network_name}}_root_0 -to_addr {{network_name}}_root_0 -value 100 -fee 1"
+        save: tx_bad_token
+        expect: any
+      - print: "TX bad token: {{tx_bad_token}}"
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr INVALID -value -100 -fee 1"
+        save: tx_negative_value
+        expect: any
+      - print: "TX negative value: {{tx_negative_value}}"
+
+      - cli: "tx_create"
+        save: tx_no_args
+        expect: any
+      - print: "TX create (no args): {{tx_no_args}}"
+
+      - cli: "tx_history -tx 0xINVALIDHASH -net {{network_name}}"
+        save: tx_bad_hash
+        expect: any
+      - print: "TX bad hash: {{tx_bad_hash}}"
+
+  - group: "Mempool commands — invalid inputs"
+    steps:
+      - cli: "mempool check -net {{network_name}} -chain main -datum 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: mempool_no_datum
+        expect: any
+      - print: "Mempool check null: {{mempool_no_datum}}"
+
+      - cli: "mempool proc -net {{network_name}} -chain main -datum INVALID_HASH"
+        save: mempool_bad_hash
+        expect: any
+      - print: "Mempool proc bad hash: {{mempool_bad_hash}}"
+
+      - cli: "mempool delete -net {{network_name}} -chain main -datum 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: mempool_del_no_exist
+        expect: any
+      - print: "Mempool delete non-existent: {{mempool_del_no_exist}}"
+
+  - group: "Global DB — invalid inputs"
+    steps:
+      - cli: "global_db read -group nonexistent.group -key nonexistent_key"
+        save: gdb_no_key
+        expect: any
+      - print: "GDB no key: {{gdb_no_key}}"
+
+      - cli: "global_db delete -group nonexistent.group -key nonexistent_key"
+        save: gdb_del_no_key
+        expect: any
+      - print: "GDB delete non-existent: {{gdb_del_no_key}}"
+
+      - cli: "global_db get_keys -group nonexistent.group.xyz"
+        save: gdb_no_group
+        expect: any
+      - print: "GDB no group: {{gdb_no_group}}"
+
+  - group: "Ledger — invalid inputs"
+    steps:
+      - cli: "ledger info -hash 0x0000000000000000000000000000000000000000000000000000000000000000 -net {{network_name}}"
+        save: ledger_null_hash
+        expect: any
+      - print: "Ledger null hash: {{ledger_null_hash}}"
+
+      - cli: "ledger list coins -net nonexistent_network"
+        save: ledger_bad_net
+        expect: any
+      - print: "Ledger bad net: {{ledger_bad_net}}"
+
+  - group: "DAG — invalid inputs"
+    steps:
+      - cli: "dag event dump -net {{network_name}} -chain zerochain -event INVALID_HASH -from events"
+        save: dag_bad_hash
+        expect: any
+      - print: "DAG bad hash: {{dag_bad_hash}}"
+
+      - cli: "dag event find -net {{network_name}} -chain zerochain -datum 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: dag_find_null
+        expect: any
+      - print: "DAG find null: {{dag_find_null}}"
+
+  - group: "Node — invalid inputs"
+    steps:
+      - cli: "node connect -net {{network_name}} -addr INVALID_ADDR"
+        save: node_bad_addr
+        expect: any
+      - print: "Node bad addr: {{node_bad_addr}}"
+
+  - group: "Net — invalid inputs"
+    steps:
+      - cli: "net -net nonexistent_network get status"
+        save: net_bad_name
+        expect: any
+      - print: "Net bad name: {{net_bad_name}}"
+
+      - cli: "net -net {{network_name}} go INVALID_STATE"
+        save: net_bad_state
+        expect: any
+      - print: "Net bad state: {{net_bad_state}}"
+
+  - group: "Version and help (should always work)"
+    steps:
+      - cli: "version"
+        save: version
+        expect: success
+      - print: "Version: {{version}}"
+
+      - cli: "help"
+        save: help_output
+        expect: any
+      - print: "Help output received"
+
+check:
+  - cli: "version"
+    node: node-1

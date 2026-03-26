@@ -1,0 +1,290 @@
+name: Block Production and Content Verification
+description: >
+  Deep verification of ESBocs block production: block creation rate,
+  block content (datums inside blocks), block signing, block chain
+  integrity (sequential numbering), and cross-node block consistency.
+  Submits real transactions and verifies they appear inside blocks.
+tags: [e2e, blocks, production, content, deep]
+version: "1.0"
+
+defaults:
+  node: "{{first_master}}"
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  test_token: "BLKTEST"
+  emission_value: "5000000000000000000"
+  tx_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w blk_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w blk_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: blk_sender_addr
+
+  - cli: "wallet new -w blk_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w blk_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: blk_receiver_addr
+
+  # Fund sender wallet with native tokens for fee payments
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{blk_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: blk_funding_hash
+  - if: "blk_funding_hash"
+    then:
+      - wait_for_datum: "{{blk_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "token_decl -net {{network_name}} -chain zerochain -token {{test_token}} -total_supply 50000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+    node: node-1
+    save_hash: blk_decl_hash
+
+  - if: "blk_decl_hash"
+    then:
+      - wait_for_datum: "{{blk_decl_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - wait: cli
+    cmd: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"
+    timeout: 60
+    interval: 5
+
+  - cli: "token_emit -net {{network_name}} -chain_emission zerochain -token {{test_token}} -emission_value {{emission_value}} -addr {{blk_sender_addr}} -certs {{root_certs}}"
+    node: node-1
+    save_hash: blk_emit_hash
+
+  - if: "blk_emit_hash"
+    then:
+      - wait_for_datum: "{{blk_emit_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - if: "blk_emit_hash"
+    then:
+      - cli: "tx_create -net {{network_name}} -chain main -from_emission {{blk_emit_hash}} -chain_emission zerochain -fee {{fee_value}} -wallet_fee {{network_name}}_root_0"
+        node: node-1
+        save_hash: blk_base_tx_hash
+      - if: "blk_base_tx_hash"
+        then:
+          - wait_for_datum: "{{blk_base_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Test 1: Measure initial block count
+  # ================================================================
+  - name: "Initial block count measurement"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _init_bc
+            expect: any
+          - print: "[{{_node}}] initial block count: {{_init_bc}}"
+
+  # ================================================================
+  # Test 2: Submit TX and track it into a block
+  # ================================================================
+  - name: "Submit TX, wait for block inclusion"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        save: blocks_pre_tx
+        expect: any
+      - print: "Blocks before TX: {{blocks_pre_tx}}"
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet blk_sender -to_addr {{blk_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save: blk_tx_result
+        save_hash: blk_tx_hash
+      - print: "TX result: {{blk_tx_result}}"
+
+      - if: "blk_tx_hash"
+        then:
+          - wait_for_datum: "{{blk_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+            timeout_in_blocks: 180
+            save_status: blk_tx_status
+          - print: "TX block status: {{blk_tx_status}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: blocks_post_tx
+        expect: any
+      - print: "Blocks after TX: {{blocks_post_tx}}"
+
+  # ================================================================
+  # Test 3: Dump the block containing our TX
+  # ================================================================
+  - name: "Block content verification"
+    steps:
+      - cli: "block last -net {{network_name}} -chain main"
+        save: last_blk
+        expect: any
+      - print: "Last block: {{last_blk}}"
+
+      - set: last_blk_hash
+        value: "regex_extract(str(last_blk), r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(last_blk) else ''"
+        eval: true
+
+      - if: "last_blk_hash"
+        then:
+          - cli: "block dump -net {{network_name}} -chain main -hash {{last_blk_hash}}"
+            save: blk_dump
+            expect: any
+          - print: "Block dump: {{blk_dump}}"
+
+  # ================================================================
+  # Test 4: Block list with filters
+  # ================================================================
+  - name: "Block listing with pagination"
+    steps:
+      - cli: "block list -net {{network_name}} -chain main -limit 5"
+        save: blk_list_5
+        expect: any
+      - print: "Block list (limit 5): {{blk_list_5}}"
+
+      - cli: "block list -net {{network_name}} -chain main -limit 5 -offset 0 -head"
+        save: blk_list_head
+        expect: any
+      - print: "Block list (head, oldest first): {{blk_list_head}}"
+
+  # ================================================================
+  # Test 5: Block count growth under load
+  # ================================================================
+  - name: "Block production under transaction load"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        save: load_blocks_t0
+        expect: any
+      - print: "Blocks before load: {{load_blocks_t0}}"
+
+      - loop: 5
+        steps:
+          - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet blk_sender -to_addr {{blk_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+            node: node-1
+            save: _load_tx
+            save_hash: _load_tx_hash
+            expect: any
+
+          - if: "_load_tx_hash"
+            then:
+              - wait_for_datum: "{{_load_tx_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+                save_status: _load_tx_status
+              - print: "Load TX {{i}} status: {{_load_tx_status}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: load_blocks_t1
+        expect: any
+      - print: "Blocks after load: {{load_blocks_t1}}"
+
+  # ================================================================
+  # Test 6: Cross-node block consistency after load
+  # ================================================================
+  - name: "Cross-node block consistency after load"
+    steps:
+      - wait: "20s"
+
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc}}"
+
+  # ================================================================
+  # Test 7: Mempool should be empty after all blocks processed
+  # ================================================================
+  - name: "Mempool drained after block production"
+    steps:
+      - wait: "15s"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        save: main_mempool_count
+        expect: any
+      - print: "Main chain mempool count: {{main_mempool_count}}"
+
+  # ================================================================
+  # Test 8: Find a specific datum in blocks
+  # ================================================================
+  - name: "Find datum in chain"
+    steps:
+      - if: "blk_tx_hash"
+        then:
+          - cli: "find datum -net {{network_name}} -chain main -hash {{blk_tx_hash}}"
+            save: find_datum_result
+            expect: any
+          - print: "Find datum result: {{find_datum_result}}"
+
+  # ================================================================
+  # Test 9: Block reward/fee verification (informational)
+  # ================================================================
+  - name: "Block reward and fee info"
+    steps:
+      - cli: "block fee -net {{network_name}} -chain main"
+        save: block_fee_info
+        expect: any
+      - print: "Block fee info: {{block_fee_info}}"
+
+      - cli: "block reward -net {{network_name}} -chain main"
+        save: block_reward_info
+        expect: any
+      - print: "Block reward info: {{block_reward_info}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
+  - cli: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"

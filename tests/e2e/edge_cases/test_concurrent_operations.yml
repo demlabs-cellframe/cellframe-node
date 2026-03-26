@@ -1,0 +1,121 @@
+name: Concurrent Operations
+description: >
+  Tests concurrent operations: rapid wallet creation, rapid GDB writes
+  from multiple nodes, rapid mempool submissions, simultaneous
+  token declarations, and parallel ledger queries.
+tags: [e2e, edge_cases, concurrent]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+test:
+  - group: "Rapid wallet creation (10 wallets)"
+    steps:
+      - loop: 10
+        steps:
+          - cli: "wallet new -w concurrent_wallet_{{i}} -sign sig_dil"
+            expect: any
+
+      - cli: "wallet list"
+        save: wallet_list
+        contains: "concurrent_wallet_0"
+      - set: wallet_count
+        value: "wallet_list.count('concurrent_wallet_')"
+        eval: true
+      - print: "Created {{wallet_count}} concurrent wallets"
+
+  - group: "Rapid GDB writes from single node"
+    steps:
+      - loop: 20
+        steps:
+          - cli: "global_db write -group local.test.concurrent -key rapid_{{i}} -value data_{{i}}"
+            expect: any
+
+      - cli: "global_db get_keys -group local.test.concurrent"
+        save: concurrent_keys
+        contains: "rapid_0"
+      - print: "Concurrent keys present"
+
+  - group: "GDB writes from multiple nodes simultaneously"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - loop: 5
+            steps:
+              - cli: "global_db write -group local.test.multinode -key {{_node}}_key_{{i}} -value {{_node}}_val_{{i}}"
+                node: "{{_node}}"
+                expect: any
+
+      - wait: global_db_sync
+        nodes: "{{root_nodes}}"
+        timeout: 60
+
+      - for: _check_node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "global_db get_keys -group local.test.multinode"
+            node: "{{_check_node}}"
+            save: _multinode_keys
+            expect: any
+          - print: "{{_check_node}} multinode keys: present"
+
+  - group: "Rapid token declarations (stress mempool)"
+    steps:
+      - loop: 3
+        steps:
+          - cli: "token_decl -net {{network_name}} -chain zerochain -token CONC{{i}} -total_supply 1000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+            expect: any
+            save: _conc_hash
+
+      - cli: "mempool list -net {{network_name}} -chain zerochain"
+        save: mempool_after_rapid
+        expect: any
+      - print: "Mempool after rapid declarations"
+
+  - group: "Parallel ledger queries across all nodes"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            expect: any
+            save: _ledger_coins
+          - cli: "net -net {{network_name}} get status"
+            node: "{{_node}}"
+            expect: any
+            save: _net_status
+
+  - group: "Rapid sync requests"
+    steps:
+      - loop: 3
+        steps:
+          - for: _node
+            in: "{{root_nodes}}"
+            steps:
+              - cli: "net -net {{network_name}} sync gdb"
+                node: "{{_node}}"
+                expect: any
+
+  - group: "Cleanup"
+    steps:
+      - cli: "global_db clear -group local.test.concurrent"
+        expect: any
+      - cli: "global_db clear -group local.test.multinode"
+        expect: any
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"

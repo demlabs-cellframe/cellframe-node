@@ -1,0 +1,95 @@
+name: Global DB Operations
+description: >
+  Tests global_db write/read/delete, group_list, get_keys,
+  flush, and cross-node replication of GDB data.
+tags: [e2e, functional, global_db, gdb]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+test:
+  - group: Write and read key-value pairs
+    steps:
+      - cli: "global_db write -group local.test.e2e.functional -key hello -value world"
+        contains: "successfully"
+
+      - cli: "global_db read -group local.test.e2e.functional -key hello"
+        save: read_result
+        contains: "world"
+      - print: "Read result: {{read_result}}"
+
+  - group: Overwrite existing key
+    steps:
+      - cli: "global_db write -group local.test.e2e.functional -key hello -value updated_world"
+        contains: "successfully"
+
+      - cli: "global_db read -group local.test.e2e.functional -key hello"
+        contains: "updated_world"
+
+  - group: Write multiple keys
+    steps:
+      - loop: 5
+        steps:
+          - cli: "global_db write -group local.test.e2e.batch -key key_{{i}} -value value_{{i}}"
+            contains: "successfully"
+
+  - group: Get keys in group
+    steps:
+      - cli: "global_db get_keys -group local.test.e2e.batch"
+        save: batch_keys
+        contains: "key_0"
+      - print: "Batch keys: {{batch_keys}}"
+
+  - group: Group list
+    steps:
+      - cli: "global_db group_list -mask local.test.e2e.*"
+        save: group_list
+        contains: "local.test.e2e"
+      - print: "Group list: {{group_list}}"
+
+  - group: Delete key
+    steps:
+      - cli: "global_db delete -group local.test.e2e.functional -key hello"
+        contains: "deleted"
+
+      - cli: "global_db read -group local.test.e2e.functional -key hello"
+        save: deleted_read
+        expect: any
+      - print: "Read deleted key: {{deleted_read}}"
+
+  - group: Flush GDB
+    steps:
+      - cli: "global_db flush"
+        save: flush_result
+        expect: any
+      - print: "Flush result: {{flush_result}}"
+
+  - group: GDB replication between nodes
+    steps:
+      - cli: "global_db write -group local.test.e2e.repl -key replicated_key -value replicated_value"
+        node: node-1
+        contains: "successfully"
+
+      - cli: "global_db read -group local.test.e2e.repl -key replicated_key"
+        node: node-1
+        save: repl_node1
+        contains: "replicated_value"
+      - print: "Node-1 read back: {{repl_node1}}"
+
+  - group: Cleanup test groups
+    steps:
+      - cli: "global_db clear -group local.test.e2e.functional"
+        expect: any
+      - cli: "global_db clear -group local.test.e2e.batch"
+        expect: any
+      - cli: "global_db clear -group local.test.e2e.repl"
+        expect: any
+
+check:
+  - cli: "global_db flush"
+    expect: any

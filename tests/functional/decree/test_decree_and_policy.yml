@@ -1,0 +1,102 @@
+name: Decree and Policy
+description: >
+  Tests decree creation and signing, policy listing,
+  find operations for datums/atoms/decrees, and
+  data management (gdb_export/import, remove).
+tags: [e2e, functional, decree, policy, find]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+test:
+  - group: Decree info
+    steps:
+      - cli: "decree info -net {{network_name}}"
+        save: decree_info
+        expect: any
+      - print: "Decree info: {{decree_info}}"
+
+  - group: Policy list
+    steps:
+      - cli: "policy list -net {{network_name}}"
+        save: policy_list
+        expect: any
+      - print: "Policy list: {{policy_list}}"
+
+  - group: Create common decree (set fee)
+    steps:
+      - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+        save_wallet: fee_addr
+
+      - cli: "decree create common -net {{network_name}} -chain zerochain -decree_chain main -certs {{root_certs}} -fee 50000000000000000 -to_addr {{fee_addr}}"
+        save: decree_result
+        expect: any
+      - print: "Decree create: {{decree_result}}"
+
+      - set: decree_hash
+        value: "regex_extract(decree_result, r'(0x[A-Fa-f0-9]+)', 1) if '0x' in decree_result else ''"
+        eval: true
+
+  - group: Decree find
+    steps:
+      - if: "decree_hash"
+        then:
+          - cli: "decree find -net {{network_name}} -hash {{decree_hash}}"
+            save: decree_found
+            expect: any
+          - print: "Decree find: {{decree_found}}"
+
+  - group: Find operations
+    steps:
+      - cli: "find datum -net {{network_name}} -chain zerochain -hash 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: find_null_datum
+        expect: any
+      - print: "Find null datum: {{find_null_datum}}"
+
+      - cli: "find atom -net {{network_name}} -chain zerochain -hash 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: find_null_atom
+        expect: any
+      - print: "Find null atom: {{find_null_atom}}"
+
+  - group: GDB export
+    steps:
+      - cli: "gdb_export filename test_export"
+        save: export_result
+        expect: any
+      - print: "GDB export: {{export_result}}"
+
+  - group: Plugin operations
+    steps:
+      - cli: "plugin list"
+        save: plugin_list
+        expect: any
+      - print: "Plugins: {{plugin_list}}"
+
+  - group: Print log
+    steps:
+      - cli: "print_log -limit 5"
+        save: log_output
+        expect: any
+      - print: "Log (5 lines): present"
+
+  - group: Statistics
+    steps:
+      - cli: "stats cpu"
+        save: cpu_stats
+        expect: any
+      - print: "CPU stats: {{cpu_stats}}"
+
+check:
+  - cli: "decree info -net {{network_name}}"
+    node: node-1
+    expect: any

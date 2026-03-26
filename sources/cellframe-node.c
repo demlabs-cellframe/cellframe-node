@@ -111,6 +111,7 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
+#include "dap_chain_net_srv_dex.h"
 #include "dap_chain_net_srv_stake_ext.h"
 #include "dap_chain_wallet_shared.h"
 
@@ -181,6 +182,23 @@ int main( int argc, const char **argv )
         g_sys_dir_path = dap_strdup(argv[2]);
 #endif
 
+    const char *l_plugins_path_arg = NULL;
+#if !DAP_OS_ANDROID
+    if (!dap_cli_server_cmd_find_option_val((char **)argv, 1, argc, "--plugins-path", &l_plugins_path_arg))
+        dap_cli_server_cmd_find_option_val((char **)argv, 1, argc, "-P", &l_plugins_path_arg);
+#endif
+    char *l_plugins_path_override = NULL;
+    if (l_plugins_path_arg) {
+        if (l_plugins_path_arg[0] == '~' && (l_plugins_path_arg[1] == '/' || l_plugins_path_arg[1] == '\0')) {
+            const char *l_home = getenv("HOME");
+            l_plugins_path_override = l_home
+                ? dap_strdup_printf("%s%s", l_home, l_plugins_path_arg + 1)
+                : dap_strdup(l_plugins_path_arg);
+        } else {
+            l_plugins_path_override = dap_strdup(l_plugins_path_arg);
+        }
+    }
+
     if (!g_sys_dir_path) {
 #ifdef DAP_OS_WINDOWS
         g_sys_dir_path = dap_strdup_printf("%s/%s", regGetUsrPath(), dap_get_appname());
@@ -242,6 +260,8 @@ int main( int argc, const char **argv )
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
+    if (l_plugins_path_override)
+        log_it(L_NOTICE, "Plugins path overridden from command line: %s", l_plugins_path_override);
 
     l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
@@ -257,7 +277,7 @@ int main( int argc, const char **argv )
     if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
         size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
-        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+        log_it(L_NOTICE, "Log rotation every %zu min enabled, max log file size %zu MB",
                          l_timeout_minutes, l_max_file_size);
         dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
     }
@@ -385,6 +405,10 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
+    // Initialize DEX v2 service
+    if (dap_chain_net_srv_dex_init()) {
+        log_it(L_ERROR, "Can't provide DEX v2 capability");
+    }
 
     if (dap_chain_net_srv_voting_init()) {
         log_it(L_ERROR, "Can't provide voting capability");
@@ -432,6 +456,32 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
+
+    bool l_plugins_enabled = dap_config_get_item_bool_default(g_config, "plugins", "enabled", false);
+    if (l_plugins_enabled) {
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
+        int rc_plugin_init = 0;
+        rc_plugin_init = dap_plugin_init(l_plugins_path_override
+            ? l_plugins_path_override
+            : dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default));
+        if (rc_plugin_init) {
+            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);
+            l_plugins_enabled = false;
+        } else {
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            log_it(L_NOTICE, "Registering python plugin type");
+            rc_plugin_init = dap_chain_plugins_init(g_config);
+#endif
+            dap_plugin_load_all();
+            dap_plugin_preinit_all();
+        }
+        DAP_DELETE(l_plugins_path_default);
+    }
+
     dap_chain_net_load_all();
 
     if( (dap_chain_wallet_shared_notify_init()) ) {
@@ -452,8 +502,8 @@ int main( int argc, const char **argv )
         return -133;
     }
 
-    log_it(L_INFO, "Automatic mempool processing %s",
-           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
+    bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
+    log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
     
     uint16_t l_listen_addrs_count = 0;
     if ( bServerEnabled )
@@ -523,43 +573,22 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
-        int rc_plugin_init = 0;
-        rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        if (rc_plugin_init) {
-            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);    
-            DAP_DELETE(l_plugins_path_default);
-        } else {
-            DAP_DELETE(l_plugins_path_default);
+    if (l_plugins_enabled) {
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            //Init python plugins
-            log_it(L_NOTICE, "Loading python plugins");
-            dap_plugins_python_app_content_init(l_server);
-            rc_plugin_init = dap_chain_plugins_init(g_config);
+        dap_plugins_python_app_content_init(l_server);
 #endif
-            dap_plugin_start_all();
-
+        dap_plugin_start_all();
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            if (!rc_plugin_init) {
-                dap_chain_plugins_save_thread(g_config);
-            } else {
-                log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
-            }
+        dap_chain_plugins_save_thread(g_config);
 #endif
-        }
     }
     dap_chain_net_try_online_all();
     rc = dap_events_wait();
-    log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
+    log_it(L_INFO, "Server loop stopped with return code %d", rc);
     // Deinit modules
 
 //failure:
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+    if (l_plugins_enabled) {
         dap_plugin_stop_all();
         dap_plugin_deinit();
     }
@@ -585,6 +614,7 @@ int main( int argc, const char **argv )
     dap_config_close( g_config );
     dap_interval_timer_deinit();
     dap_common_deinit();
+    DAP_DEL_Z(l_plugins_path_override);
 
     return rc * 10;
 }
