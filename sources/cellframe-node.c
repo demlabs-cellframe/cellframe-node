@@ -57,6 +57,7 @@ void S_SetExceptionFilter(void);
 #include "dap_chain_net_cli.h"
 #include "dap_chain_net_balancer.h"
 #include "dap_chain_net_node_list.h"
+#include "dap_chain_node.h"
 #include "dap_plugin.h"
 #include "dap_dl.h"
 #include "dap_chain.h"
@@ -216,6 +217,16 @@ int main(int argc, const char **argv)
 #ifndef DAP_OS_WASM
     dap_chain_net_cli_set_version_info(dap_node_version());
 
+    /* ---------- 6b. Plugins (before network loading so plugin services are available) ---------- */
+    if (g_config && dap_config_get_item_bool_default(g_config, "plugins", "enabled", false))
+        dap_plugin_start_all();
+
+    /* ---------- 6c. Load networks (after plugins so all services are registered) ---------- */
+    dap_chain_net_load_all();
+
+    /* ---------- 6d. Enable mempool auto-processing (must run after networks are loaded) ---------- */
+    dap_chain_node_mempool_autoproc_init();
+
     /* ---------- 7. Seed mode ---------- */
     if (l_seed_mode) {
         log_it(L_NOTICE, "Seed mode enabled via --seed-mode");
@@ -251,11 +262,7 @@ int main(int argc, const char **argv)
         log_it(L_INFO, "No enabled server, client mode only");
     }
 
-    /* ---------- 9. Plugins ---------- */
-    if (g_config && dap_config_get_item_bool_default(g_config, "plugins", "enabled", false))
-        dap_plugin_start_all();
-
-    /* ---------- 10. Register transports & bring networks online ---------- */
+    /* ---------- 9. Register transports & bring networks online ---------- */
     if (dap_net_trans_http_stream_register() != 0)
         log_it(L_ERROR, "HTTP transport registration failed");
     dap_chain_net_try_online_all();

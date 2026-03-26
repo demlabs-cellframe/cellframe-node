@@ -18,11 +18,11 @@ variables:
 test:
   - group: Verify network is operational
     steps:
-      - cli: "net get status"
+      - cli: "net get status -net {{network_name}}"
         expect: success
         contains: "NET_STATE_ONLINE"
 
-      - cli: "net get links"
+      - cli: "net get links -net {{network_name}}"
         expect: success
 
   - group: Create wallets
@@ -43,9 +43,11 @@ test:
 
       - wait_for_datum: "{{token_hash}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
-      - cli: "token info -name {{token_name}}"
+      - cli: "token info -net {{network_name}} -name {{token_name}}"
         expect: success
         contains: "{{token_name}}"
 
@@ -57,9 +59,10 @@ test:
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
-      - wait: 10s
 
       - cli: "wallet info -w e2e_alice -net {{network_name}}"
         expect: success
@@ -73,9 +76,10 @@ test:
 
       - wait_for_datum: "{{tx_hash}}"
         chain: main
-        timeout: 120
+        timeout_total: 300
+        timeout_mempool: 60
+        timeout_in_blocks: 300
 
-      - wait: 10s
 
   - group: Verify final ledger state
     steps:

@@ -23,7 +23,9 @@ test:
 
       - wait_for_datum: "{{token_hash}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
       - cli: "token_emit -token EVOTE01 -emission_value 100000 -addr {{wallet_addr}} -certs test_cert"
         expect: success
@@ -31,38 +33,44 @@ test:
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
       - wait: 10s
 
   - group: Create voting
     steps:
-      - cli: 'srv_voting create -net {{network_name}} -question "{{vote_question}}" -option "{{option_a}}" -option "{{option_b}}" -max_votes_count 10 -token EVOTE01 -from_wallet test_wallet -fee 0'
+      - cli: 'voting create -net {{network_name}} -question "{{vote_question}}" -options "{{option_a}}", "{{option_b}}" -max_votes_count 10 -token EVOTE01 -w test_wallet -fee 0.05'
         expect: success
         save_hash: voting_hash
 
       - wait_for_datum: "{{voting_hash}}"
         chain: main
-        timeout: 120
+        timeout_total: 300
+        timeout_mempool: 60
+        timeout_in_blocks: 300
 
   - group: Cast vote from first node
     steps:
-      - cli: "srv_voting vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -from_wallet test_wallet -fee 0"
+      - cli: "voting vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -w test_wallet -fee 0.05"
         expect: success
         save_hash: vote_hash_1
 
       - wait_for_datum: "{{vote_hash_1}}"
         chain: main
-        timeout: 120
+        timeout_total: 300
+        timeout_mempool: 60
+        timeout_in_blocks: 300
 
   - group: Verify voting results
     steps:
       - wait: 10s
 
-      - cli: "srv_voting list -net {{network_name}}"
+      - cli: "voting list -net {{network_name}}"
         expect: success
         contains: "{{vote_question}}"
 
-      - cli: "srv_voting dump -net {{network_name}} -hash {{voting_hash}}"
+      - cli: "voting dump -net {{network_name}} -hash {{voting_hash}}"
         expect: success
         contains: "{{option_a}}"
