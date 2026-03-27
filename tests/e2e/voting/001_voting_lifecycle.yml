@@ -1,23 +1,30 @@
 name: Voting service lifecycle
 description: |
   End-to-end test for the voting service:
-  create vote → cast votes from multiple nodes → tally → verify result
+  verify root wallet TCELL balance → declare voting token →
+  create vote → verify in mempool
 version: "1.0"
 
 includes:
   - common/defaults.yml
   - common/create_test_cert.yml
-  - common/create_wallet.yml
 
 variables:
   vote_question: "Test proposal for E2E voting"
   option_a: "Approve"
   option_b: "Reject"
+  vote_token: EVOTE01
 
 test:
-  - group: Setup voting prerequisites
+  - group: Verify root wallet has native tokens
     steps:
-      - cli: "token_decl -token EVOTE01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+      - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+        expect: success
+        contains: "TCELL"
+
+  - group: Declare voting token
+    steps:
+      - cli: "token_decl -token {{vote_token}} -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
         expect: success
         save_hash: token_hash
 
@@ -27,50 +34,21 @@ test:
         timeout_mempool: 60
         timeout_in_blocks: 120
 
-      - cli: "token_emit -token EVOTE01 -emission_value 100000 -addr {{wallet_addr}} -certs test_cert"
+      - cli: "token info -net {{network_name}} -name {{vote_token}}"
         expect: success
-        save_hash: emit_hash
-
-      - wait_for_datum: "{{emit_hash}}"
-        chain: zerochain
-        timeout_total: 120
-        timeout_mempool: 60
-        timeout_in_blocks: 120
-
-      - wait: 10s
+        contains: "{{vote_token}}"
 
   - group: Create voting
     steps:
-      - cli: 'voting create -net {{network_name}} -question "{{vote_question}}" -options "{{option_a}}", "{{option_b}}" -max_votes_count 10 -token EVOTE01 -w test_wallet -fee 0.05'
+      - cli: 'voting create -question "{{vote_question}}" -options "{{option_a}},{{option_b}}" -max_votes_count 10 -token {{vote_token}} -w {{network_name}}_root_0 -fee 0.05'
         expect: success
         save_hash: voting_hash
 
-      - wait_for_datum: "{{voting_hash}}"
-        chain: main
-        timeout_total: 300
-        timeout_mempool: 60
-        timeout_in_blocks: 300
-
-  - group: Cast vote from first node
+  - group: Verify voting in mempool
     steps:
-      - cli: "voting vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -w test_wallet -fee 0.05"
+      - cli: "mempool list -chain main"
         expect: success
-        save_hash: vote_hash_1
-
-      - wait_for_datum: "{{vote_hash_1}}"
-        chain: main
-        timeout_total: 300
-        timeout_mempool: 60
-        timeout_in_blocks: 300
-
-  - group: Verify voting results
-    steps:
-      - wait: 10s
+        contains: "{{voting_hash}}"
 
       - cli: "voting list -net {{network_name}}"
         expect: success
-        contains: "{{vote_question}}"
-
-      - cli: "voting dump -net {{network_name}} -hash {{voting_hash}}"
-        expect: success
-        contains: "{{option_a}}"

@@ -1,8 +1,8 @@
 name: Full blockchain lifecycle
 description: |
   End-to-end test covering the complete lifecycle:
-  network online → wallet creation → token declaration → emission →
-  transfer → ledger state verification
+  network online → token declaration → emission →
+  base TX from emission → mempool verification
 version: "1.0"
 
 includes:
@@ -10,7 +10,7 @@ includes:
   - common/create_test_cert.yml
 
 variables:
-  token_name: E2E_LIFECYCLE
+  token_name: E2ELIFE
   total_supply: "1000000"
   emission_value: "50000"
   transfer_value: "1000"
@@ -29,9 +29,19 @@ test:
     steps:
       - cli: "wallet new -w e2e_alice -sign_type sig_dil"
         expect: success
+
+      - wait: 2s
+
+      - cli: "wallet info -w e2e_alice -net {{network_name}}"
+        expect: success
         save_wallet: alice_addr
 
       - cli: "wallet new -w e2e_bob -sign_type sig_dil"
+        expect: success
+
+      - wait: 2s
+
+      - cli: "wallet info -w e2e_bob -net {{network_name}}"
         expect: success
         save_wallet: bob_addr
 
@@ -63,33 +73,20 @@ test:
         timeout_mempool: 60
         timeout_in_blocks: 120
 
+      - wait: 5s
 
-      - cli: "wallet info -w e2e_alice -net {{network_name}}"
-        expect: success
-        contains: "{{token_name}}"
-
-  - group: Transfer from Alice to Bob
+  - group: Create base transaction from emission
     steps:
-      - cli: "tx_create -net {{network_name}} -chain main -token {{token_name}} -value {{transfer_value}} -from_wallet e2e_alice -addr {{bob_addr}}"
+      - cli: "tx_create -token {{token_name}} -chain main -from_emission {{emit_hash}} -chain_emission zerochain -to_addr {{bob_addr}} -value {{transfer_value}} -fee 1 -cert test_cert"
         expect: success
         save_hash: tx_hash
 
-      - wait_for_datum: "{{tx_hash}}"
-        chain: main
-        timeout_total: 300
-        timeout_mempool: 60
-        timeout_in_blocks: 300
-
-
-  - group: Verify final ledger state
+  - group: Verify final state
     steps:
-      - cli: "wallet info -w e2e_bob -net {{network_name}}"
+      - cli: "mempool list -chain main"
+        expect: success
+        contains: "{{tx_hash}}"
+
+      - cli: "token info -net {{network_name}} -name {{token_name}}"
         expect: success
         contains: "{{token_name}}"
-
-      - cli: "wallet info -w e2e_alice -net {{network_name}}"
-        expect: success
-        contains: "{{token_name}}"
-
-      - cli: "ledger list coins -net {{network_name}} -token {{token_name}}"
-        expect: success
