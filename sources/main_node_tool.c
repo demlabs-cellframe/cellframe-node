@@ -34,6 +34,7 @@
 #include "dap_hash.h"
 #include "dap_hash_sha3.h"
 #include "dap_stream.h"
+#include "dap_cluster_node.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
 
@@ -783,8 +784,8 @@ static int s_cert_get_addr(int argc, const char **argv) {
         printf("Not found cert %s\n", argv[4]);
         exit(-134);
     }
-    dap_stream_node_addr_t l_addr = dap_stream_node_addr_from_cert(l_cert);
-    printf("%s\n", dap_stream_node_addr_to_str(l_addr, false));
+    dap_cluster_node_addr_t l_addr = dap_cluster_node_addr_from_cert(l_cert);
+    printf("%s\n", dap_cluster_node_addr_to_str(l_addr));
     return 0;
 }
 
