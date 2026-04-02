@@ -147,7 +147,7 @@ int main(int argc, const char **argv)
 
     /* ---------- 3. DAP SDK init ---------- */
     dap_sdk_config_t l_sdk_cfg = {
-        .modules     = DAP_SDK_MODULE_FULL_NET | DAP_SDK_MODULE_NET_DNS | DAP_SDK_MODULE_PLUGIN,
+        .modules     = (DAP_SDK_MODULE_FULL_NET & ~DAP_SDK_MODULE_NET_LINK_MGR) | DAP_SDK_MODULE_NET_DNS | DAP_SDK_MODULE_PLUGIN,
         .app_name    = dap_get_appname(),
         .log_level   = L_NOTICE,
         .sys_dir     = g_sys_dir_path,
@@ -214,9 +214,18 @@ int main(int argc, const char **argv)
 #ifndef DAP_OS_WASM
     dap_chain_net_cli_set_version_info(dap_node_version());
 
+    /* ---------- 6a. Register transport adapters ---------- */
+    if ((rc = dap_net_trans_http_stream_register()) != 0) {
+        log_it(L_CRITICAL, "Failed to register HTTP transport: %d", rc);
+        return cellframe_sdk_deinit(), dap_sdk_deinit(), rc;
+    }
+
     /* ---------- 7. Seed mode ---------- */
+    if (!l_seed_mode && g_config)
+        l_seed_mode = dap_config_get_item_bool_default(g_config, "general", "seed_mode", false);
+
     if (l_seed_mode) {
-        log_it(L_NOTICE, "Seed mode enabled via --seed-mode");
+        log_it(L_NOTICE, "Seed mode enabled");
         for (dap_chain_net_t *net = dap_chain_net_iterate(NULL); net; net = dap_chain_net_iterate(net)) {
             dap_chain_t *chain;
             dap_dl_foreach(net->pub.chains, chain) {
