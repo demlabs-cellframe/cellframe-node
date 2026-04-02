@@ -30,7 +30,9 @@ BUILD_DEB_FILE_URL="https://internal-pub.cellframe.net/linux/cellframe-node/${BU
 BUILD_SYNC_LOG_NAME="cellframe-node-build.log"
 BUILD_SYNC_LOG_PATH="${SCRIPT_DIR}/${BUILD_SYNC_LOG_NAME}"
 
-MASTER_DEB_FILE_URL="https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64"
+# If 'COMPARISON_BUILD_URL' is set as a CI/CD variable, it is used as the reference build 'URL'.
+# Otherwise falls back to the 'latest-amd64' master build.
+MASTER_DEB_FILE_URL="${COMPARISON_BUILD_URL:-https://internal-pub.cellframe.net/linux/cellframe-node/master/latest-amd64}"
 MASTER_SYNC_LOG_NAME="cellframe-node-master.log"
 MASTER_SYNC_LOG_PATH="${SCRIPT_DIR}/${MASTER_SYNC_LOG_NAME}"
 
