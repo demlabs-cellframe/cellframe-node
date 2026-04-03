@@ -26,4 +26,4 @@ test:
 
       - cli: "token info -net {{network_name}} -name FTEST01"
         expect: success
-        contains: "Supply total"
+        contains: "supply_total"
