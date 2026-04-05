@@ -1,44 +1,50 @@
-# Test: Token Listing
-# Verify token enumeration
-
 name: Token List Test
-description: Test listing available tokens
-tags: [e2e, token, list, fast]
+description: Create tokens and verify they all appear in token list
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
+  - common/defaults.yml
+  - common/create_test_cert.yml
 
-setup:
-  # Create test tokens
-  - cli: token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-    save_hash: list1_hash
-  
-  - wait_for_datum: "{{list1_hash}}"
-    chain: zerochain
-  
-  - cli: token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-    save_hash: list2_hash
-  
-  - wait_for_datum: "{{list2_hash}}"
-    chain: zerochain
-
-  - wait: 5s
 test:
-  # Test: List tokens (allow time for token list to include new tokens)
-  - cli: token list
-    save: token_list
+  - group: Verify native token exists
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "TCELL"
 
-check:
-  # Verify token list returns data and at least TCELL or our tokens (LIST1/LIST2 may need time to appear)
-  - python: |
-      token_list = ctx.get_variable('token_list') or ''
-      token_lower = token_list.lower()
-      assert token_lower, "Token list should not be empty"
-      assert 'tcell' in token_lower or 'list1' in token_lower or 'list2' in token_lower, \
-        "Token list should contain TCELL or LIST1/LIST2 (got: %s)" % (token_list[:300] if token_list else '')
-    description: "Token list returns expected data"
+  - group: Create two tokens and wait for acceptance
+    steps:
+      - cli: "token_decl -token LIST1 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: list1_hash
 
+      - wait_for_datum: "{{list1_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+      - cli: "token_decl -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: list2_hash
+
+      - wait_for_datum: "{{list2_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+  - group: Verify both tokens in list
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "LIST1"
+
+      - cli: "token list"
+        expect: success
+        contains: "LIST2"
+
+      - cli: "token list"
+        expect: success
+        contains: "TCELL"

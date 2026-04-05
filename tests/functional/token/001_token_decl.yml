@@ -1,35 +1,34 @@
-# Test: Token Declaration
-# Verify token creation
-
-name: Token Declaration Test
-description: Test creating new tokens with various parameters
-tags: [e2e, token, declaration]
+name: Token declaration
+description: Declare a new token, wait for block, verify in ledger with supply_total
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-  - common/create_wallet.yml
-
-setup:
-  - wait: 3s
+  - common/defaults.yml
+  - common/create_test_cert.yml
 
 test:
-  # Test: Create simple token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token E2ETEST -total_supply 1000000 -certs test_cert
-    node: node1
-    expect: success
-    save_hash: token_hash
-    wait: 3s
-    description: "Declare E2ETEST token"
+  - group: Declare simple token
+    steps:
+      - cli: "token_decl -token FTEST01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
 
-check:
-  # Verify token info is accessible
-  - cli: token info -name E2ETEST
-    node: node1
-    expect: success
-    contains: "E2ETEST"
-    description: "Token info contains token name"
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
+  - group: Verify token exists in ledger
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "FTEST01"
+
+      - cli: "token info -net {{network_name}} -name FTEST01"
+        expect: success
+        contains: "supply_total"
+
+      - cli: "token info -net {{network_name}} -name FTEST01"
+        expect: success
+        contains: "FTEST01"

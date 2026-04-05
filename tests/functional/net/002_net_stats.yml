@@ -1,31 +1,19 @@
-# Test: Network Statistics
-# Test network statistics retrieval
-
 name: Network Stats Test
-description: Test getting network transaction statistics
-tags: [functional, network, stats]
+description: Verify network transaction statistics return structured data
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 10s
+  - common/defaults.yml
 
 test:
-  # Test: Get network stats
-  - cli: "net -net {{network_name}} stats tx"
-    node: node1
-    save: net_stats
-    description: "Get transaction statistics"
+  - group: Get transaction stats
+    steps:
+      - cli: "net stats tx"
+        expect: success
+        contains: "transaction_statistics"
 
-check:
-  # Verify stats are returned
-  - python: |
-      stats = ctx.get_variable('net_stats')
-      assert stats is not None, "Network stats should be returned"
-    description: "Network stats are accessible"
-
+  - group: Verify status contains link counts
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "active:"

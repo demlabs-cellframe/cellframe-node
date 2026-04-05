@@ -1,25 +1,56 @@
 name: Network status and connectivity
-description: Verify nodes are online and connected
+description: Verify all nodes are online and interconnected
 version: "1.0"
 
 includes:
   - common/defaults.yml
 
 test:
-  - group: Check root node status
+  - group: Root node is online
     steps:
       - cli: "net get status"
         expect: success
         contains: "NET_STATE_ONLINE"
 
-  - group: Check node connections
+  - group: Root node has active links
     steps:
-      - cli: "net get links"
+      - cli: "net get status"
         expect: success
+        contains: "active:"
 
-  - group: Verify on multiple nodes
+  - group: Verify on node-2
     steps:
       - cli: "net get status"
         node: "node-2"
         expect: success
         contains: "NET_STATE_ONLINE"
+
+  - group: Verify on node-3
+    steps:
+      - cli: "net get status"
+        node: "node-3"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+  - group: Verify on node-4
+    steps:
+      - cli: "net get status"
+        node: "node-4"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+  - group: All nodes see native token
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "TCELL"
+
+      - cli: "token list"
+        node: "node-2"
+        expect: success
+        contains: "TCELL"
+
+      - cli: "token list"
+        node: "node-3"
+        expect: success
+        contains: "TCELL"

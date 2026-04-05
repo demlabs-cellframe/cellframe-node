@@ -1,31 +1,20 @@
-# Test: Network Synchronization
-# Test network sync operations
-
 name: Network Sync Test
-description: Test network synchronization commands
-tags: [functional, network, sync]
+description: Verify network synchronization state on multiple nodes
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 10s
+  - common/defaults.yml
 
 test:
-  # Test: Check sync status before
-  - cli: "net -net {{network_name}} get status"
-    node: node1
-    save: status_before
-    description: "Get network status"
+  - group: Verify sync state on root node
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
 
-check:
-  # Verify status is accessible
-  - python: |
-      status = ctx.get_variable('status_before')
-      assert status, "Network status should not be empty"
-    description: "Network status is accessible"
-
+  - group: Verify sync state on master node
+    steps:
+      - cli: "net get status"
+        node: "{{first_master}}"
+        expect: success
+        contains: "NET_STATE_ONLINE"

@@ -1,33 +1,51 @@
 name: Wallet creation and basic operations
-description: Create wallets, verify info, check address format
+description: Create wallets, verify info, check wallet list
 version: "1.0"
 
 includes:
   - common/defaults.yml
 
 test:
-  - group: Create new wallet
+  - group: Create wallet with sig_dil
     steps:
       - cli: "wallet new -w func_wallet_01 -sign_type sig_dil"
         expect: success
+
+      - wait: 2s
+
+      - cli: "wallet info -w func_wallet_01 -net {{network_name}}"
+        expect: success
+        contains: "addr"
         save_wallet: w1_addr
 
-      - cli: "wallet info -w func_wallet_01"
-        expect: success
-        contains: "func_wallet_01"
-
-  - group: Create second wallet with different sign type
+  - group: Create wallet with sig_ecdsa
     steps:
       - cli: "wallet new -w func_wallet_02 -sign_type sig_ecdsa"
         expect: success
+
+      - wait: 2s
+
+      - cli: "wallet info -w func_wallet_02 -net {{network_name}}"
+        expect: success
+        contains: "addr"
         save_wallet: w2_addr
 
-      - cli: "wallet info -w func_wallet_02"
-        expect: success
-        contains: "func_wallet_02"
-
-  - group: Verify wallet list
+  - group: Verify wallets in list
     steps:
       - cli: "wallet list"
         expect: success
         contains: "func_wallet_01"
+
+      - cli: "wallet list"
+        expect: success
+        contains: "func_wallet_02"
+
+  - group: Verify addresses are different
+    steps:
+      - cli: "wallet info -w func_wallet_01 -net {{network_name}}"
+        expect: success
+        contains: "{{w1_addr}}"
+
+      - cli: "wallet info -w func_wallet_02 -net {{network_name}}"
+        expect: success
+        contains: "{{w2_addr}}"

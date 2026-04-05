@@ -1,41 +1,55 @@
-# Test: Token History
-# Test token transaction history
-
 name: Token History Test
-description: Test retrieving token transaction history
-tags: [e2e, token, history]
+description: Declare, emit, transfer, wait for block, verify token info shows emissions
 version: "1.0"
 
 includes:
   - common/defaults.yml
+  - common/create_test_cert.yml
   - common/create_wallet.yml
 
-defaults:
-    wait: 3s
-    node: node1
-
-setup:
-  # wallet_addr from include common/create_wallet.yml (wallet new + wallet info)
-
-  # Create and emit token
-  - cli: token_decl -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert
-  
-  - cli: token_emit -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs test_cert
-    save_hash: emit_tx
-  
-  # Create a transaction
-  - cli: tx_create -token HISTTEST -from_emission {{emit_tx}} -chain_emission zerochain -value 1000 -fee 0.1 -cert test_cert
-    save_hash: tx_hash
-
 test:
-  # Test: Get token history
-  - cli: token info -name HISTTEST -history_limit 10
-    save: token_history
+  - group: Declare and emit token
+    steps:
+      - cli: "token_decl -token HISTTEST -total_supply 1000000000000000000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
 
-check:
-  # Verify history contains transactions
-  - python: |
-      history = ctx.get_variable('token_history')
-      assert history, "Token history should not be empty"
-      assert 'HISTTEST' in history, "History should contain token name"
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
+      - cli: "token_emit -token HISTTEST -emission_value 100000000000000000000 -addr {{wallet_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_tx
+
+      - wait_for_datum: "{{emit_tx}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+      - wait: 5s
+
+  - group: Create base TX and wait for block
+    steps:
+      - cli: "tx_create -token HISTTEST -chain main -from_emission {{emit_tx}} -chain_emission zerochain -to_addr {{wallet_addr}} -value 100000000000000000000 -fee 0 -cert stagenet.root.pvt.0"
+        expect: success
+        save_hash: tx_hash
+
+      - wait_for_datum: "{{tx_hash}}"
+        chain: main
+        timeout_total: 360
+        timeout_mempool: 300
+        timeout_in_blocks: 300
+
+  - group: Verify token shows in info
+    steps:
+      - cli: "token info -net {{network_name}} -name HISTTEST"
+        expect: success
+        contains: "HISTTEST"
+
+      - cli: "token info -net {{network_name}} -name HISTTEST"
+        expect: success
+        contains: "supply_total"

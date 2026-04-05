@@ -1,0 +1,39 @@
+name: Transaction negative tests
+description: |
+  Verify that invalid transactions fail:
+  invalid emission hash format, invalid address
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+test:
+  - group: Create wallet for negative tests
+    steps:
+      - cli: "wallet new -w neg_tx_wallet -sign_type sig_dil"
+        expect: success
+
+      - wait: 2s
+
+      - cli: "wallet info -w neg_tx_wallet -net {{network_name}}"
+        expect: success
+        save_wallet: neg_addr
+
+  - group: TX with invalid emission hash format should fail
+    steps:
+      - cli: "tx_create -token TCELL -chain main -from_emission BADHASH -chain_emission zerochain -to_addr {{neg_addr}} -value 100 -fee 1 -cert test_cert"
+        expect: error
+        contains: "requires parameter"
+
+  - group: TX without -from_wallet or -from_emission should fail
+    steps:
+      - cli: "tx_create -token TCELL -chain main -to_addr {{neg_addr}} -value 100 -fee 1 -cert test_cert"
+        expect: error
+        contains: "requires one of parameters"
+
+  - group: TX without any parameters should fail
+    steps:
+      - cli: "tx_create"
+        expect: error
+        contains: "requires parameter"

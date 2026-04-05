@@ -1,31 +1,35 @@
-# Test: Network Go Online
-# Test bringing network online
-
 name: Network Go Online Test
-description: Test network online/offline transitions
-tags: [e2e, network, state]
+description: Test network offline/online transitions
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 5s
+  - common/defaults.yml
 
 test:
-  # Test: Check initial status
-  - cli: "net -net {{network_name}} get status"
-    node: node1
-    save: status_initial
-    description: "Get initial status"
+  - group: Verify network starts ONLINE
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
 
-check:
-  # Verify status is accessible
-  - python: |
-      status = ctx.get_variable('status_initial')
-      assert status, "Network status should not be empty"
-    description: "Network status is accessible"
+  - group: Take network offline
+    steps:
+      - cli: "net go offline"
+        expect: success
 
+      - wait: 3s
+
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_OFFLINE"
+
+  - group: Bring network back online
+    steps:
+      - cli: "net go online"
+        expect: success
+
+      - wait: 10s
+
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"

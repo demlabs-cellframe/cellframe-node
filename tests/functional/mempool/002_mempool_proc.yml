@@ -1,40 +1,45 @@
-# Test: Mempool Processing
-# Test mempool transaction processing
-
 name: Mempool Processing Test
-description: Test creating transaction and checking mempool
-tags: [functional, mempool, processing]
+description: Declare token, emit, create TX, verify TX appears in mempool
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
+  - common/defaults.yml
+  - common/create_test_cert.yml
   - common/create_wallet.yml
 
-defaults:
-  node: node1
-  wait: 3s
-
-setup:
-  # Create and emit token
-  - cli: token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token MEMPOOLTEST -total_supply 1000000 -certs test_cert
-  - cli: token_emit -token MEMPOOLTEST -emission_value 10000 -addr {{wallet_addr}} -certs test_cert
-    save_hash: emit_tx
-
 test:
-  # Test: Create transaction (should go to mempool)
-  - cli: tx_create -token MEMPOOLTEST -from_emission {{emit_tx}} -chain_emission zerochain -value 500 -cert test_cert
-    save_hash: tx_hash
- 
-  # Test: Check mempool
-  - cli: mempool list
-    save: mempool
+  - group: Declare token and wait for ledger acceptance
+    steps:
+      - cli: "token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token MEMPOOLTEST -total_supply 1000000 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
 
-check:
-  # Verify mempool response
-  - python: |
-      mempool = ctx.get_variable('mempool')
-      assert mempool is not None, "Mempool should return data"
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
 
+  - group: Emit tokens and wait for ledger acceptance
+    steps:
+      - cli: "token_emit -token MEMPOOLTEST -emission_value 10000 -addr {{wallet_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+      - wait: 5s
+
+  - group: Create transaction and verify in mempool
+    steps:
+      - cli: "tx_create -token MEMPOOLTEST -chain main -from_emission {{emit_hash}} -chain_emission zerochain -to_addr {{wallet_addr}} -value 500 -fee 1 -cert test_cert"
+        expect: success
+        save_hash: tx_hash
+
+      - cli: "mempool list -chain main"
+        expect: success
+        contains: "{{tx_hash}}"

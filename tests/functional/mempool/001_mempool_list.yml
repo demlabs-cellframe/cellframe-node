@@ -1,32 +1,19 @@
-# Test: Mempool List
-# Verify mempool listing
-
 name: Mempool List Test
-description: Test listing transactions in mempool
-tags: [e2e, mempool, list]
+description: Verify mempool list returns structured output for both chains
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 5s
+  - common/defaults.yml
 
 test:
-  # Test: List mempool
-  - cli: "mempool list -net {{network_name}}"
-    node: node1
-    expect: success
-    save: mempool_list
-    description: "List mempool transactions"
+  - group: List mempool on zerochain
+    steps:
+      - cli: "mempool list -chain zerochain"
+        expect: success
+        contains: "{{network_name}}"
 
-check:
-  # Verify mempool command works
-  - python: |
-      mempool = ctx.get_variable('mempool_list')
-      assert mempool is not None, "Mempool list should return data"
-    description: "Mempool list is accessible"
-
+  - group: List mempool on main chain
+    steps:
+      - cli: "mempool list -chain main"
+        expect: success
+        contains: "{{network_name}}"

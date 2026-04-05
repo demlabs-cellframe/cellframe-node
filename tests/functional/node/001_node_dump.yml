@@ -1,33 +1,13 @@
-# Test: Node Dump
-# Verify node information retrieval
-
 name: Node Dump Test
-description: Test getting node information
-tags: [e2e, node, info, fast]
+description: Verify node dump returns actual node information
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 3s
+  - common/defaults.yml
 
 test:
-  # Test: Dump node info
-  - cli: node dump
-    node: node1
-    expect: success
-    save: node_info
-    description: "Dump node information"
-
-check:
-  # Verify node info contains expected data
-  - python: |
-      node_info = ctx.get_variable('node_info')
-      assert 'node' in node_info.lower(), \
-        "Node info should contain node data"
-    description: "Node information is valid"
-
+  - group: Dump node info
+    steps:
+      - cli: "node dump"
+        expect: success
+        contains: "addr"

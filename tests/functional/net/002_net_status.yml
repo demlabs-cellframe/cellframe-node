@@ -1,45 +1,32 @@
-# Test: Network Status
-# Verify network status reporting
-
 name: Network Status Test
-description: Test getting network status information
-tags: [e2e, network, status]
+description: Verify network status reporting and network ID
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 5s
+  - common/defaults.yml
 
 test:
-  # Test: Get network status
-  - cli: "net -net {{network_name}} get status"
-    node: node1
-    expect: success
-    save: net_status
-    description: "Get network status"
-  
-  - cli: "net -net {{network_name}} get id"
-    node: node1
-    expect: success
-    save: net_id
-    description: "Get network ID"
+  - group: Verify network is online
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
 
-check:
-  # Verify status contains key fields
-  - python: |
-      status = ctx.get_variable('net_status')
-      assert 'status' in status.lower() or 'state' in status.lower(), \
-        "Status should contain status information"
-    description: "Network status is valid"
-  
-  # Verify network ID is present
-  - python: |
-      net_id = ctx.get_variable('net_id')
-      assert net_id.strip(), "Network ID should not be empty"
-    description: "Network ID is present"
+  - group: Verify network has ID
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "id:"
 
+  - group: Verify native ticker in status
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "native_ticker"
+
+  - group: Verify on second node
+    steps:
+      - cli: "net get status"
+        node: "node-2"
+        expect: success
+        contains: "NET_STATE_ONLINE"

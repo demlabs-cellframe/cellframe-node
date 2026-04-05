@@ -1,24 +1,13 @@
-# Test: Node Connections
-# Verify node connection listing
 name: Node Connections Test
-description: Test listing node connections
-tags: [e2e, node, connections]
+description: Verify node connections command returns uplinks/downlinks info
+version: "1.0"
 
-setup:
-  - wait: 10s
+includes:
+  - common/defaults.yml
 
 test:
-  # Test: List connections
-  - cli: "node connections -net {{network_name}}"
-    node: node1
-    save: connections
-    description: "List node connections"
-
-check:
-  # Verify connections info is returned
-  - python: |
-      connections = ctx.get_variable('connections')
-      # Should have some output (even if empty connections list)
-      assert connections is not None, "Connections command should return data"
-    description: "Node connections command works"
-
+  - group: List connections on root node
+    steps:
+      - cli: "node connections"
+        expect: success
+        contains: "uplinks"

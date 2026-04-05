@@ -1,0 +1,25 @@
+name: Token negative tests
+description: |
+  Verify that invalid token operations fail correctly:
+  invalid cert, non-existent token emit, non-existent token info
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+test:
+  - group: Emit with non-existent token should fail
+    steps:
+      - cli: "token_emit -token NOSUCHTOKEN -emission_value 100 -addr aaaa1111bbbb2222 -certs test_cert"
+        expect: error
+
+  - group: Emit with invalid cert should fail
+    steps:
+      - cli: "token_emit -token TCELL -emission_value 100 -addr aaaa1111bbbb2222 -certs nonexistent_cert"
+        expect: error
+
+  - group: Token info for non-existent token
+    steps:
+      - cli: "token info -net {{network_name}} -name DEFINITELY_NOT_EXISTS"
+        expect: error

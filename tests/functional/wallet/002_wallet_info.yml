@@ -1,28 +1,31 @@
-# Test: Wallet Info Detailed
-# Test detailed wallet information retrieval
 name: Wallet Info Detailed Test
-description: Test retrieving detailed wallet information
-tags: [functional, wallet, info]
+description: Verify wallet info returns address and wallet appears in list
+version: "1.0"
 
-defaults: 
-  node: node1
-setup:
-  # Create test wallet
-  - cli: wallet new -w info_test_wallet
+includes:
+  - common/defaults.yml
 
 test:
-  # Test: Get wallet info with address extraction and validation
-  - cli: wallet info -w info_test_wallet
-    save_wallet: wallet_addr
-  
-  # Test: List wallets
-  - cli: wallet list
-    save: wallet_list
+  - group: Create and verify wallet info
+    steps:
+      - cli: "wallet new -w info_test_wallet -sign_type sig_dil"
+        expect: success
 
-check:
-  # Verify wallet in list
-  - python: |
-      wallet_list = ctx.get_variable('wallet_list')
-      assert 'info_test_wallet' in wallet_list, "Wallet should be in list"
-    description: "Wallet appears in list"
+      - wait: 2s
 
+      - cli: "wallet info -w info_test_wallet -net {{network_name}}"
+        expect: success
+        contains: "addr"
+        save_wallet: wallet_addr
+
+  - group: Verify wallet appears in list
+    steps:
+      - cli: "wallet list"
+        expect: success
+        contains: "info_test_wallet"
+
+  - group: Verify address is returned on repeated query
+    steps:
+      - cli: "wallet info -w info_test_wallet -net {{network_name}}"
+        expect: success
+        contains: "{{wallet_addr}}"

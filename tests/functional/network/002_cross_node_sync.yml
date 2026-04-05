@@ -1,0 +1,49 @@
+name: Cross-node synchronization
+description: |
+  Declare token on root node, verify it appears on other nodes.
+  This tests that consensus actually propagates data across the network.
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+test:
+  - group: Declare token on root node
+    steps:
+      - cli: "token_decl -token SYNCTEST -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: sync_token_hash
+
+      - wait_for_datum: "{{sync_token_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+  - group: Verify token on root node
+    steps:
+      - cli: "token list"
+        expect: success
+        contains: "SYNCTEST"
+
+  - group: Verify token propagated to node-2
+    steps:
+      - cli: "token list"
+        node: "node-2"
+        expect: success
+        contains: "SYNCTEST"
+
+  - group: Verify token propagated to node-3
+    steps:
+      - cli: "token list"
+        node: "node-3"
+        expect: success
+        contains: "SYNCTEST"
+
+  - group: Verify token info consistent on node-2
+    steps:
+      - cli: "token info -net {{network_name}} -name SYNCTEST"
+        node: "node-2"
+        expect: success
+        contains: "supply_total"

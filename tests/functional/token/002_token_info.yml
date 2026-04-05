@@ -1,0 +1,49 @@
+name: Token Info Test
+description: Declare token, emit, verify token info contains all expected fields
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+  - common/create_wallet.yml
+
+test:
+  - group: Declare and emit token
+    steps:
+      - cli: "token_decl -decimals 18 -signs_total 1 -signs_emission 1 -token INFOTEST -total_supply 1000000 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
+
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+      - cli: "token_emit -token INFOTEST -emission_value 5000 -addr {{wallet_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 60
+        timeout_in_blocks: 120
+
+  - group: Verify token info fields
+    steps:
+      - cli: "token info -net {{network_name}} -name INFOTEST"
+        expect: success
+        contains: "INFOTEST"
+
+      - cli: "token info -net {{network_name}} -name INFOTEST"
+        expect: success
+        contains: "supply_total"
+
+      - cli: "token info -net {{network_name}} -name INFOTEST"
+        expect: success
+        contains: "decimals"
+
+      - cli: "token info -net {{network_name}} -name INFOTEST"
+        expect: success
+        contains: "auth_sig_total"

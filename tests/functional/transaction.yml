@@ -1,0 +1,14 @@
+# Functional Test Suite: Transaction Features
+# Functional testing of token transfers and transaction edge cases
+
+suite: "Transaction Features Suite"
+description: Functional testing of token transfers and negative transaction cases
+tags: [functional, transaction, transfer]
+version: "1.0"
+
+network:
+  topology: default
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml

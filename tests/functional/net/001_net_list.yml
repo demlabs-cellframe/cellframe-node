@@ -1,34 +1,13 @@
-# Test: Network List
-# Verify network enumeration
-
 name: Network List Test
-description: Test listing available networks
-tags: [e2e, network, list, fast]
+description: Verify network enumeration returns our network
 version: "1.0"
 
-network:
-  topology: default
-
 includes:
-  - common/networks/single_node.yml
-
-setup:
-  - wait: 3s
+  - common/defaults.yml
 
 test:
-  # Test: List all networks
-  - cli: net list
-    node: node1
-    expect: success
-    save: net_list
-    description: "List all networks"
-
-check:
-  - python: |
-      net_list = ctx.get_variable('net_list')
-      net_name = ctx.get_variable('network_name')
-      net_lower = net_list.lower() if net_list else ''
-      assert net_name.lower() in net_lower, \
-        "Network '%s' should be in network list (got: %s)" % (net_name, net_list[:200] if net_list else '')
-    description: "Network is available"
-
+  - group: List networks contains our network
+    steps:
+      - cli: "net list"
+        expect: success
+        contains: "{{network_name}}"

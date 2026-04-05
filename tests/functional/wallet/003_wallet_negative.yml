@@ -1,0 +1,25 @@
+name: Wallet negative tests
+description: |
+  Verify that invalid wallet operations fail correctly:
+  duplicate name, info for non-existent wallet
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+
+test:
+  - group: Create wallet
+    steps:
+      - cli: "wallet new -w neg_wallet_test -sign_type sig_dil"
+        expect: success
+
+  - group: Duplicate wallet name should fail
+    steps:
+      - cli: "wallet new -w neg_wallet_test -sign_type sig_dil"
+        expect: error
+        contains: "already exists"
+
+  - group: Info for non-existent wallet should fail
+    steps:
+      - cli: "wallet info -w definitely_no_such_wallet_12345 -net {{network_name}}"
+        expect: error
