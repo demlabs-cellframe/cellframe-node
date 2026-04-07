@@ -1,17 +1,16 @@
-suite:
-  name: ConfCall Functional Tests
-  description: |
-    Functional tests for individual Cellframe node subsystems.
-    Each test focuses on a single feature area with controlled inputs.
-  version: "1.0"
+suite: "ConfCall Functional Tests"
+description: |
+  Functional tests for individual Cellframe node subsystems.
+  Each test focuses on a single feature area with controlled inputs.
+version: "1.0"
 
-  includes:
-    - common/defaults.yml
-    - common/create_test_cert.yml
+includes:
+  - ../common/defaults.yml
+  - ../common/create_test_cert.yml
 
-  categories:
-    - network
-    - wallet
-    - token
-    - mempool
-    - transaction
+tags:
+  - network
+  - wallet
+  - token
+  - mempool
+  - transaction

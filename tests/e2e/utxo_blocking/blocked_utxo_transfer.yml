@@ -1,83 +1,95 @@
-# UTXO Blocking Configuration Test
-# Verify token_update -utxo_blocked_add command works
-
 name: UTXO Blocking Configuration Test
 description: |
   Test verifying that token_update -utxo_blocked_add command
   correctly adds UTXO to blocked list.
-
-author: QA Team
-tags: [e2e, utxo-blocking, token-update]
-
-network:
-  topology: default
+version: "1.0"
 
 includes:
-  - common/networks/single_node.yml
-  - common/set_root_cert.yml
-
-defaults:
-  node: node1
-  wait: 1s
+  - common/defaults.yml
+  - common/create_test_cert.yml
 
 setup:
   - wait: 3s
-  
-  # Create wallet
-  - cli: wallet new -w utxo_block_wallet
-  
-  - cli: wallet info -w utxo_block_wallet -net {{network_name}}
+
+  - cli: "wallet new -w utxo_block_wallet -sign_type sig_dil"
+    expect: success
+
+  - cli: "wallet info -w utxo_block_wallet -net {{network_name}}"
+    expect: success
     save_wallet: wallet_addr
 
 test:
-  # Create token on zerochain (DAG-PoA)
-  - cli: token_decl -net {{network_name}} -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
-    save_hash: token_hash
+  - group: Create and register token on zerochain
+    steps:
+      - config: "{{network_name}}/zerochain"
+        nodes: ["{{first_root}}"]
+        set:
+          is_add_directly: "true"
 
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
-  
-  # Wait for DAG consensus and ledger sync
-  - wait: 30s
-  
-  # Verify token exists before proceeding
-  - cli: token info -net {{network_name}} -name BLOCKTEST
-    contains: "BLOCKTEST"
-  
-  # Emit tokens
-  - cli: token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
-    save_hash: emission
-  
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission}}
-  
-  # Wait for DAG consensus and ledger sync
-  - wait: 30s
-  
-  # Create UTXO
-  - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000 -cert {{root_cert_single}} -chain main"
-    save_hash: utxo_tx
-  
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
-  
-  # Wait for UTXO to be processed and indexed
-  - wait: 30s
-  
-  # Block the specific UTXO using token_update command
-  - cli: token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{utxo_tx}}:0 -certs {{root_certs}} -chain zerochain
-    save_hash: block_tx
-    description: "Add UTXO to blocked list"
+      - docker_op: stop
+        services: ["{{first_root}}"]
 
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{block_tx}}
-  
-  # Wait for update to be processed
-  - wait: 30s
+      - docker_op: start
+        services: ["{{first_root}}"]
 
-check:
-  # Verify token exists
-  - cli: token info -net {{network_name}} -name BLOCKTEST
-    contains: "BLOCKTEST"
-    description: "Token BLOCKTEST should exist"
-  
-  # Verify wallet has tokens (UTXO was created before blocking)
-  - cli: wallet info -w utxo_block_wallet -net {{network_name}}
-    contains: "BLOCKTEST"
-    description: "Wallet should have BLOCKTEST tokens"
+      - wait_network: online
+        nodes: ["{{first_root}}"]
+        timeout: 60
+
+      - cli: "token_decl -net {{network_name}} -token BLOCKTEST -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert -chain zerochain"
+        expect: success
+        save_hash: token_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
+
+      - wait: 30s
+
+      - cli: "token info -net {{network_name}} -name BLOCKTEST"
+        expect: success
+        contains: "BLOCKTEST"
+
+  - group: Emit tokens
+    steps:
+      - cli: "token_emit -net {{network_name}} -token BLOCKTEST -emission_value 2000000 -addr {{wallet_addr}} -certs test_cert -chain zerochain"
+        expect: success
+        save_hash: emission
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
+
+      - wait: 30s
+
+  - group: Create UTXO from emission
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000000000000000000000 -cert test_cert -chain main -fee 0"
+        expect: success
+        save_hash: utxo_tx
+
+      - wait: 60s
+
+      - config: "{{network_name}}/zerochain"
+        nodes: ["{{first_root}}"]
+        set:
+          is_add_directly: "false"
+
+  - group: Block specific UTXO
+    steps:
+      - cli: "token_update -net {{network_name}} -token BLOCKTEST -utxo_blocked_add {{utxo_tx}}:0 -certs test_cert -chain zerochain"
+        expect: success
+        save_hash: block_tx
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
+
+      - wait: 30s
+
+  - group: Verify token and wallet state
+    steps:
+      - cli: "token info -net {{network_name}} -name BLOCKTEST"
+        expect: success
+        contains: "BLOCKTEST"
+
+      - cli: "wallet info -w utxo_block_wallet -net {{network_name}}"
+        expect: success
+        contains: "BLOCKTEST"

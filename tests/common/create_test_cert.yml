@@ -1,4 +1,4 @@
 setup:
-  - cli: "cert create -type sig_dil test_cert"
+  - bash: "cp /opt/cellframe-node/var/lib/ca/stagenet.root.pvt.0.dcert /opt/cellframe-node/var/lib/ca/test_cert.dcert"
+    node: "{{first_root}}"
     expect: success
-    wait: 2s

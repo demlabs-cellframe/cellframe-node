@@ -1,5 +1,7 @@
 setup:
   - cli: "wallet new -w test_wallet -sign_type sig_dil"
     expect: success
-    save_wallet: wallet_addr
     wait: 2s
+  - cli: "wallet info -w test_wallet -net stagenet"
+    expect: success
+    save_wallet: wallet_addr

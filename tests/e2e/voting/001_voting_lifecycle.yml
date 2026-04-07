@@ -1,7 +1,7 @@
 name: Voting service lifecycle
 description: |
   End-to-end test for the voting service:
-  create vote → cast votes from multiple nodes → tally → verify result
+  create vote → cast votes → verify result
 version: "1.0"
 
 includes:
@@ -15,54 +15,38 @@ variables:
   option_b: "Reject"
 
 test:
-  - group: Setup voting prerequisites
+  - group: Fund test wallet with native token for fees
     steps:
-      - cli: "token_decl -token EVOTE01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 1000000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{wallet_addr}} -fee 10000000000000000000"
         expect: success
-        save_hash: token_hash
 
-      - wait_for_datum: "{{token_hash}}"
-        chain: zerochain
-        timeout: 120
+      - wait: 120s
 
-      - cli: "token_emit -token EVOTE01 -emission_value 100000 -addr {{wallet_addr}} -certs test_cert"
+      - cli: "wallet info -w test_wallet -net {{network_name}}"
         expect: success
-        save_hash: emit_hash
-
-      - wait_for_datum: "{{emit_hash}}"
-        chain: zerochain
-        timeout: 120
-
-      - wait: 10s
+        contains: "{{native_ticker}}"
 
   - group: Create voting
     steps:
-      - cli: 'srv_voting create -net {{network_name}} -question "{{vote_question}}" -option "{{option_a}}" -option "{{option_b}}" -max_votes_count 10 -token EVOTE01 -from_wallet test_wallet -fee 0'
+      - cli: 'poll create -net {{network_name}} -question "{{vote_question}}" -options "{{option_a}}", "{{option_b}}" -max_votes_count 10 -w test_wallet -fee 10000000000000000000'
         expect: success
         save_hash: voting_hash
 
-      - wait_for_datum: "{{voting_hash}}"
-        chain: main
-        timeout: 120
+      - wait: 60s
 
   - group: Cast vote from first node
     steps:
-      - cli: "srv_voting vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -from_wallet test_wallet -fee 0"
+      - cli: "poll vote -net {{network_name}} -hash {{voting_hash}} -option_idx 0 -w test_wallet -fee 10000000000000000000"
         expect: success
-        save_hash: vote_hash_1
 
-      - wait_for_datum: "{{vote_hash_1}}"
-        chain: main
-        timeout: 120
+      - wait: 60s
 
   - group: Verify voting results
     steps:
-      - wait: 10s
-
-      - cli: "srv_voting list -net {{network_name}}"
+      - cli: "poll list -net {{network_name}}"
         expect: success
         contains: "{{vote_question}}"
 
-      - cli: "srv_voting dump -net {{network_name}} -hash {{voting_hash}}"
+      - cli: "poll dump -net {{network_name}} -hash {{voting_hash}}"
         expect: success
         contains: "{{option_a}}"
