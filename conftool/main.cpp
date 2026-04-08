@@ -334,16 +334,15 @@ int main(int argc, char * argv[])
 
     if (cmdOptionExists(argv, argv+argc, "--dryrun") || cmdOptionExists(argv, argv+argc, "-d")) flags = flags | F_DRYRUN;
 
+    std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
+    if (!node_intall_path.empty())
+    {
+        variable_storage["CONFIGS_PATH"] = node_intall_path;
+    }
+
     if(cmdOptionExists(argv, argv+argc, "-i") || cmdOptionExists(argv, argv+argc, "--init"))
     {
-        //--init already exists, give me filename
         std::string init_file_name = getCmdOption(argv, argv+argc, "--init", "-i");
-        std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
-
-        if (!node_intall_path.empty())
-        {
-            variable_storage["CONFIGS_PATH"] = node_intall_path;
-        }
 
         bool non_interactive = cmdOptionExists(argv, argv+argc, "--non-interactive") || cmdOptionExists(argv, argv+argc, "-n");
 
