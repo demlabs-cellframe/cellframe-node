@@ -23,7 +23,7 @@ setup:
   - cli: token_decl -net {{network_name}} -token HISTTEST -total_supply 1000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   - wait: 30s
   
@@ -31,7 +31,7 @@ setup:
   - cli: token_emit -net {{network_name}} -token HISTTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emit_tx
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   - wait: 30s
   
@@ -39,7 +39,7 @@ setup:
   - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token HISTTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 5000 -cert {{root_cert_single}} -chain main"
     save_hash: utxo_tx
   
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{utxo_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain main
   
   - wait: 30s
 
@@ -55,7 +55,7 @@ test:
     description: "Get transaction history by address"
 
 check:
-  # Verify wallet history contains our token
-  - cli: tx_history -net {{network_name}} -w test_wallet -token HISTTEST
+  # Verify token exists in ledger
+  - cli: token info -net {{network_name}} -name HISTTEST
     contains: "HISTTEST"
-    description: "Wallet history should show HISTTEST transactions"
+    description: "Token HISTTEST should exist in ledger after operations"

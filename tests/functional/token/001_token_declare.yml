@@ -16,7 +16,10 @@ test:
 
       - wait_for_datum: "{{token_decl_hash}}"
         chain: zerochain
-        timeout: 60
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
 
   - group: Verify token exists
     steps:

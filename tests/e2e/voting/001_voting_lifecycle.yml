@@ -20,7 +20,8 @@ test:
       - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 1000000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{wallet_addr}} -fee 10000000000000000000"
         expect: success
 
-      - wait: 120s
+      # Parallel shards load the network; allow main-chain funding to confirm before balance check
+      - wait: 180s
 
       - cli: "wallet info -w test_wallet -net {{network_name}}"
         expect: success
@@ -28,7 +29,7 @@ test:
 
   - group: Create voting
     steps:
-      - cli: 'poll create -net {{network_name}} -question "{{vote_question}}" -options "{{option_a}}", "{{option_b}}" -max_votes_count 10 -w test_wallet -fee 10000000000000000000'
+      - cli: 'poll create -net {{network_name}} -question "{{vote_question}}" -options "{{option_a}},{{option_b}}" -max_votes_count 10 -w test_wallet -fee 10000000000000000000'
         expect: success
         save_hash: voting_hash
 
@@ -45,7 +46,7 @@ test:
     steps:
       - cli: "poll list -net {{network_name}}"
         expect: success
-        contains: "{{vote_question}}"
+        contains: "{{voting_hash}}"
 
       - cli: "poll dump -net {{network_name}} -hash {{voting_hash}}"
         expect: success

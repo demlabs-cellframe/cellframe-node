@@ -38,8 +38,16 @@ test:
     steps:
       - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 1000000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{alice_addr}} -fee 10000000000000000000"
         expect: success
+        save_hash: fund_alice_hash
 
-      - wait: 120s
+      - wait_for_datum: "{{fund_alice_hash}}"
+        chain: main
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
+
+      - wait: 10s
 
       - cli: "wallet info -w e2e_alice -net {{network_name}}"
         expect: success
@@ -49,8 +57,16 @@ test:
     steps:
       - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 100000000000000000000 -from_wallet e2e_alice -to_addr {{bob_addr}} -fee 10000000000000000000"
         expect: success
+        save_hash: transfer_bob_hash
 
-      - wait: 120s
+      - wait_for_datum: "{{transfer_bob_hash}}"
+        chain: main
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
+
+      - wait: 10s
 
   - group: Verify final ledger state
     steps:

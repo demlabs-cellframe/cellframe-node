@@ -23,7 +23,7 @@ setup:
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token UTXOBLK -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -39,7 +39,7 @@ test:
     save_hash: update_hash
     description: "Add UTXO to token blocklist"
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{update_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     description: "Process UTXO blocklist update"
   
   # Wait for update to be processed

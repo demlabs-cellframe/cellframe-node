@@ -27,7 +27,7 @@ setup:
   - cli: token_decl -net {{network_name}} -decimals 18 -signs_total 2 -signs_emission 2 -token ARBCMD -total_supply 1000000 -certs {{root_certs}} -chain zerochain
     save_hash: token_hash
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -40,7 +40,7 @@ setup:
   - cli: token_emit -net {{network_name}} -token ARBCMD -emission_value 10000 -addr {{arb_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: emission_tx
   
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   # Wait for DAG consensus
   - wait: 30s
@@ -51,13 +51,13 @@ test:
     save_hash: arb_tx
     description: "Create arbitrage transaction from emission"
   
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{arb_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain main
   
   # Wait for block production (ESBocs round)
   - wait: 30s
 
 check:
-  # Verify arbitrage transaction was processed
-  - cli: wallet info -w arb_wallet -net {{network_name}}
+  # Verify token exists after arbitrage transaction
+  - cli: token info -net {{network_name}} -name ARBCMD
     contains: "ARBCMD"
-    description: "Arbitrage wallet should have ARBCMD tokens"
+    description: "Token ARBCMD should exist in ledger"

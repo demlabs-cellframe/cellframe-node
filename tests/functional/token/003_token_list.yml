@@ -19,13 +19,13 @@ setup:
     save_hash: list1_hash
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{list1_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
   
   - cli: token_decl -net {{network_name}} -token LIST2 -total_supply 2000000 -decimals 18 -signs_total 2 -signs_emission 2 -certs {{root_certs}} -chain zerochain
     save_hash: list2_hash
   
   # Process token datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{list2_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
 
   - wait: 5s
 test:

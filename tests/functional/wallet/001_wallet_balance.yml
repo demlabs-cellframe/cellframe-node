@@ -20,14 +20,14 @@ setup:
     save_hash: token_decl_hash
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_decl_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
 
   # Do the emission on zerochain - needs ROOT certs
   - cli: token_emit -net {{network_name}} -token BALTEST -emission_value 5000 -addr {{wallet_addr}} -certs {{root_certs}} -chain zerochain
     save_hash: token_emit_hash
   
   # Process emission datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_emit_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
 
 test:
   # Test: Check wallet balance

@@ -375,7 +375,7 @@ if [ $E2E_EXIT -eq 0 ]; then
         info "Running ${#TEST_DIRS[@]} test suite(s)..."
         
         pushd "$STAGE_ENV_REAL_DIR" > /dev/null
-        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network "${TEST_DIRS[@]}" || TEST_EXIT=$?
+        ./stage-env --config="$STAGE_ENV_CONFIG_ABS" run-tests --no-start-network --workers 4 "${TEST_DIRS[@]}" || TEST_EXIT=$?
         popd > /dev/null
         
         if [ $TEST_EXIT -ne 0 ]; then

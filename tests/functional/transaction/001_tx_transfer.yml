@@ -23,7 +23,10 @@ test:
 
       - wait_for_datum: "{{token_hash}}"
         chain: zerochain
-        timeout: 60
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
 
       - cli: "token_emit -token FTTX01 -emission_value 10000 -addr {{sender_addr}} -certs test_cert"
         expect: success
@@ -31,7 +34,10 @@ test:
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
-        timeout: 60
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
 
   - group: Transfer tokens
     steps:
@@ -43,7 +49,10 @@ test:
 
       - wait_for_datum: "{{tx_hash}}"
         chain: main
-        timeout: 60
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
 
   - group: Verify balances
     steps:

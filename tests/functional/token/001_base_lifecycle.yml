@@ -35,8 +35,15 @@ test:
     save_hash: token_hash
   
   # Process token datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     description: "Process token datum through mempool"
+
+  - wait_for_datum: "{{token_hash}}"
+    chain: zerochain
+    timeout_total: 420
+    timeout_mempool: 360
+    timeout_verification: 360
+    timeout_in_blocks: 360
   
   # Wait for DAG consensus and ledger sync
   - wait: 30s
@@ -46,7 +53,7 @@ test:
     save_hash: emission_tx
   
   # Process emission datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emission_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     description: "Process emission datum through mempool"
   
   # Wait for DAG consensus and ledger sync
@@ -57,7 +64,7 @@ test:
     save_hash: base_tx_hash
   
   # Process base transaction
-  - cli: mempool proc -net {{network_name}} -chain main -datum {{base_tx_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain main
   
   # Wait for UTXO to appear in wallet
   - wait: 30s

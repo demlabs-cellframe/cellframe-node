@@ -25,7 +25,7 @@ test:
     description: "Create token with ALL_FROZEN flag"
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{frozen_token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     node: node1
   
   # Test: Create token with ALL_ALLOWED flag (on zerochain) - needs ROOT certs
@@ -36,7 +36,7 @@ test:
     description: "Create token with ALL_ALLOWED flag"
   
   # Process token datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{allowed_token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     node: node1
 
 check:

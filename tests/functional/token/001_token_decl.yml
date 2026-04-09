@@ -26,7 +26,7 @@ test:
     description: "Declare E2ETEST token"
   
   # Process datum manually (auto_confirmation may not work in test env)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     node: node1
     expect: success
     description: "Process token datum through mempool"

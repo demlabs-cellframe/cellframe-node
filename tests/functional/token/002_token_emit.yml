@@ -15,7 +15,7 @@ setup:
     description: "Declare EMITTEST token"
   
   # Process token datum (auto_confirmation may not work in test env)
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{token_hash}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     description: "Process token datum through mempool"
 
 test:
@@ -25,7 +25,7 @@ test:
     description: "Emit tokens to wallet"
   
   # Process emission datum
-  - cli: mempool proc -net {{network_name}} -chain zerochain -datum {{emit_tx}}
+  - cli: mempool proc_all -net {{network_name}} -chain zerochain
     description: "Process emission datum through mempool"
 
 check:
