@@ -121,6 +121,7 @@
 #include "dap_net_trans.h"
 #include "dap_net_trans_server.h"
 #include "dap_net_trans_http_server.h"
+#include "dap_net_trans_websocket_stream.h"
 
 #include "dap_file_utils.h"
 #include "dap_plugin.h"
@@ -274,8 +275,9 @@ int main( int argc, const char **argv )
     }
     // change to dap_config_get_item_int_default when it's will be possible
     uint32_t l_thread_cnt = dap_config_get_item_int32_default(g_config, "resources", "threads_cnt", 0);
+    size_t l_conn_timeout = (size_t)dap_config_get_item_int32_default(g_config, "general", "connection_timeout", 0);
     // New event loop init
-    dap_events_init(l_thread_cnt, 0);
+    dap_events_init(l_thread_cnt, l_conn_timeout);
     dap_events_start();
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
