@@ -48,7 +48,7 @@ test:
   - wait: 30s
   
   # Convert emission to UTXO
-  - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 10000 -cert {{root_cert_single}} -chain main"
+  - cli: "tx create -net {{network_name}} -chain_emission zerochain -token XFERTEST -from_emission {{emit_tx}} -to_addr {{wallet_addr}} -value 10000 -cert {{root_cert_single}} -chain main"
     save_hash: utxo_tx
   
   - cli: mempool proc_all -net {{network_name}} -chain main

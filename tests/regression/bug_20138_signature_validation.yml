@@ -68,7 +68,7 @@ test:
     steps:
       # 5. Create base TX to generate UTXOs and balance
       # NOTE: Base TX should be created WITHOUT network fee (initial UTXO creation)
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_hash}} -cert pvt.stagenet.root.0"
+      - cli: "tx create -chain main -chain_emission zerochain -from_emission {{emission_hash}} -cert pvt.stagenet.root.0"
         save_hash: base_tx_hash
         expect_success: true
       
@@ -117,7 +117,7 @@ test:
       node: node-1
     steps:
       # 9. Attempt arbitrage without -cert (should fail with TSD sanity check error)
-      - cli: "tx_create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1"
+      - cli: "tx create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1"
         expect_failure: true
         expect_error_contains:
           - "Sanity check"
@@ -131,7 +131,7 @@ test:
       # CRITICAL: Using SAME certificate as token_decl (pvt.stagenet.root.0)
       # Expected: TX should be authorized
       # Actual (BUG): TX stuck in mempool with "invalid owner signature" error
-      - cli: "tx_create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+      - cli: "tx create -net stagenet -chain main -from_wallet bug20138_owner -token BUG20138 -value 1000.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
         save_hash: arb_tx_hash
         timeout: 30
       

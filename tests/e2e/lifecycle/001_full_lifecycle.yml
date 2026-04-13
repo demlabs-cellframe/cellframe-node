@@ -34,11 +34,22 @@ test:
         expect: success
         save_wallet: bob_addr
 
+  - group: Wait for ledger to rebuild from chain data
+    steps:
+      - wait: cli
+        cmd: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+        contains: "{{native_ticker}}"
+        timeout: 120
+        interval: 5
+
   - group: Fund Alice from root wallet
     steps:
-      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 1000000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{alice_addr}} -fee 10000000000000000000"
+      - cli: "tx create -net {{network_name}} -chain main -token {{native_ticker}} -value 1000000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{alice_addr}} -fee 10000000000000000000"
         expect: success
         save_hash: fund_alice_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain main"
+        expect: success
 
       - wait_for_datum: "{{fund_alice_hash}}"
         chain: main
@@ -55,9 +66,12 @@ test:
 
   - group: Transfer from Alice to Bob
     steps:
-      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -value 100000000000000000000 -from_wallet e2e_alice -to_addr {{bob_addr}} -fee 10000000000000000000"
+      - cli: "tx create -net {{network_name}} -chain main -token {{native_ticker}} -value 100000000000000000000 -from_wallet e2e_alice -to_addr {{bob_addr}} -fee 10000000000000000000"
         expect: success
         save_hash: transfer_bob_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain main"
+        expect: success
 
       - wait_for_datum: "{{transfer_bob_hash}}"
         chain: main

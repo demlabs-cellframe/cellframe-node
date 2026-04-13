@@ -86,3 +86,4 @@ slc
 tools/build/
 cache/
 tests/stage-env.cfg
+.cursor/

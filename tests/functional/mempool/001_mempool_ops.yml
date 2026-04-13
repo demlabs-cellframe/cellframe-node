@@ -21,6 +21,9 @@ test:
       - cli: "mempool list -net {{network_name}} -chain zerochain"
         expect: success
 
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
+
       - wait_for_datum: "{{mempool_hash}}"
         chain: zerochain
         timeout_total: 420

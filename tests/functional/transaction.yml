@@ -1,0 +1,11 @@
+# Functional Test Suite: Transaction Operations
+# Tests for token transfer, fee handling, and cross-chain UTXO operations
+
+suite: "Transaction Operations Suite"
+description: Functional testing of token transfers between wallets with fee handling
+tags: [functional, transaction, transfer]
+version: "1.0"
+
+includes:
+  - ../common/defaults.yml
+  - ../common/create_test_cert.yml

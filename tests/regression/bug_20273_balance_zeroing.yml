@@ -55,7 +55,7 @@ test:
         timeout: 90
       
       # 4. Create base TX
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_baseline_hash}} -cert pvt.stagenet.root.0"
+      - cli: "tx create -chain main -chain_emission zerochain -from_emission {{emission_baseline_hash}} -cert pvt.stagenet.root.0"
         save_hash: base_tx_baseline_hash
       
       - wait_for_datum: "{{base_tx_baseline_hash}}"
@@ -71,7 +71,7 @@ test:
       - cli: "net -net stagenet -fee 0.1 -addr {{baseline_owner_addr}}"
       
       # 7. Create arbitrage WITHOUT token_update (should work correctly)
-      - cli: "tx_create -net stagenet -chain main -from_wallet bug20273_baseline -token BUG20273A -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+      - cli: "tx create -net stagenet -chain main -from_wallet bug20273_baseline -token BUG20273A -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
         save_hash: arb_baseline_hash
         timeout: 30
       
@@ -148,7 +148,7 @@ test:
         timeout: 90
       
       # 4. Create base TX
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emission_bug_hash}} -cert pvt.stagenet.root.0"
+      - cli: "tx create -chain main -chain_emission zerochain -from_emission {{emission_bug_hash}} -cert pvt.stagenet.root.0"
         save_hash: base_tx_bug_hash
       
       - wait_for_datum: "{{base_tx_bug_hash}}"
@@ -198,7 +198,7 @@ test:
       # 10. Create arbitrage transaction AFTER token_update
       # Expected: Transfer 100500.0, create change output
       # Actual (BUG): Transfer everything, balance becomes 0
-      - cli: "tx_create -net stagenet -chain main -from_wallet bug20273_bug -token BUG20273B -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
+      - cli: "tx create -net stagenet -chain main -from_wallet bug20273_bug -token BUG20273B -value 100500.0 -arbitrage -fee 0.1 -certs pvt.stagenet.root.0"
         save_hash: arb_bug_hash
         timeout: 30
       

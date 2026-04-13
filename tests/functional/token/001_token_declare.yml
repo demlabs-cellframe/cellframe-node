@@ -12,7 +12,9 @@ test:
       - cli: "token_decl -token FTEST01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
         expect: success
         save_hash: token_decl_hash
-        wait: 5s
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
 
       - wait_for_datum: "{{token_decl_hash}}"
         chain: zerochain
@@ -29,4 +31,4 @@ test:
 
       - cli: "token info -name FTEST01"
         expect: success
-        contains: "total_supply"
+        contains: "supply_total"

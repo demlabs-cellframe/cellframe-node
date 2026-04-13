@@ -62,7 +62,7 @@ test:
 
   - group: Create UTXO from emission
     steps:
-      - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000000000000000000000 -cert test_cert -chain main -fee 0"
+      - cli: "tx create -net {{network_name}} -chain_emission zerochain -token BLOCKTEST -from_emission {{emission}} -to_addr {{wallet_addr}} -value 2000000000000000000000000 -cert test_cert -chain main -fee 0"
         expect: success
         save_hash: utxo_tx
 

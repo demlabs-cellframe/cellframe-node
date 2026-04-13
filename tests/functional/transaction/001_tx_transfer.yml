@@ -1,5 +1,5 @@
 name: Basic token transfer
-description: Transfer tokens between two wallets
+description: Transfer custom tokens between two wallets with proper fee handling
 version: "1.0"
 
 includes:
@@ -7,7 +7,7 @@ includes:
   - common/create_test_cert.yml
 
 test:
-  - group: Setup wallets and fund sender
+  - group: Setup wallets
     steps:
       - cli: "wallet new -w sender_wallet -sign_type sig_dil"
         expect: success
@@ -17,9 +17,46 @@ test:
         expect: success
         save_wallet: receiver_addr
 
-      - cli: "token_decl -token FTTX01 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+  - group: Wait for ledger to rebuild from chain data
+    steps:
+      - wait: cli
+        cmd: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+        contains: "{{native_ticker}}"
+        timeout: 120
+        interval: 5
+
+  - group: Fund sender with native token for fees
+    steps:
+      - cli: "tx create -net {{network_name}} -chain main -token {{native_ticker}} -value 100000000000000000000 -from_wallet {{network_name}}_root_0 -to_addr {{sender_addr}} -fee 10000000000000000000"
+        expect: success
+        save_hash: fund_fee_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain main"
+        expect: success
+
+      - wait_for_datum: "{{fund_fee_hash}}"
+        chain: main
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
+
+      - wait: 10s
+
+      - wait: cli
+        cmd: "wallet info -w sender_wallet -net {{network_name}}"
+        contains: "{{native_ticker}}"
+        timeout: 120
+        interval: 5
+
+  - group: Declare and emit custom token on zerochain
+    steps:
+      - cli: "token_decl -token FTTX01 -total_supply 1000000.0 -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
         expect: success
         save_hash: token_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
 
       - wait_for_datum: "{{token_hash}}"
         chain: zerochain
@@ -28,9 +65,12 @@ test:
         timeout_verification: 360
         timeout_in_blocks: 360
 
-      - cli: "token_emit -token FTTX01 -emission_value 10000 -addr {{sender_addr}} -certs test_cert"
+      - cli: "token_emit -token FTTX01 -emission_value 10000.0 -addr {{sender_addr}} -certs test_cert"
         expect: success
         save_hash: emit_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain zerochain"
+        expect: success
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
@@ -39,13 +79,53 @@ test:
         timeout_verification: 360
         timeout_in_blocks: 360
 
-  - group: Transfer tokens
-    steps:
-      - wait: 5s
+      - wait: cli
+        cmd: "token info -net {{network_name}} -name FTTX01"
+        node: "{{first_master}}"
+        contains: "FTTX01"
+        timeout: 180
+        interval: 5
 
-      - cli: "tx_create -net {{network_name}} -chain main -token FTTX01 -value 1000 -from_wallet sender_wallet -addr {{receiver_addr}}"
+  - group: Convert emission to UTXO on main chain
+    steps:
+      - cli: "tx create -net {{network_name}} -chain_emission zerochain -token FTTX01 -from_emission {{emit_hash}} -to_addr {{sender_addr}} -value 10000.0 -cert test_cert -chain main"
+        expect: success
+        save_hash: base_tx_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain main"
+        expect: success
+
+      - wait_for_datum: "{{base_tx_hash}}"
+        chain: main
+        timeout_total: 420
+        timeout_mempool: 360
+        timeout_verification: 360
+        timeout_in_blocks: 360
+
+      - wait: 30s
+
+  - group: Verify sender has both tokens before transfer
+    steps:
+      - wait: cli
+        cmd: "wallet info -w sender_wallet -net {{network_name}}"
+        contains: "FTTX01"
+        timeout: 120
+        interval: 5
+
+      - wait: cli
+        cmd: "wallet info -w sender_wallet -net {{network_name}}"
+        contains: "{{native_ticker}}"
+        timeout: 60
+        interval: 5
+
+  - group: Transfer custom tokens with native token fee
+    steps:
+      - cli: "tx create -net {{network_name}} -chain main -token FTTX01 -value 1000000000000000000000 -from_wallet sender_wallet -to_addr {{receiver_addr}} -fee 10000000000000000000"
         expect: success
         save_hash: tx_hash
+
+      - cli: "mempool proc_all -net {{network_name}} -chain main"
+        expect: success
 
       - wait_for_datum: "{{tx_hash}}"
         chain: main
@@ -54,10 +134,10 @@ test:
         timeout_verification: 360
         timeout_in_blocks: 360
 
+      - wait: 10s
+
   - group: Verify balances
     steps:
-      - wait: 5s
-
       - cli: "wallet info -w receiver_wallet -net {{network_name}}"
         expect: success
         contains: "FTTX01"

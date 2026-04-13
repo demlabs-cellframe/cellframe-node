@@ -47,7 +47,7 @@ setup:
 
 test:
   # Test: Create transaction with -arbitrage flag using -from_emission
-  - cli: "tx_create -net {{network_name}} -chain_emission zerochain -token ARBCMD -from_emission {{emission_tx}} -to_addr {{arb_addr}} -value 10000 -cert {{root_cert_single}} -chain main -arbitrage"
+  - cli: "tx create -net {{network_name}} -chain_emission zerochain -token ARBCMD -from_emission {{emission_tx}} -to_addr {{arb_addr}} -value 10000 -cert {{root_cert_single}} -chain main -arbitrage"
     save_hash: arb_tx
     description: "Create arbitrage transaction from emission"
   
