@@ -45,12 +45,12 @@ setup:
 
 test:
   # Test: Get transaction history for wallet
-  - cli: tx_history -net {{network_name}} -w test_wallet
+  - cli: tx_history -net {{network_name}} -w test_wallet -chain main -limit 100
     save: wallet_history
     description: "Get transaction history for test_wallet"
   
   # Test: Get transaction history by address
-  - cli: tx_history -net {{network_name}} -addr {{wallet_addr}}
+  - cli: tx_history -net {{network_name}} -addr {{wallet_addr}} -chain main -limit 100
     save: addr_history
     description: "Get transaction history by address"
 
