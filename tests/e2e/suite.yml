@@ -1,0 +1,50 @@
+suite: Cellframe Node E2E Tests
+description: >
+  End-to-end tests requiring a full multi-node cluster.
+  Consensus (ESBocs, DAG-PoA), token/transaction lifecycle,
+  block production and synchronization, voting (poll),
+  performance/load testing, fault tolerance deep testing,
+  edge cases, concurrent operations, recovery and failover.
+
+network:
+  topology: default
+
+variables:
+  first_root: "node-1"
+  first_master: "node-4"
+
+scenarios:
+  # Consensus — ESBocs and DAG-PoA deep verification
+  - consensus/test_esbocs_status.yml
+  - consensus/test_dag_poa_consensus.yml
+  - consensus/test_validator_quorum.yml
+
+  # Transactions — full token and TX lifecycle
+  - transactions/test_token_lifecycle.yml
+  - transactions/test_tx_propagation.yml
+  - transactions/test_conditional_tx.yml
+
+  # Blocks — production, content verification, sync
+  - blocks/test_block_production.yml
+  - blocks/test_block_sync.yml
+
+  # Voting
+  - voting/test_poll_lifecycle.yml
+  - voting/test_poll_edge_cases.yml
+
+  # Performance — throughput and load testing
+  - performance/test_tx_throughput.yml
+
+  # Consensus fault tolerance — deep edge case testing
+  - consensus/test_consensus_quorum_loss.yml
+  - consensus/test_validator_freeze.yml
+  - consensus/test_simultaneous_restart.yml
+  - consensus/test_validator_penalty.yml
+
+  # Blocks — extended sync and catchup after long offline
+  - blocks/test_long_offline_catchup.yml
+
+  # Edge cases (potentially destructive, run last)
+  - edge_cases/test_invalid_inputs.yml
+  - edge_cases/test_concurrent_operations.yml
+  - edge_cases/test_recovery_scenarios.yml
