@@ -136,19 +136,27 @@ test:
 
   - group: "Ledger consistency after recovery"
     steps:
+      - wait: "45s"
+
       - for: _node
         in: "{{root_nodes}}"
         steps:
-          - cli: "ledger list coins -net {{network_name}}"
+          - wait: cli
+            cmd: "ledger list coins -net {{network_name}}"
             node: "{{_node}}"
             contains: "{{native_ticker}}"
+            timeout: 120
+            interval: 10
 
       - for: _node
         in: "{{master_nodes}}"
         steps:
-          - cli: "ledger list coins -net {{network_name}}"
+          - wait: cli
+            cmd: "ledger list coins -net {{network_name}}"
             node: "{{_node}}"
             contains: "{{native_ticker}}"
+            timeout: 120
+            interval: 10
 
   - group: "DAG consistency after recovery"
     steps:

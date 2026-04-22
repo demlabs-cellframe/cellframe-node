@@ -144,7 +144,41 @@ amd64:linux.rwd.bld:
         - version.mk
         - build_*/*.deb
 
-autotests:
+stage_env_tests:
+  extends: .ci-test
+  interruptible: true
+  stage: diagnostic_builds
+  timeout: 2 hours
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: none
+    GIT_CLEAN_FLAGS: -ffdx -e .stage-env-run/
+  dependencies:
+    - amd64:linux.rwd.bld
+  before_script:
+    - |
+      if [ -d ".stage-env-run/cache" ]; then
+        echo "Cleaning root-owned Docker artifacts..."
+        docker run --rm -v "$PWD/.stage-env-run/cache:/cleanup" alpine sh -c "rm -rf /cleanup/*" 2>/dev/null || true
+        rm -rf .stage-env-run/ 2>/dev/null || true
+      fi
+  script:
+    - source version.mk
+    - DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
+    - /opt/cellframe-stage-env/artifacts.sh "$DEB_FILE"
+  artifacts:
+    when: always
+    paths:
+      - test_logs/
+    expire_in: 7 days
+    
+.autotests:
   extends: .ci-test
   interruptible: true
   stage: diagnostic_builds

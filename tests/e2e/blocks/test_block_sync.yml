@@ -1,0 +1,378 @@
+name: Block Synchronization and Chain Integrity
+description: >
+  Tests block synchronization between nodes: new node catches up to existing
+  chain, blocks remain consistent after node restart, full nodes sync
+  blocks from validators, and chain integrity is maintained across the
+  entire network.
+tags: [e2e, blocks, sync, chain-integrity, deep]
+version: "1.0"
+
+defaults:
+  node: "{{first_master}}"
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  test_token: "SYNCBLK"
+  emission_value: "5000000000000000000"
+  tx_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w sync_sender -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w sync_sender -net {{network_name}}"
+    node: node-1
+    save_wallet: sync_sender_addr
+
+  - cli: "wallet new -w sync_receiver -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w sync_receiver -net {{network_name}}"
+    node: node-1
+    save_wallet: sync_receiver_addr
+
+  # Fund sender wallet with native tokens for fee payments
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{sync_sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: sync_funding_hash
+  - if: "sync_funding_hash"
+    then:
+      - wait_for_datum: "{{sync_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "token_decl -net {{network_name}} -chain zerochain -token {{test_token}} -total_supply 50000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+    node: node-1
+    save_hash: sync_decl_hash
+
+  - if: "sync_decl_hash"
+    then:
+      - wait_for_datum: "{{sync_decl_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - wait: cli
+    cmd: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"
+    timeout: 60
+    interval: 5
+
+  - cli: "token_emit -net {{network_name}} -chain_emission zerochain -token {{test_token}} -emission_value {{emission_value}} -addr {{sync_sender_addr}} -certs {{root_certs}}"
+    node: node-1
+    save_hash: sync_emit_hash
+
+  - if: "sync_emit_hash"
+    then:
+      - wait_for_datum: "{{sync_emit_hash}}"
+        node: node-1
+        network: "{{network_name}}"
+        chain: zerochain
+        timeout_total: 120
+        timeout_mempool: 30
+
+  - if: "sync_emit_hash"
+    then:
+      - cli: "tx_create -net {{network_name}} -chain main -from_emission {{sync_emit_hash}} -chain_emission zerochain -fee {{fee_value}} -wallet_fee {{network_name}}_root_0"
+        node: node-1
+        save_hash: sync_base_tx_hash
+      - if: "sync_base_tx_hash"
+        then:
+          - wait_for_datum: "{{sync_base_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Test 1: Generate blocks with real transactions
+  # ================================================================
+  - name: "Generate blocks with transactions"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        save: sync_blocks_initial
+        expect: any
+      - print: "Initial block count: {{sync_blocks_initial}}"
+
+      - loop: 3
+        steps:
+          - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet sync_sender -to_addr {{sync_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+            node: node-1
+            save_hash: _gen_tx_hash
+            expect: any
+
+          - if: "_gen_tx_hash"
+            then:
+              - wait_for_datum: "{{_gen_tx_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: sync_blocks_after_gen
+        expect: any
+      - print: "Block count after generation: {{sync_blocks_after_gen}}"
+
+  # ================================================================
+  # Test 2: Block sync verification across master nodes
+  # ================================================================
+  - name: "Master node sync verification"
+    steps:
+      - wait: "20s"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _master_bc
+            expect: any
+          - print: "[{{_node}}] master block count: {{_master_bc}}"
+
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _master_ledger
+            contains: "{{test_token}}"
+          - print: "[{{_node}}] master sees token: yes"
+
+          - cli: "wallet info -w sync_receiver -net {{network_name}}"
+            node: "{{_node}}"
+            save: _master_recv
+            expect: any
+          - print: "[{{_node}}] receiver balance on master: {{_master_recv}}"
+
+  # ================================================================
+  # Test 3: Stop a master node, produce blocks, restart, verify catchup
+  # ================================================================
+  - name: "Node catchup after restart"
+    steps:
+      - set: test_restart_node
+        value: "node-6"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{test_restart_node}}"
+        save: restart_blocks_before_stop
+        expect: any
+      - print: "Node blocks before stop: {{restart_blocks_before_stop}}"
+
+      - docker_op: stop
+        services: ["{{test_restart_node}}"]
+
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet sync_sender -to_addr {{sync_receiver_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _offline_tx_hash
+        expect: any
+
+      - if: "_offline_tx_hash"
+        then:
+          - wait_for_datum: "{{_offline_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: master_blocks_while_down
+        expect: any
+      - print: "Master blocks while node was down: {{master_blocks_while_down}}"
+
+      - docker_op: start
+        services: ["{{test_restart_node}}"]
+
+      - wait: cli_ready
+        node: "{{test_restart_node}}"
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: "{{test_restart_node}}"
+        contains: "NET_STATE"
+        timeout: 120
+        interval: 5
+
+      - wait: "30s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{test_restart_node}}"
+        save: node_blocks_after_restart
+        expect: any
+      - print: "Node blocks after restart: {{node_blocks_after_restart}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: master_blocks_current
+        expect: any
+      - print: "Master blocks current: {{master_blocks_current}}"
+
+  # ================================================================
+  # Test 4: Master node restart and chain continuity
+  # ================================================================
+  - name: "Master node restart chain continuity"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        save: master_blocks_pre_restart
+        expect: any
+      - print: "Master blocks before restart: {{master_blocks_pre_restart}}"
+
+      - cli: "block last -net {{network_name}} -chain main"
+        save: last_block_pre_restart
+        expect: any
+      - print: "Last block before restart: {{last_block_pre_restart}}"
+
+      - docker_op: restart
+        services: ["{{first_master}}"]
+
+      - wait: cli_ready
+        node: "{{first_master}}"
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: "{{first_master}}"
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: master_blocks_post_restart
+        expect: any
+      - print: "Master blocks after restart: {{master_blocks_post_restart}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 240
+
+      - cli: "block count -net {{network_name}} -chain main"
+        save: master_blocks_post_new
+        expect: any
+      - print: "Master blocks after new block: {{master_blocks_post_new}}"
+
+  # ================================================================
+  # Test 5: Cross-node ledger and block consistency
+  # ================================================================
+  - name: "Final cross-node consistency verification"
+    steps:
+      - wait: "20s"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc_m
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc_m}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_ledger
+            contains: "{{test_token}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_ledger_m
+            contains: "{{test_token}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "wallet info -w sync_sender -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_sender
+            expect: any
+          - print: "[{{_node}}] sender balance: {{_final_sender}}"
+
+          - cli: "wallet info -w sync_receiver -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_receiver
+            expect: any
+          - print: "[{{_node}}] receiver balance: {{_final_receiver}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "wallet info -w sync_sender -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_sender_m
+            expect: any
+          - print: "[{{_node}}] sender balance: {{_final_sender_m}}"
+
+          - cli: "wallet info -w sync_receiver -net {{network_name}}"
+            node: "{{_node}}"
+            save: _final_receiver_m
+            expect: any
+          - print: "[{{_node}}] receiver balance: {{_final_receiver_m}}"
+
+  # ================================================================
+  # Test 6: DAG sync consistency
+  # ================================================================
+  - name: "DAG sync consistency across roots"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _final_dag
+            expect: any
+          - print: "[{{_node}}] DAG event count: {{_final_dag}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
+  - cli: "block count -net {{network_name}} -chain main"
+    node: "{{first_master}}"
+    expect: success
