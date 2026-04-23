@@ -186,7 +186,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_cellframe_node_NodeService_clic
     }
     args.push_back(0);
 
-    char * cli_answer = dap_cli_exec(args.size(),&args[0]);
+    char * cli_answer = dap_cli_exec(args.size(),&args[0], 1);
     int reslen = strlen(cli_answer);
     jbyteArray arr = env->NewByteArray(reslen);
     env->SetByteArrayRegion(arr,0,reslen, (jbyte*)cli_answer);
@@ -210,7 +210,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_com_cellframe_node_NodeService_clic
     }
     args.push_back(0);
 
-    char * cli_answer = dap_cli_exec(args.size(),&args[0]);
+    char * cli_answer = dap_cli_exec(args.size(),&args[0], 1);
     int reslen = strlen(cli_answer);
     jbyteArray arr = env->NewByteArray(reslen);
     env->SetByteArrayRegion(arr,0,reslen, (jbyte*)cli_answer);

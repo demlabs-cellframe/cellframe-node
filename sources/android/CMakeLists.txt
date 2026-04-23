@@ -10,4 +10,5 @@ target_link_libraries(android-node PRIVATE
     android
     log
     cellframe-node
+    dap_app_cli
     cellframe-node-config)
