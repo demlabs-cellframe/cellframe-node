@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <jni.h>
 #include "../cellframe-node.h"
-#include "../../conftool/cellframe-node-config.h"
+#include "cellframe-node-config.h"
 
 
 std::string jstring2string(JNIEnv *env,

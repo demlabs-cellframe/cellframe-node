@@ -38,6 +38,11 @@ if (APPLE)
   target_link_libraries(cellframe-node-config PUBLIC conftool_osx_ctrl)
 endif()
 
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
@@ -49,5 +54,4 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 IF (WIN32)
   target_link_libraries(cellframe-node-config PRIVATE ws2_32)
 ENDIF()
-
 
