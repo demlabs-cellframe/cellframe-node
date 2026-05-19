@@ -1,0 +1,16 @@
+# E2E Test Suite Root
+# Root suite descriptor for all end-to-end tests
+
+suite: Cellframe Node E2E Tests
+name: Cellframe Node E2E Tests
+description: |
+  End-to-end test suite for Cellframe Node.
+  
+  This suite contains integration tests that verify complete workflows
+  across multiple nodes and network conditions.
+
+author: QA Team
+tags: [e2e, integration, network]
+version: "1.0"
+
+# Sub-suites are auto-discovered from subdirectories

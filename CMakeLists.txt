@@ -154,8 +154,8 @@ option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(CELLFRAME_NODE_STANDALONE)
     if(LINUX OR WIN32 OR DARWIN)
-        set(BUILD_WITH_PYTHON_ENV ON)
-        set(SUPPORT_PYTHON_PLUGINS ON)
+        set(BUILD_WITH_PYTHON_ENV OFF)
+        set(SUPPORT_PYTHON_PLUGINS OFF)
     endif()
 endif()
 

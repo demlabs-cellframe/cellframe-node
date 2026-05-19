@@ -1,0 +1,16 @@
+# Functional Test Suite Root
+# Root suite descriptor for all functional tests
+
+suite: Cellframe Node Functional Tests
+name: Cellframe Node Functional Tests
+description: |
+  Functional test suite for Cellframe Node.
+  
+  These tests verify individual components and features
+  in isolated test scenarios.
+
+author: QA Team
+tags: [functional, component]
+version: "1.0"
+
+# Sub-suites are auto-discovered from subdirectories
