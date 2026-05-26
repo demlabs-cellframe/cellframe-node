@@ -1,6 +1,7 @@
 # Prerequisites
 build/*
 debug/*
+test_build/
 build_stretch/*
 test/build
 *.txt.user

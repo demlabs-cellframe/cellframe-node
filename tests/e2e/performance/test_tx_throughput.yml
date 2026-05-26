@@ -1,0 +1,424 @@
+name: Transaction Throughput and Validator Performance
+description: >
+  Load test: creates multiple wallets and sends batches of transactions
+  from different senders to fill several blocks. Collects timing statistics,
+  block production rate, datums per block, esbocs round info, and
+  cross-node consistency metrics to evaluate consensus throughput.
+tags: [e2e, performance, load, throughput, blocks, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  funding_value: "10000000000000000000"
+  tx_value: "10000000000000000"
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  # Allow consensus to stabilize after previous tests' node restarts
+  - wait: "60s"
+
+  # Create 5 sender wallets and 1 receiver
+  - cli: "wallet new -w thrpt_w0 -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_w0 -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_w0_addr
+
+  - cli: "wallet new -w thrpt_w1 -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_w1 -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_w1_addr
+
+  - cli: "wallet new -w thrpt_w2 -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_w2 -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_w2_addr
+
+  - cli: "wallet new -w thrpt_w3 -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_w3 -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_w3_addr
+
+  - cli: "wallet new -w thrpt_w4 -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_w4 -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_w4_addr
+
+  - cli: "wallet new -w thrpt_recv -sign sig_dil"
+    node: node-1
+  - cli: "wallet info -w thrpt_recv -net {{network_name}}"
+    node: node-1
+    save_wallet: thrpt_recv_addr
+
+  # Fund all 5 sender wallets (sequential — UTXO from root_0 needs to update)
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{thrpt_w0_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: thrpt_fund_0
+  - if: "thrpt_fund_0"
+    then:
+      - wait_for_datum: "{{thrpt_fund_0}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{thrpt_w1_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: thrpt_fund_1
+  - if: "thrpt_fund_1"
+    then:
+      - wait_for_datum: "{{thrpt_fund_1}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{thrpt_w2_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: thrpt_fund_2
+  - if: "thrpt_fund_2"
+    then:
+      - wait_for_datum: "{{thrpt_fund_2}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{thrpt_w3_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: thrpt_fund_3
+  - if: "thrpt_fund_3"
+    then:
+      - wait_for_datum: "{{thrpt_fund_3}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{thrpt_w4_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: thrpt_fund_4
+  - if: "thrpt_fund_4"
+    then:
+      - wait_for_datum: "{{thrpt_fund_4}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  - print: "All 5 sender wallets funded with {{funding_value}} {{native_ticker}}"
+
+test:
+  # ================================================================
+  # Phase 1: Pre-load baseline
+  # ================================================================
+  - name: "Phase 1: Pre-load baseline"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_blocks_t0
+        save_regex: "(\\d+)"
+      - print: "=== LOAD TEST START ==="
+      - print: "Blocks at start (t0): {{thrpt_blocks_t0}}"
+
+      - cli: "block last -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_last_block_pre
+        expect: any
+      - print: "Last block before load: {{thrpt_last_block_pre}}"
+
+  # ================================================================
+  # Phase 2: Load batch 1 — 5 TXs from 5 different wallets
+  # ================================================================
+  - name: "Phase 2: Load batch 1 (5 TXs from 5 wallets)"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w0 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b1h0
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w1 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b1h1
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w2 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b1h2
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w3 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b1h3
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w4 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b1h4
+        expect: any
+
+      - print: "Batch 1: 5 TXs submitted"
+
+      - if: "_b1h4"
+        then:
+          - wait_for_datum: "{{_b1h4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+      - print: "Batch 1 confirmed"
+
+  # ================================================================
+  # Phase 3: Load batch 2 — 5 more TXs
+  # ================================================================
+  - name: "Phase 3: Load batch 2 (5 TXs)"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w0 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b2h0
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w1 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b2h1
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w2 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b2h2
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w3 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b2h3
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w4 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b2h4
+        expect: any
+
+      - print: "Batch 2: 5 TXs submitted"
+
+      - if: "_b2h4"
+        then:
+          - wait_for_datum: "{{_b2h4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+      - print: "Batch 2 confirmed"
+
+  # ================================================================
+  # Phase 4: Load batch 3 — 5 more TXs
+  # ================================================================
+  - name: "Phase 4: Load batch 3 (5 TXs)"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w0 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b3h0
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w1 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b3h1
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w2 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b3h2
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w3 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b3h3
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w4 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b3h4
+        expect: any
+
+      - print: "Batch 3: 5 TXs submitted"
+
+      - if: "_b3h4"
+        then:
+          - wait_for_datum: "{{_b3h4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+      - print: "Batch 3 confirmed"
+
+  # ================================================================
+  # Phase 5: Load batch 4 — 5 more TXs (total 20)
+  # ================================================================
+  - name: "Phase 5: Load batch 4 (5 TXs, total 20)"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w0 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b4h0
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w1 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b4h1
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w2 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b4h2
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w3 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b4h3
+        expect: any
+      - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet thrpt_w4 -to_addr {{thrpt_recv_addr}} -value {{tx_value}} -fee {{fee_value}}"
+        node: node-1
+        save_hash: _b4h4
+        expect: any
+
+      - print: "Batch 4: 5 TXs submitted (total: 20 TXs)"
+
+      - if: "_b4h4"
+        then:
+          - wait_for_datum: "{{_b4h4}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 240
+            timeout_mempool: 60
+      - print: "Batch 4 confirmed — all 20 TXs processed"
+
+  # ================================================================
+  # Phase 6: Post-load metrics and timing
+  # ================================================================
+  - name: "Phase 6: Post-load metrics collection"
+    steps:
+      - wait: "15s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_blocks_t1
+        save_regex: "(\\d+)"
+      - print: "=== LOAD TEST RESULTS ==="
+      - print: "Blocks at start: {{thrpt_blocks_t0}}"
+      - print: "Blocks at end:   {{thrpt_blocks_t1}}"
+      - print: "Total TXs sent:  20 (4 batches x 5 wallets)"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_mempool_final
+        expect: any
+      - print: "Mempool after load (should be 0): {{thrpt_mempool_final}}"
+
+  # ================================================================
+  # Phase 7: Block timing analysis
+  # ================================================================
+  - name: "Phase 7: Block timing analysis"
+    steps:
+      - cli: "block list -net {{network_name}} -chain main -last 10"
+        node: "{{first_master}}"
+        save: thrpt_block_list
+        expect: any
+      - print: "Last 10 blocks: {{thrpt_block_list}}"
+
+      - cli: "block last -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_last_block
+        expect: any
+      - print: "Last block: {{thrpt_last_block}}"
+
+      - set: thrpt_last_hash
+        value: "regex_extract(str(thrpt_last_block), r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(thrpt_last_block) else ''"
+        eval: true
+
+      - if: "thrpt_last_hash"
+        then:
+          - cli: "block dump -net {{network_name}} -chain main -hash {{thrpt_last_hash}}"
+            node: "{{first_master}}"
+            save: thrpt_last_dump
+            expect: any
+          - print: "Last block dump (datum count, signs, timestamp): {{thrpt_last_dump}}"
+
+  # ================================================================
+  # Phase 8: Validator statistics
+  # ================================================================
+  - name: "Phase 8: Validator statistics"
+    steps:
+      - cli: "block fee -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_fee_info
+        expect: any
+      - print: "Block fee info: {{thrpt_fee_info}}"
+
+      - cli: "block reward -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: thrpt_reward_info
+        expect: any
+      - print: "Block reward info: {{thrpt_reward_info}}"
+
+  # ================================================================
+  # Phase 9: Receiver balance verification
+  # ================================================================
+  - name: "Phase 9: Receiver balance after load"
+    steps:
+      - cli: "wallet info -w thrpt_recv -net {{network_name}}"
+        node: "{{first_master}}"
+        save: thrpt_recv_balance
+        expect: any
+      - print: "Receiver balance (20 TXs x {{tx_value}}): {{thrpt_recv_balance}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "wallet info -w thrpt_recv -net {{network_name}}"
+            node: "{{_node}}"
+            save: _thrpt_recv_bal
+            expect: any
+          - print: "[{{_node}}] receiver balance: {{_thrpt_recv_bal}}"
+
+  # ================================================================
+  # Phase 10: Cross-node consistency
+  # ================================================================
+  - name: "Phase 10: Cross-node consistency after load"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _thrpt_final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_thrpt_final_bc}}"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            contains: "{{native_ticker}}"
+
+      - print: "=== LOAD TEST COMPLETE ==="
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
+  - cli: "mempool count -net {{network_name}} -chain main"
+    node: "{{first_master}}"
+    expect: success

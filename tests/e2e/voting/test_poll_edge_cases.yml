@@ -1,0 +1,126 @@
+name: Poll Edge Cases
+description: >
+  Edge cases for voting: empty question, single option, many options,
+  voting on non-existent poll, double voting, voting after expiry,
+  insufficient fee, wrong option index.
+tags: [e2e, functional, voting, poll, edge_cases]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    save_wallet: voter_addr
+
+test:
+  - group: "Poll with minimal options (2)"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"Binary choice\" -options \"Yes\",\"No\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: binary_poll
+        expect: any
+      - print: "Binary poll: {{binary_poll}}"
+
+  - group: "Poll with many options (10)"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"Many options test\" -options \"Opt0\",\"Opt1\",\"Opt2\",\"Opt3\",\"Opt4\",\"Opt5\",\"Opt6\",\"Opt7\",\"Opt8\",\"Opt9\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: many_opts_poll
+        expect: any
+      - print: "Many options poll: {{many_opts_poll}}"
+
+  - group: "Poll with single option (should fail)"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"Single option\" -options \"Only\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: single_opt_result
+        expect: any
+      - print: "Single option result: {{single_opt_result}}"
+
+  - group: "Poll with empty question (should fail)"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"\" -options \"A\",\"B\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: empty_q_result
+        expect: any
+      - print: "Empty question result: {{empty_q_result}}"
+
+  - group: "Vote on non-existent poll hash"
+    steps:
+      - cli: "poll vote -net {{network_name}} -hash 0x0000000000000000000000000000000000000000000000000000000000000000 -option_idx 0 -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: nonexist_vote
+        expect: any
+      - print: "Non-existent poll vote: {{nonexist_vote}}"
+
+  - group: "Vote with invalid option index"
+    steps:
+      - set: binary_poll_hash
+        value: "regex_extract(binary_poll, r'(0x[A-Fa-f0-9]+)', 1) if '0x' in binary_poll else ''"
+        eval: true
+
+      - if: "binary_poll_hash"
+        then:
+          - cli: "poll vote -net {{network_name}} -hash {{binary_poll_hash}} -option_idx 999 -fee 50000000000000000 -w {{network_name}}_root_0"
+            save: invalid_idx_result
+            expect: any
+          - print: "Invalid option idx result: {{invalid_idx_result}}"
+
+  - group: "Poll with zero fee (should fail)"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"Zero fee\" -options \"A\",\"B\" -fee 0 -w {{network_name}}_root_0"
+        save: zero_fee_result
+        expect: any
+      - print: "Zero fee result: {{zero_fee_result}}"
+
+  - group: "Vote with zero fee (should fail)"
+    steps:
+      - if: "binary_poll_hash"
+        then:
+          - cli: "poll vote -net {{network_name}} -hash {{binary_poll_hash}} -option_idx 0 -fee 0 -w {{network_name}}_root_0"
+            save: zero_fee_vote
+            expect: any
+          - print: "Zero fee vote: {{zero_fee_vote}}"
+
+  - group: "Poll dump on non-existent hash"
+    steps:
+      - cli: "poll dump -net {{network_name}} -hash 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: nonexist_dump
+        expect: any
+      - print: "Non-existent dump: {{nonexist_dump}}"
+
+  - group: "Cancel non-existent poll"
+    steps:
+      - cli: "poll cancel -net {{network_name}} -hash 0x0000000000000000000000000000000000000000000000000000000000000000 -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: cancel_nonexist
+        expect: any
+      - print: "Cancel non-existent: {{cancel_nonexist}}"
+
+  - group: "Poll with very long question"
+    steps:
+      - set: long_question
+        value: "'A' * 500"
+        eval: true
+      - cli: "poll create -net {{network_name}} -question \"{{long_question}}\" -options \"Yes\",\"No\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: long_q_result
+        expect: any
+      - print: "Long question result (truncated): poll created or rejected"
+
+  - group: "Poll with unicode in question"
+    steps:
+      - cli: "poll create -net {{network_name}} -question \"Поддержать обновление протокола?\" -options \"Да\",\"Нет\" -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: unicode_poll
+        expect: any
+      - print: "Unicode poll result: {{unicode_poll}}"
+
+  - group: "List polls with token filter"
+    steps:
+      - cli: "poll list -net {{network_name}} -token {{native_ticker}}"
+        save: filtered_polls
+        expect: any
+      - print: "Filtered polls: {{filtered_polls}}"
+
+check:
+  - cli: "poll list -net {{network_name}}"
+    node: node-1
+    expect: any

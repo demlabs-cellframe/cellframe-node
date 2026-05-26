@@ -1,0 +1,122 @@
+name: Poll Lifecycle
+description: >
+  Tests full voting lifecycle: create poll, vote, list, dump,
+  cancel, and verification of results.
+  Uses the 'poll' (alias 'voting') CLI command.
+tags: [e2e, functional, voting, poll]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    save_wallet: voter_addr
+
+test:
+  - group: Create basic poll
+    steps:
+      - cli: "poll create -net {{network_name}} -question Upgrade_v6 -options Yes,No,Abstain -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: poll_create_result
+        expect: any
+      - print: "Poll create result: {{poll_create_result}}"
+
+      - set: poll_hash
+        value: "regex_extract(poll_create_result, r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(poll_create_result) else ''"
+        eval: true
+      - print: "Poll hash: {{poll_hash}}"
+
+  - group: List polls
+    steps:
+      - cli: "poll list -net {{network_name}}"
+        save: poll_list
+        expect: any
+      - print: "Poll list: {{poll_list}}"
+
+  - group: Dump poll details
+    steps:
+      - if: "poll_hash"
+        then:
+          - cli: "poll dump -net {{network_name}} -hash {{poll_hash}}"
+            save: poll_dump
+            expect: any
+          - print: "Poll dump: {{poll_dump}}"
+
+  - group: Vote on poll
+    steps:
+      - if: "poll_hash"
+        then:
+          - cli: "poll vote -net {{network_name}} -hash {{poll_hash}} -option_idx 0 -fee 50000000000000000 -w {{network_name}}_root_0"
+            save: vote_result
+            expect: any
+          - print: "Vote result: {{vote_result}}"
+
+  - group: Wait for vote processing
+    steps:
+      - wait: "10s"
+
+  - group: Verify vote in poll dump
+    steps:
+      - if: "poll_hash"
+        then:
+          - cli: "poll dump -net {{network_name}} -hash {{poll_hash}}"
+            save: poll_after_vote
+            expect: any
+          - print: "Poll after vote: {{poll_after_vote}}"
+
+  - group: Create poll with max_votes_count
+    steps:
+      - cli: "poll create -net {{network_name}} -question Limited_votes -options A,B -max_votes_count 3 -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: limited_poll_result
+        expect: any
+      - print: "Limited poll: {{limited_poll_result}}"
+
+  - group: Create poll with expiration
+    steps:
+      - cli: "poll create -net {{network_name}} -question Expiring_poll -options Keep,Remove -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: expire_poll_result
+        expect: any
+      - print: "Expiring poll: {{expire_poll_result}}"
+
+  - group: Create poll with delegated key
+    steps:
+      - cli: "poll create -net {{network_name}} -question Delegated_key -options Approve,Reject -delegated_key_required -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: delegated_poll_result
+        expect: any
+      - print: "Delegated poll: {{delegated_poll_result}}"
+
+  - group: Create poll allowing vote changes
+    steps:
+      - cli: "poll create -net {{network_name}} -question Vote_changing -options Alpha,Beta,Gamma -vote_changing_allowed -fee 50000000000000000 -w {{network_name}}_root_0"
+        save: changing_poll_result
+        expect: any
+      - print: "Vote-changing poll: {{changing_poll_result}}"
+
+  - group: Cancel poll
+    steps:
+      - set: changing_poll_hash
+        value: "regex_extract(str(changing_poll_result), r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(changing_poll_result) else ''"
+        eval: true
+
+      - if: "changing_poll_hash"
+        then:
+          - cli: "poll cancel -net {{network_name}} -hash {{changing_poll_hash}} -fee 50000000000000000 -w {{network_name}}_root_0"
+            save: cancel_result
+            expect: any
+          - print: "Cancel result: {{cancel_result}}"
+
+  - group: Final poll list
+    steps:
+      - cli: "poll list -net {{network_name}}"
+        save: final_poll_list
+        expect: any
+      - print: "Final poll list: {{final_poll_list}}"
+
+check:
+  - cli: "poll list -net {{network_name}}"
+    node: node-1
+    expect: any

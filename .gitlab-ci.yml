@@ -105,28 +105,8 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
-  - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
-  - echo ${PATCH_NUM_VAR_NAME}
-  - echo ${VERSION_VAR_NAME}
-  - source ./version.mk
-  - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
-  - echo "Current version from version.mk:${CURRENT_VERSION}"
-  - 'STORED_VERSION=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${VERSION_VAR_NAME}" | jq -r ".value // empty")'
-  - echo "Stored version from GitLab:${STORED_VERSION}"
-  - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
-  - echo "Gitlab var patch number for ${PATCH_NUM_VAR_NAME} is ${PATCH_NUM}."
-  - 'if [ -z "${STORED_VERSION}" ]; then echo "First build for this branch - starting with patch number 0"; PATCH_NUM=0; fi'
-  - 'if [ -n "${STORED_VERSION}" ] && [ "${STORED_VERSION}" != "${CURRENT_VERSION}" ]; then echo "Version changed from ${STORED_VERSION} to ${CURRENT_VERSION} - resetting patch number to 0"; PATCH_NUM=0; fi'
-  - '[ -z "${PATCH_NUM}" ] && PATCH_NUM=0'
-  - echo "VERSION_MAJOR=$VERSION_MAJOR" > ./version.mk
-  - echo "VERSION_MINOR=$VERSION_MINOR" >> ./version.mk
-  - echo "VERSION_PATCH=$PATCH_NUM" >> ./version.mk
-  - cat ./version.mk
-  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-  - 'curl -s --request POST --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
-  - 'PIPLINE_NAME="Build ${CURRENT_VERSION}-${PATCH_NUM}: $CI_COMMIT_MESSAGE"'
-  - 'curl -H "Job-Token: $CI_JOB_TOKEN" -X PUT --data "name=$PIPLINE_NAME" $CI_API_V4_URL/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/metadata' 
+  - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/fill_version_mk.sh
+  - ./prod_build/ci/fill_version_mk.sh 
 
 amd64:linux.rwd.bld:
     extends: .build
@@ -144,7 +124,41 @@ amd64:linux.rwd.bld:
         - version.mk
         - build_*/*.deb
 
-autotests:
+stage_env_tests:
+  extends: .ci-test
+  interruptible: true
+  stage: diagnostic_builds
+  timeout: 2 hours
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: none
+    GIT_CLEAN_FLAGS: -ffdx -e .stage-env-run/
+  dependencies:
+    - amd64:linux.rwd.bld
+  before_script:
+    - |
+      if [ -d ".stage-env-run/cache" ]; then
+        echo "Cleaning root-owned Docker artifacts..."
+        docker run --rm -v "$PWD/.stage-env-run/cache:/cleanup" alpine sh -c "rm -rf /cleanup/*" 2>/dev/null || true
+        rm -rf .stage-env-run/ 2>/dev/null || true
+      fi
+  script:
+    - source version.mk
+    - DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
+    - /opt/cellframe-stage-env/artifacts.sh "$DEB_FILE"
+  artifacts:
+    when: always
+    paths:
+      - test_logs/
+    expire_in: 7 days
+    
+.autotests:
   extends: .ci-test
   interruptible: true
   stage: diagnostic_builds
@@ -165,6 +179,11 @@ autotests:
       DEB_FILE=$(find build_* -type f -name "cellframe-node-${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}-rwd-amd64.deb")
       echo "Using package: $DEB_FILE"
       /opt/tests-in-docker/artifacts.sh "$DEB_FILE"
+  artifacts:
+    when: always
+    paths:
+      - test_logs/
+    expire_in: 7 days
 
 asan_build:
   extends: .build
@@ -411,15 +430,5 @@ version:up:
   rules:
     - when: on_success
   script:
-    - PATCH_NUM_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_PATCH_NUM
-    - VERSION_VAR_NAME=P_$(echo "${CI_COMMIT_REF_SLUG}" | tr "-" _)_LAST_VERSION
-    - echo ${PATCH_NUM_VAR_NAME}
-    - echo ${VERSION_VAR_NAME}
-    - source version.mk
-    - CURRENT_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
-    - echo "Current version:${CURRENT_VERSION}"
-    - 'PATCH_NUM=$(curl -s --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/${PATCH_NUM_VAR_NAME}" | jq -r ".value // empty")'
-    - PATCH_NUM=$((PATCH_NUM + 1))
-    - 'echo "New patch version:${PATCH_NUM}"'
-    - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$PATCH_NUM_VAR_NAME" --form "key=$PATCH_NUM_VAR_NAME" --form "value=${PATCH_NUM}" || true'
-    - 'curl -s --request PUT --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/$VERSION_VAR_NAME" --form "key=$VERSION_VAR_NAME" --form "value=${CURRENT_VERSION}" || true'
+    - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/version_up.sh
+    - ./prod_build/ci/version_up.sh
