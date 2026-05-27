@@ -123,6 +123,7 @@ amd64:linux.rwd.bld:
       paths:
         - version.mk
         - build_*/*.deb
+        - prod_build/ci/
 
 stage_env_tests:
   extends: .ci-test
@@ -426,9 +427,11 @@ version:up:
   tags:
     - ansible-runner
   variables:
+    # No git checkout: only version.mk, .deb and prod_build/ci/ from amd64:linux.rwd.bld artifacts
     GIT_STRATEGY: none
   rules:
     - when: on_success
   script:
-    - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/version_up.sh
+    - test -f version.mk || (echo "ERROR: version.mk artifact missing" && exit 1)
+    - test -x ./prod_build/ci/version_up.sh || chmod +x ./prod_build/ci/version_up.sh
     - ./prod_build/ci/version_up.sh
