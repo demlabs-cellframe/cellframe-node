@@ -432,6 +432,5 @@ version:up:
   rules:
     - when: on_success
   script:
-    - test -f version.mk || (echo "ERROR: version.mk artifact missing" && exit 1)
-    - test -x ./prod_build/ci/version_up.sh || chmod +x ./prod_build/ci/version_up.sh
+    - chmod +x ./prod_build/ci/version_up.sh
     - ./prod_build/ci/version_up.sh
