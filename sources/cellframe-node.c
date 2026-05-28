@@ -577,13 +577,7 @@ int main( int argc, const char **argv )
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_plugins_python_app_content_init(l_server);
 #endif
-        {
-            int l_plugin_start_rc = dap_plugin_start_all();
-            if (l_plugin_start_rc != 0) {
-                log_it(L_CRITICAL, "Plugin init failed with code %d, aborting node startup", l_plugin_start_rc);
-                return -134;
-            }
-        }
+        dap_plugin_start_all();
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
         dap_chain_plugins_save_thread(g_config);
 #endif
