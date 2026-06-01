@@ -9,7 +9,11 @@ else()
 endif()
 
 if(NOT COMMAND ReadVariables)
-    include(cellframe-sdk/cmake/ReadMKFile.cmake)
+    if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
+        include(${CELLFRAME_SDK_SOURCE_DIR}/cmake/ReadMKFile.cmake)
+    else()
+        include(cellframe-sdk/cmake/ReadMKFile.cmake)
+    endif()
 endif()
 include(FetchContent)
 
@@ -20,10 +24,12 @@ set(CMAKE_C_STANDARD 11)
         
 # Predefine project
 ReadVariables(version.mk)
-SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
-SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+if(CELLFRAME_NODE_STANDALONE)
+    SET( CPACK_PACKAGE_NAME  "${PROJECT_NAME}")
+    SET( CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+    SET( CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+    SET( CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+endif()
 
 # Option to enable full cppcheck analysis
 option(ENABLE_CPPCHECK_ANALYSIS "Enable full cppcheck static analysis" OFF)
@@ -117,7 +123,11 @@ if( CELLFRAME_NO_OPTIMIZATION )
 endif()
 
 if(CELLFRAME_NODE_STANDALONE)
-    include(dap-sdk/cmake/OS_Detection.cmake)
+    if(DEFINED DAP_SDK_SOURCE_DIR)
+        include(${DAP_SDK_SOURCE_DIR}/cmake/OS_Detection.cmake)
+    else()
+        include(dap-sdk/cmake/OS_Detection.cmake)
+    endif()
 endif()
 
 set(BUILD_WITH_GDB_DRIVER_MDBX ON)
@@ -171,11 +181,21 @@ endif()
 # activate sphincsplus flexible option
 set(SPHINCSPLUS_FLEX ON)
 
+# Standalone: use own tools/dap_tpl. Embedded: parent sets DAP_TPL_DIR before add_subdirectory()
+if(NOT DEFINED DAP_TPL_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl/dap_tpl.sh")
+    set(DAP_TPL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl" CACHE PATH "Path to dap_tpl template engine")
+    message(STATUS "[+] dap_tpl: ${DAP_TPL_DIR}")
+endif()
+
 if(NOT TARGET dap_core)
     add_subdirectory(dap-sdk)
 endif()
 if(NOT TARGET cellframe-sdk)
-    add_subdirectory(cellframe-sdk)
+    if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
+        add_subdirectory(${CELLFRAME_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/cellframe-sdk)
+    else()
+        add_subdirectory(cellframe-sdk)
+    endif()
 endif()
 if(UNIX)
     if(DARWIN)
@@ -907,21 +927,6 @@ else()
 
 
 endif()
-
-if(NOT CELLFRAME_NODE_STANDALONE)
-    foreach(_v
-            CPACK_PACKAGE_NAME CPACK_PACKAGE_VERSION
-            CPACK_PACKAGE_VERSION_MAJOR CPACK_PACKAGE_VERSION_MINOR CPACK_PACKAGE_VERSION_PATCH
-            CPACK_GENERATOR CPACK_SYSTEM_NAME
-            CPACK_DEBIAN_PACKAGE_ARCHITECTURE CPACK_DEBIAN_PACKAGE_MAINTAINER
-            CPACK_DEBIAN_PACKAGE_DESCRIPTION_SUMMARY CPACK_DEBIAN_PACKAGE_DESCRIPTION
-            CPACK_DEBIAN_PACKAGE_SECTION CPACK_DEBIAN_PACKAGE_DEPENDS
-            CPACK_DEBIAN_PACKAGE_SHLIBDEPS CPACK_DEBIAN_FILE_NAME
-            CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA)
-        if(DEFINED ${_v})
-            set(${_v} "${${_v}}" PARENT_SCOPE)
-        endif()
-    endforeach()
-else()
+if(CELLFRAME_NODE_STANDALONE)
     INCLUDE(CPack)
 endif()
