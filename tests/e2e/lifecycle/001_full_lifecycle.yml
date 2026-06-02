@@ -83,9 +83,9 @@ test:
 
   - group: Verify final state
     steps:
-      - cli: "mempool list -chain main"
+      - cli: "mempool check -datum {{tx_hash}} -chain main"
         expect: success
-        contains: "{{tx_hash}}"
+        contains: "find: true"
 
       - cli: "token info -net {{network_name}} -name {{token_name}}"
         expect: success

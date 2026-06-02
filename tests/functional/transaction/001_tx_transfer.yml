@@ -40,5 +40,5 @@ test:
         save_hash: tx_hash
 
 check:
-  - cli: "mempool list -chain main"
-    contains: "{{tx_hash}}"
+  - cli: "mempool check -datum {{tx_hash}} -chain main"
+    contains: "find: true"

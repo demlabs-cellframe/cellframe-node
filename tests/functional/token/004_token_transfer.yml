@@ -50,7 +50,7 @@ test:
     save_hash: transfer_tx
 
 check:
-  # Verify transfer tx was placed in mempool
-  - cli: mempool list -chain main
-    contains: "{{transfer_tx}}"
+  # Verify transfer tx was placed in mempool or accepted into chain
+  - cli: mempool check -datum {{transfer_tx}} -chain main
+    contains: "find: true"
 

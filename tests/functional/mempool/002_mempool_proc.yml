@@ -40,6 +40,6 @@ test:
         expect: success
         save_hash: tx_hash
 
-      - cli: "mempool list -chain main"
+      - cli: "mempool check -datum {{tx_hash}} -chain main"
         expect: success
-        contains: "{{tx_hash}}"
+        contains: "find: true"

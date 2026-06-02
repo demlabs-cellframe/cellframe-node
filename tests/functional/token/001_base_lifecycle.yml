@@ -56,7 +56,7 @@ check:
   - cli: token info -name LIFECYCLE
     contains: "LIFECYCLE"
   
-  # Verify transfer tx was placed in mempool
-  - cli: mempool list -chain main
-    contains: "{{transfer_tx}}"
+  # Verify transfer tx was placed in mempool or accepted into chain
+  - cli: mempool check -datum {{transfer_tx}} -chain main
+    contains: "find: true"
 

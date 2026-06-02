@@ -10,4 +10,4 @@ test:
     steps:
       - cli: "node balancer"
         expect: success
-        contains: "node_addr"
+        contains: "links total"

@@ -34,6 +34,6 @@ test:
 
   - group: Verify tx in mempool
     steps:
-      - cli: "mempool list -chain main"
+      - cli: "mempool check -datum {{credit_tx_hash}} -chain main"
         expect: success
-        contains: "{{credit_tx_hash}}"
+        contains: "find: true"

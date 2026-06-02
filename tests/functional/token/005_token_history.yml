@@ -24,13 +24,10 @@ test:
         expect: success
         save_hash: emit_tx
 
-      - wait_for_datum: "{{emit_tx}}"
+      - wait_for_tx: "{{emit_tx}}"
         chain: zerochain
-        timeout_total: 120
-        timeout_mempool: 60
-        timeout_in_blocks: 120
-
-      - wait: 5s
+        expected_status: success
+        timeout_per_stage: 120
 
   - group: Create base TX and wait for block
     steps:

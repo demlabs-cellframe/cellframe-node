@@ -46,9 +46,9 @@ test:
 
   - group: Verify voting in mempool
     steps:
-      - cli: "mempool list -chain main"
+      - cli: "mempool check -datum {{voting_hash}} -chain main"
         expect: success
-        contains: "{{voting_hash}}"
+        contains: "find: true"
 
       - cli: "voting list -net {{network_name}}"
         expect: success
