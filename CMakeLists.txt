@@ -617,7 +617,7 @@ endif()
 # =============================================================================
 if(UNIX AND NOT WIN32)
     message("[*] Unix library set")
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE")
+    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-D_GNU_SOURCE -rdynamic")
     set(NODE_LIBRARIES -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive)
     set(NODE_CLI_LIBRARIES m -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive)
     set(NODE_TOOL_LIBRARIES m -Wl,--whole-archive cellframe-sdk -Wl,--no-whole-archive)
