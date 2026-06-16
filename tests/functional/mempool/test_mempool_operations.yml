@@ -1,0 +1,92 @@
+name: Mempool Operations
+description: >
+  Tests mempool list, count, check, proc, dump, delete,
+  and proc_all for both zerochain and main chain.
+tags: [e2e, functional, mempool]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-1
+  wait: 1s
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+test:
+  - group: Mempool list on empty/existing chains
+    steps:
+      - cli: "mempool list -net {{network_name}} -chain zerochain"
+        save: mempool_zero
+        expect: any
+      - print: "Zerochain mempool: {{mempool_zero}}"
+
+      - cli: "mempool list -net {{network_name}} -chain main"
+        save: mempool_main
+        expect: any
+      - print: "Main chain mempool: {{mempool_main}}"
+
+  - group: Mempool count
+    steps:
+      - cli: "mempool count -net {{network_name}} -chain zerochain"
+        save: zero_count
+        expect: any
+      - print: "Zerochain mempool count: {{zero_count}}"
+
+      - cli: "mempool count -net {{network_name}} -chain main"
+        save: main_count
+        expect: any
+      - print: "Main chain mempool count: {{main_count}}"
+
+  - group: Create datum and verify mempool operations
+    steps:
+      - cli: "token_decl -net {{network_name}} -chain zerochain -token MPTEST -total_supply 1000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+        save_hash: mp_datum_hash
+      - print: "Datum in mempool: {{mp_datum_hash}}"
+
+      - cli: "mempool check -net {{network_name}} -chain zerochain -datum {{mp_datum_hash}}"
+        save: check_result
+        expect: any
+      - print: "Mempool check: {{check_result}}"
+
+      - cli: "mempool dump -net {{network_name}} -chain zerochain -datum {{mp_datum_hash}}"
+        save: dump_result
+        expect: any
+      - print: "Mempool dump: {{dump_result}}"
+
+  - group: Mempool list brief mode
+    steps:
+      - cli: "mempool list -net {{network_name}} -chain zerochain -brief"
+        save: brief_list
+        expect: any
+      - print: "Brief mempool list: {{brief_list}}"
+
+  - group: Process datum from mempool
+    steps:
+      - cli: "mempool proc -net {{network_name}} -chain zerochain -datum {{mp_datum_hash}}"
+        save: proc_result
+        expect: any
+      - print: "Mempool proc: {{proc_result}}"
+
+  - group: Mempool delete (create another datum to delete)
+    steps:
+      - cli: "token_decl -net {{network_name}} -chain zerochain -token MPDEL -total_supply 1000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+        save_hash: del_datum_hash
+
+      - cli: "mempool delete -net {{network_name}} -chain zerochain -datum {{del_datum_hash}}"
+        save: del_result
+        expect: any
+      - print: "Mempool delete: {{del_result}}"
+
+      - cli: "mempool check -net {{network_name}} -chain zerochain -datum {{del_datum_hash}}"
+        save: check_deleted
+        expect: any
+      - print: "Check deleted datum: {{check_deleted}}"
+
+check:
+  - cli: "mempool list -net {{network_name}} -chain zerochain"
+    expect: any

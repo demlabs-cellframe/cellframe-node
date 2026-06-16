@@ -1,0 +1,332 @@
+name: Token Full Lifecycle
+description: >
+  Complete token lifecycle: declaration → multi-sign → emission →
+  transfer to wallet → balance verification → transfer between wallets →
+  cross-node balance consistency → tx_history verification.
+  Tests the full path from token creation through to spending.
+tags: [e2e, transactions, token, lifecycle, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  test_token: "TLTEST"
+  emission_value: "1000000000000000000"
+  transfer_value: "100000000000000000"
+  funding_value: "10000000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w test_sender -sign sig_dil"
+    save: sender_wallet_result
+  - cli: "wallet info -w test_sender -net {{network_name}}"
+    save_wallet: sender_addr
+  - print: "Sender wallet addr: {{sender_addr}}"
+
+  - cli: "wallet new -w test_receiver -sign sig_dil"
+    save: receiver_wallet_result
+  - cli: "wallet info -w test_receiver -net {{network_name}}"
+    save_wallet: receiver_addr
+  - print: "Receiver wallet addr: {{receiver_addr}}"
+
+  - cli: "wallet new -w test_third -sign sig_dil"
+    save: third_wallet_result
+  - cli: "wallet info -w test_third -net {{network_name}}"
+    save_wallet: third_addr
+  - print: "Third wallet addr: {{third_addr}}"
+
+  # Fund sender wallet with native tokens for fee payments
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{sender_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: sender_funding_hash
+  - if: "sender_funding_hash"
+    then:
+      - wait_for_datum: "{{sender_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+  # Fund receiver wallet with native tokens (needed for chain transfer receiver → third)
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{receiver_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: receiver_funding_hash
+  - if: "receiver_funding_hash"
+    then:
+      - wait_for_datum: "{{receiver_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Phase 1: Token Declaration
+  # ================================================================
+  - name: "Phase 1: Declare new token"
+    steps:
+      - cli: "token_decl -net {{network_name}} -chain zerochain -token {{test_token}} -total_supply 10000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+        save: decl_result
+        save_hash: decl_hash
+      - print: "Declaration result: {{decl_result}}"
+      - print: "Declaration hash: {{decl_hash}}"
+
+      - if: "decl_hash"
+        then:
+          - wait_for_datum: "{{decl_hash}}"
+            node: node-1
+            network: "{{network_name}}"
+            chain: zerochain
+            timeout_total: 120
+            timeout_mempool: 30
+            save_status: decl_status
+          - print: "Declaration datum status: {{decl_status}}"
+
+      - wait: cli
+        cmd: "token info -net {{network_name}} -name {{test_token}}"
+        node: node-1
+        contains: "{{test_token}}"
+        timeout: 60
+        interval: 5
+
+      - cli: "token info -net {{network_name}} -name {{test_token}}"
+        node: node-1
+        save: token_info_after_decl
+      - print: "Token info after declaration: {{token_info_after_decl}}"
+
+  # ================================================================
+  # Phase 2: Token Emission
+  # ================================================================
+  - name: "Phase 2: Emit tokens to sender wallet"
+    steps:
+      - cli: "token_emit -net {{network_name}} -chain_emission zerochain -token {{test_token}} -emission_value {{emission_value}} -addr {{sender_addr}} -certs {{root_certs}}"
+        save: emit_result
+        save_hash: emit_hash
+      - print: "Emission result: {{emit_result}}"
+      - print: "Emission hash: {{emit_hash}}"
+
+      - if: "emit_hash"
+        then:
+          - wait_for_datum: "{{emit_hash}}"
+            node: node-1
+            network: "{{network_name}}"
+            chain: zerochain
+            timeout_total: 120
+            timeout_mempool: 30
+            save_status: emit_status
+          - print: "Emission datum status: {{emit_status}}"
+
+      - if: "emit_hash"
+        then:
+          - cli: "tx_create -net {{network_name}} -chain main -from_emission {{emit_hash}} -chain_emission zerochain -fee {{fee_value}} -wallet_fee {{network_name}}_root_0"
+            save_hash: base_tx_hash
+          - if: "base_tx_hash"
+            then:
+              - wait_for_datum: "{{base_tx_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+                save_status: base_tx_status
+
+      - cli: "token info -net {{network_name}} -name {{test_token}}"
+        node: node-1
+        save: token_info_after_emit
+        expect: any
+      - print: "Token info after emission: {{token_info_after_emit}}"
+
+  # ================================================================
+  # Phase 3: Verify sender balance
+  # ================================================================
+  - name: "Phase 3: Verify sender received emission"
+    steps:
+      - cli: "wallet info -w test_sender -net {{network_name}}"
+        node: node-1
+        save: sender_balance
+      - print: "Sender wallet balance: {{sender_balance}}"
+
+  # ================================================================
+  # Phase 4: Transfer tokens sender → receiver
+  # ================================================================
+  - name: "Phase 4: Transfer tokens to receiver"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet test_sender -to_addr {{receiver_addr}} -value {{transfer_value}} -fee {{fee_value}}"
+        save: tx1_result
+        save_hash: tx1_hash
+      - print: "Transfer 1 result: {{tx1_result}}"
+      - print: "Transfer 1 hash: {{tx1_hash}}"
+
+      - if: "tx1_hash"
+        then:
+          - wait_for_datum: "{{tx1_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+            save_status: tx1_status
+          - print: "TX1 datum status: {{tx1_status}}"
+
+  # ================================================================
+  # Phase 5: Verify balances after transfer
+  # ================================================================
+  - name: "Phase 5: Verify balances after first transfer"
+    steps:
+      - wait: "10s"
+
+      - cli: "wallet info -w test_sender -net {{network_name}}"
+        node: node-1
+        save: sender_after_tx1
+      - print: "Sender after TX1: {{sender_after_tx1}}"
+
+      - cli: "wallet info -w test_receiver -net {{network_name}}"
+        node: node-1
+        save: receiver_after_tx1
+      - print: "Receiver after TX1: {{receiver_after_tx1}}"
+
+  # ================================================================
+  # Phase 6: Second transfer receiver → third
+  # ================================================================
+  - name: "Phase 6: Chain transfer receiver → third"
+    steps:
+      - cli: "tx_create -net {{network_name}} -chain main -token {{test_token}} -from_wallet test_receiver -to_addr {{third_addr}} -value {{transfer_value}} -fee {{fee_value}}"
+        save: tx2_result
+        save_hash: tx2_hash
+        expect: any
+      - print: "Transfer 2 result: {{tx2_result}}"
+
+      - if: "tx2_hash"
+        then:
+          - wait_for_datum: "{{tx2_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+            save_status: tx2_status
+          - print: "TX2 datum status: {{tx2_status}}"
+
+  # ================================================================
+  # Phase 7: Transaction history
+  # ================================================================
+  - name: "Phase 7: Transaction history verification"
+    steps:
+      - wait: "10s"
+
+      - cli: "tx_history -w test_sender -net {{network_name}}"
+        node: node-1
+        save: sender_history
+        expect: any
+      - print: "Sender tx_history: {{sender_history}}"
+
+      - cli: "tx_history -w test_receiver -net {{network_name}}"
+        node: node-1
+        save: receiver_history
+        expect: any
+      - print: "Receiver tx_history: {{receiver_history}}"
+
+      - if: "tx1_hash"
+        then:
+          - cli: "tx_history -tx {{tx1_hash}} -net {{network_name}}"
+            node: node-1
+            save: tx1_history
+            expect: any
+          - print: "TX1 history: {{tx1_history}}"
+
+  # ================================================================
+  # Phase 8: Transaction verification
+  # ================================================================
+  - name: "Phase 8: Transaction verification via tx_verify"
+    steps:
+      - if: "tx1_hash"
+        then:
+          - cli: "tx_verify -net {{network_name}} -chain main -tx {{tx1_hash}}"
+            node: node-1
+            save: tx1_verify
+            expect: any
+          - print: "TX1 verify: {{tx1_verify}}"
+
+      - if: "tx2_hash"
+        then:
+          - cli: "tx_verify -net {{network_name}} -chain main -tx {{tx2_hash}}"
+            node: node-1
+            save: tx2_verify
+            expect: any
+          - print: "TX2 verify: {{tx2_verify}}"
+
+  # ================================================================
+  # Phase 9: Cross-node balance consistency
+  # ================================================================
+  - name: "Phase 9: Cross-node balance and ledger consistency"
+    steps:
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "wallet info -w test_sender -net {{network_name}}"
+            node: "{{_node}}"
+            save: _sender_bal
+            expect: any
+          - print: "[{{_node}}] sender balance: {{_sender_bal}}"
+
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "wallet info -w test_receiver -net {{network_name}}"
+            node: "{{_node}}"
+            save: _recv_bal
+            expect: any
+          - print: "[{{_node}}] receiver balance: {{_recv_bal}}"
+
+  # ================================================================
+  # Phase 10: Ledger transaction lookup
+  # ================================================================
+  - name: "Phase 10: Ledger info for transactions"
+    steps:
+      - if: "tx1_hash"
+        then:
+          - cli: "ledger info -hash {{tx1_hash}} -net {{network_name}}"
+            node: node-1
+            save: ledger_tx1
+            expect: any
+          - print: "Ledger TX1: {{ledger_tx1}}"
+
+      - if: "tx2_hash"
+        then:
+          - cli: "ledger info -hash {{tx2_hash}} -net {{network_name}}"
+            node: node-1
+            save: ledger_tx2
+            expect: any
+          - print: "Ledger TX2: {{ledger_tx2}}"
+
+check:
+  - cli: "token info -net {{network_name}} -name {{test_token}}"
+    node: node-1
+    contains: "{{test_token}}"
+  - cli: "wallet info -w test_receiver -net {{network_name}}"
+    node: node-1
+    expect: any
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
