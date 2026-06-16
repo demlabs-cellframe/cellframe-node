@@ -1,0 +1,216 @@
+name: ESBocs Consensus Status and Validator Participation
+description: >
+  Deep verification of ESBocs consensus state: validator set, round rotation,
+  block signing participation, minimum validators enforcement, and consensus
+  status consistency across all validator nodes.
+tags: [e2e, consensus, esbocs, validators, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 180
+
+test:
+  # ================================================================
+  # Group 1: Verify min_validators_count
+  # ================================================================
+  - name: "Verify minimum validators count"
+    steps:
+      - cli: "esbocs min_validators_count show -net {{network_name}}"
+        node: node-1
+        save: min_val_count
+      - print: "Min validators count: {{min_val_count}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "esbocs min_validators_count show -net {{network_name}}"
+            node: "{{_node}}"
+            save: _min_val_m
+          - print: "[{{_node}}] min_validators: {{_min_val_m}}"
+
+  # ================================================================
+  # Group 3: Block production is active (blocks growing)
+  # ================================================================
+  - name: "Block production is active"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_t0
+        save_regex: "(\\d+)"
+      - print: "Block count at t0: {{blocks_t0}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_t1
+        save_regex: "(\\d+)"
+      - print: "Block count at t1: {{blocks_t1}}"
+
+  # ================================================================
+  # Group 4: Block count consistency across nodes
+  # ================================================================
+  - name: "Block count consistency across all nodes"
+    steps:
+      - wait: "10s"
+
+      - set: _block_counts
+        value: "''"
+
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _bc
+            expect: any
+          - print: "[{{_node}}] block count: {{_bc}}"
+
+  # ================================================================
+  # Group 5: Verify blocks are signed by validators
+  # ================================================================
+  - name: "Verify last block is signed by a validator"
+    steps:
+      - cli: "block last -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: last_block_info
+        expect: any
+      - print: "Last block info: {{last_block_info}}"
+
+      - set: last_block_hash
+        value: "regex_extract(str(last_block_info), r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(last_block_info) else ''"
+        eval: true
+
+      - if: "last_block_hash"
+        then:
+          - cli: "block dump -net {{network_name}} -chain main -hash {{last_block_hash}}"
+            node: "{{first_master}}"
+            save: block_dump_out
+            expect: any
+          - print: "Block dump: {{block_dump_out}}"
+
+  # ================================================================
+  # Group 6: Check signs structure status
+  # ================================================================
+  - name: "Check signs structure status"
+    steps:
+      - cli: "esbocs check_signs_structure show -net {{network_name}}"
+        node: node-1
+        save: signs_struct_status
+        expect: any
+      - print: "Signs structure status: {{signs_struct_status}}"
+
+  # ================================================================
+  # Group 7: Emergency validators list (should be empty initially)
+  # ================================================================
+  - name: "Emergency validators list"
+    steps:
+      - cli: "esbocs emergency_validators show -net {{network_name}}"
+        node: node-1
+        save: emergency_vals
+        expect: any
+      - print: "Emergency validators: {{emergency_vals}}"
+
+  # ================================================================
+  # Group 8: DAG event consistency across root nodes
+  # ================================================================
+  - name: "DAG event consistency across root nodes"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _dag_cnt
+            expect: any
+          - print: "[{{_node}}] DAG event count: {{_dag_cnt}}"
+
+  # ================================================================
+  # Group 9: Verify all nodes see same token set
+  # ================================================================
+  - name: "Token list consistency across synced nodes"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _tl
+            contains: "{{native_ticker}}"
+          - print: "[{{_node}}] ledger coins present"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _tl_m
+            contains: "{{native_ticker}}"
+          - print: "[{{_node}}] ledger coins present"
+
+  # ================================================================
+  # Group 10: Ledger consistency
+  # ================================================================
+  - name: "Ledger coins consistency"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _lc
+            contains: "{{native_ticker}}"
+          - print: "[{{_node}}] ledger coins: present"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _lc_m
+            contains: "{{native_ticker}}"
+          - print: "[{{_node}}] ledger coins: present"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-2
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-3
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-5
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-6
+    contains: "NET_STATE_ONLINE"

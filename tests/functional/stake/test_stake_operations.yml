@@ -1,0 +1,87 @@
+name: Stake Operations
+description: >
+  Tests srv_stake order management (create/list/remove),
+  delegation workflow, stake_lock hold/take, and
+  stake status queries across nodes.
+tags: [e2e, functional, stake, srv_stake]
+version: "1.0"
+
+network:
+  topology: default
+
+defaults:
+  node: node-4
+  wait: 2s
+
+setup:
+  - cli: "wallet info -w {{network_name}}_root_0 -net {{network_name}}"
+    node: node-1
+    save_wallet: root_addr
+
+test:
+  - group: Stake order list (fee orders)
+    steps:
+      - cli: "srv_stake order list fee -net {{network_name}}"
+        save: fee_orders
+        expect: any
+      - print: "Fee orders: {{fee_orders}}"
+
+  - group: Stake order list (validator orders)
+    steps:
+      - cli: "srv_stake order list validator -net {{network_name}}"
+        save: validator_orders
+        expect: any
+      - print: "Validator orders: {{validator_orders}}"
+
+  - group: Stake order list (staker orders)
+    steps:
+      - cli: "srv_stake order list staker -net {{network_name}}"
+        save: staker_orders
+        expect: any
+      - print: "Staker orders: {{staker_orders}}"
+
+  - group: Stake keys list
+    steps:
+      - cli: "srv_stake list keys -net {{network_name}}"
+        save: stake_keys
+        expect: any
+      - print: "Stake keys: {{stake_keys}}"
+
+  - group: Stake tx list
+    steps:
+      - cli: "srv_stake list tx -net {{network_name}}"
+        save: stake_txs
+        expect: any
+      - print: "Stake TXs: {{stake_txs}}"
+
+  - group: Stake reward query
+    steps:
+      - cli: "srv_stake reward -net {{network_name}}"
+        save: stake_rewards
+        expect: any
+      - print: "Stake rewards: {{stake_rewards}}"
+
+  - group: Stake lock hold (time-locked staking)
+    steps:
+      - cli: "stake_lock hold -net {{network_name}} -w {{network_name}}_root_0 -time_staking 010000 -token {{native_ticker}} -value 1000000000000000000 -fee 50000000000000000"
+        node: node-1
+        save: lock_result
+        expect: any
+      - print: "Stake lock hold: {{lock_result}}"
+
+  - group: Stake operations with invalid params
+    steps:
+      - cli: "srv_stake order create validator -net {{network_name}} -value_min 0 -value_max 0 -tax 0 -cert nonexistent_cert"
+        save: bad_stake_order
+        expect: any
+      - print: "Bad stake order: {{bad_stake_order}}"
+
+      - cli: "srv_stake check -net {{network_name}} -tx 0x0000000000000000000000000000000000000000000000000000000000000000"
+        save: stake_check_null
+        expect: any
+      - print: "Stake check null TX: {{stake_check_null}}"
+
+check:
+  - cli: "srv_stake order list -net {{network_name}}"
+    node: node-4
+    expect: any

@@ -4,10 +4,7 @@ source "$(dirname "$0")/ledger_balance_config.sh"
 
 install_dependencies() {
     local DEPENDENCIES_LIST=("wget")
-    local LINES_TO_CLEAR=$((3 + 1 + ${#DEPENDENCIES_LIST[@]}))
 
-    echo "─────────────────────"
-    echo -e "${ORANGE}+ Updating package list and installing required dependencies...${RESET}"
     echo "─────────────────────"
     echo -ne "${ORANGE}+ Updating package list (apt update)...${RESET}"
     if ! apt update > /dev/null 2>&1; then
@@ -31,10 +28,6 @@ install_dependencies() {
             echo -e "${CLEAR_LINE}${CHECKED} Dependency '${DEP}' is already installed."
         fi
     done
-
-    printf "\033[${LINES_TO_CLEAR}A\033[J"
-    echo "─────────────────────"
-    echo -e "${CHECKED} Package list updated and required dependencies installed."
     return 0
 }
 
@@ -267,6 +260,25 @@ uninstall_node_package() {
     return 0
 }
 
+extract_node_version() {
+    local DEB_FILE_URL="$1"
+    local DEB_FILE_NAME
+    DEB_FILE_NAME=$(basename "$DEB_FILE_URL")
+    local NODE_BUILD_VERSION
+    NODE_BUILD_VERSION=$(echo "$DEB_FILE_NAME" | grep -oP 'cellframe-node-\K[0-9]+\.[0-9]+-[0-9]+')
+    echo "${NODE_BUILD_VERSION:-unknown}"
+}
+
+noise_filtration() {
+    if [[ ${#LOG_NOISE_PATTERNS[@]} -eq 0 ]]; then
+        cat
+        return
+    fi
+    local PATTERN
+    PATTERN=$(IFS='|'; echo "${LOG_NOISE_PATTERNS[*]}")
+    grep -vE "$PATTERN"
+}
+
 compare_sync_log_records() {
     echo "─────────────────────"
     if [[ ! -f "$MASTER_SYNC_LOG_PATH" ]]; then
@@ -284,8 +296,10 @@ compare_sync_log_records() {
     local MASTER_FILTERED_LOG=$(mktemp)
     local BUILD_FILTERED_LOG=$(mktemp)
 
-    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$MASTER_SYNC_LOG_PATH" 2>/dev/null | sort > "$MASTER_FILTERED_LOG"
-    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$BUILD_SYNC_LOG_PATH" 2>/dev/null | sort > "$BUILD_FILTERED_LOG"
+    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$MASTER_SYNC_LOG_PATH" 2>/dev/null \
+        | grep -v '^[[:space:]]' | noise_filtration | sort > "$MASTER_FILTERED_LOG"
+    grep -oP '\[(dap_ledger[a-z_]*|dap_chain_net_decree)\] \K.*' "$BUILD_SYNC_LOG_PATH" 2>/dev/null \
+        | grep -v '^[[:space:]]' | noise_filtration | sort > "$BUILD_FILTERED_LOG"
 
     local MASTER_FILTERED_LOG_MD5=$(md5sum "$MASTER_FILTERED_LOG" | awk '{print $1}')
     local BUILD_FILTERED_LOG_MD5=$(md5sum "$BUILD_FILTERED_LOG" | awk '{print $1}')
@@ -300,38 +314,63 @@ compare_sync_log_records() {
     echo -e "${FAILED}${RED} Discrepancies found in log file records. Sync records comparison:${RESET}"
     echo "─────────────────────"
 
+    local MASTER_VERSION
+    MASTER_VERSION=$(extract_node_version "$MASTER_DEB_FILE_NAME")
+    local BUILD_VERSION
+    BUILD_VERSION=$(extract_node_version "$BUILD_DEB_FILE_NAME")
+
+    local DISCREPANCIES_FILE_LINES=()
+    while IFS= read -r header_line; do
+        DISCREPANCIES_FILE_LINES+=("$header_line")
+    done < <(generate_discrepancies_report_header "$BUILD_SYNC_LOG_NAME" "$BUILD_VERSION" "$MASTER_SYNC_LOG_NAME" "$MASTER_VERSION")
+
     local FIRST_BLOCK=true
     while IFS= read -r line; do
         if [[ "$line" =~ ^[0-9]+(,[0-9]+)?[acd][0-9]+(,[0-9]+)?$ ]]; then
             if [[ "$FIRST_BLOCK" == false ]]; then
                 echo "─────────────────────"
+                DISCREPANCIES_FILE_LINES+=("─────────────────────")
             fi
             FIRST_BLOCK=false
         elif [[ "$line" =~ ^---$ ]]; then
             continue
         elif [[ "$line" =~ ^\< ]]; then
-            echo -e "[EXPECTED] [MASTER] | ${line#< }"
+            local content="${line#< }"
+            content="${content#"${content%%[! ]*}"}"
+            echo -e "[EXPECTED] [MASTER] [${MASTER_VERSION}] | ${content}"
+            DISCREPANCIES_FILE_LINES+=("[EXPECTED] [MASTER] [${MASTER_VERSION}] | ${content}")
         elif [[ "$line" =~ ^\> ]]; then
-            echo -e "[RECEIVED] [CBUILD] | ${line#> }"
+            local content="${line#> }"
+            content="${content#"${content%%[! ]*}"}"
+            echo -e "[RECEIVED] [BUILD] [${BUILD_VERSION}] | ${content}"
+            DISCREPANCIES_FILE_LINES+=("[RECEIVED] [BUILD] [${BUILD_VERSION}] | ${content}")
         fi
     done < <(diff "$MASTER_FILTERED_LOG" "$BUILD_FILTERED_LOG" 2>/dev/null)
 
     echo "─────────────────────"
+    DISCREPANCIES_FILE_LINES+=("─────────────────────")
     rm -f "$MASTER_FILTERED_LOG" "$BUILD_FILTERED_LOG"
+
+    local DISCREPANCIES_DUMP_FILE_NAME="${SCRIPT_DIR}/ledger_balance_discrepancies_$(date +%d%m%y).txt"
+    printf '%s\n' "${DISCREPANCIES_FILE_LINES[@]}" > "$DISCREPANCIES_DUMP_FILE_NAME"
+    echo -e "${CHECKED} All detected discrepancies have been saved to '$(basename "$DISCREPANCIES_DUMP_FILE_NAME")'."
+    echo "─────────────────────"
 }
 
 execute_sync_logs_comparison() {
     install_dependencies || exit 1
 
     install_node_package "$MASTER_DEB_FILE_URL" "[MASTER]" || exit 1
+    MASTER_DEB_FILE_NAME="$DEB_FILE_NAME"
     preload_chains_backup "[MASTER]" || exit 1
     init_run_node "$MASTER_SYNC_LOG_PATH" "[MASTER]" || exit 1
     uninstall_node_package "[MASTER]" || exit 1
 
-    install_node_package "$BUILD_DEB_FILE_URL" "[CBUILD]" || exit 1
-    preload_chains_backup "[CBUILD]" || exit 1
-    init_run_node "$BUILD_SYNC_LOG_PATH" "[CBUILD]" || exit 1
-    uninstall_node_package "[CBUILD]" || exit 1
+    install_node_package "$BUILD_DEB_FILE_URL" "[BUILD]" || exit 1
+    BUILD_DEB_FILE_NAME="$DEB_FILE_NAME"
+    preload_chains_backup "[BUILD]" || exit 1
+    init_run_node "$BUILD_SYNC_LOG_PATH" "[BUILD]" || exit 1
+    uninstall_node_package "[BUILD]" || exit 1
 
     compare_sync_log_records
 }

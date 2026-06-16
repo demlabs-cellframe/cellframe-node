@@ -104,6 +104,8 @@ config Backbone general seed_nodes_hosts ensure [0.root.scorpion.cellframe.net:8
 config KelVPN general seed_nodes_hosts ensure [0.root.kelvpn.com:8079,1.root.kelvpn.com:8079,2.root.kelvpn.com:8079]
 
 config Backbone esbocs consensus_debug ensure true
+config Backbone global_db mempool_ttl ensure 14400
+
 config KelVPN esbocs consensus_debug ensure true
 config raiden esbocs consensus_debug ensure true
 config riemann esbocs consensus_debug ensure true
