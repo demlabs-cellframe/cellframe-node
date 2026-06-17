@@ -105,8 +105,8 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/fill_version_mk.sh
-  - ./prod_build/ci/fill_version_mk.sh 
+  - chmod +x ./tools/prod_build/ci/gitlab_project_var.sh ./tools/prod_build/ci/fill_version_mk.sh
+  - ./tools/prod_build/ci/fill_version_mk.sh 
 
 amd64:linux.rwd.bld:
     extends: .build
@@ -217,9 +217,9 @@ ubsan_build:
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
   script:
-    - ./prod_build/build.sh --target linux rwd 
-    - ./prod_build/pack.sh --target linux rwd
-    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb     
+    - ./tools/prod_build/build.sh --target linux rwd 
+    - ./tools/prod_build/pack.sh --target linux rwd
+    - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 tsan_build:
   extends: .build
@@ -235,8 +235,8 @@ tsan_build:
   before_script:
    - /opt/buildtools/prepare_environment.sh arm64-linux
   script:
-    - ./prod_build/build.sh --target linux rwd 
-    - ./prod_build/pack.sh --target linux rwd
+    - ./tools/prod_build/build.sh --target linux rwd 
+    - ./tools/prod_build/pack.sh --target linux rwd
     - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 ledger_balance_compare:
@@ -283,8 +283,8 @@ amd64:linux.release:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON 
-      - ./prod_build/pack.sh --target linux release
+      - ./tools/prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./tools/prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
 
 amd64:windows.rwd:
@@ -296,8 +296,8 @@ amd64:windows.rwd:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target windows rwd
-      - ./prod_build/pack.sh --target windows rwd 
+      - ./tools/prod_build/build.sh --target windows rwd
+      - ./tools/prod_build/pack.sh --target windows rwd 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.exe 
       - /opt/buildtools/deploy_files.sh pub_cellframe windows/cellframe-node/$CI_COMMIT_REF_NAME/ build_windows_rwd/*.exe --redirect-with-link windows/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64 --just-redirect
 
@@ -312,8 +312,8 @@ any:macos.release:
     script:
       - export PATH=/opt/homebrew/bin:$PATH
       - security unlock-keychain -p 1234 ~/Library/Keychains/login.keychain-db 
-      - ./prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-      - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/demlabs.sh
+      - ./tools/prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+      - ./tools/prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/demlabs.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg
       - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest.universal --just-redirect
       - lipo -info build_osx_release/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
@@ -331,8 +331,8 @@ amd64:linux.debug:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
-      - ./prod_build/pack.sh --target linux debug
+      - ./tools/prod_build/build.sh --target linux debug -DBUILD_WITH_PYTHON_ENV=ON 
+      - ./tools/prod_build/pack.sh --target linux debug
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.rwd.opt:
@@ -344,8 +344,8 @@ amd64:linux.rwd.opt:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
-      - ./prod_build/pack.sh --target linux rwd
+      - ./tools/prod_build/build.sh --target linux rwd -DBUILD_WITH_PYTHON_ENV=ON -DCELLFRAME_NO_OPTIMIZATION=OFF
+      - ./tools/prod_build/pack.sh --target linux rwd
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-amd64.opt --just-redirect
 
@@ -358,8 +358,8 @@ amd64:linux.tps:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     when: manual
     script:
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
-      - ./prod_build/pack.sh --target linux release
+      - ./tools/prod_build/build.sh --target linux release -DBUILD_WITH_TPS_TEST=ON
+      - ./tools/prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 amd64:linux.updtr:
@@ -375,8 +375,8 @@ amd64:linux.updtr:
       - /opt/buildtools/prepare_environment.sh amd64-linux
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DADD_UPDATER=ON
-      - ./prod_build/pack.sh --target linux release
+      - ./tools/prod_build/build.sh --target linux release -DBUILD_WITH_PYTHON_ENV=ON -DADD_UPDATER=ON
+      - ./tools/prod_build/pack.sh --target linux release
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb
 
 
@@ -388,8 +388,8 @@ arm32:linux.release:
 
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release --cross-arch arm32
-      - ./prod_build/pack.sh --target linux release --cross-arch arm32
+      - ./tools/prod_build/build.sh --target linux release --cross-arch arm32
+      - ./tools/prod_build/pack.sh --target linux release --cross-arch arm32
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*armhf*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-armhf --just-redirect
 
@@ -401,8 +401,8 @@ arm64:linux.release:
 
     script:
       - echo "Do hard work"
-      - ./prod_build/build.sh --target linux release --cross-arch arm64
-      - ./prod_build/pack.sh --target linux release --cross-arch arm64
+      - ./tools/prod_build/build.sh --target linux release --cross-arch arm64
+      - ./tools/prod_build/pack.sh --target linux release --cross-arch arm64
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*.deb 
       - /opt/buildtools/deploy_files.sh pub_cellframe linux/cellframe-node/$CI_COMMIT_REF_NAME/ build_*/*arm64*.deb --redirect-with-link linux/cellframe-node/$CI_COMMIT_REF_NAME/latest-arm64 --just-redirect
   
@@ -416,7 +416,7 @@ any:android.release:
       - 'apt install -y openjdk-17-jdk'
       - 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/'
     script: 
-      - ./prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
+      - ./tools/prod_build/pack.sh --target android release --sign /opt/buildtools/sign/android/default.sh
       - /opt/buildtools/deploy_files.sh pub_cellframe android/cellframe-node/$CI_COMMIT_REF_NAME/ *.apk 
 
 version:up:
@@ -430,5 +430,5 @@ version:up:
   rules:
     - when: on_success
   script:
-    - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/version_up.sh
-    - ./prod_build/ci/version_up.sh
+    - chmod +x ./tools/prod_build/ci/gitlab_project_var.sh ./tools/prod_build/ci/version_up.sh
+    - ./tools/prod_build/ci/version_up.sh

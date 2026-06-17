@@ -160,7 +160,7 @@ endif()
 
 
 set(CELLFRAME_MODULES "core chains mining network srv cs-dag-poa cs-esbocs cs-none
-                      srv-app srv-app-db srv-datum srv-stake srv-xchange srv-dex srv-bridge srv-voting srv-stake-ext compose")
+                      srv-datum srv-stake srv-xchange srv-dex srv-bridge srv-voting srv-stake-ext compose")
 
 
 if(BUILD_CELLFRAME_NODE_TESTS)
