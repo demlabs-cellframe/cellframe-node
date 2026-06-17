@@ -105,8 +105,8 @@ stages:
   allow_failure: true
 
 .fill_version_mk: &fill_version_mk
-  - chmod +x ./prod_build/ci/gitlab_project_var.sh ./prod_build/ci/fill_version_mk.sh
-  - ./prod_build/ci/fill_version_mk.sh 
+  - chmod +x .tools/prod_build/ci/gitlab_project_var.sh .tools/prod_build/ci/fill_version_mk.sh
+  - .tools/prod_build/ci/fill_version_mk.sh 
 
 amd64:linux.rwd.bld:
     extends: .build
