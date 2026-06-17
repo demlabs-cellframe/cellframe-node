@@ -614,6 +614,8 @@ int main( int argc, const char **argv )
             dap_plugins_python_app_content_init(l_server);
             rc_plugin_init = dap_chain_plugins_init(g_config);
 #endif
+            dap_plugin_load_all();
+            dap_plugin_preinit_all();
             dap_plugin_start_all();
 
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
