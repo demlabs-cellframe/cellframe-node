@@ -246,10 +246,6 @@ if(UNIX)
         set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
 
-    #if ( CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "arm")
-    #    SET( BUILD_WITH_PYTHON_ENV OFF )
-    #endif()
-
     if(NOT CPACK_SYSTEM_NAME)
         set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
     endif()
@@ -302,10 +298,14 @@ if(UNIX)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
+    SET( CPACK_DEBIAN_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}.deb")
+
     message("[*] Debian package setup pkgarch=${CPACK_DEBIAN_PACKAGE_ARCHITECTURE} version=${CPACK_PACKAGE_VERSION}")
 
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postrm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/templates;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/config;")
+    "${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/prerm;${CMAKE_CURRENT_SOURCE_DIR}/os/debian/postrm;")
+
     elseif(BSD)
         message("[*] BSD family system ${CMAKE_SYSTEM} ")
     elseif(DARWIN)

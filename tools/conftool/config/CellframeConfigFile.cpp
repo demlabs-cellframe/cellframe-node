@@ -245,8 +245,8 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
         
         if (is_grp_decl && group_found)
         {
-            if (flags & F_VERBOSE)  std::cout << "[VC] No param in group [" << group_name<<"], group ends at  " << current_line-1 <<  std::endl;
-            if (line_no) *line_no = current_line-1;
+            if (flags & F_VERBOSE)  std::cout << "[VC] No param in group [" << group_name<<"], group ends at  " << current_line <<  std::endl;
+            if (line_no) *line_no = current_line;
             if (group_exists) *group_exists = group_found;
             return false;
         }
@@ -268,7 +268,7 @@ bool CellframeConfigurationFile::exists(const std::string & group, const std::st
         }
     }
     
-    if (line_no) *line_no = current_line-1;
+    if (line_no) *line_no = current_line + 1;
 
     if (group_exists)
         *group_exists = group_found;
