@@ -518,8 +518,12 @@ int main( int argc, const char **argv )
                     l_enabled[l_enabled_count++] = l_type;
             }
         } else {
+            /* All transports enabled by default when [server] transports= is not configured */
             l_enabled[0] = DAP_NET_TRANS_HTTP;
-            l_enabled_count = 1;
+            l_enabled[1] = DAP_NET_TRANS_TLS_DIRECT;
+            l_enabled[2] = DAP_NET_TRANS_WEBSOCKET;
+            l_enabled[3] = DAP_NET_TRANS_DNS_TUNNEL;
+            l_enabled_count = 4;
         }
 
         uint16_t l_addr_count = 0;
@@ -539,24 +543,25 @@ int main( int argc, const char **argv )
             switch (l_type) {
             case DAP_NET_TRANS_HTTP:
                 l_type_name = "http";
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_http", "port", 80);
                 break;
             case DAP_NET_TRANS_UDP_BASIC:
             case DAP_NET_TRANS_UDP_RELIABLE:
             case DAP_NET_TRANS_UDP_QUIC_LIKE:
                 l_type_name = "udp";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_udp", l_base_port);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_udp", "port", l_base_port);
                 break;
             case DAP_NET_TRANS_WEBSOCKET:
                 l_type_name = "websocket";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_websocket", l_base_port + 1);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_websocket", "port", 8080);
                 break;
             case DAP_NET_TRANS_TLS_DIRECT:
                 l_type_name = "tls";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_tls", l_base_port + 2);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_tls", "port", 443);
                 break;
             case DAP_NET_TRANS_DNS_TUNNEL:
                 l_type_name = "dns";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_dns", 53);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_dns", "port", 53);
                 break;
             default:
                 log_it(L_WARNING, "Unknown transport type 0x%02X, skipping", l_type);
@@ -655,6 +660,8 @@ int main( int argc, const char **argv )
     rc = dap_events_wait();
     _log_it( rc ? L_CRITICAL : L_NOTICE, "[cellframe-node] Server loop stopped with return code %d", rc );
     // Deinit modules
+
+    dap_events_deinit();
 
 //failure:
     if (l_plugins_enabled) {
