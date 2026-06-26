@@ -102,6 +102,7 @@
 #include "dap_stream_ctl.h"
 #include "dap_chain_net_srv_order.h"
 #include "dap_chain_net_srv_xchange.h"
+
 #include "dap_chain_net_srv_voting.h"
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
@@ -245,10 +246,8 @@ int main( int argc, const char **argv )
     if (!( g_config = dap_config_open(dap_get_appname()) ))
         return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
 
-    log_it(L_NOTICE, "DEBUG: Config opened successfully, checking [server] enabled...");
     {
         bool l_test_enabled = dap_config_get_item_bool_default(g_config, "server", "enabled", false);
-        log_it(L_NOTICE, "DEBUG: [server] enabled = %s", l_test_enabled ? "true" : "false");
     }
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH + 1];
@@ -298,7 +297,6 @@ int main( int argc, const char **argv )
     dap_events_start();
 
     bServerEnabled = dap_config_get_item_bool_default( g_config, "server", "enabled", false );
-    log_it(L_NOTICE, "DEBUG: bServerEnabled = %s", bServerEnabled ? "true" : "false");
 
     if ( bServerEnabled && dap_server_init() != 0 ) {
         log_it( L_CRITICAL, "Can't init socket server module" );
@@ -348,7 +346,6 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL, "Can't init global db module" );
         return -58;
     }
-    log_it(L_NOTICE, "DEBUG: global_db init done");
 
     if ( dap_datum_mempool_init() ) {
         log_it( L_CRITICAL, "Can't init mempool module" );
@@ -403,14 +400,11 @@ int main( int argc, const char **argv )
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
-    log_it(L_NOTICE, "DEBUG: chain_wallet init done");
 
-    log_it(L_NOTICE, "DEBUG: about to call dap_chain_net_srv_init");
     if( dap_chain_net_srv_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network service module");
         return -66;
     }
-    log_it(L_NOTICE, "DEBUG: chain_net_srv_init done");
 
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
@@ -632,7 +626,9 @@ int main( int argc, const char **argv )
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
     dap_chain_net_load_all();
-    log_it(L_NOTICE, "DEBUG: chain_net_load_all done");
+
+    /* VPN service creation happens in cf_vpn_srv_init() which is called
+     * by the plugin system AFTER dap_chain_net_load_all(). */
 
     if( (dap_chain_wallet_shared_notify_init()) ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
@@ -651,146 +647,9 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL, "Can't init gdb clean and pin" );
         return -133;
     }
-    log_it(L_NOTICE, "DEBUG: gdb_clean init done");
 
-    log_it(L_NOTICE, "Server enabled: %s, starting transport initialization",
-           bServerEnabled ? "yes" : "no");
-
-    if ( bServerEnabled ) {
-        uint16_t l_trans_count = 0;
-        const char **l_trans_strs = dap_config_get_array_str(g_config, "server", "transports", &l_trans_count);
-
-        dap_net_trans_type_t l_enabled[DAP_NET_TRANS_MAX + 1];
-        size_t l_enabled_count = 0;
-        if (l_trans_strs && l_trans_count) {
-            for (uint16_t i = 0; i < l_trans_count; i++) {
-                dap_net_trans_type_t l_type = dap_net_trans_type_from_str(l_trans_strs[i]);
-                bool l_dup = false;
-                for (size_t j = 0; j < l_enabled_count; j++)
-                    if (l_enabled[j] == l_type) { l_dup = true; break; }
-                if (!l_dup)
-                    l_enabled[l_enabled_count++] = l_type;
-            }
-        } else {
-            /* All transports enabled by default when [server] transports= is not configured */
-            l_enabled[0] = DAP_NET_TRANS_HTTP;
-            l_enabled[1] = DAP_NET_TRANS_TLS_DIRECT;
-            l_enabled[2] = DAP_NET_TRANS_WEBSOCKET;
-            l_enabled[3] = DAP_NET_TRANS_DNS_TUNNEL;
-            l_enabled_count = 4;
-        }
-
-        uint16_t l_addr_count = 0;
-        const char **l_listen_addrs = dap_config_get_array_str(g_config, "server", "listen_address", &l_addr_count);
-        char l_base_ip[INET6_ADDRSTRLEN] = "0.0.0.0";
-        uint16_t l_base_port = 8079;
-        if (l_listen_addrs && l_addr_count > 0)
-            dap_net_parse_config_address(l_listen_addrs[0], l_base_ip, &l_base_port, NULL, NULL);
-        if (!l_base_port)
-            l_base_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_tcp", 8079);
-
-        for (size_t t = 0; t < l_enabled_count; t++) {
-            dap_net_trans_type_t l_type = l_enabled[t];
-            const char *l_type_name = "unknown";
-            uint16_t l_port = l_base_port;
-
-            switch (l_type) {
-            case DAP_NET_TRANS_HTTP:
-                l_type_name = "http";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_http", "port", 80);
-                break;
-            case DAP_NET_TRANS_UDP_BASIC:
-            case DAP_NET_TRANS_UDP_RELIABLE:
-            case DAP_NET_TRANS_UDP_QUIC_LIKE:
-                l_type_name = "udp";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_udp", "port", l_base_port);
-                break;
-            case DAP_NET_TRANS_WEBSOCKET:
-                l_type_name = "websocket";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_websocket", "port", 8080);
-                break;
-            case DAP_NET_TRANS_TLS_DIRECT:
-                l_type_name = "tls";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_tls", "port", 443);
-                break;
-            case DAP_NET_TRANS_DNS_TUNNEL:
-                l_type_name = "dns";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_dns", "port", 53);
-                break;
-            default:
-                log_it(L_WARNING, "Unknown transport type 0x%02X, skipping", l_type);
-                continue;
-            }
-
-            if (!dap_net_trans_server_get_ops(l_type)) {
-                log_it(L_WARNING, "Transport '%s' has no server implementation, skipping", l_type_name);
-                continue;
-            }
-
-            char l_name[64];
-            snprintf(l_name, sizeof(l_name), "%s_%s", dap_get_appname(), l_type_name);
-            dap_net_trans_server_t *l_ts = dap_net_trans_server_new(l_type, l_name);
-            if (!l_ts) {
-                log_it(L_ERROR, "Failed to create %s transport server", l_type_name);
-                continue;
-            }
-
-            const char *l_addrs[] = { l_base_ip };
-            uint16_t l_ports[] = { l_port };
-            int l_ret = dap_net_trans_server_start(l_ts, "server", l_addrs, l_ports, 1);
-            if (l_ret != 0) {
-                log_it(L_ERROR, "Failed to start %s transport server on %s:%u (rc=%d)",
-                       l_type_name, l_base_ip, l_port, l_ret);
-                dap_net_trans_server_delete(l_ts);
-                continue;
-            }
-
-            l_trans_servers[l_trans_servers_count++] = l_ts;
-            log_it(L_NOTICE, "Transport server '%s' started on %s:%u", l_type_name, l_base_ip, l_port);
-
-            if (l_type == DAP_NET_TRANS_HTTP) {
-                dap_net_trans_http_server_t *l_http_ts =
-                    (dap_net_trans_http_server_t *)dap_net_trans_server_get_specific(l_ts);
-                if (l_http_ts)
-                    l_server = l_http_ts->server;
-            }
-        }
-    }
-
-    if ( l_server ) {
-        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
-        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
-            dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
-        }
-
-        if (dap_json_rpc_init(l_server, g_config)) {
-            log_it( L_CRITICAL, "Can't init json-rpc" );
-            return -12;
-        }
-
-#if !DAP_OS_ANDROID
-        if (  dap_config_get_item_bool_default(g_config,"www","enabled",false)  ){
-                dap_http_folder_add( DAP_HTTP_SERVER(l_server), "/",
-                                dap_config_get_item_str(g_config,
-                                                            "resources",
-                                                            "www_root") );
-        }
-#endif
-        dap_server_set_default(l_server);
-        dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_NODE_LIST, 2048, dap_chain_net_node_check_http_issue_link);
-        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "http_server", false) ) {
-            log_it(L_DEBUG, "HTTP balancer enabled");
-            dap_http_simple_proc_add(DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_BALANCER,
-                                     DAP_BALANCER_MAX_REPLY_SIZE, dap_chain_net_balancer_http_issue_link);
-        }
-        if ( dap_config_get_item_bool_default(g_config, "bootstrap_balancer", "dns_server", false) ) {
-            log_it(L_DEBUG, "DNS balancer enabled");
-            dap_dns_server_start("bootstrap_balancer");
-        }
-    } else if ( bServerEnabled )
-        log_it( L_WARNING, "HTTP transport server not available, app-specific HTTP handlers skipped" );
-    else
-        log_it( L_INFO, "No enabled server, working in client mode only" );
+    /* Transport servers already created before dap_chain_net_load_all().
+     * l_server, json-rpc, www, balancer handlers already set up in the new block. */
 
     bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
     log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
