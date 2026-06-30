@@ -470,8 +470,6 @@ int main( int argc, const char **argv )
             log_it(L_NOTICE, "Registering python plugin type");
             rc_plugin_init = dap_chain_plugins_init(g_config);
 #endif
-            dap_plugin_load_all();
-            dap_plugin_preinit_all();
         }
         DAP_DELETE(l_plugins_path_default);
     }
