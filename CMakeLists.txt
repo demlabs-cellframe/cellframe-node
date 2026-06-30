@@ -107,11 +107,12 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 
 # init CellFrame SDK
 
-set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+if (NOT DEFINED DAP_VERSION)
+    set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
+endif()
 set(BUILD_TS "${BUILD_TIMESTAMP}")
 set(BUILD_HASH "${GIT_COMMIT_HASH}")
-
-add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
 add_definitions("-DBUILD_TS=\"${BUILD_TS}\"")
 add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
 
@@ -153,8 +154,8 @@ option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(CELLFRAME_NODE_STANDALONE)
     if(LINUX OR WIN32 OR DARWIN)
-        set(BUILD_WITH_PYTHON_ENV ON)
-        set(SUPPORT_PYTHON_PLUGINS ON)
+        set(BUILD_WITH_PYTHON_ENV OFF)
+        set(SUPPORT_PYTHON_PLUGINS OFF)
     endif()
 endif()
 
@@ -187,11 +188,7 @@ if(NOT DEFINED DAP_TPL_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl
 endif()
 
 if(NOT TARGET dap_core)
-    if(DEFINED DAP_SDK_SOURCE_DIR)
-        add_subdirectory(${DAP_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/dap-sdk)
-    else()
-        add_subdirectory(dap-sdk)
-    endif()
+    add_subdirectory(dap-sdk)
 endif()
 if(NOT TARGET cellframe-sdk)
     if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
