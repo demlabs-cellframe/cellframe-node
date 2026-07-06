@@ -1,0 +1,32 @@
+suite: ChipChain E2E Tests
+
+name: ChipChain E2E Tests
+description: |
+  End-to-end tests for ChipChain consensus with Chipmunk aggregated signatures.
+  Uses custom templates with ChipChain consensus instead of ESBOCS.
+  Zerochain and MainChain both use ChipChain consensus.
+  Production-like: 5 root nodes, 3/5 consensus on zerochain.
+version: "1.0"
+
+# Custom templates directory — overrides default ESBOCS templates
+custom_templates_dir: templates
+
+# Custom topology — 5 root nodes for 3/5 consensus
+custom_topology_dir: topologies
+
+# Custom genesis scenarios — uses ChipChain consensus
+custom_genesis_scenario: phase2_chipchain.yml
+custom_phase1_scenario: phase1_zerochain.yml
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+scenarios:
+  - 001_chipchain_consensus.yml
+  - 002_anonymous_transactions.yml
+  - 003_auto_sharding.yml
+  - 004_deanonymization_attack.yml
+
+categories:
+  - chipchain

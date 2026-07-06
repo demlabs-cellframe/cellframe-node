@@ -1,0 +1,155 @@
+name: PHASE 1 - Zerochain Genesis (ChipChain)
+description: Initialize ROOT nodes, create token and emission — ChipChain consensus
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  # Start all nodes dynamically based on topology
+  - docker_op: start
+    services: "{{all_nodes}}"
+    detach: true
+  
+  # Verify ROOT node certificates exist
+  - group: Verify ROOT node certificates
+    steps:
+      - for: node_idx
+        in: "{{root_indices}}"
+        steps:
+          - set: _cert_idx
+            value: "node_idx - 1"
+            eval: true
+          - set: _cert_path
+            value: "/opt/cellframe-node/var/lib/ca/{{network_name}}.root.pvt.{{_cert_idx}}.dcert"
+          - set: _check_node
+            value: "node-{{node_idx}}"
+          - bash: "test -f {{_cert_path}} && echo 'ROOT cert found: {{_cert_path}}'"
+            node: "{{_check_node}}"
+  
+  # Verify MASTER node certificates exist
+  - group: Verify MASTER node certificates
+    steps:
+      - for: node_idx
+        in: "{{master_indices}}"
+        steps:
+          - set: _cert_idx
+            value: "node_idx - root_count - 1"
+            eval: true
+          - set: _cert_path
+            value: "/opt/cellframe-node/var/lib/ca/{{network_name}}.master.pvt.{{_cert_idx}}.dcert"
+          - set: _check_node
+            value: "node-{{node_idx}}"
+          - bash: "test -f {{_cert_path}} && echo 'MASTER cert found: {{_cert_path}}'"
+            node: "{{_check_node}}"
+  
+  # Copy all root private certs to first root node for multi-signature
+  - group: Copy root certs to node-1 for multi-signature
+    steps:
+      - for: cert_idx
+        in: "range(1, root_count)"
+        steps:
+          - set: _src_node_id
+            value: "cert_idx + 1"
+            eval: true
+          - set: _cert_name
+            value: "{{network_name}}.root.pvt.{{cert_idx}}.dcert"
+          - set: _cert_path
+            value: "/opt/cellframe-node/var/lib/ca/{{_cert_name}}"
+          - docker_op: cp
+            src: "node-{{_src_node_id}}:{{_cert_path}}"
+            dst: "node-1:{{_cert_path}}"
+  
+  # Configure events_sign_cert for each ROOT node
+  - for: node_idx
+    in: "{{root_indices}}"
+    steps:
+      - set: _cert_idx
+        value: "node_idx - 1"
+        eval: true
+      - set: _current_node
+        value: "node-{{node_idx}}"
+      - set: _current_cert
+        value: "{{network_name}}.root.pvt.{{_cert_idx}}"
+      - config: "{{network_name}}"
+        nodes: ["{{_current_node}}"]
+        set:
+          events_sign_cert: "{{_current_cert}}"
+
+  # Wait for nodes to come online
+  - wait_network: online
+    nodes: "{{all_nodes}}"
+    timeout: 120
+
+  # Wait for global DB sync
+  - wait: global_db_sync
+    nodes: "{{root_nodes}}"
+    timeout: 120
+
+test:
+  - group: Verify network is operational
+    steps:
+      - cli: "net get status"
+        node: "{{first_root}}"
+        contains: "NET_STATE_ONLINE"
+      
+      - cli: "chain list"
+        node: "{{first_root}}"
+        contains: "zerochain"
+
+  - group: Create wallet and token
+    steps:
+      - cli: "wallet new -w {{network_name}}_root_0 -sign_type sig_dil"
+        node: "{{first_root}}"
+
+      - cli: "wallet info -w {{network_name}}_root_0"
+        node: "{{first_root}}"
+        save_wallet: root_wallet_addr
+
+      - cli: "token_decl -token {{native_ticker}} -total_supply 100000000000000000000000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs {{network_name}}.root.pvt.0"
+        node: "{{first_root}}"
+        save_hash: token_decl_hash
+
+      - wait_for_datum: "{{token_decl_hash}}"
+        node: "{{first_root}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token info -name {{native_ticker}}"
+        node: "{{first_root}}"
+        contains: "{{native_ticker}}"
+
+  - group: Emit tokens
+    steps:
+      - cli: "token_emit -token {{native_ticker}} -emission_value 100000000000000000000000000000 -addr {{root_wallet_addr}} -certs {{network_name}}.root.pvt.0"
+        node: "{{first_root}}"
+        save_hash: emission_hash
+
+      - wait_for_datum: "{{emission_hash}}"
+        node: "{{first_root}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "wallet info -w {{network_name}}_root_0"
+        node: "{{first_root}}"
+        contains: "{{native_ticker}}"
+
+  - group: Sync to master nodes
+    steps:
+      - cli: "net go sync"
+        node: "{{first_root}}"
+
+      - wait: network_sync
+        nodes: "{{all_nodes}}"
+        timeout: 300
+
+      - wait: global_db_sync
+        nodes: "{{all_nodes}}"
+        timeout: 300
+
+      - cli: "ledger list coins"
+        node: "{{first_master}}"
+        contains: "{{native_ticker}}"

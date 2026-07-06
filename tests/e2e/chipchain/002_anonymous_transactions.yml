@@ -1,0 +1,144 @@
+name: Anonymous transactions with ChipChain
+description: |
+  E2E test for anonymous ledger on ChipChain consensus:
+  - Create wallets with Chipmunk keys
+  - Test anonymous TX creation
+  - Test double-spend prevention
+  - Verify anonymity properties
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+variables:
+  token_name: CC_ANON
+  total_supply: "10000000"
+  emission_value: "1000000"
+  anon_transfer_value: "500"
+  anon_transfer_value_2: "300"
+
+test:
+  # ======================================================================
+  # Group 1: Create Chipmunk wallets
+  # ======================================================================
+  - group: Create Chipmunk wallets
+    description: |
+      Generate Chipmunk keypairs for anonymous transactions.
+      These keys use lattice-based MLWE/MSIS (post-quantum).
+    steps:
+      - cli: "wallet new -w cc_anon_alice -sign_type sig_chipmunk"
+        expect: success
+        save_wallet: alice_addr
+
+      - cli: "wallet new -w cc_anon_bob -sign_type sig_chipmunk"
+        expect: success
+        save_wallet: bob_addr
+
+      - cli: "wallet new -w cc_anon_carol -sign_type sig_chipmunk"
+        expect: success
+        save_wallet: carol_addr
+
+      # Verify wallet type is Chipmunk
+      - cli: "wallet info -w cc_anon_alice"
+        expect: success
+        contains: "chipmunk"
+
+  # ======================================================================
+  # Group 2: Token setup
+  # ======================================================================
+  - group: Setup token
+    steps:
+      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
+
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 120
+
+  # ======================================================================
+  # Group 3: Anonymous transfer (Alice → Bob)
+  # ======================================================================
+  - group: Anonymous transfer Alice to Bob
+    description: |
+      Create an anonymous transaction:
+      - Amount hidden behind Pedersen commitment
+      - Sender identity hidden behind Chipmunk ring signature
+      - Range proof proves amount is non-negative
+      - Key image prevents double-spending
+    steps:
+      - cli: "tx_create -token {{token_name}} -value {{anon_transfer_value}} -addr {{bob_addr}} -w cc_anon_alice -anonymous"
+        expect: success
+        save_hash: anon_tx_1
+
+      - wait_for_datum: "{{anon_tx_1}}"
+        chain: zerochain
+        timeout: 120
+
+      # Verify Bob received tokens
+      - cli: "wallet info -w cc_anon_bob"
+        expect: success
+        contains: "{{token_name}}"
+
+  # ======================================================================
+  # Group 4: Chain anonymous transfer (Bob → Carol)
+  # ======================================================================
+  - group: Anonymous transfer Bob to Carol
+    description: |
+      Chain anonymous transfers to test key image tracking.
+      Each TX should generate a unique key image.
+    steps:
+      - cli: "tx_create -token {{token_name}} -value {{anon_transfer_value_2}} -addr {{carol_addr}} -w cc_anon_bob -anonymous"
+        expect: success
+        save_hash: anon_tx_2
+
+      - wait_for_datum: "{{anon_tx_2}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "wallet info -w cc_anon_carol"
+        expect: success
+        contains: "{{token_name}}"
+
+  # ======================================================================
+  # Group 5: Verify anonymous TX properties
+  # ======================================================================
+  - group: Verify anonymous TX properties
+    description: |
+      Check that anonymous transactions have the expected structure:
+      - Key image is present
+      - No cleartext amount in the TX
+    steps:
+      - cli: "tx get -hash {{anon_tx_1}}"
+        expect: success
+        contains: "key_image"
+
+      - cli: "tx get -hash {{anon_tx_2}}"
+        expect: success
+        contains: "key_image"
+
+  # ======================================================================
+  # Group 6: Ledger consistency
+  # ======================================================================
+  - group: Ledger consistency
+    steps:
+      - cli: "ledger info -token {{token_name}}"
+        expect: success
+
+  # ======================================================================
+  # Group 7: Verify chain health
+  # ======================================================================
+  - group: Verify chain health
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"

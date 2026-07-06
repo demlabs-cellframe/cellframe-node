@@ -1,0 +1,12 @@
+# Default CLI parameters for stagenet scenarios
+# Include this file to auto-apply common CLI options
+#
+# These defaults are applied to CLI commands that support them:
+#   -net stagenet    (network name)
+#   -port 8079       (node port for connections)
+#   -chain zerochain (default chain for DAG operations)
+
+defaults:
+  cli:
+    net: "{{network_name}}"
+    port: "8079"

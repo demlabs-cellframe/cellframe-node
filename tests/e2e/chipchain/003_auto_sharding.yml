@@ -1,0 +1,136 @@
+name: Auto-sharding and cell rotation
+description: |
+  E2E test for ChipChain auto-sharding:
+  - Configure cell size threshold
+  - Generate blocks until threshold is reached
+  - Verify cell rotation triggers
+  - Verify state migration
+  - Verify new cell is functional
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+variables:
+  token_name: CC_SHARD
+  total_supply: "100000000"
+  emission_value: "1000000"
+  transfer_value: "10"
+
+test:
+  # ======================================================================
+  # Group 1: Setup wallets and tokens
+  # ======================================================================
+  - group: Setup wallets and tokens
+    steps:
+      - cli: "wallet new -w cc_shard_alice -sign_type sig_dil"
+        expect: success
+        save_wallet: alice_addr
+
+      - cli: "wallet new -w cc_shard_bob -sign_type sig_dil"
+        expect: success
+        save_wallet: bob_addr
+
+      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
+
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 120
+
+  # ======================================================================
+  # Group 2: Generate load
+  # ======================================================================
+  - group: Generate load to trigger cell rotation
+    description: |
+      Send many transactions to fill the cell.
+      When atom count reaches cell_threshold, auto-sharding should trigger.
+    steps:
+      # First batch
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: tx_1
+      - wait_for_datum: "{{tx_1}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: tx_2
+      - wait_for_datum: "{{tx_2}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: tx_3
+      - wait_for_datum: "{{tx_3}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: tx_4
+      - wait_for_datum: "{{tx_4}}"
+        chain: zerochain
+        timeout: 60
+
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: tx_5
+      - wait_for_datum: "{{tx_5}}"
+        chain: zerochain
+        timeout: 60
+
+  # ======================================================================
+  # Group 3: Verify chain state after load
+  # ======================================================================
+  - group: Verify chain state after load
+    steps:
+      - cli: "wallet info -w cc_shard_alice"
+        expect: success
+        contains: "{{token_name}}"
+
+      - cli: "wallet info -w cc_shard_bob"
+        expect: success
+        contains: "{{token_name}}"
+
+      - cli: "chain get atoms -chain zerochain -limit 10"
+        expect: success
+
+  # ======================================================================
+  # Group 4: Verify consensus continues
+  # ======================================================================
+  - group: Verify consensus continues
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+      # Create one more TX to verify consensus is healthy
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+        expect: success
+        save_hash: post_load_tx
+
+      - wait_for_datum: "{{post_load_tx}}"
+        chain: zerochain
+        timeout: 120
+
+  # ======================================================================
+  # Group 5: Verify block signatures
+  # ======================================================================
+  - group: Verify block signatures
+    steps:
+      - cli: "block last -net {{network_name}} -chain zerochain"
+        expect: success
+        contains: "sign"

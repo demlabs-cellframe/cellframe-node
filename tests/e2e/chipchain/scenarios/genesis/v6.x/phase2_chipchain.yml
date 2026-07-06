@@ -1,0 +1,204 @@
+name: PHASE 2 - ChipChain Genesis
+description: Create mainchain genesis block from emission (ChipChain consensus)
+
+includes:
+  - common/set_net_default.yml
+
+network:
+  topology: default
+  name: "{{network_name}}"
+
+setup:
+  # NOTE: When running as part of genesis flow (via manager.py), 
+  # containers are already running from phase1.
+  
+  # Build active nodes list (root + master)
+  - set: _active_nodes
+    value: "root_nodes + master_nodes"
+    eval: true
+  
+  - wait_network: online
+    nodes: "{{_active_nodes}}"
+    timeout: 120
+
+  # Enable seed_mode on active nodes via CLI
+  - group: Enable seed_mode on active nodes
+    steps:
+      - for: _active_node
+        in: "{{_active_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain main on"
+            node: "{{_active_node}}"
+          - cli: "chain seed -net {{network_name}} -chain zerochain on"
+            node: "{{_active_node}}"
+      
+      - print: "seed_mode enabled on active nodes via CLI"
+
+  - wait: global_db_sync
+    node: "{{first_root}}"
+    timeout: 300
+  
+  # Get fee_addr from first root wallet
+  - cli: "wallet info -w {{network_name}}_root_0"
+    node: "{{first_root}}"
+    save_wallet: fee_addr
+
+test:
+  - group: Verify network connectivity and emission on root
+    description: Ensure root nodes have emission and network is ready
+    steps:
+      - cli: "net get status"
+        node: "{{first_root}}"
+        contains: "NET_STATE_ONLINE"
+      
+      - cli: "ledger list coins"
+        node: "{{first_root}}"
+        contains: "{{native_ticker}}"
+      
+      - cli: "dag event list -chain zerochain"
+        node: "{{first_root}}"
+        save_to: _dag_events_output
+      
+      - print: "Root node zerochain events: {{_dag_events_output}}"
+  
+  - group: Wait for master nodes to sync chain data
+    steps:
+      - cli: "net go sync"
+        node: "{{first_master}}"
+
+      - wait: network_sync
+        nodes: "{{_active_nodes}}"
+        timeout: 300
+
+      - wait: global_db_sync
+        nodes: "{{_active_nodes}}"
+        timeout: 300
+
+      - cli: "dag event list -chain zerochain"
+        node: "{{first_master}}"
+        save_to: _master_dag_events
+      
+      - print: "Master node zerochain events: {{_master_dag_events}}"
+      
+      - cli: "ledger list coins"
+        node: "{{first_master}}"
+        save_to: _master_ledger_coins
+      
+      - print: "Master ledger coins: {{_master_ledger_coins}}"
+  
+  - group: Force chain sync if needed
+    steps:
+      - cli: "net go sync"
+        node: "{{first_root}}"
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+      
+      - wait: global_db_sync
+        nodes: "{{_active_nodes}}"
+        timeout: 300
+
+      - cli: "ledger list coins"
+        node: "{{first_master}}"
+        contains: "{{native_ticker}}"
+      
+      - print: "Emission synced to master node ledger"
+  
+  - group: Genesis Block - Create from emission (ChipChain consensus)
+    defaults:
+      node: "{{first_root}}"
+      cli:
+        chain: "main"
+        token: "{{native_ticker}}"
+    steps:
+      - cli: "tx_create -chain_emission zerochain -from_emission {{emission_hash}} -value 10.0e+54 -to_addr {{fee_addr}} -fee 5.0e+18 -cert {{network_name}}.root.pvt.0"
+        save_hash: mainchain_genesis_tx
+      
+      - cli: "mempool proc_all"
+
+      - cli: "net go sync"
+        node: "{{first_root}}"
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+
+      - wait: cli
+        cmd: "mempool list -chain main"
+        node: "{{first_master}}"
+        contains: "datum"
+        timeout: 120
+        interval: 5
+
+      - cli: "mempool list -chain main"
+        node: "{{first_master}}"
+        save_to: _master_mempool_status
+      
+      - print: "Master mempool: {{_master_mempool_status}}"
+      
+      # Wait for ChipChain consensus to create genesis block
+      - wait: block_created
+        node: "{{first_master}}"
+        chain: "main"
+        min_blocks: 1
+        timeout: 300
+
+      - cli: "block list"
+        node: "{{first_master}}"
+        save_to: _master_blocks_status
+      
+      - print: "Master blocks status: {{_master_blocks_status}}"
+      
+  
+  - cli: "block list -chain main"
+    node: "{{first_master}}"
+    save_hash: genesis_block_hash
+  
+  # Configure static genesis block BEFORE restart
+  - config: "{{network_name}}/main"
+    nodes: "{{_active_nodes}}"
+    set:
+      static_genesis_block: "{{genesis_block_hash}}"
+      is_static_genesis_block: "true"
+  
+  # Disable seed_mode on all active nodes via CLI
+  - group: Disable seed_mode on active nodes
+    steps:
+      - for: _active_node
+        in: "{{_active_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain main off"
+            node: "{{_active_node}}"
+          - cli: "chain seed -net {{network_name}} -chain zerochain off"
+            node: "{{_active_node}}"
+      
+      - print: "seed_mode disabled on active nodes via CLI"
+
+  - docker_op: restart
+    services: "{{all_nodes}}"
+
+  - wait_network: online
+    nodes: "{{_active_nodes}}"
+    timeout: 300
+
+  - wait: global_db_sync
+    node: "{{first_root}}"
+    timeout: 300
+  
+  # Configure fee_addr in main.cfg 
+  - config: "{{network_name}}/main"
+    nodes: "{{_active_nodes}}"
+    set:
+      fee_addr: "{{fee_addr}}"
+
+check:
+  - cli: "net get status"
+    node: "{{first_master}}"
+    contains: "NET_STATE_ONLINE"
+  
+  - cli: "block list -chain main"
+    node: "{{first_root}}"
+    contains: "have blocks:"
+  
+  - cli: "token list"
+    node: "{{first_root}}"
+    contains: "tokens:"

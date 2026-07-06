@@ -136,7 +136,7 @@ set(BUILD_WITH_ZIP OFF)
 option(ADD_UPDATER OFF)
 option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
-set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-none
+set(CELLFRAME_MODULES "core chains ledger node-cli network srv cs-dag-poa cs-esbocs cs-chipchain cs-none
                        srv-app srv-app-db srv-datum srv-stake srv-xchange srv-bridge srv-voting srv-stake-ext compose")
 
 if(LINUX OR DARWIN)

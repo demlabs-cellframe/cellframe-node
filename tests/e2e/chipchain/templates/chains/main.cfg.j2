@@ -1,0 +1,48 @@
+# Main chain configuration for ChipChain consensus
+# ChipChain: Chipmunk aggregated signatures + auto-sharding
+# All parameters are configurable via topology and scenario configs
+
+[chain]
+id=0x0000000000000001
+shard_id=0x0000000000000000
+name=main
+load_priority=1
+datum_types=[transaction,anchor]
+default_datum_types=[transaction,anchor]
+mempool_auto_types=[transaction,anchor]
+consensus=chipchain
+{% if mainchain_validators_addrs and mainchain_validators_addrs != '[]' -%}
+authorized_nodes_addrs={{ mainchain_validators_addrs }}
+{% elif validators_addrs and validators_addrs != '[]' -%}
+authorized_nodes_addrs={{ validators_addrs }}
+{% endif -%}
+
+[files]
+storage_dir=../../../var/lib/network/{{ network_name | default('stagenet') }}/main/
+
+[blocks]
+is_celled=false
+is_static_genesis_block={{ is_static_genesis_block | default('false', true) }}
+static_genesis_block={{ static_genesis_block | default('', true) }}
+
+[chipchain]
+consensus_debug={{ consensus_debug | default('true', true) }}
+min_validators_count={{ min_validators_count | default(3, true) }}
+{% if mainchain_validators_addrs and mainchain_validators_addrs != '[]' -%}
+validators_addrs={{ mainchain_validators_addrs }}
+{% elif validators_addrs and validators_addrs != '[]' -%}
+validators_addrs={{ validators_addrs }}
+{% endif -%}
+poa_mode={{ poa_mode | default('false', true) }}
+auth_certs_prefix={{ network_name | default('stagenet') }}.master
+{% if fee_addr -%}
+fee_addr={{ fee_addr }}
+{% endif -%}
+new_round_delay={{ new_round_delay | default(15, true) }}
+round_start_sync_timeout={{ round_start_sync_timeout | default(5, true) }}
+round_attempts_max={{ round_attempts_max | default(3, true) }}
+round_attempt_timeout={{ round_attempt_timeout | default(10, true) }}
+# ChipChain-specific: Chipmunk aggregated signatures
+use_chipmunk_aggregated={{ use_chipmunk_aggregated | default('false', true) }}
+# ChipChain-specific: auto-sharding (0 = disabled)
+cell_size_threshold={{ cell_size_threshold | default(0, true) }}

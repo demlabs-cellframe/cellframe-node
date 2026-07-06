@@ -1,0 +1,29 @@
+# {{ network_name | default('stagenet') }} configuration (ChipChain)
+
+[general]
+id={{ network_id | default('0x0000000000001234') }}
+name={{ network_name | default('stagenet') }}
+gdb_groups_prefix={{ network_name | default('stagenet') }}
+native_ticker={{ native_ticker | default('TCELL') }}
+node-role={{ node_role | default('full', true) }}
+seed_nodes_aliases={{ seed_nodes_aliases | default('[]', true) }}
+seed_nodes_hosts={{ seed_nodes_hosts | default('[]', true) }}
+permanent_nodes_addrs={{ permanent_nodes_addrs | default('[]', true) }}
+permanent_nodes_hosts={{ permanent_nodes_hosts | default('[]', true) }}
+# NOTE: authorized_nodes_addrs is NOT read from this file!
+# It MUST be in zerochain.cfg [chain] section for node add command to work
+
+# ChipChain blocks signing certificate (for MASTER nodes only)
+[chipchain]
+consensus_debug={{ consensus_debug | default('true', true) }}
+{% if blocks_sign_cert %}
+blocks-sign-cert={{ blocks_sign_cert }}
+{% endif %}
+{% if fee_addr %}
+fee_addr={{ fee_addr }}
+{% endif %}
+collecting_level={{ collecting_level | default(10.0) }}
+# ChipChain-specific: Chipmunk aggregated signatures
+use_chipmunk_aggregated={{ use_chipmunk_aggregated | default('false', true) }}
+# ChipChain-specific: auto-sharding (0 = disabled)
+cell_size_threshold={{ cell_size_threshold | default(0, true) }}

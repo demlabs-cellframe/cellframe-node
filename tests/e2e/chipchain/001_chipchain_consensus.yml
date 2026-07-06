@@ -1,0 +1,107 @@
+name: ChipChain consensus lifecycle
+description: |
+  E2E test for ChipChain consensus:
+  - Verify network is online
+  - Test basic token lifecycle on ChipChain
+  - Test block signatures
+  - Test consensus config
+version: "1.0"
+
+includes:
+  - common/defaults.yml
+  - common/create_test_cert.yml
+
+variables:
+  token_name: CC_CONSENSUS
+  total_supply: "10000000"
+  emission_value: "1000000"
+  transfer_value: "100"
+
+test:
+  # ======================================================================
+  # Group 1: Verify network is operational
+  # ======================================================================
+  - group: Verify network is operational
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+      - cli: "net get links"
+        expect: success
+
+  # ======================================================================
+  # Group 2: Create wallets
+  # ======================================================================
+  - group: Create wallets
+    steps:
+      - cli: "wallet new -w cc_alice -sign_type sig_dil"
+        expect: success
+        save_wallet: alice_addr
+
+      - cli: "wallet new -w cc_bob -sign_type sig_dil"
+        expect: success
+        save_wallet: bob_addr
+
+  # ======================================================================
+  # Group 3: Token declaration and emission
+  # ======================================================================
+  - group: Declare and emit tokens
+    steps:
+      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+        expect: success
+        save_hash: token_decl_hash
+
+      - wait_for_datum: "{{token_decl_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "token info -name {{token_name}}"
+        expect: success
+        contains: "{{token_name}}"
+
+      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs test_cert"
+        expect: success
+        save_hash: emit_hash
+
+      - wait_for_datum: "{{emit_hash}}"
+        chain: zerochain
+        timeout: 120
+
+  # ======================================================================
+  # Group 4: Transfer to verify consensus processing
+  # ======================================================================
+  - group: Transfer tokens
+    steps:
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_alice"
+        expect: success
+        save_hash: tx_hash
+
+      - wait_for_datum: "{{tx_hash}}"
+        chain: zerochain
+        timeout: 120
+
+      - cli: "wallet info -w cc_bob"
+        expect: success
+        contains: "{{token_name}}"
+
+  # ======================================================================
+  # Group 5: Verify block signatures
+  # ======================================================================
+  - group: Verify block signatures
+    steps:
+      - cli: "block last -net {{network_name}} -chain zerochain"
+        expect: success
+        contains: "sign"
+
+  # ======================================================================
+  # Group 6: Verify chain health
+  # ======================================================================
+  - group: Verify chain health
+    steps:
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
+
+      - cli: "chain get atoms -chain zerochain -limit 5"
+        expect: success
