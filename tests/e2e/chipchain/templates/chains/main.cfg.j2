@@ -33,7 +33,7 @@ validators_addrs={{ mainchain_validators_addrs }}
 {% elif validators_addrs and validators_addrs != '[]' -%}
 validators_addrs={{ validators_addrs }}
 {% endif -%}
-poa_mode={{ poa_mode | default('false', true) }}
+poa_mode={{ poa_mode | default('true', true) }}
 auth_certs_prefix={{ network_name | default('stagenet') }}.master
 {% if fee_addr -%}
 fee_addr={{ fee_addr }}

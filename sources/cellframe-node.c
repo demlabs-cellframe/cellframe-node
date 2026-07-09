@@ -255,7 +255,14 @@ int main(int argc, const char **argv)
     if (g_config && dap_config_get_item_bool_default(g_config, "plugins", "enabled", false))
         dap_plugin_start_all();
 
-    /* ---------- 10. Bring networks online ---------- */
+    /* ---------- 10. Load network data (chains, mempool clusters, nodelist) ---------- */
+    /* NOTE: cellframe_sdk_init() intentionally does NOT call
+     * dap_chain_net_load_all() — the caller must invoke it after
+     * plugins are loaded so that plugin-registered services are
+     * available during chain consensus initialization. */
+    dap_chain_net_load_all();
+
+    /* ---------- 11. Bring networks online ---------- */
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all(NULL);
 #endif /* !DAP_OS_WASM */
