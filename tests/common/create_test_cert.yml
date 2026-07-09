@@ -4,6 +4,15 @@
 #
 # IMPORTANT: 'cert create' is available in cellframe-node-tool, NOT in
 # cellframe-node-cli. Use the 'tool:' action to invoke cellframe-node-tool.
+#
+# CRITICAL: A cert created with cellframe-node-tool is saved to disk only
+# (/opt/cellframe-node/var/lib/ca/<name>.dcert). The running node does NOT
+# auto-load it into its in-memory cert hashtable (s_certs) — only certs
+# present at node start are loaded. To make the new cert usable by CLI
+# commands like token_decl/token_emit/tx_create without a node restart,
+# we set the test_cert variable to the full on-disk path. dap_cert_find_by_name()
+# detects the '/' in the path and loads the cert file on demand via
+# dap_cert_file_load().
 
 setup:
   # Create temporary certificate for test operations using cellframe-node-tool.
@@ -12,3 +21,9 @@ setup:
   - tool: cert create test_cert sig_dil
     node: node1
     expect: any
+
+# Set test_cert variable to the FULL on-disk path (without the .dcert
+# extension — dap_cert_find_by_name appends '.dcert' when it's absent).
+# This makes the cert usable by CLI commands on the already-running node.
+variables:
+  test_cert: "/opt/cellframe-node/var/lib/ca/test_cert"

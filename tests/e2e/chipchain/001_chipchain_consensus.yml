@@ -48,7 +48,7 @@ test:
   # ======================================================================
   - group: Declare and emit tokens
     steps:
-      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs test_cert"
+      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
         expect: success
         save_hash: token_decl_hash
 
@@ -60,7 +60,7 @@ test:
         expect: success
         contains: "{{token_name}}"
 
-      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs test_cert"
+      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
         expect: success
         save_hash: emit_hash
 
