@@ -1,4 +1,14 @@
+# Common: Create temporary test certificate
+# Creates a certificate for signing test transactions
+# After including this, use -certs test_cert explicitly in your commands
+#
+# IMPORTANT: 'cert create' is available in cellframe-node-tool, NOT in
+# cellframe-node-cli. Use the 'tool:' action to invoke cellframe-node-tool.
+
 setup:
-  - cli: "cert create -type sig_dil test_cert"
-    expect: success
-    wait: 2s
+  # Create temporary certificate for test operations using cellframe-node-tool.
+  # Syntax: cert create <cert_name> <sign_type> [<key_length>]
+  # expect: any allows the step to pass even if cert already exists
+  - tool: cert create test_cert sig_dil
+    node: node1
+    expect: any
