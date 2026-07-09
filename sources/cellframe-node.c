@@ -262,6 +262,9 @@ int main(int argc, const char **argv)
      * available during chain consensus initialization. */
     dap_chain_net_load_all();
 
+    /* ---------- 10a. Enable mempool autoproc for validator nodes ---------- */
+    dap_chain_node_mempool_autoproc_init();
+
     /* ---------- 11. Bring networks online ---------- */
     dap_chain_net_try_online_all();
     dap_chain_net_announce_addr_all(NULL);
