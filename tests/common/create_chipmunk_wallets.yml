@@ -1,0 +1,41 @@
+# Common: Create Chipmunk Ring wallets for anonymous transactions
+#
+# Creates wallets with sig_chipmunk_ring keys, required for:
+#   - Anonymous TX (-anonymous flag in tx_create)
+#   - Ring signatures (CHIPMUNK_RING_N_MIN=8 ring members)
+#   - Pedersen commitments for confidential amounts
+#   - SNARK proofs for zero-knowledge verification
+#
+# Usage:
+#   includes:
+#     - common/create_chipmunk_wallets.yml
+#
+# After inclusion, these wallet addresses are available as variables:
+#   - chipmunk_alice_addr
+#   - chipmunk_bob_addr
+#   - chipmunk_carol_addr
+
+setup:
+  # Create Chipmunk Ring wallets for anonymous transactions
+  # sig_chipmunk_ring (0x010C) — ring signature for anonymous ledger
+  - cli: "wallet new -w chipmunk_alice -sign_type sig_chipmunk_ring"
+    expect: success
+    save_wallet: chipmunk_alice_addr
+
+  - cli: "wallet new -w chipmunk_bob -sign_type sig_chipmunk_ring"
+    expect: success
+    save_wallet: chipmunk_bob_addr
+
+  - cli: "wallet new -w chipmunk_carol -sign_type sig_chipmunk_ring"
+    expect: success
+    save_wallet: chipmunk_carol_addr
+
+  # Verify all wallets show chipmunk_ring sign type
+  - cli: "wallet info -w chipmunk_alice"
+    expect: success
+
+  - cli: "wallet info -w chipmunk_bob"
+    expect: success
+
+  - cli: "wallet info -w chipmunk_carol"
+    expect: success

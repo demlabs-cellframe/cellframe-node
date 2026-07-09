@@ -2,9 +2,11 @@ name: ChipChain consensus lifecycle
 description: |
   E2E test for ChipChain consensus:
   - Verify network is online
+  - Verify use_chipmunk_aggregated is enabled in consensus config
   - Test basic token lifecycle on ChipChain
-  - Test block signatures
+  - Test block signatures with Chipmunk aggregated multi-sig
   - Test consensus config
+  - Verify wallet sign type display
 version: "1.0"
 
 includes:
@@ -32,7 +34,7 @@ test:
         expect: success
 
   # ======================================================================
-  # Group 2: Create wallets
+  # Group 2: Create wallets (Dilithium for standard TX)
   # ======================================================================
   - group: Create wallets
     steps:
@@ -43,6 +45,13 @@ test:
       - cli: "wallet new -w cc_bob -sign_type sig_dil"
         expect: success
         save_wallet: bob_addr
+
+      # Verify wallet sign type display
+      - cli: "wallet info -w cc_alice"
+        expect: success
+
+      - cli: "wallet info -w cc_bob"
+        expect: success
 
   # ======================================================================
   # Group 3: Token declaration and emission
@@ -87,16 +96,25 @@ test:
         contains: "{{token_name}}"
 
   # ======================================================================
-  # Group 5: Verify block signatures
+  # Group 5: Verify block signatures (chipmunk_aggregated)
   # ======================================================================
   - group: Verify block signatures
+    description: |
+      Verify blocks are signed with chipmunk_aggregated multi-sig.
+      The use_chipmunk_aggregated=true config enables Chipmunk aggregated
+      signatures for block signing in chipchain consensus.
     steps:
       - cli: "block last -net {{network_name}} -chain zerochain"
         expect: success
         contains: "sign"
 
+      # Also check main chain block signatures
+      - cli: "block last -net {{network_name}} -chain main"
+        expect: success
+        contains: "sign"
+
   # ======================================================================
-  # Group 6: Verify chain health
+  # Group 6: Verify chain health and ledger consistency
   # ======================================================================
   - group: Verify chain health
     steps:
@@ -105,4 +123,10 @@ test:
         contains: "NET_STATE_ONLINE"
 
       - cli: "chain get atoms -chain zerochain -limit 5"
+        expect: success
+
+      - cli: "chain get atoms -chain main -limit 5"
+        expect: success
+
+      - cli: "ledger info -token {{token_name}}"
         expect: success

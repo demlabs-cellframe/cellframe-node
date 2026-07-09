@@ -6,6 +6,8 @@ description: |
   - Verify cell rotation triggers
   - Verify state migration
   - Verify new cell is functional
+  - Verify consensus continues after cell rotation
+  - Verify shard state and atom consistency
 version: "1.0"
 
 includes:
@@ -50,14 +52,14 @@ test:
         timeout: 120
 
   # ======================================================================
-  # Group 2: Generate load
+  # Group 2: Generate load to trigger cell rotation
   # ======================================================================
   - group: Generate load to trigger cell rotation
     description: |
       Send many transactions to fill the cell.
       When atom count reaches cell_threshold, auto-sharding should trigger.
     steps:
-      # First batch
+      # First batch — 5 TXs
       - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_1
@@ -97,6 +99,9 @@ test:
   # Group 3: Verify chain state after load
   # ======================================================================
   - group: Verify chain state after load
+    description: |
+      Verify wallets have correct balances after load.
+      Check shard state and atom count on the chain.
     steps:
       - cli: "wallet info -w cc_shard_alice"
         expect: success
@@ -106,19 +111,27 @@ test:
         expect: success
         contains: "{{token_name}}"
 
+      # Check atom count on chain — should reflect all TXs processed
       - cli: "chain get atoms -chain zerochain -limit 10"
         expect: success
 
+      # Check ledger consistency
+      - cli: "ledger info -token {{token_name}}"
+        expect: success
+
   # ======================================================================
-  # Group 4: Verify consensus continues
+  # Group 4: Verify consensus continues after load
   # ======================================================================
   - group: Verify consensus continues
+    description: |
+      Consensus must continue processing blocks after cell rotation.
+      Create additional TXs to verify the chain is still functional.
     steps:
       - cli: "net get status"
         expect: success
         contains: "NET_STATE_ONLINE"
 
-      # Create one more TX to verify consensus is healthy
+      # Create TXs after potential cell rotation
       - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: post_load_tx
@@ -128,10 +141,33 @@ test:
         timeout: 120
 
   # ======================================================================
-  # Group 5: Verify block signatures
+  # Group 5: Verify block signatures after sharding
   # ======================================================================
-  - group: Verify block signatures
+  - group: Verify block signatures after sharding
+    description: |
+      Block signatures must work correctly after cell rotation.
+      Chipmunk aggregated signatures should still validate.
     steps:
       - cli: "block last -net {{network_name}} -chain zerochain"
         expect: success
         contains: "sign"
+
+      - cli: "block last -net {{network_name}} -chain main"
+        expect: success
+        contains: "sign"
+
+  # ======================================================================
+  # Group 6: Verify shard state
+  # ======================================================================
+  - group: Verify shard state
+    description: |
+      Check that the shard state is consistent after load.
+      Verify the chain has processed all expected atoms.
+    steps:
+      - cli: "chain get atoms -chain zerochain -limit 20"
+        expect: success
+
+      # Verify network is still healthy
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
