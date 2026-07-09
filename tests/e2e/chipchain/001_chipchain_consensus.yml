@@ -16,6 +16,7 @@ variables:
   total_supply: "10000000"
   emission_value: "1000000"
   transfer_value: "100"
+  tx_fee: "0.01"
 
 test:
   # ======================================================================
@@ -73,7 +74,7 @@ test:
   # ======================================================================
   - group: Transfer tokens
     steps:
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_hash
 

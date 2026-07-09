@@ -17,6 +17,7 @@ variables:
   total_supply: "100000000"
   emission_value: "1000000"
   transfer_value: "10"
+  tx_fee: "0.01"
 
 test:
   # ======================================================================
@@ -57,35 +58,35 @@ test:
       When atom count reaches cell_threshold, auto-sharding should trigger.
     steps:
       # First batch
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_1
       - wait_for_datum: "{{tx_1}}"
         chain: zerochain
         timeout: 60
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_2
       - wait_for_datum: "{{tx_2}}"
         chain: zerochain
         timeout: 60
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_3
       - wait_for_datum: "{{tx_3}}"
         chain: zerochain
         timeout: 60
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_4
       - wait_for_datum: "{{tx_4}}"
         chain: zerochain
         timeout: 60
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: tx_5
       - wait_for_datum: "{{tx_5}}"
@@ -118,7 +119,7 @@ test:
         contains: "NET_STATE_ONLINE"
 
       # Create one more TX to verify consensus is healthy
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -addr {{bob_addr}} -w cc_shard_alice"
+      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
         save_hash: post_load_tx
 
