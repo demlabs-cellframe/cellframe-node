@@ -247,28 +247,6 @@ if [ -f "$PROJECT_ROOT/CMakeLists.txt" ] && grep -q "cellframe-node" "$PROJECT_R
         success "Package created: $(basename "$DEB_PACKAGE")"
         cd "$PROJECT_ROOT"
     fi
-    
-    # Update stage-env.cfg to use local package
-    if [ -n "$DEB_PACKAGE" ] && [ -f "$STAGE_ENV_CONFIG" ]; then
-        info "Updating stage-env.cfg with local package path..."
-        python3 -c "
-import configparser
-config = configparser.ConfigParser()
-config.read('$STAGE_ENV_CONFIG')
-
-if not config.has_section('node_source'):
-    config.add_section('node_source')
-
-config.set('node_source', 'type', 'local')
-config.set('node_source', 'local_path', '$DEB_PACKAGE')
-
-with open('$STAGE_ENV_CONFIG', 'w') as f:
-    config.write(f)
-" || {
-            warning "Failed to update stage-env.cfg automatically"
-        }
-        success "stage-env.cfg updated to use local package"
-    fi
 else
     info "Not in cellframe-node repository - using configured node source"
 fi
