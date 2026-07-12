@@ -27,7 +27,8 @@ static_genesis_block={{ static_genesis_block | default('', true) }}
 
 [chipchain]
 consensus_debug={{ consensus_debug | default('true', true) }}
-min_validators_count={{ min_validators_count | default(3, true) }}
+min_validators_count={{ mainchain_min_validators_count | default(min_validators_count | default(3, true), true) }}
+bootstrap_min_validators_count={{ bootstrap_min_validators_count | default(1, true) }}
 {% if mainchain_validators_addrs and mainchain_validators_addrs != '[]' -%}
 validators_addrs={{ mainchain_validators_addrs }}
 {% elif validators_addrs and validators_addrs != '[]' -%}
@@ -35,9 +36,17 @@ validators_addrs={{ validators_addrs }}
 {% endif -%}
 poa_mode={{ poa_mode | default('true', true) }}
 auth_certs_prefix={{ network_name | default('stagenet') }}.master
+{% if master_count is defined %}
+auth_certs_count={{ master_count }}
+{% endif %}
 {% if fee_addr -%}
 fee_addr={{ fee_addr }}
 {% endif -%}
+{% if blocks_sign_cert %}
+blocks-sign-cert={{ blocks_sign_cert }}
+{% elif events_sign_cert %}
+blocks-sign-cert={{ events_sign_cert }}
+{% endif %}
 new_round_delay={{ new_round_delay | default(15, true) }}
 round_start_sync_timeout={{ round_start_sync_timeout | default(5, true) }}
 round_attempts_max={{ round_attempts_max | default(3, true) }}

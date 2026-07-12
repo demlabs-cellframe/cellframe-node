@@ -22,6 +22,8 @@ includes:
   - common/defaults.yml
   - common/create_test_cert.yml
 
+restore_snapshot: clean_state
+
 scenarios:
   - 001_chipchain_consensus.yml
   - 002_anonymous_transactions.yml

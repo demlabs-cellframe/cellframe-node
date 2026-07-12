@@ -17,12 +17,15 @@ includes:
 
 variables:
   token_name: CC_ATTACK
-  total_supply: "100000000"
-  emission_value: "1000000"
-  transfer_value: "100"
-  transfer_value_small: "50"
+  total_supply: "100000000.0"
+  emission_value: "1000000.0"
+  transfer_value: "100.0"
+  transfer_value_small: "50.0"
   anon_ring_size: "10"
-  tx_fee: "0.01"
+  # Zero-fee: from_emission of a non-native token cannot pay a TCELL fee
+  # (ledger: "Token tickers IN and OUT mismatch"). Masters accept zero-fee
+  # until a validator fee order exists.
+  tx_fee: "0"
 
 test:
   # ======================================================================
@@ -60,7 +63,7 @@ test:
 
       - wait_for_datum: "{{token_decl_hash}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 180
 
       - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
         expect: success
@@ -68,7 +71,131 @@ test:
 
       - wait_for_datum: "{{emit_hash}}"
         chain: zerochain
+        timeout_total: 180
+
+      - wait: global_db_sync
         timeout: 120
+
+      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
+        expect: success
+        save_hash: bootstrap_tx_hash
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{bootstrap_tx_hash}}"
+        chain: main
+        node: "{{first_root}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      - wait: global_db_sync
+        timeout: 120
+
+      - cli: "wallet info -w cc_atk_alice"
+        expect: success
+        contains: "{{token_name}}"
+
+      # Fund ring wallets via anonymous transfers (standard tx cannot sign with sig_chipmunk_ring)
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+        node: "{{first_root}}"
+        timeout: 300
+        expect: success
+        save_hash: fund_bob_tx
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{fund_bob_tx}}"
+        chain: main
+        node: "{{first_root}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{carol_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+        node: "{{first_root}}"
+        timeout: 300
+        expect: success
+        save_hash: fund_carol_tx
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{fund_carol_tx}}"
+        chain: main
+        node: "{{first_root}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      - wait: global_db_sync
+        timeout: 120
+
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{dave_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+        node: "{{first_root}}"
+        timeout: 300
+        expect: success
+        save_hash: fund_dave_tx
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{fund_dave_tx}}"
+        chain: main
+        node: "{{first_root}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
 
   # ======================================================================
   # Group 3: Timing analysis — rapid anonymous TX submission
@@ -81,27 +208,55 @@ test:
       Pedersen commitment. Timing correlation should not be possible
       because ring signatures mix with validator public keys.
     steps:
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: timing_tx_1
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{carol_addr}} -from_wallet cc_atk_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{carol_addr}} -from_wallet cc_atk_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: timing_tx_2
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{dave_addr}} -from_wallet cc_atk_carol -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{dave_addr}} -from_wallet cc_atk_carol -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: timing_tx_3
 
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
       - wait_for_datum: "{{timing_tx_1}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
       - wait_for_datum: "{{timing_tx_2}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
       - wait_for_datum: "{{timing_tx_3}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
 
   # ======================================================================
   # Group 4: Verify key image uniqueness
@@ -135,20 +290,57 @@ test:
       blinding factor. This prevents amount correlation attacks.
     steps:
       # Two TXs from same wallet, same amount — different commitments
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value_small}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value_small}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: commit_tx_1
 
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value_small}} -to_addr {{carol_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{commit_tx_1}}"
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value_small}} -to_addr {{carol_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: commit_tx_2
 
-      - wait_for_datum: "{{commit_tx_1}}"
-        chain: zerochain
-        timeout: 120
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
       - wait_for_datum: "{{commit_tx_2}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
 
       # Both TXs should be valid with different commitments
       - cli: "tx get -hash {{commit_tx_1}}"
@@ -167,14 +359,32 @@ test:
       Attempt to verify TX integrity after chain processing — if a double-spend
       were possible, the ledger would show inconsistencies.
     steps:
-      # Normal TX from Alice — should succeed
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_dave -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      # Normal TX from Dave — should succeed
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_dave -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: doublespend_tx
 
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
       - wait_for_datum: "{{doublespend_tx}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
 
       - cli: "tx get -hash {{doublespend_tx}}"
         expect: success
@@ -191,13 +401,31 @@ test:
       correctly. Each TX creates a new anonymous output that can be spent
       by the recipient.
     steps:
-      - cli: "tx_create -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: chain_tx_1
 
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
       - wait_for_datum: "{{chain_tx_1}}"
-        chain: zerochain
-        timeout: 120
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
 
       - cli: "tx get -hash {{chain_tx_1}}"
         expect: success
@@ -254,8 +482,18 @@ test:
 
       - cli: "block last -net {{network_name}} -chain zerochain"
         expect: success
-        contains: "sign"
+        save: zc_last_block_hash
+        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+
+      - cli: "block dump -net {{network_name}} -chain zerochain -hash {{zc_last_block_hash}}"
+        expect: success
+        contains: "sig_dil"
 
       - cli: "block last -net {{network_name}} -chain main"
         expect: success
-        contains: "sign"
+        save: main_last_block_hash
+        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+
+      - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}}"
+        expect: success
+        contains: "sig_dil"

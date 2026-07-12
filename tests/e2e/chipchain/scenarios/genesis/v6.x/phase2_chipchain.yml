@@ -12,7 +12,6 @@ setup:
   # NOTE: When running as part of genesis flow (via manager.py), 
   # containers are already running from phase1.
   
-  # Build active nodes list (root + master)
   - set: _active_nodes
     value: "root_nodes + master_nodes"
     eval: true
@@ -21,24 +20,45 @@ setup:
     nodes: "{{_active_nodes}}"
     timeout: 120
 
-  # Enable seed_mode on active nodes via CLI
-  - group: Enable seed_mode on active nodes
+  # ONLY seed main — zerochain already has static_genesis_block.
+  # Re-enabling seed on zerochain accepts a NEW genesis and wipes token/emission.
+  # All main validators need seed ON or they REJECT genesis candidates.
+  - group: Enable seed_mode on main chain only
     steps:
       - for: _active_node
         in: "{{_active_nodes}}"
         steps:
           - cli: "chain seed -net {{network_name}} -chain main on"
             node: "{{_active_node}}"
-          - cli: "chain seed -net {{network_name}} -chain zerochain on"
-            node: "{{_active_node}}"
       
-      - print: "seed_mode enabled on active nodes via CLI"
+      - print: "seed_mode enabled on main chain only (zerochain left sealed)"
+
+  # Seed main with full quorum from the first block (same as zerochain).
+  - config: "{{network_name}}/main"
+    nodes: "{{_active_nodes}}"
+    set:
+      min_validators_count: "2"
+      bootstrap_min_validators_count: "2"
+
+  - docker_op: restart
+    services: "{{_active_nodes}}"
+
+  - wait_network: online
+    nodes: "{{_active_nodes}}"
+    timeout: 180
+
+  - group: Re-enable seed_mode on main after config restart
+    steps:
+      - for: _active_node
+        in: "{{_active_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain main on"
+            node: "{{_active_node}}"
 
   - wait: global_db_sync
     node: "{{first_root}}"
     timeout: 300
   
-  # Get fee_addr from first root wallet
   - cli: "wallet info -w {{network_name}}_root_0"
     node: "{{first_root}}"
     save_wallet: fee_addr
@@ -55,11 +75,11 @@ test:
         node: "{{first_root}}"
         contains: "{{native_ticker}}"
       
-      - cli: "dag event list -chain zerochain"
+      - cli: "block list -chain zerochain"
         node: "{{first_root}}"
-        save_to: _dag_events_output
+        save_to: _zerochain_blocks_output
       
-      - print: "Root node zerochain events: {{_dag_events_output}}"
+      - print: "Root node zerochain blocks: {{_zerochain_blocks_output}}"
   
   - group: Wait for master nodes to sync chain data
     steps:
@@ -74,12 +94,28 @@ test:
         nodes: "{{_active_nodes}}"
         timeout: 300
 
-      - cli: "dag event list -chain zerochain"
+      # Chain sync can take multiple peer retries (empty full/master peers reply
+      # SYNCED at height 0). Wait until zerochain atoms actually arrive.
+      - wait: cli
         node: "{{first_master}}"
-        save_to: _master_dag_events
+        cmd: "block list -chain zerochain -net {{network_name}}"
+        not_contains: "have blocks: 0"
+        timeout: 300
+        interval: 5
+
+      - cli: "block list -chain zerochain"
+        node: "{{first_master}}"
+        save_to: _master_zerochain_blocks
       
-      - print: "Master node zerochain events: {{_master_dag_events}}"
+      - print: "Master node zerochain blocks: {{_master_zerochain_blocks}}"
       
+      - wait: cli
+        node: "{{first_master}}"
+        cmd: "ledger list coins -net {{network_name}}"
+        contains: "{{native_ticker}}"
+        timeout: 180
+        interval: 5
+
       - cli: "ledger list coins"
         node: "{{first_master}}"
         save_to: _master_ledger_coins
@@ -135,7 +171,6 @@ test:
       
       - print: "Master mempool: {{_master_mempool_status}}"
       
-      # Wait for ChipChain consensus to create genesis block
       - wait: block_created
         node: "{{first_master}}"
         chain: "main"
@@ -148,30 +183,33 @@ test:
       
       - print: "Master blocks status: {{_master_blocks_status}}"
       
+      - wait_for_datum: "{{mainchain_genesis_tx}}"
+        node: "{{first_master}}"
+        chain: main
+        timeout_total: 300
   
-  - cli: "block list -chain main"
+  # Newest-first by default — pin the oldest (genesis) block for static_genesis_block.
+  - cli: "block list -chain main -head -limit 1"
     node: "{{first_master}}"
     save_hash: genesis_block_hash
   
-  # Configure static genesis block BEFORE restart
   - config: "{{network_name}}/main"
     nodes: "{{_active_nodes}}"
     set:
       static_genesis_block: "{{genesis_block_hash}}"
       is_static_genesis_block: "true"
+      min_validators_count: "2"
+      bootstrap_min_validators_count: "2"
   
-  # Disable seed_mode on all active nodes via CLI
-  - group: Disable seed_mode on active nodes
+  - group: Disable seed_mode on main chain
     steps:
       - for: _active_node
         in: "{{_active_nodes}}"
         steps:
           - cli: "chain seed -net {{network_name}} -chain main off"
             node: "{{_active_node}}"
-          - cli: "chain seed -net {{network_name}} -chain zerochain off"
-            node: "{{_active_node}}"
       
-      - print: "seed_mode disabled on active nodes via CLI"
+      - print: "seed_mode disabled on main chain"
 
   - docker_op: restart
     services: "{{all_nodes}}"
@@ -184,7 +222,6 @@ test:
     node: "{{first_root}}"
     timeout: 300
   
-  # Configure fee_addr in main.cfg 
   - config: "{{network_name}}/main"
     nodes: "{{_active_nodes}}"
     set:
@@ -197,6 +234,7 @@ check:
   
   - cli: "block list -chain main"
     node: "{{first_root}}"
+    not_contains: "have blocks: 0"
     contains: "have blocks:"
   
   - cli: "token list"

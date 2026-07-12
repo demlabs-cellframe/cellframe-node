@@ -1,5 +1,5 @@
 name: PHASE 1 - Zerochain Genesis (ChipChain)
-description: Initialize ROOT nodes, create token and emission — ChipChain consensus
+description: Initialize ROOT nodes, create token and emission — ChipChain consensus (blocks, not DAG)
 
 includes:
   - common/set_net_default.yml
@@ -9,7 +9,7 @@ network:
   name: "{{network_name}}"
 
 setup:
-  # Start all nodes dynamically based on topology
+  # Start ALL nodes simultaneously.
   - docker_op: start
     services: "{{all_nodes}}"
     detach: true
@@ -27,7 +27,7 @@ setup:
             value: "/opt/cellframe-node/var/lib/ca/{{network_name}}.root.pvt.{{_cert_idx}}.dcert"
           - set: _check_node
             value: "node-{{node_idx}}"
-          - bash: "test -f {{_cert_path}} && echo 'ROOT cert found: {{_cert_path}}'"
+          - bash: "test -f {{_cert_path}} && echo '✓ ROOT cert found: {{_cert_path}}'"
             node: "{{_check_node}}"
   
   # Verify MASTER node certificates exist
@@ -43,7 +43,7 @@ setup:
             value: "/opt/cellframe-node/var/lib/ca/{{network_name}}.master.pvt.{{_cert_idx}}.dcert"
           - set: _check_node
             value: "node-{{node_idx}}"
-          - bash: "test -f {{_cert_path}} && echo 'MASTER cert found: {{_cert_path}}'"
+          - bash: "test -f {{_cert_path}} && echo '✓ MASTER cert found: {{_cert_path}}'"
             node: "{{_check_node}}"
   
   # Copy all root private certs to first root node for multi-signature
@@ -63,7 +63,8 @@ setup:
             src: "node-{{_src_node_id}}:{{_cert_path}}"
             dst: "node-1:{{_cert_path}}"
   
-  # Configure events_sign_cert for each ROOT node
+  # Configure blocks-sign-cert for each ROOT (ChipChain reads it from network [chipchain]).
+  # All zerochain validators must be able to COMMIT_SIGN during seed genesis.
   - for: node_idx
     in: "{{root_indices}}"
     steps:
@@ -77,79 +78,459 @@ setup:
       - config: "{{network_name}}"
         nodes: ["{{_current_node}}"]
         set:
+          blocks_sign_cert: "{{_current_cert}}"
           events_sign_cert: "{{_current_cert}}"
 
-  # Wait for nodes to come online
-  - wait_network: online
-    nodes: "{{all_nodes}}"
-    timeout: 120
+  # Masters sign mainchain ChipChain blocks — without this they stay silent in START_SYNC.
+  - for: node_idx
+    in: "{{master_indices}}"
+    steps:
+      - set: _cert_idx
+        value: "node_idx - root_count - 1"
+        eval: true
+      - set: _current_node
+        value: "node-{{node_idx}}"
+      - set: _current_cert
+        value: "{{network_name}}.master.pvt.{{_cert_idx}}"
+      - config: "{{network_name}}"
+        nodes: ["{{_current_node}}"]
+        set:
+          blocks_sign_cert: "{{_current_cert}}"
+          events_sign_cert: "{{_current_cert}}"
+  
+  - docker_op: restart
+    services: "{{all_nodes}}"
+  
+  - wait: 10s
 
-  # Wait for global DB sync
+test:
+  # Get ALL node addresses dynamically (works without ONLINE state, AFTER signing cert restart)
+  - group: Get node addresses
+    steps:
+      - for: node_idx
+        in: "{{root_indices}}"
+        steps:
+          - set: _addr_idx
+            value: "node_idx - 1"
+            eval: true
+          - set: _node_name
+            value: "node-{{node_idx}}"
+          - set: _addr_var
+            value: "root_addr_{{_addr_idx}}"
+          - cli: "node dump"
+            node: "{{_node_name}}"
+            save_node: "{{_addr_var}}"
+      
+      - for: node_idx
+        in: "{{master_indices}}"
+        steps:
+          - set: _addr_idx
+            value: "node_idx - root_count - 1"
+            eval: true
+          - set: _node_name
+            value: "node-{{node_idx}}"
+          - set: _addr_var
+            value: "master_addr_{{_addr_idx}}"
+          - cli: "node dump"
+            node: "{{_node_name}}"
+            save_node: "{{_addr_var}}"
+      
+      - for: node_idx
+        in: "{{full_indices}}"
+        steps:
+          - set: _addr_idx
+            value: "node_idx - root_count - master_count - 1"
+            eval: true
+          - set: _node_name
+            value: "node-{{node_idx}}"
+          - set: _addr_var
+            value: "full_addr_{{_addr_idx}}"
+          - cli: "node dump"
+            node: "{{_node_name}}"
+            save_node: "{{_addr_var}}"
+
+  - set: validators_addrs_str
+    value: "join_vars_bracket('master_addr_', master_count)"
+    eval: true
+  
+  - set: authorized_nodes_str
+    value: "join_vars_bracket('root_addr_', root_count)"
+    eval: true
+
+  - set: zerochain_validators_str
+    value: "join_vars_bracket('root_addr_', root_count)"
+    eval: true
+  
+  - config: "{{network_name}}/main"
+    nodes: "{{all_nodes}}"
+    set:
+      validators_addrs: "{{validators_addrs_str}}"
+  
+  - config: "{{network_name}}/zerochain"
+    nodes: "{{all_nodes}}"
+    set:
+      authorized_nodes_addrs: "{{authorized_nodes_str}}"
+      validators_addrs: "{{zerochain_validators_str}}"
+      # Full 3/5 consensus from the first sealed block — no single-signer bootstrap.
+      # Token/emission datums stay single-cert (CF20 auth policy); that is separate
+      # from chipchain block COMMIT_SIGN quorum.
+      min_validators_count: "3"
+      bootstrap_min_validators_count: "3"
+      auth_certs_count: "{{root_count}}"
+      consensus_section: chipchain
+
+  - set: _active_nodes
+    value: "root_nodes + master_nodes"
+    eval: true
+
+  - docker_op: restart
+    services: "{{_active_nodes}}"
+  
+  - wait: 15s
+
+  - group: Add all nodes to nodelist
+    steps:
+      - for: _target_node_idx
+        in: "{{root_indices}}"
+        steps:
+          - set: _target_node
+            value: "'node-' + str(_target_node_idx)"
+            eval: true
+          - print: "Adding node records to {{_target_node}}"
+          
+          - for: node_idx
+            in: "{{root_indices}}"
+            steps:
+              - set: _addr_idx
+                value: "node_idx - 1"
+                eval: true
+              - set: _add_addr
+                value: "get_var('root_addr_' + str(_addr_idx))"
+                eval: true
+              - set: _add_host
+                value: "get_var_dict('node_ip').get('node' + str(node_idx), '')"
+                eval: true
+              - cli: "node add -addr {{_add_addr}} -host {{_add_host}}:{{node_port}}"
+                node: "{{_target_node}}"
+                contains: "successfully"
+          
+          - for: node_idx
+            in: "{{master_indices}}"
+            steps:
+              - set: _addr_idx
+                value: "node_idx - root_count - 1"
+                eval: true
+              - set: _add_addr
+                value: "get_var('master_addr_' + str(_addr_idx))"
+                eval: true
+              - set: _add_host
+                value: "get_var_dict('node_ip').get('node' + str(node_idx), '')"
+                eval: true
+              - cli: "node add -addr {{_add_addr}} -host {{_add_host}}:{{node_port}}"
+                node: "{{_target_node}}"
+                contains: "successfully"
+          
+          - for: node_idx
+            in: "{{full_indices}}"
+            steps:
+              - set: _addr_idx
+                value: "node_idx - root_count - master_count - 1"
+                eval: true
+              - set: _add_addr
+                value: "get_var('full_addr_' + str(_addr_idx))"
+                eval: true
+              - set: _add_host
+                value: "get_var_dict('node_ip').get('node' + str(node_idx), '')"
+                eval: true
+              - cli: "node add -addr {{_add_addr}} -host {{_add_host}}:{{node_port}}"
+                node: "{{_target_node}}"
+                contains: "successfully"
+  
+  - for: _verify_node_idx
+    in: "{{root_indices}}"
+    steps:
+      - set: _verify_node
+        value: "'node-' + str(_verify_node_idx)"
+        eval: true
+      - cli: "node list"
+        node: "{{_verify_node}}"
+        not_contains: "No records"
+        save_to: "_node_list_{{_verify_node_idx}}"
+      - print: "Node list on {{_verify_node}} verified"
+
+  - docker_op: restart
+    services: "{{_active_nodes}}"
+  
+  - wait_network: online
+    nodes: "{{_active_nodes}}"
+    timeout: 300
+  
+  # Every zerochain validator must have seed ON — otherwise they REJECT genesis
+  # candidates ("seed mode not enabled") and rounds never finalize.
+  - group: Enable seed_mode on seed nodes
+    steps:
+      - for: _seed_node
+        in: "{{seed_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain zerochain on"
+            node: "{{_seed_node}}"
+          - cli: "chain seed -net {{network_name}} -chain main on"
+            node: "{{_seed_node}}"
+  
+  - print: "seed_mode enabled via CLI on all seed nodes (required for genesis accept)"
+
+  - group: Create wallets
+    defaults:
+      cli:
+        sign: "sig_dil"
+    steps:
+      - for: node_idx
+        in: "{{root_indices}}"
+        steps:
+          - set: _wallet_idx
+            value: "node_idx - 1"
+            eval: true
+          - set: _wallet_node
+            value: "node-{{node_idx}}"
+          - set: _wallet_name
+            value: "{{network_name}}_root_{{_wallet_idx}}"
+          - cli: "wallet new -w {{_wallet_name}}"
+            node: "{{_wallet_node}}"
+      
+      - for: node_idx
+        in: "{{master_indices}}"
+        steps:
+          - set: _wallet_idx
+            value: "node_idx - root_count - 1"
+            eval: true
+          - set: _wallet_node
+            value: "node-{{node_idx}}"
+          - set: _wallet_name
+            value: "{{network_name}}_master_{{_wallet_idx}}"
+          - cli: "wallet new -w {{_wallet_name}}"
+            node: "{{_wallet_node}}"
+      
+      - for: node_idx
+        in: "{{full_indices}}"
+        steps:
+          - set: _wallet_idx
+            value: "node_idx - root_count - master_count - 1"
+            eval: true
+          - set: _wallet_node
+            value: "node-{{node_idx}}"
+          - set: _wallet_name
+            value: "{{network_name}}_full_{{_wallet_idx}}"
+          - cli: "wallet new -w {{_wallet_name}}"
+            node: "{{_wallet_node}}"
+  
+  - cli: "wallet info -w {{network_name}}_root_0"
+    node: "{{first_root}}"
+    save_wallet: fee_addr
+
   - wait: global_db_sync
     nodes: "{{root_nodes}}"
     timeout: 120
+ 
+  - cli: "net get status"
+    node: "{{first_root}}"
+    save_to: _net_status_before_genesis
+  - print: "Network status before genesis: {{_net_status_before_genesis}}"
+  
+  - set: root_certs_str
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
 
-test:
-  - group: Verify network is operational
+  - group: Genesis Block - Token Declaration (ChipChain)
+    defaults:
+      node: "{{first_root}}"
+      cli:
+        chain: "zerochain"
     steps:
-      - cli: "net get status"
-        node: "{{first_root}}"
-        contains: "NET_STATE_ONLINE"
-      
-      - cli: "chain list"
-        node: "{{first_root}}"
-        contains: "zerochain"
+      # CF20 token auth can be single-cert; chipchain seals the block with
+      # min_validators_count COMMIT_SIGNs (3), not with token datum signs.
+      - cli: "token_decl -token {{native_ticker}} -total_supply 0 -decimals 18 -signs_emission 1 -signs_total 1 -type CF20 -certs {{network_name}}.root.pvt.0"
+        save_hash: token_hash
+        save_to: _token_decl_result
+      - print: "Token decl result: {{_token_decl_result}}"
 
-  - group: Create wallet and token
-    steps:
-      - cli: "wallet new -w {{network_name}}_root_0 -sign_type sig_dil"
-        node: "{{first_root}}"
+      - cli: "mempool list"
+        save_to: _mempool_before_proc
+      - print: "Mempool before proc_all: {{_mempool_before_proc}}"
 
-      - cli: "wallet info -w {{network_name}}_root_0"
-        node: "{{first_root}}"
-        save_wallet: root_wallet_addr
+      - cli: "mempool proc_all"
+        save_to: _mempool_proc_result
+      - print: "Mempool proc_all result: {{_mempool_proc_result}}"
 
-      - cli: "token_decl -token {{native_ticker}} -total_supply 100000000000000000000000000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs {{network_name}}.root.pvt.0"
-        node: "{{first_root}}"
-        save_hash: token_decl_hash
-
-      - wait_for_datum: "{{token_decl_hash}}"
+      - wait_for_datum: "{{token_hash}}"
         node: "{{first_root}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 300
 
-      - cli: "token info -name {{native_ticker}}"
-        node: "{{first_root}}"
-        contains: "{{native_ticker}}"
+      - print: "✓ Token declaration included in zerochain block"
 
-  - group: Emit tokens
-    steps:
-      - cli: "token_emit -token {{native_ticker}} -emission_value 100000000000000000000000000000 -addr {{root_wallet_addr}} -certs {{network_name}}.root.pvt.0"
-        node: "{{first_root}}"
-        save_hash: emission_hash
+      - cli: "token list"
+        contains: "token_name: TCELL"
+      
+      - cli: "token_emit -no_base_tx -emission_value 10.0e+54 -addr {{fee_addr}} -certs {{network_name}}.root.pvt.0 -chain zerochain -token {{native_ticker}}"
+        save_hash: emission_datum_hash
+        save_to: _emission_result
+      - print: "Emission result: {{_emission_result}}"
+      
+      - set: emission_hash
+        value: "emission_datum_hash"
+        eval: true
 
+      - cli: "mempool list"
+        save_to: _mempool_before_emission_proc
+      - print: "Mempool before emission processing: {{_mempool_before_emission_proc}}"
+      
+      - cli: "mempool proc_all"
+        save_to: _emission_mempool_result
+      - print: "Emission mempool proc_all result: {{_emission_mempool_result}}"
+      
       - wait_for_datum: "{{emission_hash}}"
         node: "{{first_root}}"
         chain: zerochain
-        timeout: 120
+        timeout_total: 300
 
-      - cli: "wallet info -w {{network_name}}_root_0"
+      - print: "✓ Emission included in zerochain block"
+
+      # Token ticker alone is not enough — emission datum must be in a sealed block.
+      # `block find` prints containing block hashes (not the datum hash).
+      - cli: "block find -datum {{emission_hash}} -net {{network_name}} -chain zerochain"
+        contains: "blocks:"
+        not_contains: "total: 0"
+      - print: "✓ Emission present in zerochain block"
+      
+      - cli: "global_db flush"
+      
+      - cli: "block list -chain zerochain"
+        save_to: _zerochain_blocks
+        not_contains: "have blocks: 0"
+        contains: "have blocks:"
+      
+      - print: "Zerochain blocks after genesis: {{_zerochain_blocks}}"
+      
+      # CRITICAL: block list defaults to newest-first. static_genesis_block must be
+      # the FIRST (oldest / META_GENESIS) block — use -head -limit 1.
+      - cli: "block list -chain zerochain -head -limit 1"
         node: "{{first_root}}"
-        contains: "{{native_ticker}}"
+        save_hash: genesis_block_hash
+        save_to: _genesis_block_list
+      - print: "Genesis block hash (first/oldest): {{genesis_block_hash}}"
+      - print: "Genesis block list: {{_genesis_block_list}}"
 
-  - group: Sync to master nodes
+  # Propagate sealed blocks to ALL roots BEFORE restart.
+  # With min_validators=3 every sealed block already has a quorum of signs;
+  # still wait until emission is present on every root before pinning genesis.
+  - group: Sync zerochain genesis to all roots before restart
     steps:
-      - cli: "net go sync"
-        node: "{{first_root}}"
-
-      - wait: network_sync
-        nodes: "{{all_nodes}}"
-        timeout: 300
-
-      - wait: global_db_sync
-        nodes: "{{all_nodes}}"
-        timeout: 300
-
-      - cli: "ledger list coins"
-        node: "{{first_master}}"
+      - for: _sync_node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "net go sync"
+            node: "{{_sync_node}}"
+      - for: _sync_node
+        in: "{{root_nodes}}"
+        steps:
+          - wait: cli
+            cmd: "block list -chain zerochain"
+            node: "{{_sync_node}}"
+            not_contains: "have blocks: 0"
+            contains: "have blocks:"
+            timeout: 180
+            interval: 5
+          # Poll until emission is present — one-shot check races chain sync.
+          - wait: cli
+            cmd: "block find -datum {{emission_hash}} -net {{network_name}} -chain zerochain"
+            node: "{{_sync_node}}"
+            contains: "blocks:"
+            not_contains: "total: 0"
+            timeout: 180
+            interval: 5
+      - for: _sync_node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "global_db flush"
+            node: "{{_sync_node}}"
+          - bash: "sync"
+            node: "{{_sync_node}}"
+  
+  - config: "{{network_name}}/zerochain"
+    nodes: "{{_active_nodes}}"
+    set:
+      static_genesis_block: "{{genesis_block_hash}}"
+      is_static_genesis_block: "true"
+      min_validators_count: "3"
+      bootstrap_min_validators_count: "3"
+  
+  - group: Disable seed_mode on seed nodes
+    steps:
+      - for: _seed_node
+        in: "{{seed_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain zerochain off"
+            node: "{{_seed_node}}"
+          - cli: "chain seed -net {{network_name}} -chain main off"
+            node: "{{_seed_node}}"
+  
+  - group: Create stake orders for validators
+    steps:
+      - for: node_idx
+        in: "{{master_indices}}"
+        steps:
+          - set: _cert_idx
+            value: "node_idx - root_count - 1"
+            eval: true
+          - set: _stake_node
+            value: "node-{{node_idx}}"
+          - set: _stake_cert
+            value: "{{network_name}}.master.pvt.{{_cert_idx}}"
+          - cli: "srv_stake order create -net {{network_name}} -value 0.05e+18 -cert {{_stake_cert}}"
+            node: "{{_stake_node}}"
+            save: stake_order_result
+  
+  - docker_op: restart
+    services: "{{_active_nodes}}"
+  
+  - wait_network: online
+    nodes: "{{_active_nodes}}"
+    timeout: 120
+  
+  - wait: global_db_sync
+    node: "{{first_root}}"
+    timeout: 120
+  
+  - group: Verify Genesis State After Restart
+    defaults:
+      node: "{{first_root}}"
+      cli:
+        chain: "zerochain"
+    steps:
+      - cli: "block list -chain zerochain"
+        save_to: _blocks_after_restart
+        not_contains: "have blocks: 0"
+        contains: "have blocks:"
+      - print: "Blocks after restart: {{_blocks_after_restart}}"
+      
+      - cli: "ledger list coins -net {{network_name}}"
         contains: "{{native_ticker}}"
+      - cli: "block find -datum {{emission_hash}} -net {{network_name}} -chain zerochain"
+        contains: "blocks:"
+        not_contains: "total: 0"
+      - print: "✓ Ledger coins and emission verified"
+
+  - for: _verify_node
+    in: "{{root_nodes}}"
+    steps:
+      - cli: "block list -chain zerochain"
+        node: "{{_verify_node}}"
+        save_to: _final_blocks
+        not_contains: "have blocks: 0"
+        contains: "have blocks:"
+      - print: "Final verification - {{_verify_node}}: {{_final_blocks}}"
+
+  - config: "{{network_name}}/main"
+    nodes: "{{_active_nodes}}"
+    set:
+      fee_addr: "{{fee_addr}}"

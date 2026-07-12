@@ -13,11 +13,15 @@ permanent_nodes_hosts={{ permanent_nodes_hosts | default('[]', true) }}
 # NOTE: authorized_nodes_addrs is NOT read from this file!
 # It MUST be in zerochain.cfg [chain] section for node add command to work
 
-# ChipChain blocks signing certificate (for MASTER nodes only)
+# ChipChain blocks signing certificate
+# ROOT nodes: stagenet.root.pvt.N (zerochain validators)
+# MASTER nodes: stagenet.master.pvt.N (mainchain validators, also via cfg.d snippet)
 [chipchain]
 consensus_debug={{ consensus_debug | default('true', true) }}
 {% if blocks_sign_cert %}
 blocks-sign-cert={{ blocks_sign_cert }}
+{% elif events_sign_cert %}
+blocks-sign-cert={{ events_sign_cert }}
 {% endif %}
 {% if fee_addr %}
 fee_addr={{ fee_addr }}
@@ -27,3 +31,8 @@ collecting_level={{ collecting_level | default(10.0) }}
 use_chipmunk_aggregated={{ use_chipmunk_aggregated | default('false', true) }}
 # ChipChain-specific: auto-sharding (0 = disabled)
 cell_size_threshold={{ cell_size_threshold | default(0, true) }}
+
+[ledger]
+# sig_chipmunk_ring wallets use LRS key material; auto-detect also works
+type={{ ledger_type | default('anon', true) }}
+anon_algo={{ anon_algo | default('lrs', true) }}

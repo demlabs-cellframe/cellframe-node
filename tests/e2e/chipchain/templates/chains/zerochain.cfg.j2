@@ -25,11 +25,21 @@ static_genesis_block={{ static_genesis_block | default('', true) }}
 [chipchain]
 consensus_debug={{ consensus_debug | default('true', true) }}
 min_validators_count={{ min_validators_count | default(3, true) }}
-{% if validators_addrs -%}
+# Floor for verifying sealed seed blocks when min_validators_count is raised later
+bootstrap_min_validators_count={{ bootstrap_min_validators_count | default(min_validators_count | default(3, true), true) }}
+{% if auth_certs_count %}
+auth_certs_count={{ auth_certs_count }}
+{% endif %}
+{% if validators_addrs and validators_addrs != '[]' -%}
 validators_addrs={{ validators_addrs }}
 {% endif -%}
 poa_mode={{ poa_mode | default('true', true) }}
 auth_certs_prefix={{ network_name | default('stagenet') }}.root
+{% if blocks_sign_cert %}
+blocks-sign-cert={{ blocks_sign_cert }}
+{% elif events_sign_cert %}
+blocks-sign-cert={{ events_sign_cert }}
+{% endif %}
 {% if fee_addr -%}
 fee_addr={{ fee_addr }}
 {% endif -%}
