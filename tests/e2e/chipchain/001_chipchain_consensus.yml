@@ -18,10 +18,7 @@ variables:
   total_supply: "10000000.0"
   emission_value: "1000000.0"
   transfer_value: "100.0"
-  # Zero-fee: from_emission of a non-native token cannot pay a TCELL fee
-  # (ledger: "Token tickers IN and OUT mismatch"). Masters accept zero-fee
-  # until a validator fee order exists.
-  tx_fee: "0"
+  tx_fee: "1.0"
 
 test:
   # ======================================================================
@@ -104,7 +101,7 @@ test:
 
       - wait_for_datum: "{{bootstrap_tx_hash}}"
         chain: main
-        node: "{{first_root}}"
+        node: "{{first_master}}"
         timeout_total: 300
         timeout_mempool: 240
         timeout_verification: 180

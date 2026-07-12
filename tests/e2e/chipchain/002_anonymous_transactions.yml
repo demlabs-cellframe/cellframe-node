@@ -27,7 +27,7 @@ variables:
   # Zero-fee: from_emission of a non-native token cannot pay a TCELL fee
   # (ledger: "Token tickers IN and OUT mismatch"). Masters accept zero-fee
   # until a validator fee order exists.
-  tx_fee: "0"
+  tx_fee: "1.0"
 
 test:
   # ======================================================================

@@ -20,12 +20,13 @@ variables:
   total_supply: "100000000.0"
   emission_value: "1000000.0"
   transfer_value: "100.0"
+  fund_value: "101.0"
   transfer_value_small: "50.0"
   anon_ring_size: "10"
   # Zero-fee: from_emission of a non-native token cannot pay a TCELL fee
   # (ledger: "Token tickers IN and OUT mismatch"). Masters accept zero-fee
   # until a validator fee order exists.
-  tx_fee: "0"
+  tx_fee: "1.0"
 
 test:
   # ======================================================================
@@ -110,7 +111,7 @@ test:
         contains: "{{token_name}}"
 
       # Fund ring wallets via anonymous transfers (standard tx cannot sign with sig_chipmunk_ring)
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{fund_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         node: "{{first_root}}"
         timeout: 300
         expect: success
@@ -138,7 +139,7 @@ test:
         timeout_verification: 180
         timeout_in_blocks: 180
 
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{carol_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{fund_value}} -to_addr {{carol_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         node: "{{first_root}}"
         timeout: 300
         expect: success
@@ -169,7 +170,7 @@ test:
       - wait: global_db_sync
         timeout: 120
 
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{dave_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+      - cli: "tx_create -chain main -token {{token_name}} -value {{fund_value}} -to_addr {{dave_addr}} -from_wallet cc_atk_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         node: "{{first_root}}"
         timeout: 300
         expect: success
