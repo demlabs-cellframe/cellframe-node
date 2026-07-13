@@ -84,3 +84,6 @@ cmake-build-*
 .cursorrules
 .slc/
 slc
+/tests/stage-env.cfg
+.cursor/
+cache/

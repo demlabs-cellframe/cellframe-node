@@ -42,9 +42,11 @@ STAGE_ENV_WRAPPER="$SCRIPT_DIR/stage-env/stage-env"
 STAGE_ENV_CONFIG="$SCRIPT_DIR/stage-env.cfg"
 
 # Test directories
-STAGE_ENV_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/base"
+# NOTE: Base integration tests are in integration/scenarios/base (not 'base' directly)
+STAGE_ENV_BASE_TESTS="$SCRIPT_DIR/stage-env/tests/integration/scenarios/base"
 FUNCTIONAL_TESTS="$SCRIPT_DIR/functional"
-SCENARIOS_TESTS="$SCRIPT_DIR/scenarios"
+# NOTE: Genesis scenarios are in stage-env/scenarios/, not tests/scenarios/
+SCENARIOS_TESTS="$SCRIPT_DIR/stage-env/scenarios"
 
 # Build directories
 TEST_BUILD_DIR="$PROJECT_ROOT/test_build"
