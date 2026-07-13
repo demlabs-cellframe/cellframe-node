@@ -17,7 +17,7 @@ if MacOS == $HOST_OS
 endif
 
 config  Backbone     general     node-role   default     full
-config  KelVPN       general     node-role   default     full
+config  KelVPN       general     node-role   default     light
 config  raiden       general     node-role   default     full
 config  riemann      general     node-role   default     full
 config  mileena      general     node-role   default     full
