@@ -16,27 +16,3 @@
 [submodule "tests/stage-env"]
 	path = tests/stage-env
 	url = ../cellframe-stage-env.git
-[submodule "defi_security_audit/poc/kamino_withdrawal_cap_fork/lib/forge-std"]
-	path = defi_security_audit/poc/kamino_withdrawal_cap_fork/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "defi_security_audit/poc/kamino_withdrawal_cap_fork/lib/forge-poc-templates"]
-	path = defi_security_audit/poc/kamino_withdrawal_cap_fork/lib/forge-poc-templates
-	url = https://github.com/immunefi-team/forge-poc-templates
-[submodule "defi_security_audit/poc/boros_agent_expiry_fork/lib/forge-std"]
-	path = defi_security_audit/poc/boros_agent_expiry_fork/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "defi_security_audit/poc/boros_agent_expiry_fork/lib/forge-poc-templates"]
-	path = defi_security_audit/poc/boros_agent_expiry_fork/lib/forge-poc-templates
-	url = https://github.com/immunefi-team/forge-poc-templates
-[submodule "defi_security_audit/poc/renzo_od_slash_fork/lib/forge-std"]
-	path = defi_security_audit/poc/renzo_od_slash_fork/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "defi_security_audit/poc/renzo_od_slash_fork/lib/forge-poc-templates"]
-	path = defi_security_audit/poc/renzo_od_slash_fork/lib/forge-poc-templates
-	url = https://github.com/immunefi-team/forge-poc-templates
-[submodule "defi_security_audit/poc/benqi_reward_snipe_fork/lib/forge-std"]
-	path = defi_security_audit/poc/benqi_reward_snipe_fork/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "defi_security_audit/poc/gmx_sequencer_oracle_fork/lib/forge-std"]
-	path = defi_security_audit/poc/gmx_sequencer_oracle_fork/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
