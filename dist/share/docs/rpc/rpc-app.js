@@ -488,7 +488,7 @@
       <div class="api-shell">
         <nav class="dex-top-nav" aria-label="Page navigation">
           <a class="dex-nav-brand" href="/" aria-label="Cellframe">
-            <img src="/logo.svg" alt="Cellframe DEX" decoding="async" />
+            <img src="/logo.svg" alt="Cellframe" decoding="async" />
           </a>
           <span class="dex-nav-btn" style="cursor:default">Node RPC</span>
         </nav>
