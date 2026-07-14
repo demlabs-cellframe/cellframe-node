@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>stake_lock — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+</style>
+</head>
+<body>
+
+<h1>stake_lock</h1>
+
+<p>Stake lock service commands. Lock tokens for staking until a specified unlock date (<code>hold</code>), then reclaim them with <code>take</code>.</p>
+
+<p>Supported networks on public nodes (for example <code>rpc.cellframe.net</code>): <strong>Backbone</strong>, <strong>KelVPN</strong>.</p>
+
+<h2>JSON-RPC request</h2>
+
+<p>Method name: <code>stake_lock</code>. Send a POST request to the node CLI server
+(for example <code>http://rpc.cellframe.net/</code>). Two request shapes are supported
+(see <code>dap_json_rpc_params_create_from_subcmd_and_args</code>).</p>
+
+<h3>Version 1 — <code>params</code> string</h3>
+
+<pre>{
+  "method": "stake_lock",
+  "params": ["stake_lock;&lt;subcommand&gt;;...options..."],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Version 2 — <code>subcommand</code> and <code>arguments</code></h3>
+
+<p>Omit <code>params</code>. Provide <code>subcommand</code> (<code>"hold"</code> or
+<code>"take"</code>) and <code>arguments</code> as a JSON object. Each key maps to a CLI flag
+<code>-&lt;key&gt;</code> (keys are written without the leading dash).</p>
+
+<pre>{
+  "method": "stake_lock",
+  "subcommand": "hold",
+  "arguments": {
+    "net": "Backbone",
+    "w": "mywallet",
+    "time_staking": "271231",
+    "token": "CELL",
+    "value": "1000000000000000000",
+    "fee": "1000000000000000000"
+  },
+  "id": 1,
+  "version": 2
+}
+
+{
+  "method": "stake_lock",
+  "subcommand": "take",
+  "arguments": {
+    "net": "Backbone",
+    "w": "mywallet",
+    "tx": "0xABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789",
+    "fee": "1000000000000000000"
+  },
+  "id": 2,
+  "version": 2
+}</pre>
+
+<p>Optional keys: <code>chain</code>, <code>reinvest</code> (hold only), <code>H</code>
+(<code>hex</code> or <code>base58</code>). Amount alias: <code>value</code> or
+<code>coins</code> (hold).</p>
+
+<p><code>hold</code> and <code>take</code> are write operations — they require a wallet file on
+the node (<code>w</code>). On public nodes such as <code>rpc.cellframe.net</code> (no local
+wallets), requests reach parameter validation but fail at wallet open with
+<code>can't open wallet</code>. The v2 argument form is still accepted and validated the same
+way as v1 params (verified live: missing <code>value</code>/<code>coins</code> returns
+<code>requires parameter -coins</code>).</p>
+
+<h2>Params format (version 1)</h2>
+
+<p><code>params</code> is an array with a <strong>single string</strong>. Tokens are separated by semicolons (<code>;</code>), matching CLI argv. The string must start with <code>stake_lock</code>, then the subcommand and options.</p>
+
+<pre>stake_lock;hold;-net;Backbone;-w;mywallet;-time_staking;271231;-token;CELL;-value;1000000000000000000;-fee;1000000000000000000
+stake_lock;take;-net;Backbone;-w;mywallet;-tx;0xABCDEF...;-fee;1000000000000000000</pre>
+
+<p>Spaces are not used as separators — use semicolons between every token (command name, subcommand, flags, values).</p>
+
+<h2>Subcommands</h2>
+
+<table>
+<thead>
+<tr><th>Subcommand</th><th>Description</th><th>Access</th></tr>
+</thead>
+<tbody>
+<tr><td><code>hold</code></td><td>Create a stake-lock transaction and add it to the mempool.</td><td><strong>Write</strong> — requires a wallet file on the node (<code>-w</code>).</td></tr>
+<tr><td><code>take</code></td><td>Unlock and reclaim tokens from a prior <code>hold</code> transaction.</td><td><strong>Write</strong> — requires a wallet file on the node (<code>-w</code>) that owns the stake-lock tx.</td></tr>
+</tbody>
+</table>
+
+<p>Both subcommands sign transactions with the node-local wallet and submit datums to the mempool. The wallet must exist in the node&rsquo;s wallet directory and hold sufficient balance for the lock amount and fees.</p>
+
+<h2>hold</h2>
+
+<pre>stake_lock hold -net &lt;net_name&gt; -w &lt;wallet_name&gt; -time_staking &lt;YYMMDD&gt; -token &lt;ticker&gt; -value &lt;value&gt; -fee &lt;value&gt;
+    [-chain &lt;chain_name&gt;] [-reinvest &lt;percentage&gt;] [-H hex|base58]</pre>
+
+<p>Create a stake-lock transaction that locks tokens until the unlock date. On success the response <code>status</code> field contains the mempool datum hash — save it for <code>take</code>.</p>
+
+<h3>Parameters</h3>
+
+<table>
+<thead>
+<tr><th>Option</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>yes</td><td>Network name (e.g. <code>Backbone</code>, <code>KelVPN</code>).</td></tr>
+<tr><td><code>-w &lt;wallet_name&gt;</code></td><td>yes</td><td>Wallet file on the node used to sign the transaction.</td></tr>
+<tr><td><code>-time_staking &lt;YYMMDD&gt;</code></td><td>yes</td><td>Unlock date in simplified format. Example: <code>220610</code> = 10 June 2022 00:00. Must be 6 digits with valid month (01–12) and day (01–31), and must be in the future.</td></tr>
+<tr><td><code>-token &lt;ticker&gt;</code></td><td>yes</td><td>Token ticker to lock (max 8 characters).</td></tr>
+<tr><td><code>-value &lt;datoshi&gt;</code></td><td>yes</td><td>Amount to lock as a 256-bit integer in datoshi. Alias: <code>-coins</code>.</td></tr>
+<tr><td><code>-fee &lt;datoshi&gt;</code></td><td>yes</td><td>Validator fee in datoshi (256-bit integer, must be non-zero).</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td>no</td><td>Target chain; defaults to the network&rsquo;s default TX chain.</td></tr>
+<tr><td><code>-reinvest &lt;percentage&gt;</code></td><td>no</td><td>Reinvest percentage from 0 to 100.</td></tr>
+<tr><td><code>-H hex|base58</code></td><td>no</td><td>Hash output format for the created datum (default: <code>hex</code>).</td></tr>
+</tbody>
+</table>
+
+<p>Parameter validation order: <code>-net</code> → <code>-token</code> → <code>-value</code>/<code>-coins</code> → <code>-w</code> → <code>-fee</code> → <code>-time_staking</code> → wallet open and balance checks.</p>
+
+<h3>Example request (version 1)</h3>
+<pre>{
+  "method": "stake_lock",
+  "params": ["stake_lock;hold;-net;Backbone;-w;mywallet;-time_staking;271231;-token;CELL;-value;1000000000000000000;-fee;1000000000000000000"],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Example request (version 2)</h3>
+
+<pre>{
+  "method": "stake_lock",
+  "subcommand": "hold",
+  "arguments": {
+    "net": "Backbone",
+    "w": "mywallet",
+    "time_staking": "271231",
+    "token": "CELL",
+    "value": "1000000000000000000",
+    "fee": "1000000000000000000"
+  },
+  "id": 1,
+  "version": 2
+}</pre>
+
+<p>With optional reinvest and chain (version 1):</p>
+<pre>{
+  "method": "stake_lock",
+  "params": ["stake_lock;hold;-net;KelVPN;-w;mywallet;-time_staking;280101;-token;CELL;-value;5000000000000000000;-fee;500000000000000000;-chain;zerochain;-reinvest;50"],
+  "id": 2,
+  "version": 1
+}</pre>
+
+<p>Version 2 equivalent:</p>
+
+<pre>{
+  "method": "stake_lock",
+  "subcommand": "hold",
+  "arguments": {
+    "net": "KelVPN",
+    "w": "mywallet",
+    "time_staking": "280101",
+    "token": "CELL",
+    "value": "5000000000000000000",
+    "fee": "500000000000000000",
+    "chain": "zerochain",
+    "reinvest": "50"
+  },
+  "id": 2,
+  "version": 2
+}</pre>
+
+<h2>take</h2>
+
+<pre>stake_lock take -net &lt;net_name&gt; -w &lt;wallet_name&gt; -tx &lt;transaction_hash&gt; -fee &lt;value&gt;
+    [-chain &lt;chain_name&gt;] [-H hex|base58]</pre>
+
+<p>Reclaim locked tokens from a stake-lock transaction created by <code>hold</code>. The wallet must own the original transaction (public key must match the stake-lock sign item). The stake-lock output must not already be spent. If the lock has a time-based flag, blockchain time must be past <code>time_unlock</code>.</p>
+
+<h3>Parameters</h3>
+
+<table>
+<thead>
+<tr><th>Option</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>yes</td><td>Network name (e.g. <code>Backbone</code>, <code>KelVPN</code>).</td></tr>
+<tr><td><code>-w &lt;wallet_name&gt;</code></td><td>yes</td><td>Wallet file on the node; must own the stake-lock transaction.</td></tr>
+<tr><td><code>-tx &lt;hash&gt;</code></td><td>yes</td><td>Hash of the original stake-lock transaction from <code>hold</code>. Use <code>0x</code> prefix for hex (64 hex digits) or base58.</td></tr>
+<tr><td><code>-fee &lt;datoshi&gt;</code></td><td>yes</td><td>Validator fee in datoshi (256-bit integer, must be non-zero).</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td>no</td><td>Target chain; defaults to the network&rsquo;s default TX chain.</td></tr>
+<tr><td><code>-H hex|base58</code></td><td>no</td><td>Hash output format for the take datum (default: <code>hex</code>).</td></tr>
+</tbody>
+</table>
+
+<p>Parameter validation order: <code>-net</code> → <code>-tx</code> (hash parse and stake-lock lookup) → <code>-w</code> → <code>-fee</code> → wallet open and owner-key checks. Missing <code>-w</code> or <code>-fee</code> are reported only after a valid stake-lock transaction is found.</p>
+
+<h3>Example request (version 1)</h3>
+
+<pre>{
+  "method": "stake_lock",
+  "params": ["stake_lock;take;-net;Backbone;-w;mywallet;-tx;0xABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789;-fee;1000000000000000000"],
+  "id": 3,
+  "version": 1
+}</pre>
+
+<h3>Example request (version 2)</h3>
+
+<pre>{
+  "method": "stake_lock",
+  "subcommand": "take",
+  "arguments": {
+    "net": "Backbone",
+    "w": "mywallet",
+    "tx": "0xABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789",
+    "fee": "1000000000000000000"
+  },
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h2>Response</h2>
+
+<p><code>stake_lock</code> is a JSON-response command. The server returns <code>type: 2</code> (<code>TYPE_RESPONSE_JSON</code>). The <code>result</code> field is a JSON array with one object containing a <code>status</code> string (multiline CLI-style text).</p>
+
+<h3>Success — hold</h3>
+
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "status": "\n---> HOLD <---\nTX STAKE LOCK CREATED\nSuccessfully hash = 0xABCDEF...\nSave to take!\n\nContribution successfully made"
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Success — take</h3>
+
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "status": "\n---> TAKE <---\nTAKE_TX_DATUM_HASH = 0xABCDEF...\n\nContribution successfully made"
+    }
+  ],
+  "id": 3,
+  "version": 1
+}</pre>
+
+<h3>Subcommand error (unrecognized command)</h3>
+
+<p>When the subcommand is missing or not <code>hold</code>/<code>take</code>, the response uses an <code>errors</code> array instead of <code>status</code>:</p>
+
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 1, "message": "Command foo not recognized" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Parameter and validation errors</h3>
+
+<p>Operational errors return <code>status</code> with an <code>ERROR!</code> line and a descriptive message. Verified against <code>rpc.cellframe.net</code>:</p>
+
+<pre>// v2 hold — missing value/coins (verified live)
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -coins" } ], "id": 1, "version": 2 }
+
+// stake_lock;hold — missing -net
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -net" } ], "id": 1, "version": 1 }
+
+// stake_lock;hold;-net;Backbone — missing -token
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -token" } ], "id": 2, "version": 1 }
+
+// stake_lock;hold;-net;Backbone;-token;CELL — missing -value/-coins
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -coins" } ], "id": 3, "version": 1 }
+
+// ...;-value;1000000000000000000 — missing -w
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -w" } ], "id": 4, "version": 1 }
+
+// ...;-w;mywallet — missing -fee
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter -fee" } ], "id": 5, "version": 1 }
+
+// ...;-fee;1000000000000000000 — missing -time_staking
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter '-time_staking' in simplified format YYMMDD\nExample: \"220610\" == \"10 june 2022 00:00\"" } ], "id": 6, "version": 1 }
+
+// ...;-time_staking;260101 — past date (same TIME_ERROR message)
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nstake_lock command requires parameter '-time_staking' in simplified format YYMMDD\nExample: \"220610\" == \"10 june 2022 00:00\"" } ], "id": 7, "version": 1 }
+
+// -net;UnknownNetXYZ
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\n'UnknownNetXYZ'ERROR!\n ^^^ network not found" } ], "id": 8, "version": 1 }
+
+// -token;NOTOKEN
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\n'NOTOKEN'ERROR!\n ^^^ token ticker not found" } ], "id": 9, "version": 1 }
+
+// -value;0
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nFormat -coins &lt;256 bit integer&gt;" } ], "id": 10, "version": 1 }
+
+// -fee;0
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\nERROR!\nFormat -fee &lt;256 bit integer&gt;" } ], "id": 11, "version": 1 }
+
+// -w;nonexistent_wallet_xyz (wallet not on node)
+{ "type": 2, "result": [ { "status": "\n---> HOLD <---\n'nonexistent_wallet_xyz'ERROR!\n ^^^ can't open wallet" } ], "id": 12, "version": 1 }</pre>
+
+<pre>// stake_lock;take — missing -net
+{ "type": 2, "result": [ { "status": "\n---> TAKE <---\nERROR!\nstake_lock command requires parameter -net" } ], "id": 20, "version": 1 }
+
+// stake_lock;take;-net;Backbone — missing -tx
+{ "type": 2, "result": [ { "status": "\n---> TAKE <---\nERROR!\nstake_lock command requires parameter -tx" } ], "id": 21, "version": 1 }
+
+// -tx;0000000000000000000000000000000000000000000000000000000000000000 (blank hash)
+{ "type": 2, "result": [ { "status": "\n---> TAKE <---\nERROR!\ntx hash is blank" } ], "id": 22, "version": 1 }
+
+// -tx;0x1111...1111 (valid format, tx not found)
+{ "type": 2, "result": [ { "status": "\n---> TAKE <---\nERROR!\n ^^^ could not find transaction" } ], "id": 23, "version": 1 }</pre>
+
+<h3>Additional errors (from source)</h3>
+
+<p>These messages appear when parameters are syntactically valid but business rules fail:</p>
+
+<ul>
+<li><code>Not enough money</code> — wallet balance insufficient for <code>hold</code>.</li>
+<li><code> ^^^ failed to get wallet address</code> — wallet address derivation failed.</li>
+<li><code> ^^^ delegated token not found</code> — delegated token for the ticker is missing.</li>
+<li><code>reinvestment is set as a percentage from 0 to 100</code> — invalid <code>-reinvest</code> value.</li>
+<li><code>wrong subtype for transaction</code> — <code>-tx</code> is not a stake-lock conditional output.</li>
+<li><code>tx hash is used out</code> — stake-lock already spent.</li>
+<li><code>wallet key is not equal tx owner key</code> — <code>-w</code> does not own the stake-lock tx.</li>
+<li><code>Not enough time has passed</code> — unlock time not yet reached.</li>
+<li><code>failed to add datum with take-transaction to mempool</code> — mempool submission failed.</li>
+<li><code>Total fee more than stake</code> — fee exceeds stake value (printed before mempool error).</li>
+</ul>
+
+</body>
+</html>

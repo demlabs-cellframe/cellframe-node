@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ledger — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.untestable { color: #666; font-style: italic; }
+.warn { background: #fff8e6; border: 1px solid #e6d9a8; padding: 0.8em 1em; }
+</style>
+</head>
+<body>
+
+<h1>ledger</h1>
+<p>Ledger information — token supply, balances, thresholded transactions, transaction details, and ledger events.</p>
+
+<h2>JSON-RPC</h2>
+<p>Method name: <code>ledger</code>. Supports <a href="/index.html">API version 1</a> (<code>params</code> string) and version 2 (<code>subcommand</code> + <code>arguments</code>).</p>
+
+<h3>Version 1 — semicolon <code>params</code></h3>
+<pre>{
+  "jsonrpc": "2.0",
+  "method": "ledger",
+  "params": ["ledger;list;coins;-net;Backbone;-limit;50;-offset;0"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Arguments are separated by <code>;</code> only. Example: <code>ledger;info;-hash;0xABC...;-net;Backbone</code>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<pre>{
+  "method": "ledger",
+  "subcommand": "list;coins",
+  "arguments": {"net": "Backbone", "limit": "1"},
+  "id": 1,
+  "version": 2
+}
+
+{
+  "method": "ledger",
+  "subcommand": ["list", "coins"],
+  "arguments": {"net": "Backbone", "limit": "1"},
+  "id": 2,
+  "version": 2
+}</pre>
+
+<div class="warn">
+<p><strong>Multi-token subcommands:</strong> Use <code>;</code> or a JSON array — <strong>not spaces</strong>.
+<code>"list;coins"</code> or <code>["list","coins"]</code> works; <code>"list coins"</code> is parsed as a single token and returns error code 1
+(<em>requires parameter &lsquo;list&rsquo; or &lsquo;info&rsquo; or &lsquo;event&rsquo;</em>). Same rule applies to <code>list;threshold</code>, <code>list;balance</code>, and <code>event;list</code>.</p>
+</div>
+
+<h2>Global options</h2>
+<table>
+<tr><th>Option</th><th>v2 <code>arguments</code> key</th><th>Description</th></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td><code>net</code></td><td>Network name (required for all tested subcommands).</td></tr>
+<tr><td><code>-hash &lt;tx_hash&gt;</code></td><td><code>hash</code></td><td>Transaction hash (<code>info</code>, <code>event dump</code>, <code>list threshold -hash</code>).</td></tr>
+<tr><td><code>-limit &lt;N&gt;</code></td><td><code>limit</code></td><td>Maximum list results.</td></tr>
+<tr><td><code>-offset &lt;N&gt;</code></td><td><code>offset</code></td><td>Skip first N list results.</td></tr>
+<tr><td><code>-head</code></td><td><code>head</code> (empty string)</td><td>Iterate from head (oldest first) in list subcommands.</td></tr>
+<tr><td><code>-unspent</code></td><td><code>unspent</code> (empty string)</td><td>For <code>info</code>: search only unspent transaction in chains.</td></tr>
+<tr><td><code>-full</code></td><td><code>full</code> (empty string)</td><td>Local CLI table mode: show full hashes/keys (no truncation).</td></tr>
+<tr><td><code>-h</code></td><td><code>h</code> (empty string)</td><td>Local CLI table mode for <code>list</code> subcommands (see below).</td></tr>
+<tr><td><code>-group &lt;name&gt;</code></td><td><code>group</code></td><td>Filter <code>event list</code> by group.</td></tr>
+<tr><td><code>-H hex|base58</code></td><td><code>H</code></td><td>Hash format for event key list (default <code>hex</code>).</td></tr>
+<tr><td><code>-history_limit &lt;N&gt;</code></td><td><code>history_limit</code></td><td>UTXO blocklist history depth in <code>list coins</code> (default 10; 0 = all).</td></tr>
+</table>
+
+<h2>Subcommands</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>v1 <code>params</code></th><th>v2 <code>subcommand</code></th><th>Public RPC</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list coins</code></td><td><code>ledger;list;coins;-net;&lt;net&gt;;[-limit;N][;-offset;N]</code></td><td><code>"list;coins"</code> or <code>["list","coins"]</code></td><td>tested</td></tr>
+<tr><td><code>list threshold</code></td><td><code>ledger;list;threshold;-net;&lt;net&gt;;[-hash;&lt;tx_hash&gt;][;-limit;N][;-offset;N][;-head]</code></td><td><code>"list;threshold"</code></td><td>tested</td></tr>
+<tr><td><code>list balance</code></td><td><code>ledger;list;balance;-net;&lt;net&gt;;[-limit;N][;-offset;N][;-head]</code></td><td><code>"list;balance"</code></td><td>tested</td></tr>
+<tr><td><code>info</code></td><td><code>ledger;info;-hash;&lt;tx_hash&gt;;-net;&lt;net&gt;;[-unspent]</code></td><td><code>"info"</code></td><td>tested</td></tr>
+<tr><td><code>event list</code></td><td><code>ledger;event;list;-net;&lt;net&gt;;[-group;&lt;name&gt;]</code></td><td><code>"event;list"</code> or <code>["event","list"]</code></td><td>tested</td></tr>
+<tr><td><code>event dump</code></td><td><code>ledger;event;dump;-net;&lt;net&gt;;-hash;&lt;tx_hash&gt;</code></td><td><code>"event;dump"</code></td><td class="untestable">needs event tx hash</td></tr>
+<tr><td><code>event create</code></td><td>Requires wallet, certs, service UID</td><td>—</td><td class="untestable">state-changing</td></tr>
+<tr><td><code>event key add|remove|list</code></td><td>Decree-chain operations</td><td>—</td><td class="untestable">requires local certs</td></tr>
+</tbody>
+</table>
+
+<h2>Example requests</h2>
+<h3>Version 1</h3>
+<pre>{"jsonrpc":"2.0","method":"ledger","params":["ledger;list;coins;-net;Backbone;-limit;3;-offset;0"],"id":1,"version":1}
+
+{"jsonrpc":"2.0","method":"ledger","params":["ledger;list;threshold;-net;Backbone;-limit;20;-head"],"id":2,"version":1}
+
+{"jsonrpc":"2.0","method":"ledger","params":["ledger;info;-hash;0x135371432B6F6E7E53E53EF83F34B604DECF3C3F58DC84B62D6376F25FA5BE93;-net;Backbone"],"id":4,"version":1}</pre>
+
+<h3>Version 2</h3>
+<pre>{"method":"ledger","subcommand":"list;coins","arguments":{"net":"Backbone","limit":"1"},"id":1,"version":2}
+
+{"method":"ledger","subcommand":["list","coins"],"arguments":{"net":"Backbone","limit":"1"},"id":2,"version":2}
+
+{"method":"ledger","subcommand":"list;balance","arguments":{"net":"Backbone","limit":"1"},"id":3,"version":2}</pre>
+
+<h2>Response envelope</h2>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Errors appear inside <code>result</code> as <code>{"errors": [{"code": N, "message": "..."}]}</code>.</p>
+
+<h2>Version 1 vs version 2 response field names</h2>
+<p>Token and balance fields are defined in <code>dap_chain_ledger.c</code>; transaction info fields in <code>dap_chain_node_cli_cmd_tx.c</code>. The response <code>version</code> echoes the request.</p>
+<table>
+<thead>
+<tr><th>Context</th><th>Version 1</th><th>Version 2</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list coins</code> ticker</td><td><code>--&gt;Token name</code></td><td><code>token_name</code></td></tr>
+<tr><td><code>list coins</code> type</td><td><code>type</code></td><td><code>subtype</code></td></tr>
+<tr><td><code>list coins</code> supply</td><td><code>Supply current</code> / <code>Supply total</code></td><td><code>supply_current</code> / <code>supply_total</code></td></tr>
+<tr><td><code>list coins</code> decimals</td><td><code>Decimals</code></td><td><code>decimals</code></td></tr>
+<tr><td><code>list coins</code> auth signs</td><td><code>Auth signs valid</code> / <code>Auth signs total</code></td><td><code>auth_sig_valid</code> / <code>auth_sig_total</code></td></tr>
+<tr><td><code>list coins</code> public keys</td><td><code>Signatures public keys</code> (<code>hash</code>, <code>bytes</code>)</td><td><code>sig_pkeys</code> (<code>pkey_hash</code>, <code>pkey_size</code>)</td></tr>
+<tr><td><code>list coins</code> emissions</td><td><code>Total emissions</code></td><td><code>total_emissions</code></td></tr>
+<tr><td><code>list threshold</code> tx hash</td><td><code>Ledger thresholded tx_hash_fast</code></td><td><code>tx_hash</code></td></tr>
+<tr><td><code>list threshold</code> time / size</td><td><code>time_created</code>, <code>tx_item_size</code></td><td><code>time_created</code>, <code>tx_item_size</code></td></tr>
+<tr><td><code>list balance</code> key</td><td><code>Ledger balance key</code></td><td><code>balance_key</code></td></tr>
+<tr><td><code>list balance</code> token / amount</td><td><code>token_ticker</code>, <code>balance</code></td><td><code>token_ticker</code>, <code>balance</code></td></tr>
+<tr><td><code>info</code> tx hash</td><td><code>Datum_tx_hash</code></td><td><code>datum_tx_hash</code></td></tr>
+<tr><td><code>info</code> timestamp</td><td><code>TS_Created</code></td><td><code>ts_created</code></td></tr>
+<tr><td><code>info</code> ticker</td><td><code>Token_ticker</code> / <code>token ticker</code></td><td><code>token_ticker</code></td></tr>
+<tr><td><code>info</code> spent outs</td><td><code>Spent OUTs</code> / <code>all OUTs yet unspent</code></td><td><code>spent_outs</code> / <code>all_outs_yet_unspent</code></td></tr>
+</tbody>
+</table>
+
+<h2>Response fields (verified on rpc.cellframe.net / Backbone, Jul 2026)</h2>
+
+<h3>list coins</h3>
+<p><code>result[0]</code> is an array: optional <code>{"limit": N}</code> / <code>{"offset": N}</code> objects, then one object per token.</p>
+<p><strong>Version 1:</strong></p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      { "limit": 1 },
+      {
+        "-->Token name": "CELL",
+        "type": "CF20",
+        "flags": ["ALL_SENDER_ALLOWED"],
+        "description": "The token description is not set",
+        "Supply current": "0",
+        "Supply total": "0",
+        "Decimals": "18",
+        "Auth signs valid": 4,
+        "Auth signs total": 6,
+        "Signatures public keys": [ { "line": 0, "hash": "0x4118...", "pkey_type": "DAP_PKEY_TYPE_SIGN_DILITHIUM", "bytes": 1196 } ],
+        "tx_send_block": [ "Rj7J7MiX2bWy8sNyYTf2fmRtwKh2BgtWspSAsHVMcerXEqbVTzsg4EXe5ymSrLTDDKdYwu8JkkKwXDkbF5zbXEf5NnM2MqEqqJCnGqe3" ],
+        "utxo_blocklist_count": 0,
+        "Total emissions": 26898
+      }
+    ]
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p><strong>Version 2:</strong></p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      { "limit": 1 },
+      {
+        "token_name": "CELL",
+        "subtype": "CF20",
+        "flags": ["ALL_SENDER_ALLOWED"],
+        "description": "The token description is not set",
+        "supply_current": "0",
+        "supply_total": "0",
+        "decimals": "18",
+        "auth_sig_valid": 4,
+        "auth_sig_total": 6,
+        "sig_pkeys": [ { "line": 0, "pkey_hash": "0x4118...", "pkey_type": "DAP_PKEY_TYPE_SIGN_DILITHIUM", "pkey_size": 1196 } ],
+        "tx_send_block": [ "Rj7J7MiX2bWy8sNyYTf2fmRtwKh2BgtWspSAsHVMcerXEqbVTzsg4EXe5ymSrLTDDKdYwu8JkkKwXDkbF5zbXEf5NnM2MqEqqJCnGqe3" ],
+        "utxo_blocklist_count": 0,
+        "total_emissions": 26898
+      }
+    ]
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h3>list threshold</h3>
+<p>When no thresholded transactions exist:</p>
+<pre>{
+  "result": [
+    [
+      { "limit": 3 },
+      { "status": "0 items in ledger tx threshold" }
+    ]
+  ]
+}</pre>
+<p>When items exist: version 1 uses <code>Ledger thresholded tx_hash_fast</code>; version 2 uses <code>tx_hash</code>. Both use <code>time_created</code> and <code>tx_item_size</code>.</p>
+
+<h3>list balance</h3>
+<p><strong>Version 1:</strong></p>
+<pre>{
+  "result": [
+    [
+      { "limit": 1 },
+      {
+        "Ledger balance key": "Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33 CELL",
+        "token_ticker": "CELL",
+        "balance": "3000000000000000000"
+      }
+    ]
+  ]
+}</pre>
+<p><strong>Version 2:</strong></p>
+<pre>{
+  "result": [
+    [
+      { "limit": 1 },
+      {
+        "balance_key": "Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33 CELL",
+        "token_ticker": "CELL",
+        "balance": "3000000000000000000"
+      }
+    ]
+  ]
+}</pre>
+<p>Version 1 <code>Ledger balance key</code> concatenates address and token ticker. <code>balance</code> is the raw uint256 value (divide by 10<sup>decimals</sup> for coins).</p>
+
+<h3>info</h3>
+<p>Returns full transaction dump from ledger. Requires <code>-hash</code> / <code>hash</code> and <code>-net</code> / <code>net</code>.</p>
+<pre>{
+  "result": [
+    {
+      "Datum_tx_hash": "0x135371432B6F6E7E53E53EF83F34B604DECF3C3F58DC84B62D6376F25FA5BE93",
+      "TS_Created": "Mon, 13 Jul 2026 15:07:16 +0000",
+      "Token_ticker": "CELL",
+      "hash": "0x135371432B6F6E7E53E53EF83F34B604DECF3C3F58DC84B62D6376F25FA5BE93",
+      "token ticker": "CELL",
+      "ITEMS": [
+        { "item type": "OUT STD", "addr": "Rj7J7MiX2bWy8sNyX38bB86KTFUnSn7sdKDsTFa2RJyQTDWFaebrj6BucT7Wa5CSq77zwRAwevbiKy1sv1RBGTonM83D3xPDwoyGasZ7", "token": "CELL", "coins": "0.002", "value": "2000000000000000" },
+        { "item type": "SIG", "Type": "sig_dil", "Public key hash": "0x9D424AB6F89812B42FE8F63EA3163304D93094BB3D8DF846549B514F6A18684D" }
+      ],
+      "Spent OUTs": [],
+      "all OUTs yet unspent": "yes"
+    }
+  ]
+}</pre>
+<p>With <code>version: 2</code>, top-level keys become <code>datum_tx_hash</code>, <code>ts_created</code>, <code>token_ticker</code>, <code>spent_outs</code>, <code>all_outs_yet_unspent</code>; item fields use snake_case (<code>item_type</code>, <code>addr</code>, etc.). Optional flags: <code>-unspent</code>, <code>-need_sign</code>, <code>-tx_to_json</code>.</p>
+
+<h3>event list</h3>
+<pre>{
+  "result": [
+    {
+      "events": []
+    }
+  ]
+}</pre>
+
+<h2>Local CLI <code>-h</code> vs JSON-RPC response</h2>
+<p>
+HTTP JSON-RPC always returns JSON in <code>result</code>, even with <code>-h</code> in params (verified: identical JSON with and without <code>-h</code>).
+Local <code>cellframe-node-cli</code> uses <code>s_print_for_ledger_list</code> to render ASCII tables when <code>-h</code> is set.
+</p>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>Local CLI table columns</th><th><code>-full</code> effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list coins</code></td><td>Token Ticker, Type, Decimals, Total Supply, Current Supply</td><td>n/a</td></tr>
+<tr><td><code>list threshold</code></td><td>Tx Hash, Time Created, Items Size</td><td>full tx hash (66 chars)</td></tr>
+<tr><td><code>list balance</code></td><td>Balance Key, Token, Balance</td><td>full balance key (120 chars)</td></tr>
+</tbody>
+</table>
+<p>Without <code>-full</code>, threshold tx hash and balance key are truncated to the last 15 characters in the table view.</p>
+
+<p><a href="/index.html">Back to index</a></p>
+
+</body>
+</html>

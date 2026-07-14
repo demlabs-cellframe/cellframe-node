@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>tx_history</title>
+</head>
+<body>
+
+<h1>tx_history</h1>
+
+<p>Transaction history (for address or by hash).</p>
+
+<h2>JSON-RPC</h2>
+
+<p>Send a POST request to the node CLI JSON-RPC endpoint (for example <code>POST http://rpc.cellframe.net/</code>). Set <code>method</code> to <code>tx_history</code>.</p>
+
+<p>Two request formats are supported (see <a href="/index.html">index</a> for full rules):</p>
+<ul>
+<li><strong>Version 1</strong> — <code>params</code> array with one semicolon-separated CLI string.</li>
+<li><strong>Version 2</strong> — omit <code>params</code>; use <code>subcommand</code> and <code>arguments</code>. Argument keys must <strong>not</strong> include a leading dash. Use string values and <code>""</code> for bare flags; JSON booleans and numbers in <code>arguments</code> are rejected.</li>
+</ul>
+
+<p>Response field names depend on <code>version</code>: version 2 uses <code>addr</code> and <code>total_tx_count</code>; version 1 uses <code>address</code> and <code>"Number of transaction"</code> in count responses.</p>
+
+<h3>Version 1 — params string</h3>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-addr;Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me;-net;Backbone;-chain;main;-limit;2;-head"],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Version 2 — subcommand + arguments</h3>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {
+    "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me",
+    "net": "Backbone",
+    "chain": "main",
+    "limit": "2",
+    "head": ""
+  },
+  "id": 1,
+  "version": 2
+}</pre>
+<p>For <code>-count</code>, either set <code>subcommand</code> to <code>"-count"</code> or leave <code>subcommand</code> empty and pass <code>"count": ""</code> in <code>arguments</code> (both forms are equivalent).</p>
+
+<h2>Command forms</h2>
+
+<pre>tx_history {-addr &lt;addr&gt; | {-w &lt;wallet_name&gt;} -net &lt;net_name&gt;} [-chain &lt;chain_name&gt;] [-limit &lt;n&gt;] [-offset &lt;n&gt;] [-head] [-brief] [-srv &lt;service&gt;] [-act &lt;action&gt;] [-H hex|base58] [-h]
+tx_history -all -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] [-limit &lt;n&gt;] [-offset &lt;n&gt;] [-head] [-brief] [-srv &lt;service&gt;] [-act &lt;action&gt;] [-H hex|base58] [-h]
+tx_history -tx &lt;tx_hash&gt; -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] [-H hex|base58]
+tx_history -count -net &lt;net_name&gt; [-h]</pre>
+
+<h2>Parameters</h2>
+
+<table border="1" cellpadding="4">
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>-addr &lt;addr&gt;</code></td><td>Wallet address (base58). Network can be inferred from the address if <code>-net</code> is omitted.</td></tr>
+<tr><td><code>-w &lt;wallet_name&gt;</code></td><td>Local wallet name on the node; address is resolved for the given network. Requires <code>-net</code>.</td></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>Chain network name (required for <code>-all</code>, <code>-count</code>, <code>-tx</code>, and <code>-w</code>; optional when <code>-addr</code> alone determines the network).</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td>Chain name. Defaults to the network's default TX chain (typically <code>main</code> on Backbone/KelVPN).</td></tr>
+<tr><td><code>-tx &lt;tx_hash&gt;</code></td><td>Look up a single transaction by hash (hex or base58). Incompatible with <code>-addr</code>.</td></tr>
+<tr><td><code>-all</code></td><td>List all transactions in the chain (paginated).</td></tr>
+<tr><td><code>-count</code></td><td>Return total transaction count for the network's default TX chain.</td></tr>
+<tr><td><code>-limit &lt;n&gt;</code></td><td>Maximum records to return (default: 1000).</td></tr>
+<tr><td><code>-offset &lt;n&gt;</code></td><td>Skip first N records (default: 0).</td></tr>
+<tr><td><code>-head</code></td><td>Iterate from the head (newest) instead of the tail.</td></tr>
+<tr><td><code>-brief</code></td><td>Omit detailed transaction body fields in list responses.</td></tr>
+<tr><td><code>-H hex|base58</code></td><td>Hash output format (default: hex).</td></tr>
+<tr><td><code>-srv &lt;service&gt;</code></td><td>Filter by service name (address/all history).</td></tr>
+<tr><td><code>-act &lt;action&gt;</code></td><td>Filter by action type (address/all history).</td></tr>
+<tr><td><code>-h</code></td><td>Human-readable table output (CLI only; JSON-RPC returns raw JSON).</td></tr>
+</table>
+
+<h2>JSON-RPC response envelope</h2>
+
+<p><code>tx_history</code> is a JSON-response command. Successful and failed calls both return HTTP 200 with this envelope:</p>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 2
+}</pre>
+<ul>
+<li><code>type</code> — <code>2</code> (<code>TYPE_RESPONSE_JSON</code>)</li>
+<li><code>result</code> — JSON array of result objects (or error objects)</li>
+<li><code>id</code> — echoes the request <code>id</code></li>
+<li><code>version</code> — RPC protocol version (<code>1</code> or <code>2</code>)</li>
+</ul>
+<p>There is no top-level <code>error</code> field. Command errors appear inside <code>result</code> as objects with an <code>errors</code> array: <code>{ "code": &lt;int&gt;, "message": "&lt;text&gt;" }</code>.</p>
+
+<h2>Examples (verified on rpc.cellframe.net)</h2>
+
+<h3>History for address</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-addr;Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me;-net;Backbone;-chain;main;-limit;2;-head"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {
+    "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me",
+    "net": "Backbone",
+    "chain": "main",
+    "limit": "2",
+    "head": ""
+  },
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h3>History for wallet (local node only)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-w;my_wallet;-net;Backbone;-limit;10"],
+  "id": 2,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {"w": "my_wallet", "net": "Backbone", "limit": "10"},
+  "id": 2,
+  "version": 2
+}</pre>
+<p><code>-w</code> requires the wallet file to exist on the RPC node. Public nodes such as <code>rpc.cellframe.net</code> do not have user wallets.</p>
+
+<h3>Single transaction by hash (accepted)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-tx;0x43EC9084DDD7CA81F83CB36E6963D39E1148ACE28C654CC202198A06B232CE5C;-net;Backbone;-chain;main"],
+  "id": 3,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {
+    "tx": "0x43EC9084DDD7CA81F83CB36E6963D39E1148ACE28C654CC202198A06B232CE5C",
+    "net": "Backbone",
+    "chain": "main"
+  },
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>Single transaction by hash (pending in mempool)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-tx;0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9;-net;Backbone;-chain;main"],
+  "id": 4,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {
+    "tx": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+    "net": "Backbone",
+    "chain": "main"
+  },
+  "id": 4,
+  "version": 2
+}</pre>
+
+<h3>All transactions</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-all;-net;Backbone;-chain;main;-limit;2;-head"],
+  "id": 5,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {"all": "", "net": "Backbone", "chain": "main", "limit": "2", "head": ""},
+  "id": 5,
+  "version": 2
+}</pre>
+
+<h3>Transaction count</h3>
+<p>Version 1 (response field <code>"Number of transaction"</code>):</p>
+<pre>{
+  "method": "tx_history",
+  "params": ["tx_history;-count;-net;Backbone"],
+  "id": 6,
+  "version": 1
+}</pre>
+<p>Version 2 — form A (<code>subcommand</code> <code>"-count"</code>; response field <code>total_tx_count</code>):</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "-count",
+  "arguments": {"net": "Backbone"},
+  "id": 6,
+  "version": 2
+}</pre>
+<p>Version 2 — form B (<code>count</code> flag in <code>arguments</code>):</p>
+<pre>{
+  "method": "tx_history",
+  "subcommand": "",
+  "arguments": {"count": "", "net": "Backbone"},
+  "id": 6,
+  "version": 2
+}</pre>
+
+<h2>Typical responses</h2>
+
+<h3>Address history</h3>
+<p>Two elements: transaction list array, then summary object.</p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      { "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me" },
+      { "limit": 2 },
+      {
+        "status": "ACCEPTED",
+        "hash": "0x43EC9084DDD7CA81F83CB36E6963D39E1148ACE28C654CC202198A06B232CE5C",
+        "atom_hash": "0x9FFF6C8686A93DB4616158E1E21F697380B160282312508D8085495C627F24B1",
+        "ret_code": 0,
+        "ret_code_str": "No error",
+        "action": "take",
+        "service": "wallet_shared",
+        "batching": "false",
+        "tx_created": "Tue, 07 Jul 2026 23:50:32 +0000",
+        "data": [
+          {
+            "tx_type": "recv",
+            "recv_coins": "524.974432117843343041",
+            "recv_datoshi": "524974432117843343041",
+            "token": "CELL",
+            "source_address": "Rj7J7MiX2bWy8sNyadg47jAEJQuj6AF3drDg7o6Gc4zetrzkUNceEyYbSR3FDrx2PbPJn28u6wPZkS7xX2U9viSx2V8uNnio83nHLVJ7"
+          }
+        ]
+      }
+    ],
+    {
+      "network": "Backbone",
+      "chain": "main",
+      "tx_accept_count": 2,
+      "tx_reject_count": 0,
+      "tx_count": 2,
+      "total_tx_count": 7
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<p>The first element of the inner array is the address header. A <code>{ "limit": N }</code> object records pagination. Each transaction includes a <code>data</code> array with per-address send/recv breakdown when applicable.</p>
+
+<h3>All transactions (-all)</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      { "limit": 2 },
+      {
+        "status": "ACCEPTED",
+        "hash": "0xECA1E788C30E76774AEB976399397CDECE80EB758C907884CF13156C7244ECEB",
+        "ret_code": 0,
+        "ret_code_str": "No error",
+        "action": "UNKNOWN",
+        "batching": "false",
+        "first_transaction": "emit",
+        "tx_created": "Thu, 07 Apr 2022 18:40:26 +0000",
+        "token_ticker": "CELL",
+        "tx_num": 1,
+        "items": [ { "item_type": "in_ems", "ticker": "CELL" } ]
+      }
+    ],
+    {
+      "network": "Backbone",
+      "chain": "main",
+      "tx_sum": 2,
+      "accepted_tx": 2,
+      "rejected_tx": 0
+    }
+  ],
+  "id": 5,
+  "version": 2
+}</pre>
+
+<h3>Single transaction (-tx), accepted</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "status": "ACCEPTED",
+      "hash": "0x43EC9084DDD7CA81F83CB36E6963D39E1148ACE28C654CC202198A06B232CE5C",
+      "atom_hash": "0x9FFF6C8686A93DB4616158E1E21F697380B160282312508D8085495C627F24B1",
+      "confirmations": 2959,
+      "ret_code": 0,
+      "ret_code_str": "No error",
+      "action": "take",
+      "batching": "false",
+      "first_transaction": "empty",
+      "tx_created": "Tue, 07 Jul 2026 23:50:32 +0000",
+      "token_ticker": "CELL",
+      "items": [
+        { "item_type": "in", "tx_prev_hash": "0x...", "tx_out_prev_idx": 4 },
+        { "item_type": "out_std", "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me", "token": "CELL", "value": "524974432117843343041" },
+        { "item_type": "sign", "sig_type": "sig_dil", "sender_addr": "Rj7J7MiX2bWy8sNyadg47jAEJQuj6AF3drDg7o6Gc4zetrzkUNceEyYbSR3FDrx2PbPJn28u6wPZkS7xX2U9viSx2V8uNnio83nHLVJ7" }
+      ]
+    }
+  ],
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>Single transaction (-tx), pending in mempool</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "status": "pending",
+      "source": "mempool",
+      "hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+      "ret_code": 0,
+      "ret_code_str": "pending",
+      "action": "UNKNOWN",
+      "comment": "Transaction is found in mempool and has not been accepted yet"
+    }
+  ],
+  "id": 4,
+  "version": 2
+}</pre>
+
+<h3>Count (-count)</h3>
+<p>Version 2:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    { "total_tx_count": 1074658 }
+  ],
+  "id": 6,
+  "version": 2
+}</pre>
+<p>Version 1:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    { "Number of transaction": 1074658 }
+  ],
+  "id": 6,
+  "version": 1
+}</pre>
+
+<h3>Errors</h3>
+<p>Missing required mode parameter:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 2, "message": "tx_history requires parameter '-addr' or '-w' or '-tx'" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<p>Transaction not found:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": -1, "message": "TX hash 0x0000000000000000000000000000000000000000000000000000000000000001 not found in chains and mempool" },
+        { "code": 12, "message": "something went wrong in tx_history" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2>CLI table output (-h)</h2>
+<p>When <code>-h</code> is passed, the CLI client (<code>s_print_for_tx_history_all</code>) formats the JSON response as a table (hash, status, action, service, time). For address/wallet history it prints the address header, a numbered table, limit/offset, and summary counts. For <code>-count</code> it prints <code>Total transactions count: N</code>. JSON-RPC callers receive structured JSON regardless.</p>
+
+</body>
+</html>

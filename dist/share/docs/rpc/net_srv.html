@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>net_srv — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 960px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.note { background: #fff8e1; border-left: 4px solid #ffc107; padding: 0.6em 1em; }
+</style>
+</head>
+<body>
+
+<h1>net_srv</h1>
+<p>Network services management — find, dump, create, update, and delete service orders; query usage limits and reports.</p>
+<p>Verified against public RPC <code>http://rpc.cellframe.net/</code> (networks: <code>Backbone</code>, <code>KelVPN</code>).</p>
+
+<h2>JSON-RPC request</h2>
+<p>Method name: <code>net_srv</code>. Response <code>type</code> is <code>2</code> (<code>TYPE_RESPONSE_JSON</code>).</p>
+<p>Two request formats are supported. The response <code>version</code> echoes the request <code>version</code> and affects JSON field names in order and <code>get_limits</code> responses (see <a href="#v1-v2-fields">v1 vs v2 field names</a>).</p>
+
+<h3>Version 1 — legacy <code>params</code> string</h3>
+<pre>{
+  "method": "net_srv",
+  "params": ["net_srv;-net;KelVPN;order;find"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p><code>params</code> is an array with one string. Every token is separated by <code>;</code> — <strong>not spaces</strong>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<pre>{
+  "method": "net_srv",
+  "subcommand": "order;find",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}</pre>
+<p><code>subcommand</code> may also be a JSON array:</p>
+<pre>{
+  "method": "net_srv",
+  "subcommand": ["order", "find"],
+  "arguments": {"net": "KelVPN", "direction": "sell"},
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Both forms produce the same internal command: <code>net_srv;order;find;-net;KelVPN;-direction;sell</code>.</p>
+<p class="note"><strong>Spaces in <code>subcommand</code> do not work.</strong> Use <code>"order;find"</code> or <code>["order","find"]</code>, not <code>"order find"</code>.</p>
+<p>To use version 2 fields, omit <code>params</code> entirely.</p>
+
+<h4>Version 2 <code>arguments</code> mapping</h4>
+<table>
+<tr><th><code>arguments</code> key</th><th>CLI flag</th><th>Used by</th></tr>
+<tr><td><code>net</code></td><td><code>-net</code></td><td>All subcommands except <code>report</code></td></tr>
+<tr><td><code>H</code></td><td><code>-H</code></td><td>Hash output format (<code>hex</code> or <code>base58</code>)</td></tr>
+<tr><td><code>direction</code></td><td><code>-direction</code></td><td><code>order find</code>, <code>order create</code> (<code>sell</code> or <code>buy</code>)</td></tr>
+<tr><td><code>srv_uid</code></td><td><code>-srv_uid</code></td><td><code>order find</code>, <code>order create</code>, <code>get_limits</code></td></tr>
+<tr><td><code>srv_class</code></td><td><code>-srv_class</code></td><td><code>order find</code></td></tr>
+<tr><td><code>hash</code></td><td><code>-hash</code></td><td><code>order dump</code>, <code>order update</code>, <code>order delete</code></td></tr>
+<tr><td><code>price_unit</code>, <code>price_token</code></td><td><code>-price_unit</code>, <code>-price_token</code></td><td><code>order find</code>, <code>order create</code></td></tr>
+<tr><td><code>price_min</code>, <code>price_max</code></td><td><code>-price_min</code>, <code>-price_max</code></td><td><code>order find</code></td></tr>
+<tr><td><code>price</code>, <code>units</code>, <code>cert</code></td><td><code>-price</code>, <code>-units</code>, <code>-cert</code></td><td><code>order create</code></td></tr>
+<tr><td><code>node_addr</code>, <code>tx_cond</code>, <code>expires</code></td><td><code>-node_addr</code>, <code>-tx_cond</code>, <code>-expires</code></td><td><code>order create</code></td></tr>
+<tr><td><code>ext</code>, <code>region</code>, <code>continent</code></td><td><code>-ext</code>, <code>-region</code>, <code>-continent</code></td><td><code>order create</code>, <code>order update</code></td></tr>
+<tr><td><code>tx_to_json</code></td><td><code>-tx_to_json</code></td><td><code>order dump</code> (bare flag: <code>""</code>)</td></tr>
+<tr><td><code>provider_pkey_hash</code>, <code>client_pkey_hash</code></td><td><code>-provider_pkey_hash</code>, <code>-client_pkey_hash</code></td><td><code>get_limits</code></td></tr>
+</table>
+<p>Argument values must be strings (or <code>null</code>/empty string for bare flags). JSON numbers and booleans are rejected.</p>
+
+<h2>Global options</h2>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>-H hex|base58</code></td><td>Hash output format (default: <code>hex</code>).</td></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>Network selector (required except for <code>report</code>).</td></tr>
+</table>
+
+<h2>Subcommands</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>Description</th><th>Public RPC</th></tr>
+</thead>
+<tbody>
+<tr><td><code>order find</code></td><td>Search orders with optional filters.</td><td>tested</td></tr>
+<tr><td><code>order dump -hash</code></td><td>Dump one order by hash.</td><td>tested</td></tr>
+<tr><td><code>report</code></td><td>Service usage report (no <code>-net</code> required).</td><td>tested</td></tr>
+<tr><td><code>get_limits</code></td><td>Remaining service limits for provider/client pair.</td><td>tested (returns error when no data)</td></tr>
+<tr><td><code>order create</code></td><td>Create a signed order (<code>-cert</code> required since v5.2).</td><td class="note">requires local certificate and master role — not testable on public node</td></tr>
+<tr><td><code>order update -hash</code></td><td>Update order extension or location.</td><td class="note">requires existing order write access — not testable on public node</td></tr>
+<tr><td><code>order delete -hash</code></td><td>Delete an order.</td><td class="note">write operation — not tested on public node</td></tr>
+</tbody>
+</table>
+
+<h2>Subcommand syntax (CLI / v1 params)</h2>
+<pre>net_srv;report
+
+net_srv;-net;&lt;net_name&gt;;order;find
+net_srv;-net;&lt;net_name&gt;;order;find;-direction;sell
+net_srv;-net;&lt;net_name&gt;;order;find;-direction;buy
+net_srv;-net;&lt;net_name&gt;;order;find;-srv_uid;0x0000000000000014
+net_srv;-net;&lt;net_name&gt;;order;find;-price_unit;DAY;-price_token;KEL
+net_srv;-net;&lt;net_name&gt;;order;find;-price_min;10;-price_max;100
+
+net_srv;-net;&lt;net_name&gt;;order;dump;-hash;0xORDER_HASH
+net_srv;-net;&lt;net_name&gt;;order;dump;-hash;0xORDER_HASH;-tx_to_json
+
+net_srv;-net;&lt;net_name&gt;;order;delete;-hash;0xORDER_HASH
+
+net_srv;-net;&lt;net_name&gt;;order;create;-direction;sell;-srv_uid;0x1;-price;100
+  ;-price_unit;DAY;-price_token;KEL;-units;30;-cert;node.dcert
+  ;[-node_addr;&lt;addr&gt;][;-tx_cond;&lt;hash&gt;][;-expires;&lt;unix_ts&gt;]
+  ;[-ext;&lt;extension&gt;|-region;&lt;region&gt;;-continent;&lt;continent&gt;]
+
+net_srv;-net;&lt;net_name&gt;;order;update;-hash;0xORDER_HASH
+  ;[-ext;&lt;extension&gt;|-region;&lt;region&gt;;-continent;&lt;continent&gt;]
+
+net_srv;get_limits;-net;&lt;net_name&gt;;-srv_uid;0x1
+  ;-provider_pkey_hash;0xPROVIDER;-client_pkey_hash;0xCLIENT</pre>
+<p><code>-direction</code>: <code>sell</code> or <code>buy</code> (maps to <code>SERV_DIR_SELL</code> / <code>SERV_DIR_BUY</code> in responses).</p>
+<p><code>-price_unit</code> for create: <code>B</code>, <code>KB</code>, <code>MB</code>, <code>SEC</code>, <code>DAY</code>, <code>PCS</code>.</p>
+
+<h2>Example requests</h2>
+
+<h3>Version 1</h3>
+<pre>{"method":"net_srv","params":["net_srv;-net;KelVPN;order;find;-direction;sell;-srv_uid;0x0000000000000014"],"id":1,"version":1}
+
+{"method":"net_srv","params":["net_srv;-net;Backbone;order;dump;-hash;0x17C692FA7DD35E66C07F51C1D49595B5F588FFB6C2C728B84A5A58964C9F4CE8"],"id":2,"version":1}
+
+{"method":"net_srv","params":["net_srv;report"],"id":3,"version":1}
+
+{"method":"net_srv","params":["net_srv;get_limits;-net;KelVPN;-srv_uid;0x0000000000000014;-provider_pkey_hash;0xPROVIDER;-client_pkey_hash;0xCLIENT"],"id":4,"version":1}</pre>
+
+<h3>Version 2 (verified on rpc.cellframe.net)</h3>
+<pre>{"method":"net_srv","subcommand":"order;find","arguments":{"net":"Backbone","direction":"sell","srv_uid":"0x0000000000000014"},"id":1,"version":2}
+
+{"method":"net_srv","subcommand":["order","find"],"arguments":{"net":"KelVPN","direction":"sell"},"id":2,"version":2}
+
+{"method":"net_srv","subcommand":"order;dump","arguments":{"net":"Backbone","hash":"0x17C692FA7DD35E66C07F51C1D49595B5F588FFB6C2C728B84A5A58964C9F4CE8"},"id":3,"version":2}
+
+{"method":"net_srv","subcommand":"report","id":4,"version":2}
+
+{"method":"net_srv","subcommand":"get_limits","arguments":{"net":"KelVPN","srv_uid":"0x0000000000000014","provider_pkey_hash":"0xPROVIDER","client_pkey_hash":"0xCLIENT"},"id":5,"version":2}</pre>
+
+<h2>Response envelope</h2>
+<p>Same JSON-response format as other CLI modules:</p>
+<pre>{
+  "type": 2,
+  "result": [ { ... } ],
+  "id": 1,
+  "version": 2
+}</pre>
+<ul>
+<li><code>type</code> — <code>2</code> (<code>TYPE_RESPONSE_JSON</code>)</li>
+<li><code>result</code> — JSON array of result objects (or error objects)</li>
+<li><code>id</code> — echoes the request <code>id</code></li>
+<li><code>version</code> — RPC protocol version (<code>1</code> or <code>2</code>)</li>
+</ul>
+<p>Errors appear inside <code>result[].errors[]</code>:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 10, "message": "Can't find order with hash 0x...\n" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2 id="v1-v2-fields">v1 vs v2 response field names</h2>
+<table>
+<tr><th>Version 1</th><th>Version 2</th><th>Context</th></tr>
+<tr><td><code>price coins</code></td><td><code>price_coins</code></td><td><code>order find</code> / <code>order dump</code> order objects</td></tr>
+<tr><td><code>price datoshi</code></td><td><code>price_datoshi</code></td><td>order objects</td></tr>
+<tr><td><code>price token</code></td><td><code>price_token</code></td><td>order objects</td></tr>
+<tr><td><code>price unit</code></td><td><code>price_unit</code></td><td>order objects</td></tr>
+<tr><td><code>provider</code></td><td><code>sig_inf_provider</code></td><td><code>get_limits</code> success response</td></tr>
+<tr><td><code>client</code></td><td><code>sig_inf_client</code></td><td><code>get_limits</code> success response</td></tr>
+</table>
+<p>All other order fields (<code>order</code>, <code>direction</code>, <code>srv_uid</code>, <code>node_addr</code>, etc.) use the same names on both versions. Buy orders may include <code>tx_cond_hash</code>.</p>
+
+<h2>Response fields (verified on rpc.cellframe.net)</h2>
+
+<h3>net_srv order find</h3>
+<pre>// version 2
+{
+  "result": [
+    {
+      "count": 203,
+      "orders": [
+        {
+          "order": "0x17C692FA7DD35E66C07F51C1D49595B5F588FFB6C2C728B84A5A58964C9F4CE8",
+          "version": 3,
+          "direction": "SERV_DIR_SELL",
+          "created": "Wed, 21 Aug 2024 12:00:19 +0000",
+          "timestamp": 1724241619,
+          "srv_uid": "0x0000000000000014",
+          "price_coins": "46.5",
+          "price_datoshi": "46500000000000000000",
+          "price_token": "mCELL",
+          "units": "1",
+          "price_unit": "pieces",
+          "node_addr": "B400::E107::817F::B2A4",
+          "node_location": "None - None",
+          "ext_size": 64,
+          "pkey": "0x0465C436A7C5B5AD984FAA02FFA04F38C43BD875D51E697B4A3E364812B27FBB"
+        }
+      ]
+    }
+  ]
+}</pre>
+<pre>// version 1 — same order, spaced price fields
+{
+  "price coins": "46.5",
+  "price datoshi": "46500000000000000000",
+  "price token": "mCELL",
+  "price unit": "pieces"
+}</pre>
+
+<h3>net_srv order dump</h3>
+<p>Same fields as a single order object from <code>order find</code>. With <code>-tx_to_json</code>, returns <code>data_hash</code>, <code>data_type</code>, <code>data_size</code>, and base58-encoded <code>data</code> instead.</p>
+
+<h3>net_srv order create (not tested on public node)</h3>
+<pre>{
+  "result": [
+    { "order_hash": "0xNEW_ORDER_HASH..." }
+  ]
+}</pre>
+<p>Requires <code>-cert</code> with a private key and node role &ge; master. Without a certificate, returns error code 13 (<code>"The certificate name was not specified..."</code>).</p>
+
+<h3>net_srv order delete (not tested on public node)</h3>
+<pre>{
+  "result": [
+    { "order_hash": "0xABCDEF0123456789" }
+  ]
+}</pre>
+
+<h3>net_srv order update (not tested on public node)</h3>
+<pre>{
+  "result": [
+    { "status": "updated" }
+  ]
+}</pre>
+
+<h3>net_srv get_limits</h3>
+<pre>// success (field names depend on version)
+{
+  "result": [
+    {
+      "sig_inf_provider": "0xPROVIDER_HASH...",
+      "sig_inf_client": "0xCLIENT_HASH...",
+      "sec": 86400,
+      "bytes": 1073741824
+    }
+  ]
+}</pre>
+<p>Version 1 uses <code>provider</code> / <code>client</code> instead of <code>sig_inf_provider</code> / <code>sig_inf_client</code>. Returns error code 28 when no remain-limits data exists for the given keys (verified on rpc.cellframe.net with dummy hashes).</p>
+
+<h3>net_srv report</h3>
+<pre>{
+  "result": [
+    { "report": "Service report:\n" }
+  ]
+}</pre>
+
+<h2>Common error codes</h2>
+<table>
+<tr><th>Code</th><th>When</th></tr>
+<tr><td>10</td><td>Order not found (<code>dump</code>, <code>delete</code>, <code>update</code>).</td></tr>
+<tr><td>12</td><td><code>order delete</code> missing <code>-hash</code>.</td></tr>
+<tr><td>13</td><td><code>order create</code> — node role too low, or certificate not specified.</td></tr>
+<tr><td>28</td><td><code>get_limits</code> — no remain service data for the given provider/client.</td></tr>
+<tr><td>102</td><td>Missing required <code>-net</code> parameter.</td></tr>
+</table>
+
+</body>
+</html>

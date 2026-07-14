@@ -1,0 +1,134 @@
+<h1>help</h1>
+
+<p>Description of command parameters.</p>
+
+<h2>Description</h2>
+<p>
+Without a command argument, returns a plain-text list of all registered CLI commands with short descriptions.
+With a command name, returns detailed documentation for that command.
+</p>
+<p>
+A synonym <code>?</code> is registered with the same handler in the CLI, but on public nodes such as
+<code>rpc.cellframe.net</code> the <code>?</code> method is <em>not</em> in <code>allowed_cmd</code> — use
+<code>method</code> <code>"help"</code> instead.
+</p>
+
+<h2>CLI usage</h2>
+<pre>help [&lt;command&gt;]</pre>
+
+<h2>JSON-RPC request</h2>
+<p>
+The <code>help</code> command is <em>not</em> in <code>json_commands()</code>, so successful responses use
+<code>type</code> <code>0</code> (<code>TYPE_RESPONSE_STRING</code>) and <code>result</code> is a plain string.
+Two request formats are supported. If <code>params</code> is present, the version 2 path is ignored.
+</p>
+
+<h3>Version 1 — legacy <code>params</code> string</h3>
+<p>
+Put the full command line in <code>params[0]</code>. Arguments are separated by semicolons (<code>;</code>)
+— the same delimiter the CLI server uses in <code>dap_strsplit(str_cmd, ";", -1)</code>.
+<strong>Spaces are not separators.</strong> For example, <code>"help wallet"</code> is treated as a single
+token and returns the command list, not wallet help.
+</p>
+
+<h4>List all commands</h4>
+<pre>{"method":"help","params":[""],"id":1,"version":1}</pre>
+<p>Equivalent forms: <code>params</code> <code>["help"]</code>, omitted <code>params</code>, or <code>params</code> <code>[]</code>.</p>
+
+<h4>Help for a specific command</h4>
+<pre>{"method":"help","params":["help;wallet"],"id":2,"version":1}</pre>
+<pre>{"method":"help","params":["help;net"],"id":3,"version":1}</pre>
+<p>The first token is the command name (<code>help</code>); the second is the target command.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<p>
+Omit <code>params</code>. Use <code>subcommand</code> for the target command name only — do <em>not</em>
+repeat <code>help</code> in the subcommand (the server prepends <code>method</code> automatically).
+</p>
+
+<h4>List all commands</h4>
+<pre>{"method":"help","id":1,"version":2}</pre>
+<p>Omit <code>subcommand</code> entirely. Do <strong>not</strong> pass <code>"subcommand":""</code> — that produces an empty command token and returns <code>command "" not recognized</code>.</p>
+
+<h4>Help for a specific command</h4>
+<pre>{"method":"help","subcommand":"wallet","id":2,"version":2}</pre>
+<pre>{"method":"help","subcommand":"net","id":3,"version":2}</pre>
+<p>There are no flags for <code>help</code>; <code>arguments</code> is unused.</p>
+
+<p>Request fields:</p>
+<ul>
+<li><code>method</code> — <code>"help"</code> (required on public nodes; <code>"?"</code> is restricted)</li>
+<li><code>params</code> — version 1: array; first element is the semicolon-separated command string</li>
+<li><code>subcommand</code> — version 2: target command name, or omit for the full command list</li>
+<li><code>id</code> — request identifier (required)</li>
+<li><code>version</code> — RPC protocol version: <code>1</code> or <code>2</code> (optional)</li>
+</ul>
+
+<h2>JSON-RPC response</h2>
+<p>The HTTP body uses the Cellframe RPC envelope: <code>type</code>, <code>result</code>, <code>id</code>, <code>version</code>.</p>
+
+<h3>Command list (no command argument)</h3>
+<pre>{
+  "type": 0,
+  "result": "Available commands:\n\nsrv_stake:\t\t\tDelegated stake service commands\ndag:\t\t\tDAG commands\n...\nwallet:\t\t\tWallet operations\n...\n",
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Each line has the form <code>name:\t\t\tdescription</code>. The list includes every command registered on the node, including commands that may be restricted for remote callers. Verified with both <code>version: 1</code> and <code>version: 2</code> on <code>rpc.cellframe.net</code> (2026-07-14).</p>
+
+<h3>Help for one command</h3>
+<pre>{
+  "type": 0,
+  "result": "Wallet operations:\nwallet list\nwallet new -w &lt;wallet_name&gt; ...\n",
+  "id": 2,
+  "version": 2
+}</pre>
+<p>The <code>result</code> text is built from the command&rsquo;s <code>doc</code> and <code>doc_ex</code> fields (<code>doc</code> line, then <code>doc_ex</code> body).</p>
+
+<h3>Unknown command</h3>
+<pre>{
+  "type": 0,
+  "result": "command \"foo\" not recognized",
+  "id": 6,
+  "version": 1
+}</pre>
+<p>The handler returns exit code <code>-1</code>; the error is still delivered as a plain string in <code>result</code>.</p>
+
+<h3>Empty subcommand (version 2 pitfall)</h3>
+<pre>{
+  "type": 0,
+  "result": "command \"\" not recognized",
+  "id": 1,
+  "version": 2
+}</pre>
+<p>Caused by <code>"subcommand":""</code>. Omit the field instead.</p>
+
+<h3>Restricted method (public nodes)</h3>
+<p>Calling a method not listed in <code>allowed_cmd</code> from a non-local client returns <code>type</code> <code>2</code>:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        {
+          "code": -1,
+          "message": "Command \"?\" is restricted"
+        }
+      ]
+    }
+  ],
+  "id": 5,
+  "version": 1
+}</pre>
+
+<h2>Commands in help list vs public <code>allowed_cmd</code></h2>
+<p>
+The general help list shows all registered commands. On <code>rpc.cellframe.net</code> (verified 2026-07-14),
+only the following <code>method</code> names are callable remotely; all others return
+<code>Command "&lt;name&gt;" is restricted</code> even though they appear in the help list:
+</p>
+<ul>
+<li>Allowed: <code>version</code>, <code>help</code>, <code>wallet</code>, <code>net</code>, <code>block</code>, <code>ledger</code>, <code>mempool</code>, <code>mempool_add</code>, <code>srv_xchange</code>, <code>srv_dex</code>, <code>stake_lock</code>, <code>net_srv</code>, <code>tx_create_json</code>, <code>token</code>, <code>tx_history</code>, <code>poll</code></li>
+<li>In help list but restricted: <code>srv_stake</code>, <code>dag</code>, <code>dag_poa</code>, <code>esbocs</code>, <code>stake_ext</code>, <code>global_db</code>, <code>node</code>, <code>?</code>, <code>token_update</code>, <code>token_decl</code>, <code>token_update_sign</code>, <code>token_decl_sign</code>, <code>token_emit</code>, <code>token_emit_sign</code>, <code>chain_ca_pub</code>, <code>tx_create</code>, <code>tx_cond</code>, <code>tx_verify</code>, <code>tx_sign</code>, <code>print_log</code>, <code>stats</code>, <code>gdb_export</code>, <code>gdb_import</code>, <code>remove</code>, <code>decree</code>, <code>exec_cmd</code>, <code>find</code>, <code>policy</code>, <code>exit</code>, <code>vpn_client</code></li>
+</ul>
+<p>Help for restricted commands (e.g. version 1 <code>params</code> <code>["help;exit"]</code> or version 2 <code>subcommand</code> <code>"exit"</code>) still works because <code>help</code> itself is allowed; only invoking those commands remotely is blocked.</p>
