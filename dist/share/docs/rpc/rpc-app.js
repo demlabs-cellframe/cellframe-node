@@ -493,21 +493,6 @@
           <span class="dex-nav-btn" style="cursor:default">Node RPC</span>
         </nav>
 
-        <header class="api-hero">
-          <div class="api-hero-badge">Developer</div>
-          <h1>Node RPC Reference</h1>
-          <p class="api-hero-lead">
-            Interactive JSON-RPC for Cellframe Node CLI server. Try requests in the browser
-            (Swagger-style). Use API version 2 for <code>subcommand</code> + <code>arguments</code>
-            (no semicolon string), or version 1 for legacy <code>params[0]</code>.
-          </p>
-          <ul class="api-meta" aria-label="Page summary">
-            <li><span class="api-meta-value">v${state.version}</span><span class="api-meta-label">api</span></li>
-            <li><span class="api-meta-value">${RPC_CATALOG.length}</span><span class="api-meta-label">endpoints</span></li>
-            <li><span class="api-meta-value">${tags().length}</span><span class="api-meta-label">modules</span></li>
-          </ul>
-        </header>
-
         <div class="api-controls">
           <div class="api-server">
             <span class="api-server-label">Server</span>
