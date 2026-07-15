@@ -102,6 +102,7 @@
 #include "dap_stream_ctl.h"
 #include "dap_chain_net_srv_order.h"
 #include "dap_chain_net_srv_xchange.h"
+
 #include "dap_chain_net_srv_voting.h"
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
@@ -244,6 +245,10 @@ int main( int argc, const char **argv )
 
     if (!( g_config = dap_config_open(dap_get_appname()) ))
         return log_it( L_CRITICAL,"Can't open general config %s.cfg", dap_get_appname() ), DAP_DELETE(g_sys_dir_path), -5;
+
+    {
+        bool l_test_enabled = dap_config_get_item_bool_default(g_config, "server", "enabled", false);
+    }
 #ifndef DAP_OS_WINDOWS
     char l_default_dir[MAX_PATH + 1];
     snprintf(l_default_dir, MAX_PATH + 1, "%s/tmp", g_sys_dir_path);
@@ -470,37 +475,18 @@ int main( int argc, const char **argv )
             log_it(L_NOTICE, "Registering python plugin type");
             rc_plugin_init = dap_chain_plugins_init(g_config);
 #endif
-            dap_plugin_load_all();
-            dap_plugin_preinit_all();
         }
         DAP_DELETE(l_plugins_path_default);
     }
 
-    dap_chain_net_load_all();
+    /* Transport servers start BEFORE dap_chain_net_load_all() because
+     * that function can hang on pthread_join, blocking everything */
 
-    if( (dap_chain_wallet_shared_notify_init()) ) {
-        log_it(L_CRITICAL,"Can't init dap chain wallet module");
-        return -61;
-    }
-
-    if( dap_chain_net_srv_order_init() )
-        return -67;
-
-    if (dap_chain_node_list_clean_init()) {
-        log_it( L_CRITICAL, "Can't init node list clean" );
-        return -131;
-    }
-
-    if (dap_global_db_clean_init()) {
-        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
-        return -133;
-    }
-
-    bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
-    log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
-    
     dap_net_trans_server_t *l_trans_servers[DAP_NET_TRANS_MAX + 1] = {0};
     size_t l_trans_servers_count = 0;
+
+    log_it(L_NOTICE, "Server enabled: %s, starting transport initialization",
+           bServerEnabled ? "yes" : "no");
 
     if ( bServerEnabled ) {
         uint16_t l_trans_count = 0;
@@ -519,7 +505,10 @@ int main( int argc, const char **argv )
             }
         } else {
             l_enabled[0] = DAP_NET_TRANS_HTTP;
-            l_enabled_count = 1;
+            l_enabled[1] = DAP_NET_TRANS_TLS_DIRECT;
+            l_enabled[2] = DAP_NET_TRANS_WEBSOCKET;
+            l_enabled[3] = DAP_NET_TRANS_DNS_TUNNEL;
+            l_enabled_count = 4;
         }
 
         uint16_t l_addr_count = 0;
@@ -539,24 +528,25 @@ int main( int argc, const char **argv )
             switch (l_type) {
             case DAP_NET_TRANS_HTTP:
                 l_type_name = "http";
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_http", "port", 80);
                 break;
             case DAP_NET_TRANS_UDP_BASIC:
             case DAP_NET_TRANS_UDP_RELIABLE:
             case DAP_NET_TRANS_UDP_QUIC_LIKE:
                 l_type_name = "udp";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_udp", l_base_port);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_udp", "port", l_base_port);
                 break;
             case DAP_NET_TRANS_WEBSOCKET:
                 l_type_name = "websocket";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_websocket", l_base_port + 1);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_websocket", "port", 8080);
                 break;
             case DAP_NET_TRANS_TLS_DIRECT:
                 l_type_name = "tls";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_tls", l_base_port + 2);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_tls", "port", 443);
                 break;
             case DAP_NET_TRANS_DNS_TUNNEL:
                 l_type_name = "dns";
-                l_port = dap_config_get_item_uint16_default(g_config, "server", "listen_port_dns", 53);
+                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_dns", "port", 53);
                 break;
             default:
                 log_it(L_WARNING, "Unknown transport type 0x%02X, skipping", l_type);
@@ -633,6 +623,35 @@ int main( int argc, const char **argv )
     else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
+    dap_chain_net_load_all();
+
+    /* VPN service creation happens in cf_vpn_srv_init() which is called
+     * by the plugin system AFTER dap_chain_net_load_all(). */
+
+    if( (dap_chain_wallet_shared_notify_init()) ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
+
+    if( dap_chain_net_srv_order_init() )
+        return -67;
+
+    if (dap_chain_node_list_clean_init()) {
+        log_it( L_CRITICAL, "Can't init node list clean" );
+        return -131;
+    }
+
+    if (dap_global_db_clean_init()) {
+        log_it( L_CRITICAL, "Can't init gdb clean and pin" );
+        return -133;
+    }
+
+    /* Transport servers already created before dap_chain_net_load_all().
+     * l_server, json-rpc, www, balancer handlers already set up in the new block. */
+
+    bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
+    log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
+
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "geoip_enabled", false)) {
         if(chain_net_geoip_init(g_config) != 0) {
             log_it(L_CRITICAL, "Can't init geoip module");
@@ -655,6 +674,8 @@ int main( int argc, const char **argv )
     rc = dap_events_wait();
     _log_it( rc ? L_CRITICAL : L_NOTICE, "[cellframe-node] Server loop stopped with return code %d", rc );
     // Deinit modules
+
+    dap_events_deinit();
 
 //failure:
     if (l_plugins_enabled) {

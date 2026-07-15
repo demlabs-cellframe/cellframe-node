@@ -1,0 +1,27 @@
+# UTXO Blocking Functional Test Suite
+# Suite descriptor for UTXO blocking functional tests
+
+suite: UTXO Blocking Functional Tests
+name: UTXO Blocking Functional Tests
+description: |
+  Functional tests for UTXO blocking functionality.
+  
+  Tests included:
+  - token_update_utxo_add: Tests UTXO blocking via token_update
+  - tx_create_arbitrage: Tests arbitrage transaction creation
+  - arbitrage_bypass_test: Tests arbitrage bypass functionality
+
+author: QA Team
+tags: [functional, utxo-blocking, arbitrage]
+version: "1.0"
+
+# Test scenarios in this suite
+scenarios:
+  - token_update_utxo_add.yml
+  - tx_create_arbitrage.yml
+  - arbitrage_bypass_test.yml
+
+# Suite-level defaults
+defaults:
+  network: stagenet
+  timeout: 120
