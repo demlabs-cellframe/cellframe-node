@@ -107,8 +107,11 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 
 # init CellFrame SDK
 
+# version.mk is read unconditionally (line 26), so VERSION_MAJOR/MINOR/PATCH
+# are always populated. CPACK_PACKAGE_VERSION_* are only set in standalone mode
+# (lines 29-31), so we must NOT rely on them here.
 if (NOT DEFINED DAP_VERSION)
-    set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    set(DAP_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}")
     add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
 endif()
 set(BUILD_TS "${BUILD_TIMESTAMP}")
