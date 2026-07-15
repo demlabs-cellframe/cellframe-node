@@ -1,0 +1,25 @@
+# UTXO Blocking E2E Test Suite
+# Suite descriptor for UTXO blocking and arbitrage bypass tests
+
+suite: UTXO Blocking E2E Tests
+name: UTXO Blocking E2E Tests
+description: |
+  End-to-end tests for UTXO blocking functionality and arbitrage bypass.
+  
+  Tests included:
+  - blocked_utxo_transfer: Verifies regular transactions are blocked for blocked UTXOs
+  - arbitrage_bypass: Verifies arbitrage transactions can bypass UTXO blocklist
+
+author: QA Team
+tags: [e2e, utxo-blocking, arbitrage, critical]
+version: "1.0"
+
+# Test scenarios in this suite
+scenarios:
+  - blocked_utxo_transfer.yml
+  - arbitrage_bypass.yml
+
+# Suite-level defaults
+defaults:
+  network: stagenet
+  timeout: 300

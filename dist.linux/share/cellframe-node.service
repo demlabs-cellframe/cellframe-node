@@ -5,8 +5,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/cellframe-node
-ExecStart=/opt/cellframe-node/bin/cellframe-node &
-ExecStop=/bin/kill -SIGTERM $MAINPID
+ExecStart=/opt/cellframe-node/bin/cellframe-node
 Restart=always
 User=root
 Group=root

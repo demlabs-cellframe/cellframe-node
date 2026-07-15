@@ -107,11 +107,12 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 
 # init CellFrame SDK
 
-set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+if (NOT DEFINED DAP_VERSION)
+    set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
+endif()
 set(BUILD_TS "${BUILD_TIMESTAMP}")
 set(BUILD_HASH "${GIT_COMMIT_HASH}")
-
-add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
 add_definitions("-DBUILD_TS=\"${BUILD_TS}\"")
 add_definitions("-DBUILD_HASH=\"${BUILD_HASH}\"")
 
@@ -153,8 +154,8 @@ option(DAP_USE_RPMALLOC "Use 'rpmalloc' instead of std allocator" OFF)
 
 if(CELLFRAME_NODE_STANDALONE)
     if(LINUX OR WIN32 OR DARWIN)
-        set(BUILD_WITH_PYTHON_ENV ON)
-        set(SUPPORT_PYTHON_PLUGINS ON)
+        set(BUILD_WITH_PYTHON_ENV OFF)
+        set(SUPPORT_PYTHON_PLUGINS OFF)
     endif()
 endif()
 
@@ -190,14 +191,14 @@ if(NOT TARGET dap_core)
     if(DEFINED DAP_SDK_SOURCE_DIR)
         add_subdirectory(${DAP_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/dap-sdk)
     else()
-        add_subdirectory(dap-sdk)
+        message(FATAL_ERROR "dap-sdk source dir not provided. Set DAP_SDK_SOURCE_DIR before adding cellframe-node, or initialize cellframe-node/dap-sdk submodule.")
     endif()
 endif()
 if(NOT TARGET cellframe-sdk)
     if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
         add_subdirectory(${CELLFRAME_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/cellframe-sdk)
     else()
-        add_subdirectory(cellframe-sdk)
+        message(FATAL_ERROR "cellframe-sdk source dir not provided. Set CELLFRAME_SDK_SOURCE_DIR before adding cellframe-node.")
     endif()
 endif()
 if(UNIX)
@@ -835,6 +836,20 @@ else()
         INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        # Strip binaries in Release builds (debug symbols go to -dbg package)
+        if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+            INSTALL(CODE "
+                execute_process(COMMAND \${CMAKE_STRIP} --strip-unneeded
+                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node
+                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-cli
+                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-tool
+                    OUTPUT_VARIABLE STRIP_OUT ERROR_VARIABLE STRIP_ERR
+                    RESULT_VARIABLE STRIP_RC)
+                if(STRIP_RC)
+                    message(WARNING \"strip failed: \${STRIP_ERR}\")
+                endif()
+            ")
+        endif()
     endif()
 
     if (NOT ANDROID)
