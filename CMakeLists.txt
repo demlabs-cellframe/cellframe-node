@@ -107,8 +107,11 @@ message("Git SHA: ${GIT_COMMIT_HASH}")
 
 # init CellFrame SDK
 
+# version.mk is read unconditionally (line 26), so VERSION_MAJOR/MINOR/PATCH
+# are always populated. CPACK_PACKAGE_VERSION_* are only set in standalone mode
+# (lines 29-31), so we must NOT rely on them here.
 if (NOT DEFINED DAP_VERSION)
-    set(DAP_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}-${CPACK_PACKAGE_VERSION_PATCH}")
+    set(DAP_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}-${VERSION_PATCH}")
     add_definitions("-DDAP_VERSION=\"${DAP_VERSION}\"")
 endif()
 set(BUILD_TS "${BUILD_TIMESTAMP}")
@@ -188,13 +191,25 @@ if(NOT DEFINED DAP_TPL_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/dap_tpl
 endif()
 
 if(NOT TARGET dap_core)
-    add_subdirectory(dap-sdk)
+    if(NOT DEFINED DAP_SDK_SOURCE_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/dap-sdk/CMakeLists.txt")
+        set(DAP_SDK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dap-sdk")
+        message(STATUS "[+] dap-sdk (auto-detected submodule): ${DAP_SDK_SOURCE_DIR}")
+    endif()
+    if(DEFINED DAP_SDK_SOURCE_DIR)
+        add_subdirectory(${DAP_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/dap-sdk)
+    else()
+        message(FATAL_ERROR "dap-sdk source dir not provided. Set DAP_SDK_SOURCE_DIR before adding cellframe-node, or initialize cellframe-node/dap-sdk submodule.")
+    endif()
 endif()
 if(NOT TARGET cellframe-sdk)
+    if(NOT DEFINED CELLFRAME_SDK_SOURCE_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk/CMakeLists.txt")
+        set(CELLFRAME_SDK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cellframe-sdk")
+        message(STATUS "[+] cellframe-sdk (auto-detected submodule): ${CELLFRAME_SDK_SOURCE_DIR}")
+    endif()
     if(DEFINED CELLFRAME_SDK_SOURCE_DIR)
         add_subdirectory(${CELLFRAME_SDK_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/cellframe-sdk)
     else()
-        add_subdirectory(cellframe-sdk)
+        message(FATAL_ERROR "cellframe-sdk source dir not provided. Set CELLFRAME_SDK_SOURCE_DIR before adding cellframe-node.")
     endif()
 endif()
 if(UNIX)
@@ -832,6 +847,19 @@ else()
         INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+        if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+            INSTALL(CODE "
+                execute_process(COMMAND \"${CMAKE_STRIP}\" --strip-unneeded
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-cli
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-tool
+                    OUTPUT_VARIABLE STRIP_OUT ERROR_VARIABLE STRIP_ERR
+                    RESULT_VARIABLE STRIP_RC)
+                if(STRIP_RC)
+                    message(WARNING \"strip failed: \${STRIP_ERR}\")
+                endif()
+            ")
+        endif()
     endif()
 
     if (NOT ANDROID)
