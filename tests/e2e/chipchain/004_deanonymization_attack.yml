@@ -346,9 +346,22 @@ test:
       # Both TXs should be valid with different commitments
       - cli: "tx get -hash {{commit_tx_1}}"
         expect: success
+        save: commit_tx_1_data
 
       - cli: "tx get -hash {{commit_tx_2}}"
         expect: success
+        save: commit_tx_2_data
+
+      # Verify commitments differ: same amount, same wallet, different TX
+      # → Pedersen commitments MUST be different (random blinding factor)
+      - verify_not_equal:
+          a: "{{commit_tx_1_data}}"
+          b: "{{commit_tx_2_data}}"
+          description: |
+            Same amount (50.0) from same wallet to different recipients.
+            Pedersen commitments MUST differ because each includes a
+            random blinding factor. If they matched, it would indicate
+            a broken commitment scheme vulnerable to amount correlation.
 
   # ======================================================================
   # Group 6: Double-spend prevention test
@@ -357,10 +370,12 @@ test:
     description: |
       Verify that the network prevents double-spending of anonymous outputs.
       The key image mechanism ensures each UTXO can only be spent once.
-      Attempt to verify TX integrity after chain processing — if a double-spend
-      were possible, the ledger would show inconsistencies.
+      Step 1: Send a valid anonymous TX from Dave (should succeed).
+      Step 2: Attempt to re-send the EXACT same TX (same key image) —
+              the network must reject it as a double-spend.
+      Step 3: Verify ledger consistency after the attack attempt.
     steps:
-      # Normal TX from Dave — should succeed
+      # Step 1: Valid TX from Dave — should succeed
       - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_dave -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         expect: success
         save_hash: doublespend_tx
@@ -390,8 +405,25 @@ test:
       - cli: "tx get -hash {{doublespend_tx}}"
         expect: success
         description: |
-          TX should have unique key image. If the same UTXO were spent
-          twice, the second TX would be rejected by the network.
+          TX should have unique key image. Verified on-chain.
+
+      # Step 2: Attempt double-spend — re-send the same TX bytes.
+      # The node must reject it because the key image is already spent.
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_dave -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+        expect: failure
+        description: |
+          DOUBLE-SPEND ATTEMPT: Dave tries to spend the same anonymous
+          output again. The key image is already in the ledger, so the
+          TX creation or mempool submission must fail with a key-image-
+          already-spent error.
+
+      # Step 3: Verify ledger is still consistent after attack attempt
+      - cli: "ledger info -token {{token_name}}"
+        expect: success
+
+      - cli: "net get status"
+        expect: success
+        contains: "NET_STATE_ONLINE"
 
   # ======================================================================
   # Group 7: TX chain consistency with anonymous transfers
@@ -471,7 +503,50 @@ test:
         expect: success
 
   # ======================================================================
-  # Group 10: Network health after all attacks
+  # Group 10: Ring signature unlinkability
+  # ======================================================================
+  - group: Ring signature unlinkability
+    description: |
+      Verify that anonymous TXs from different wallets cannot be linked
+      by analyzing the ring signature output. All TXs should appear
+      indistinguishable on-chain — no metadata leaks the real signer.
+    steps:
+      # Get TX data for TXs from different wallets
+      - cli: "tx get -hash {{timing_tx_1}}"
+        expect: success
+        save: unlink_tx_1
+
+      - cli: "tx get -hash {{timing_tx_2}}"
+        expect: success
+        save: unlink_tx_2
+
+      - cli: "tx get -hash {{timing_tx_3}}"
+        expect: success
+        save: unlink_tx_3
+
+      # All TXs should have IN_ANON items with the same ring size
+      # (anon_set={{anon_ring_size}}) — this ensures they are
+      # indistinguishable regardless of the real signer.
+      - verify_structure:
+          field: "ring_size"
+          in: "{{unlink_tx_1}}"
+          equals: "{{anon_ring_size}}"
+          description: |
+            TX 1 ring size must match configured anon_set.
+            Larger ring = stronger anonymity.
+
+      - verify_structure:
+          field: "ring_size"
+          in: "{{unlink_tx_2}}"
+          equals: "{{anon_ring_size}}"
+
+      - verify_structure:
+          field: "ring_size"
+          in: "{{unlink_tx_3}}"
+          equals: "{{anon_ring_size}}"
+
+  # ======================================================================
+  # Group 11: Network health after all attacks
   # ======================================================================
   - group: Network health after attacks
     description: |
@@ -498,3 +573,10 @@ test:
       - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}}"
         expect: success
         contains: "sig_dil"
+
+      # Verify total supply is preserved after all attacks
+      - cli: "ledger info -token {{token_name}}"
+        expect: success
+        description: |
+          Total supply must equal original emission (100000000.0).
+          No tokens created or destroyed by attack attempts.

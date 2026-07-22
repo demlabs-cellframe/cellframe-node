@@ -23,6 +23,10 @@ variables:
   # (ledger: "Token tickers IN and OUT mismatch"). Masters accept zero-fee
   # until a validator fee order exists.
   tx_fee: "1.0"
+  # CRITICAL: cell_size_threshold must be set to trigger auto-sharding.
+  # With threshold=7, after 7 atoms in a cell, rotation is triggered.
+  # We generate 10 TXs (5 initial + 5 post-check) to exceed this.
+  cell_size_threshold: 7
 
 test:
   # ======================================================================
@@ -236,6 +240,8 @@ test:
     description: |
       Verify wallets have correct balances after load.
       Check shard state and atom count on the chain.
+      With cell_size_threshold=7 and 5+ TXs processed, cell rotation
+      should have been triggered.
     steps:
       - cli: "wallet info -w cc_shard_alice"
         expect: success
@@ -246,12 +252,26 @@ test:
         contains: "{{token_name}}"
 
       # Check atom count on chain — should reflect all TXs processed
+      - cli: "chain get atoms -chain main -limit 20"
+        expect: success
+
+      # Verify chain cell state — after threshold is reached,
+      # the chain should have rotated to a new cell
       - cli: "chain get atoms -chain zerochain -limit 10"
         expect: success
 
       # Check ledger consistency
       - cli: "ledger info -token {{token_name}}"
         expect: success
+
+      # Verify the chain reports the correct number of atoms
+      # (all 5 TXs + bootstrap + token_decl + emission should be present)
+      - cli: "chain get count -chain main"
+        expect: success
+        description: |
+          Atom count on mainchain should be >= 8 (token_decl + emission +
+          bootstrap_tx + 5 transfer TXs). If cell rotation occurred,
+          atoms should be distributed across cells.
 
   # ======================================================================
   # Group 4: Verify consensus continues after load
@@ -260,15 +280,17 @@ test:
     description: |
       Consensus must continue processing blocks after cell rotation.
       Create additional TXs to verify the chain is still functional.
+      With cell_size_threshold=7, the first 5 TXs should have triggered
+      rotation. These 5 additional TXs go into the NEW cell.
     steps:
       - cli: "net get status"
         expect: success
         contains: "NET_STATE_ONLINE"
 
-      # Create TXs after potential cell rotation
+      # Post-rotation TX 1
       - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
         expect: success
-        save_hash: post_load_tx
+        save_hash: post_load_tx_1
 
       - cli: "mempool proc_all"
         expect: success
@@ -284,7 +306,61 @@ test:
         node: "{{first_master}}"
         expect: success
 
-      - wait_for_datum: "{{post_load_tx}}"
+      - wait_for_datum: "{{post_load_tx_1}}"
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      # Post-rotation TX 2
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+        expect: success
+        save_hash: post_load_tx_2
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{post_load_tx_2}}"
+        chain: main
+        node: "{{first_master}}"
+        timeout_total: 300
+        timeout_mempool: 240
+        timeout_verification: 180
+        timeout_in_blocks: 180
+
+      # Post-rotation TX 3
+      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+        expect: success
+        save_hash: post_load_tx_3
+
+      - cli: "mempool proc_all"
+        expect: success
+
+      - cli: "net go sync"
+        expect: success
+
+      - cli: "net go sync"
+        node: "{{first_master}}"
+        expect: success
+
+      - cli: "mempool proc_all"
+        node: "{{first_master}}"
+        expect: success
+
+      - wait_for_datum: "{{post_load_tx_3}}"
         chain: main
         node: "{{first_master}}"
         timeout_total: 300

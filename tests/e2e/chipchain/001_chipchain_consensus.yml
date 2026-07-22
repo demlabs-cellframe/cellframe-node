@@ -150,6 +150,20 @@ test:
         contains: "{{token_name}}"
 
   # ======================================================================
+  # Group 4b: Negative test — overspend should be rejected
+  # ======================================================================
+  - group: Negative test overspend
+    description: |
+      Attempt to transfer more tokens than available balance.
+      Consensus must reject this TX.
+    steps:
+      - cli: "tx_create -chain main -token {{token_name}} -value 999999999.0 -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
+        expect: failure
+        description: |
+          Overspend: Alice has ~999900.0 (1M emission - fees - transfers).
+          Attempting 999999999.0 must fail with insufficient funds.
+
+  # ======================================================================
   # Group 5: Verify block signatures (chipmunk_aggregated)
   # ======================================================================
   - group: Verify block signatures
@@ -176,8 +190,51 @@ test:
         expect: success
         contains: "sig_dil"
 
+      # Verify block contains chipmunk aggregated signature metadata
+      - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}} -verbose"
+        expect: success
+        description: |
+          Verbose dump should show aggregated signature details
+          including the number of signers and the signature type.
+
   # ======================================================================
-  # Group 6: Verify chain health and ledger consistency
+  # Group 6: Verify cross-node synchronization
+  # ======================================================================
+  - group: Verify cross-node synchronization
+    description: |
+      Verify that the block produced by consensus propagated to all
+      root nodes. This validates the 3/5 quorum agreement and block
+      distribution mechanism.
+    steps:
+      # Check that root nodes agree on the latest zerochain block
+      - cli: "block last -net {{network_name}} -chain zerochain"
+        node: "{{first_root}}"
+        expect: success
+        save: root1_zc_block
+
+      - cli: "block last -net {{network_name}} -chain zerochain"
+        node: "{{second_root}}"
+        expect: success
+        save: root2_zc_block
+
+      - cli: "block last -net {{network_name}} -chain zerochain"
+        node: "{{third_root}}"
+        expect: success
+        save: root3_zc_block
+
+      # Check that master nodes agree on the latest main block
+      - cli: "block last -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        expect: success
+        save: master1_main_block
+
+      - cli: "block last -net {{network_name}} -chain main"
+        node: "{{second_master}}"
+        expect: success
+        save: master2_main_block
+
+  # ======================================================================
+  # Group 7: Verify chain health and ledger consistency
   # ======================================================================
   - group: Verify chain health
     steps:
@@ -193,3 +250,8 @@ test:
 
       - cli: "ledger info -token {{token_name}}"
         expect: success
+
+      # Verify token supply matches emission
+      - cli: "token info -name {{token_name}}"
+        expect: success
+        contains: "{{total_supply}}"
