@@ -464,16 +464,6 @@ test:
       min_validators_count: "3"
       bootstrap_min_validators_count: "3"
   
-  - group: Disable seed_mode on seed nodes
-    steps:
-      - for: _seed_node
-        in: "{{seed_nodes}}"
-        steps:
-          - cli: "chain seed -net {{network_name}} -chain zerochain off"
-            node: "{{_seed_node}}"
-          - cli: "chain seed -net {{network_name}} -chain main off"
-            node: "{{_seed_node}}"
-  
   - group: Create stake orders for validators
     steps:
       - for: node_idx
@@ -501,6 +491,20 @@ test:
     node: "{{first_root}}"
     timeout: 120
   
+  # CRITICAL: seed_mode is a runtime state (not persisted in config).
+  # After restart it defaults to OFF. Re-enable it so the node can accept
+  # the genesis block from its own chain storage on disk.
+  - group: Re-enable seed_mode after restart
+    steps:
+      - for: _seed_node
+        in: "{{seed_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain zerochain on"
+            node: "{{_seed_node}}"
+          - cli: "chain seed -net {{network_name}} -chain main on"
+            node: "{{_seed_node}}"
+      - wait: 5s
+
   - group: Verify Genesis State After Restart
     defaults:
       node: "{{first_root}}"
@@ -529,6 +533,20 @@ test:
         not_contains: "have blocks: 0"
         contains: "have blocks:"
       - print: "Final verification - {{_verify_node}}: {{_final_blocks}}"
+
+  # CRITICAL: Disable seed_mode AFTER restart and verification.
+  # seed_mode must be ON during restart so the genesis block is accepted
+  # during chain load from disk. If seed_mode is OFF during load, the
+  # genesis block is rejected and the chain has 0 blocks after restart.
+  - group: Disable seed_mode on seed nodes
+    steps:
+      - for: _seed_node
+        in: "{{seed_nodes}}"
+        steps:
+          - cli: "chain seed -net {{network_name}} -chain zerochain off"
+            node: "{{_seed_node}}"
+          - cli: "chain seed -net {{network_name}} -chain main off"
+            node: "{{_seed_node}}"
 
   - config: "{{network_name}}/main"
     nodes: "{{_active_nodes}}"
