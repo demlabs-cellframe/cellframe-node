@@ -1,0 +1,9 @@
+# Common defaults for ChipChain E2E tests
+# These variables supplement the auto-generated topology variables
+# (first_root, first_master, network_name, etc.) from the global context.
+
+variables:
+  # Additional node references not provided by global context
+  second_root: "node-2"
+  third_root: "node-3"
+  second_master: "node-7"

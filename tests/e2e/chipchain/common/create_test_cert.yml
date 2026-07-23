@@ -1,0 +1,8 @@
+# Test certificate setup for ChipChain E2E tests
+# Uses the existing root certificate from genesis (created during phase1).
+# The root cert is already distributed to all nodes during genesis.
+
+variables:
+  # Use the first root node's consensus certificate for token operations.
+  # This cert was created during genesis and is available on all nodes.
+  test_cert: "{{network_name}}.root.pvt.0"

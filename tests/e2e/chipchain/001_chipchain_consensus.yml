@@ -21,237 +21,243 @@ variables:
   tx_fee: "1.0"
 
 test:
-  # ======================================================================
-  # Group 1: Verify network is operational
-  # ======================================================================
-  - group: Verify network is operational
-    steps:
-      - cli: "net get status"
-        expect: success
-        contains: "NET_STATE_ONLINE"
+  defaults:
+    cli:
+      net: "{{network_name}}"
+  steps:
+    # ======================================================================
+    # Group 1: Verify network is operational
+    # ======================================================================
+    - group: Verify network is operational
+      steps:
+        - cli: "net get status"
+          expect: success
+          contains: "NET_STATE_ONLINE"
 
-      - cli: "net get links"
-        expect: success
+        - cli: "net get links"
+          expect: success
 
-  # ======================================================================
-  # Group 2: Create wallets (Dilithium for standard TX)
-  # ======================================================================
-  - group: Create wallets
-    steps:
-      - cli: "wallet new -w cc_alice -sign_type sig_dil"
-        expect: success
-        save_wallet: alice_addr
+    # ======================================================================
+    # Group 2: Create wallets (Dilithium for standard TX)
+    # ======================================================================
+    - group: Create wallets
+      steps:
+        - cli: "wallet new -w cc_alice -sign_type sig_dil"
+          expect: success
+          save_wallet: alice_addr
 
-      - cli: "wallet new -w cc_bob -sign_type sig_dil"
-        expect: success
-        save_wallet: bob_addr
+        - cli: "wallet new -w cc_bob -sign_type sig_dil"
+          expect: success
+          save_wallet: bob_addr
 
-      # Verify wallet sign type display
-      - cli: "wallet info -w cc_alice"
-        expect: success
+        # Verify wallet sign type display
+        - cli: "wallet info -w cc_alice"
+          expect: success
 
-      - cli: "wallet info -w cc_bob"
-        expect: success
+        - cli: "wallet info -w cc_bob"
+          expect: success
 
-  # ======================================================================
-  # Group 3: Token declaration and emission
-  # ======================================================================
-  - group: Declare and emit tokens
-    steps:
-      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
-        expect: success
-        save_hash: token_decl_hash
+    # ======================================================================
+    # Group 3: Token declaration and emission
+    # ======================================================================
+    - group: Declare and emit tokens
+      steps:
+        - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
+          expect: success
+          save_hash: token_decl_hash
 
-      - wait_for_datum: "{{token_decl_hash}}"
-        chain: zerochain
-        timeout_total: 180
+        - wait_for_datum: "{{token_decl_hash}}"
+          chain: zerochain
+          timeout_total: 180
 
-      - cli: "token info -name {{token_name}}"
-        expect: success
-        contains: "{{token_name}}"
+        - cli: "token info -name {{token_name}}"
+          expect: success
+          contains: "{{token_name}}"
 
-      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
-        expect: success
-        save_hash: emit_hash
+        - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
+          expect: success
+          save_hash: emit_hash
 
-      - wait_for_datum: "{{emit_hash}}"
-        chain: zerochain
-        timeout_total: 180
+        - wait_for_datum: "{{emit_hash}}"
+          chain: zerochain
+          timeout_total: 180
 
-      - wait: global_db_sync
-        timeout: 120
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
 
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
-        expect: success
-        save_hash: bootstrap_tx_hash
+        - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
+          expect: success
+          save_hash: bootstrap_tx_hash
 
-      - cli: "mempool proc_all"
-        expect: success
+        - cli: "mempool proc_all"
+          expect: success
 
-      - cli: "net go sync"
-        expect: success
+        - cli: "net go sync"
+          expect: success
 
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
 
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
 
-      - wait_for_datum: "{{bootstrap_tx_hash}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
+        - wait_for_datum: "{{bootstrap_tx_hash}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
 
-      - wait: global_db_sync
-        timeout: 120
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
 
-      - cli: "wallet info -w cc_alice"
-        expect: success
-        contains: "{{token_name}}"
+        - cli: "wallet info -w cc_alice"
+          expect: success
+          contains: "{{token_name}}"
 
-  # ======================================================================
-  # Group 4: Transfer to verify consensus processing
-  # ======================================================================
-  - group: Transfer tokens
-    steps:
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_hash
+    # ======================================================================
+    # Group 4: Transfer to verify consensus processing
+    # ======================================================================
+    - group: Transfer tokens
+      steps:
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_hash
 
-      - cli: "mempool proc_all"
-        expect: success
+        - cli: "mempool proc_all"
+          expect: success
 
-      - cli: "net go sync"
-        expect: success
+        - cli: "net go sync"
+          expect: success
 
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
 
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
 
-      - wait_for_datum: "{{tx_hash}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
+        - wait_for_datum: "{{tx_hash}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
 
-      - cli: "wallet info -w cc_bob"
-        expect: success
-        contains: "{{token_name}}"
+        - cli: "wallet info -w cc_bob"
+          expect: success
+          contains: "{{token_name}}"
 
-  # ======================================================================
-  # Group 4b: Negative test — overspend should be rejected
-  # ======================================================================
-  - group: Negative test overspend
-    description: |
-      Attempt to transfer more tokens than available balance.
-      Consensus must reject this TX.
-    steps:
-      - cli: "tx_create -chain main -token {{token_name}} -value 999999999.0 -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
-        expect: error
-        description: |
-          Overspend: Alice has ~999900.0 (1M emission - fees - transfers).
-          Attempting 999999999.0 must fail with insufficient funds.
+    # ======================================================================
+    # Group 4b: Negative test — overspend should be rejected
+    # ======================================================================
+    - group: Negative test overspend
+      description: |
+        Attempt to transfer more tokens than available balance.
+        Consensus must reject this TX.
+      steps:
+        - cli: "tx_create -chain main -token {{token_name}} -value 999999999.0 -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
+          expect: error
+          description: |
+            Overspend: Alice has ~999900.0 (1M emission - fees - transfers).
+            Attempting 999999999.0 must fail with insufficient funds.
 
-  # ======================================================================
-  # Group 5: Verify block signatures (chipmunk_aggregated)
-  # ======================================================================
-  - group: Verify block signatures
-    description: |
-      Verify blocks are signed with chipmunk_aggregated multi-sig.
-      The use_chipmunk_aggregated=true config enables Chipmunk aggregated
-      signatures for block signing in chipchain consensus.
-    steps:
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        expect: success
-        save: zc_last_block_hash
-        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+    # ======================================================================
+    # Group 5: Verify block signatures (chipmunk_aggregated)
+    # ======================================================================
+    - group: Verify block signatures
+      description: |
+        Verify blocks are signed with chipmunk_aggregated multi-sig.
+        The use_chipmunk_aggregated=true config enables Chipmunk aggregated
+        signatures for block signing in chipchain consensus.
+      steps:
+        - cli: "block last -chain zerochain"
+          expect: success
+          save: zc_last_block_hash
+          save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
 
-      - cli: "block dump -net {{network_name}} -chain zerochain -hash {{zc_last_block_hash}}"
-        expect: success
-        contains: "sig_dil"
+        - cli: "block dump -chain zerochain -hash {{zc_last_block_hash}}"
+          expect: success
+          contains: "sig_dil"
 
-      - cli: "block last -net {{network_name}} -chain main"
-        expect: success
-        save: main_last_block_hash
-        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+        - cli: "block last -chain main"
+          expect: success
+          save: main_last_block_hash
+          save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
 
-      - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}}"
-        expect: success
-        contains: "sig_dil"
+        - cli: "block dump -chain main -hash {{main_last_block_hash}}"
+          expect: success
+          contains: "sig_dil"
 
-      # Verify block contains chipmunk aggregated signature metadata
-      - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}} -verbose"
-        expect: success
-        description: |
-          Verbose dump should show aggregated signature details
-          including the number of signers and the signature type.
+        # Verify block contains chipmunk aggregated signature metadata
+        - cli: "block dump -chain main -hash {{main_last_block_hash}} -verbose"
+          expect: success
+          description: |
+            Verbose dump should show aggregated signature details
+            including the number of signers and the signature type.
 
-  # ======================================================================
-  # Group 6: Verify cross-node synchronization
-  # ======================================================================
-  - group: Verify cross-node synchronization
-    description: |
-      Verify that the block produced by consensus propagated to all
-      root nodes. This validates the 3/5 quorum agreement and block
-      distribution mechanism.
-    steps:
-      # Check that root nodes agree on the latest zerochain block
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        node: "{{first_root}}"
-        expect: success
-        save: root1_zc_block
+    # ======================================================================
+    # Group 6: Verify cross-node synchronization
+    # ======================================================================
+    - group: Verify cross-node synchronization
+      description: |
+        Verify that the block produced by consensus propagated to all
+        root nodes. This validates the 3/5 quorum agreement and block
+        distribution mechanism.
+      steps:
+        # Check that root nodes agree on the latest zerochain block
+        - cli: "block last -chain zerochain"
+          node: "{{first_root}}"
+          expect: success
+          save: root1_zc_block
 
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        node: "{{second_root}}"
-        expect: success
-        save: root2_zc_block
+        - cli: "block last -chain zerochain"
+          node: "{{second_root}}"
+          expect: success
+          save: root2_zc_block
 
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        node: "{{third_root}}"
-        expect: success
-        save: root3_zc_block
+        - cli: "block last -chain zerochain"
+          node: "{{third_root}}"
+          expect: success
+          save: root3_zc_block
 
-      # Check that master nodes agree on the latest main block
-      - cli: "block last -net {{network_name}} -chain main"
-        node: "{{first_master}}"
-        expect: success
-        save: master1_main_block
+        # Check that master nodes agree on the latest main block
+        - cli: "block last -chain main"
+          node: "{{first_master}}"
+          expect: success
+          save: master1_main_block
 
-      - cli: "block last -net {{network_name}} -chain main"
-        node: "{{second_master}}"
-        expect: success
-        save: master2_main_block
+        - cli: "block last -chain main"
+          node: "{{second_master}}"
+          expect: success
+          save: master2_main_block
 
-  # ======================================================================
-  # Group 7: Verify chain health and ledger consistency
-  # ======================================================================
-  - group: Verify chain health
-    steps:
-      - cli: "net get status"
-        expect: success
-        contains: "NET_STATE_ONLINE"
+    # ======================================================================
+    # Group 7: Verify chain health and ledger consistency
+    # ======================================================================
+    - group: Verify chain health
+      steps:
+        - cli: "net get status"
+          expect: success
+          contains: "NET_STATE_ONLINE"
 
-      - cli: "chain get atoms -chain zerochain -limit 5"
-        expect: success
+        - cli: "chain get atoms -chain zerochain -limit 5"
+          expect: success
 
-      - cli: "chain get atoms -chain main -limit 5"
-        expect: success
+        - cli: "chain get atoms -chain main -limit 5"
+          expect: success
 
-      - cli: "ledger info -token {{token_name}}"
-        expect: success
+        - cli: "ledger info -token {{token_name}}"
+          expect: success
 
-      # Verify token supply matches emission
-      - cli: "token info -name {{token_name}}"
-        expect: success
-        contains: "{{total_supply}}"
+        # Verify token supply matches emission
+        - cli: "token info -name {{token_name}}"
+          expect: success
+          contains: "{{total_supply}}"
