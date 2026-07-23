@@ -158,7 +158,7 @@ test:
       Consensus must reject this TX.
     steps:
       - cli: "tx_create -chain main -token {{token_name}} -value 999999999.0 -to_addr {{bob_addr}} -from_wallet cc_alice -fee {{tx_fee}}"
-        expect: failure
+        expect: error
         description: |
           Overspend: Alice has ~999900.0 (1M emission - fees - transfers).
           Attempting 999999999.0 must fail with insufficient funds.

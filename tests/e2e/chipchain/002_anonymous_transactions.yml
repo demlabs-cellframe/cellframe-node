@@ -264,7 +264,7 @@ test:
       - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value_2}} -to_addr {{alice_addr}} -from_wallet cc_anon_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
         node: "{{first_root}}"
         timeout: 300
-        expect: failure
+        expect: error
         description: |
           Bob already spent his anonymous output (300 -> Carol).
           Attempting to spend it again must fail with key-image-

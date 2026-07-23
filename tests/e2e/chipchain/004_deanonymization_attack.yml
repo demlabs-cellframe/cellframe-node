@@ -410,7 +410,7 @@ test:
       # Step 2: Attempt double-spend — re-send the same TX bytes.
       # The node must reject it because the key image is already spent.
       - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_atk_dave -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
-        expect: failure
+        expect: error
         description: |
           DOUBLE-SPEND ATTEMPT: Dave tries to spend the same anonymous
           output again. The key image is already in the ledger, so the
