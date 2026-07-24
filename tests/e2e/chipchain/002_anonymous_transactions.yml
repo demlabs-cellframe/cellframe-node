@@ -30,301 +30,307 @@ variables:
   tx_fee: "1.0"
 
 test:
-  # ======================================================================
-  # Group 1: Create Chipmunk Ring wallets for anonymous TX
-  # ======================================================================
-  - group: Create Chipmunk Ring wallets
-    description: |
-      Generate sig_chipmunk_ring keypairs for anonymous transactions.
-      Key type 0x010C — ring signature for anonymous ledger with
-      SNARK proofs and Pedersen commitments.
-    steps:
-      - cli: "wallet new -w cc_anon_alice -sign_type sig_chipmunk_ring"
-        expect: success
-        save_wallet: alice_addr
+  defaults:
+    cli:
+      net: "{{network_name}}"
+  steps:
+    # ======================================================================
+    # Group 1: Create Chipmunk Ring wallets for anonymous TX
+    # ======================================================================
+    - group: Create Chipmunk Ring wallets
+      description: |
+        Generate sig_chipmunk_ring keypairs for anonymous transactions.
+        Key type 0x010C — ring signature for anonymous ledger with
+        SNARK proofs and Pedersen commitments.
+      steps:
+        - cli: "wallet new -w cc_anon_alice -sign_type sig_chipmunk_ring"
+          expect: success
+          save_wallet: alice_addr
 
-      - cli: "wallet new -w cc_anon_bob -sign_type sig_chipmunk_ring"
-        expect: success
-        save_wallet: bob_addr
+        - cli: "wallet new -w cc_anon_bob -sign_type sig_chipmunk_ring"
+          expect: success
+          save_wallet: bob_addr
 
-      - cli: "wallet new -w cc_anon_carol -sign_type sig_chipmunk_ring"
-        expect: success
-        save_wallet: carol_addr
+        - cli: "wallet new -w cc_anon_carol -sign_type sig_chipmunk_ring"
+          expect: success
+          save_wallet: carol_addr
 
-      # Verify wallet info shows chipmunk_ring sign type
-      - cli: "wallet info -w cc_anon_alice"
-        expect: success
-        description: |
-          Wallet info should display sign type as chipmunk_ring.
-          This confirms the wallet was created with correct key type
-          for anonymous transactions.
-
-      - cli: "wallet info -w cc_anon_bob"
-        expect: success
-
-  # ======================================================================
-  # Group 2: Token setup
-  # ======================================================================
-  - group: Setup token
-    steps:
-      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
-        expect: success
-        save_hash: token_decl_hash
-
-      - wait_for_datum: "{{token_decl_hash}}"
-        chain: zerochain
-        timeout_total: 180
-
-      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
-        expect: success
-        save_hash: emit_hash
-
-      - wait_for_datum: "{{emit_hash}}"
-        chain: zerochain
-        timeout_total: 180
-
-      - wait: global_db_sync
-        timeout: 120
-
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
-        expect: success
-        save_hash: bootstrap_tx_hash
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{bootstrap_tx_hash}}"
-        chain: main
-        node: "{{first_root}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - wait: global_db_sync
-        timeout: 120
-
-      - cli: "wallet info -w cc_anon_alice"
-        expect: success
-        contains: "{{token_name}}"
-
-      - cli: "token info -name {{token_name}}"
-        expect: success
-        contains: "{{token_name}}"
-
-  # ======================================================================
-  # Group 3: Anonymous TX — Alice -> Bob
-  # ======================================================================
-  - group: Anonymous transfer Alice to Bob
-    description: |
-      Create an anonymous transaction using the -anonymous flag.
-      The TX uses:
-      - Ring signature with auto-selected validators (anon_set={{anon_ring_size}})
-      - SNARK proof for zero-knowledge verification
-      - Key image for double-spend prevention
-      - Pedersen commitment for confidential amount
-    steps:
-      - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_anon_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
-        node: "{{first_root}}"
-        timeout: 300
-        expect: success
-        save_hash: anon_tx_1
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{anon_tx_1}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      # Verify the anonymous TX was created and contains key_image
-      - cli: "tx get -hash {{anon_tx_1}}"
-        expect: success
-        description: |
-          TX get should return the anonymous transaction with:
-          - IN_ANON item (ring signature + SNARK proof)
-          - OUT_ANON item (Pedersen commitment + range proof)
-          - KEY_IMAGE item (double-spend prevention)
-        contains:
-          - "IN_ANON"
-          - "OUT_ANON"
-          - "KEY_IMAGE"
-
-  # ======================================================================
-  # Group 4: Anonymous TX — Bob -> Carol
-  # ======================================================================
-  - group: Anonymous transfer Bob to Carol
-    description: |
-      Chain anonymous transfer from Bob to Carol.
-      Tests that received anonymous outputs can be spent.
-    steps:
-      - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value_2}} -to_addr {{carol_addr}} -from_wallet cc_anon_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
-        node: "{{first_root}}"
-        timeout: 300
-        expect: success
-        save_hash: anon_tx_2
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{anon_tx_2}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - cli: "tx get -hash {{anon_tx_2}}"
-        expect: success
-        contains:
-          - "IN_ANON"
-          - "OUT_ANON"
-          - "KEY_IMAGE"
-
-  # ======================================================================
-  # Group 5: Verify key images are unique
-  # ======================================================================
-  - group: Verify key image uniqueness
-    description: |
-      Each anonymous TX must have a unique key image.
-      Key images prevent double-spending: if the same key image appears
-      in two transactions, one is rejected as a double-spend.
-      Verify both TXs have KEY_IMAGE items and they are different.
-    steps:
-      - cli: "tx get -hash {{anon_tx_1}}"
-        expect: success
-        save: anon_tx_1_data
-
-      - cli: "tx get -hash {{anon_tx_2}}"
-        expect: success
-        save: anon_tx_2_data
-
-      # Verify key images are present in both TXs
-      - verify_contains:
-          data: "{{anon_tx_1_data}}"
-          pattern: "KEY_IMAGE"
-          description: "TX 1 must contain KEY_IMAGE item"
-
-      - verify_contains:
-          data: "{{anon_tx_2_data}}"
-          pattern: "KEY_IMAGE"
-          description: "TX 2 must contain KEY_IMAGE item"
-
-      # Verify TXs are different (different senders, different key images)
-      - verify_not_equal:
-          a: "{{anon_tx_1_data}}"
-          b: "{{anon_tx_2_data}}"
+        # Verify wallet info shows chipmunk_ring sign type
+        - cli: "wallet info -w cc_anon_alice"
+          expect: success
           description: |
-            Two different anonymous TXs from different wallets must
-            have different key images and different TX data.
+            Wallet info should display sign type as chipmunk_ring.
+            This confirms the wallet was created with correct key type
+            for anonymous transactions.
 
-  # ======================================================================
-  # Group 5b: Double-spend prevention verification
-  # ======================================================================
-  - group: Double-spend prevention
-    description: |
-      Verify that attempting to spend the same anonymous output twice
-      fails. Bob tries to send the same amount again — if his previous
-      output is already spent, the TX must be rejected.
-    steps:
-      # Bob already sent 300 to Carol. Try sending 300 again from Bob.
-      # If Bob only had one anon output of 300, this should fail.
-      - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value_2}} -to_addr {{alice_addr}} -from_wallet cc_anon_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
-        node: "{{first_root}}"
-        timeout: 300
-        expect: error
-        description: |
-          Bob already spent his anonymous output (300 -> Carol).
-          Attempting to spend it again must fail with key-image-
-          already-spent error.
+        - cli: "wallet info -w cc_anon_bob"
+          expect: success
 
-  # ======================================================================
-  # Group 6: Anonymous balance verification
-  # ======================================================================
-  - group: Anonymous balance behavior
-    description: |
-      In anonymous mode, balance is hidden in Pedersen commitments.
-      Standard 'wallet info' returns 0 because s_anon_calc_balance()
-      always returns uint256_0 — the actual balance can only be revealed
-      by the private key holder via dap_chain_tx_anon_reveal_balance().
-      Verify that wallet info does NOT show the token balance directly.
-    steps:
-      # Alice's wallet info — balance should NOT be directly visible
-      # for tokens in anonymous ledger (Pedersen commitments hide amounts)
-      - cli: "wallet info -w cc_anon_alice"
-        expect: success
-        description: |
-          In anonymous mode, wallet info shows 0 for the anonymous token.
-          The actual balance is hidden in Pedersen commitments.
-          s_anon_calc_balance() always returns uint256_0.
+    # ======================================================================
+    # Group 2: Token setup
+    # ======================================================================
+    - group: Setup token
+      steps:
+        - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
+          expect: success
+          save_hash: token_decl_hash
 
-      - cli: "wallet info -w cc_anon_bob"
-        expect: success
-        description: |
-          Bob's balance is also hidden after receiving anonymous TX.
+        - wait_for_datum: "{{token_decl_hash}}"
+          chain: zerochain
+          timeout_total: 180
 
-      - cli: "wallet info -w cc_anon_carol"
-        expect: success
-        description: |
-          Carol's balance is hidden after receiving anonymous TX from Bob.
+        - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
+          expect: success
+          save_hash: emit_hash
 
-  # ======================================================================
-  # Group 7: Ledger consistency after anonymous TXs
-  # ======================================================================
-  - group: Ledger consistency
-    steps:
-      - cli: "ledger info -token {{token_name}}"
-        expect: success
+        - wait_for_datum: "{{emit_hash}}"
+          chain: zerochain
+          timeout_total: 180
 
-      - cli: "chain get atoms -chain zerochain -limit 10"
-        expect: success
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
 
-  # ======================================================================
-  # Group 8: Verify chain health
-  # ======================================================================
-  - group: Verify chain health
-    steps:
-      - cli: "net get status"
-        expect: success
-        contains: "NET_STATE_ONLINE"
+        - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
+          expect: success
+          save_hash: bootstrap_tx_hash
 
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        expect: success
-        save: zc_last_block_hash
-        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+        - cli: "mempool proc_all"
+          expect: success
 
-      - cli: "block dump -net {{network_name}} -chain zerochain -hash {{zc_last_block_hash}}"
-        expect: success
-        contains: "sig_dil"
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{bootstrap_tx_hash}}"
+          chain: main
+          node: "{{first_root}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
+
+        - cli: "wallet info -w cc_anon_alice"
+          expect: success
+          contains: "{{token_name}}"
+
+        - cli: "token info -name {{token_name}}"
+          expect: success
+          contains: "{{token_name}}"
+
+    # ======================================================================
+    # Group 3: Anonymous TX — Alice -> Bob
+    # ======================================================================
+    - group: Anonymous transfer Alice to Bob
+      description: |
+        Create an anonymous transaction using the -anonymous flag.
+        The TX uses:
+        - Ring signature with auto-selected validators (anon_set={{anon_ring_size}})
+        - SNARK proof for zero-knowledge verification
+        - Key image for double-spend prevention
+        - Pedersen commitment for confidential amount
+      steps:
+        - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_anon_alice -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+          node: "{{first_root}}"
+          timeout: 300
+          expect: success
+          save_hash: anon_tx_1
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{anon_tx_1}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        # Verify the anonymous TX was created and contains key_image
+        - cli: "tx get -hash {{anon_tx_1}}"
+          expect: success
+          description: |
+            TX get should return the anonymous transaction with:
+            - IN_ANON item (ring signature + SNARK proof)
+            - OUT_ANON item (Pedersen commitment + range proof)
+            - KEY_IMAGE item (double-spend prevention)
+          contains:
+            - "IN_ANON"
+            - "OUT_ANON"
+            - "KEY_IMAGE"
+
+    # ======================================================================
+    # Group 4: Anonymous TX — Bob -> Carol
+    # ======================================================================
+    - group: Anonymous transfer Bob to Carol
+      description: |
+        Chain anonymous transfer from Bob to Carol.
+        Tests that received anonymous outputs can be spent.
+      steps:
+        - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value_2}} -to_addr {{carol_addr}} -from_wallet cc_anon_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+          node: "{{first_root}}"
+          timeout: 300
+          expect: success
+          save_hash: anon_tx_2
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{anon_tx_2}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - cli: "tx get -hash {{anon_tx_2}}"
+          expect: success
+          contains:
+            - "IN_ANON"
+            - "OUT_ANON"
+            - "KEY_IMAGE"
+
+    # ======================================================================
+    # Group 5: Verify key images are unique
+    # ======================================================================
+    - group: Verify key image uniqueness
+      description: |
+        Each anonymous TX must have a unique key image.
+        Key images prevent double-spending: if the same key image appears
+        in two transactions, one is rejected as a double-spend.
+        Verify both TXs have KEY_IMAGE items and they are different.
+      steps:
+        - cli: "tx get -hash {{anon_tx_1}}"
+          expect: success
+          save: anon_tx_1_data
+
+        - cli: "tx get -hash {{anon_tx_2}}"
+          expect: success
+          save: anon_tx_2_data
+
+        # Verify key images are present in both TXs
+        - verify_contains:
+            data: "{{anon_tx_1_data}}"
+            pattern: "KEY_IMAGE"
+            description: "TX 1 must contain KEY_IMAGE item"
+
+        - verify_contains:
+            data: "{{anon_tx_2_data}}"
+            pattern: "KEY_IMAGE"
+            description: "TX 2 must contain KEY_IMAGE item"
+
+        # Verify TXs are different (different senders, different key images)
+        - verify_not_equal:
+            a: "{{anon_tx_1_data}}"
+            b: "{{anon_tx_2_data}}"
+            description: |
+              Two different anonymous TXs from different wallets must
+              have different key images and different TX data.
+
+    # ======================================================================
+    # Group 5b: Double-spend prevention verification
+    # ======================================================================
+    - group: Double-spend prevention
+      description: |
+        Verify that attempting to spend the same anonymous output twice
+        fails. Bob tries to send the same amount again — if his previous
+        output is already spent, the TX must be rejected.
+      steps:
+        # Bob already sent 300 to Carol. Try sending 300 again from Bob.
+        # If Bob only had one anon output of 300, this should fail.
+        - cli: "tx_create -chain main -token {{token_name}} -value {{anon_transfer_value_2}} -to_addr {{alice_addr}} -from_wallet cc_anon_bob -anonymous -anon_set {{anon_ring_size}} -fee {{tx_fee}}"
+          node: "{{first_root}}"
+          timeout: 300
+          expect: error
+          description: |
+            Bob already spent his anonymous output (300 -> Carol).
+            Attempting to spend it again must fail with key-image-
+            already-spent error.
+
+    # ======================================================================
+    # Group 6: Anonymous balance verification
+    # ======================================================================
+    - group: Anonymous balance behavior
+      description: |
+        In anonymous mode, balance is hidden in Pedersen commitments.
+        Standard 'wallet info' returns 0 because s_anon_calc_balance()
+        always returns uint256_0 — the actual balance can only be revealed
+        by the private key holder via dap_chain_tx_anon_reveal_balance().
+        Verify that wallet info does NOT show the token balance directly.
+      steps:
+        # Alice's wallet info — balance should NOT be directly visible
+        # for tokens in anonymous ledger (Pedersen commitments hide amounts)
+        - cli: "wallet info -w cc_anon_alice"
+          expect: success
+          description: |
+            In anonymous mode, wallet info shows 0 for the anonymous token.
+            The actual balance is hidden in Pedersen commitments.
+            s_anon_calc_balance() always returns uint256_0.
+
+        - cli: "wallet info -w cc_anon_bob"
+          expect: success
+          description: |
+            Bob's balance is also hidden after receiving anonymous TX.
+
+        - cli: "wallet info -w cc_anon_carol"
+          expect: success
+          description: |
+            Carol's balance is hidden after receiving anonymous TX from Bob.
+
+    # ======================================================================
+    # Group 7: Ledger consistency after anonymous TXs
+    # ======================================================================
+    - group: Ledger consistency
+      steps:
+        - cli: "ledger info -token {{token_name}}"
+          expect: success
+
+        - cli: "chain get atoms -chain zerochain -limit 10"
+          expect: success
+
+    # ======================================================================
+    # Group 8: Verify chain health
+    # ======================================================================
+    - group: Verify chain health
+      steps:
+        - cli: "net get status"
+          expect: success
+          contains: "NET_STATE_ONLINE"
+
+        - cli: "block last -chain zerochain"
+          expect: success
+          save: zc_last_block_hash
+          save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+
+        - cli: "block dump -chain zerochain -hash {{zc_last_block_hash}}"
+          expect: success
+          contains: "sig_dil"

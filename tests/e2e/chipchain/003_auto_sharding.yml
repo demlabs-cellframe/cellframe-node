@@ -29,383 +29,389 @@ variables:
   cell_size_threshold: 7
 
 test:
-  # ======================================================================
-  # Group 1: Setup wallets and tokens
-  # ======================================================================
-  - group: Setup wallets and tokens
-    steps:
-      - cli: "wallet new -w cc_shard_alice -sign_type sig_dil"
-        expect: success
-        save_wallet: alice_addr
-
-      - cli: "wallet new -w cc_shard_bob -sign_type sig_dil"
-        expect: success
-        save_wallet: bob_addr
-
-      - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
-        expect: success
-        save_hash: token_decl_hash
-
-      - wait_for_datum: "{{token_decl_hash}}"
-        chain: zerochain
-        timeout_total: 180
-
-      - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
-        expect: success
-        save_hash: emit_hash
-
-      - wait_for_datum: "{{emit_hash}}"
-        chain: zerochain
-        timeout_total: 180
-
-      - wait: global_db_sync
-        timeout: 120
-
-      - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
-        expect: success
-        save_hash: bootstrap_tx_hash
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{bootstrap_tx_hash}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - wait: global_db_sync
-        timeout: 120
-
-      - cli: "wallet info -w cc_shard_alice"
-        expect: success
-        contains: "{{token_name}}"
-
-  # ======================================================================
-  # Group 2: Generate load to trigger cell rotation
-  # ======================================================================
-  - group: Generate load to trigger cell rotation
-    description: |
-      Send many transactions to fill the cell.
-      When atom count reaches cell_threshold, auto-sharding should trigger.
-    steps:
-      # First batch — 5 TXs
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_1
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{tx_1}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_2
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{tx_2}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_3
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{tx_3}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_4
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{tx_4}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: tx_5
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{tx_5}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-  # ======================================================================
-  # Group 3: Verify chain state after load
-  # ======================================================================
-  - group: Verify chain state after load
-    description: |
-      Verify wallets have correct balances after load.
-      Check shard state and atom count on the chain.
-      With cell_size_threshold=7 and 5+ TXs processed, cell rotation
-      should have been triggered.
-    steps:
-      - cli: "wallet info -w cc_shard_alice"
-        expect: success
-        contains: "{{token_name}}"
-
-      - cli: "wallet info -w cc_shard_bob"
-        expect: success
-        contains: "{{token_name}}"
-
-      # Check atom count on chain — should reflect all TXs processed
-      - cli: "chain get atoms -chain main -limit 20"
-        expect: success
-
-      # Verify chain cell state — after threshold is reached,
-      # the chain should have rotated to a new cell
-      - cli: "chain get atoms -chain zerochain -limit 10"
-        expect: success
-
-      # Check ledger consistency
-      - cli: "ledger info -token {{token_name}}"
-        expect: success
-
-      # Verify the chain reports the correct number of atoms
-      # (all 5 TXs + bootstrap + token_decl + emission should be present)
-      - cli: "chain get count -chain main"
-        expect: success
-        description: |
-          Atom count on mainchain should be >= 8 (token_decl + emission +
-          bootstrap_tx + 5 transfer TXs). If cell rotation occurred,
-          atoms should be distributed across cells.
-
-  # ======================================================================
-  # Group 4: Verify consensus continues after load
-  # ======================================================================
-  - group: Verify consensus continues
-    description: |
-      Consensus must continue processing blocks after cell rotation.
-      Create additional TXs to verify the chain is still functional.
-      With cell_size_threshold=7, the first 5 TXs should have triggered
-      rotation. These 5 additional TXs go into the NEW cell.
-    steps:
-      - cli: "net get status"
-        expect: success
-        contains: "NET_STATE_ONLINE"
-
-      # Post-rotation TX 1
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: post_load_tx_1
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{post_load_tx_1}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      # Post-rotation TX 2
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: post_load_tx_2
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{post_load_tx_2}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-      # Post-rotation TX 3
-      - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
-        expect: success
-        save_hash: post_load_tx_3
-
-      - cli: "mempool proc_all"
-        expect: success
-
-      - cli: "net go sync"
-        expect: success
-
-      - cli: "net go sync"
-        node: "{{first_master}}"
-        expect: success
-
-      - cli: "mempool proc_all"
-        node: "{{first_master}}"
-        expect: success
-
-      - wait_for_datum: "{{post_load_tx_3}}"
-        chain: main
-        node: "{{first_master}}"
-        timeout_total: 300
-        timeout_mempool: 240
-        timeout_verification: 180
-        timeout_in_blocks: 180
-
-  # ======================================================================
-  # Group 5: Verify block signatures after sharding
-  # ======================================================================
-  - group: Verify block signatures after sharding
-    description: |
-      Block signatures must work correctly after cell rotation.
-      Chipmunk aggregated signatures should still validate.
-    steps:
-      - cli: "block last -net {{network_name}} -chain zerochain"
-        expect: success
-        save: zc_last_block_hash
-        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
-
-      - cli: "block dump -net {{network_name}} -chain zerochain -hash {{zc_last_block_hash}}"
-        expect: success
-        contains: "sig_dil"
-
-      - cli: "block last -net {{network_name}} -chain main"
-        expect: success
-        save: main_last_block_hash
-        save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
-
-      - cli: "block dump -net {{network_name}} -chain main -hash {{main_last_block_hash}}"
-        expect: success
-        contains: "sig_dil"
-
-  # ======================================================================
-  # Group 6: Verify shard state
-  # ======================================================================
-  - group: Verify shard state
-    description: |
-      Check that the shard state is consistent after load.
-      Verify the chain has processed all expected atoms.
-    steps:
-      - cli: "chain get atoms -chain zerochain -limit 20"
-        expect: success
-
-      # Verify network is still healthy
-      - cli: "net get status"
-        expect: success
-        contains: "NET_STATE_ONLINE"
+  defaults:
+    cli:
+      net: "{{network_name}}"
+  steps:
+    # ======================================================================
+    # Group 1: Setup wallets and tokens
+    # ======================================================================
+    - group: Setup wallets and tokens
+      steps:
+        - cli: "wallet new -w cc_shard_alice -sign_type sig_dil"
+          expect: success
+          save_wallet: alice_addr
+
+        - cli: "wallet new -w cc_shard_bob -sign_type sig_dil"
+          expect: success
+          save_wallet: bob_addr
+
+        - cli: "token_decl -token {{token_name}} -total_supply {{total_supply}} -decimals 18 -signs_total 1 -signs_emission 1 -certs {{test_cert}}"
+          expect: success
+          save_hash: token_decl_hash
+
+        - wait_for_datum: "{{token_decl_hash}}"
+          chain: zerochain
+          timeout_total: 180
+
+        - cli: "token_emit -token {{token_name}} -emission_value {{emission_value}} -addr {{alice_addr}} -certs {{test_cert}}"
+          expect: success
+          save_hash: emit_hash
+
+        - wait_for_datum: "{{emit_hash}}"
+          chain: zerochain
+          timeout_total: 180
+
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
+
+        - cli: "tx_create -chain main -chain_emission zerochain -from_emission {{emit_hash}} -token {{token_name}} -value {{emission_value}} -to_addr {{alice_addr}} -cert {{network_name}}.root.pvt.0 -fee {{tx_fee}}"
+          expect: success
+          save_hash: bootstrap_tx_hash
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{bootstrap_tx_hash}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - wait: global_db_sync
+          nodes: "{{all_nodes}}"
+          timeout: 120
+
+        - cli: "wallet info -w cc_shard_alice"
+          expect: success
+          contains: "{{token_name}}"
+
+    # ======================================================================
+    # Group 2: Generate load to trigger cell rotation
+    # ======================================================================
+    - group: Generate load to trigger cell rotation
+      description: |
+        Send many transactions to fill the cell.
+        When atom count reaches cell_threshold, auto-sharding should trigger.
+      steps:
+        # First batch — 5 TXs
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_1
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{tx_1}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_2
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{tx_2}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_3
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{tx_3}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_4
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{tx_4}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: tx_5
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{tx_5}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+    # ======================================================================
+    # Group 3: Verify chain state after load
+    # ======================================================================
+    - group: Verify chain state after load
+      description: |
+        Verify wallets have correct balances after load.
+        Check shard state and atom count on the chain.
+        With cell_size_threshold=7 and 5+ TXs processed, cell rotation
+        should have been triggered.
+      steps:
+        - cli: "wallet info -w cc_shard_alice"
+          expect: success
+          contains: "{{token_name}}"
+
+        - cli: "wallet info -w cc_shard_bob"
+          expect: success
+          contains: "{{token_name}}"
+
+        # Check atom count on chain — should reflect all TXs processed
+        - cli: "chain get atoms -chain main -limit 20"
+          expect: success
+
+        # Verify chain cell state — after threshold is reached,
+        # the chain should have rotated to a new cell
+        - cli: "chain get atoms -chain zerochain -limit 10"
+          expect: success
+
+        # Check ledger consistency
+        - cli: "ledger info -token {{token_name}}"
+          expect: success
+
+        # Verify the chain reports the correct number of atoms
+        # (all 5 TXs + bootstrap + token_decl + emission should be present)
+        - cli: "chain get count -chain main"
+          expect: success
+          description: |
+            Atom count on mainchain should be >= 8 (token_decl + emission +
+            bootstrap_tx + 5 transfer TXs). If cell rotation occurred,
+            atoms should be distributed across cells.
+
+    # ======================================================================
+    # Group 4: Verify consensus continues after load
+    # ======================================================================
+    - group: Verify consensus continues
+      description: |
+        Consensus must continue processing blocks after cell rotation.
+        Create additional TXs to verify the chain is still functional.
+        With cell_size_threshold=7, the first 5 TXs should have triggered
+        rotation. These 5 additional TXs go into the NEW cell.
+      steps:
+        - cli: "net get status"
+          expect: success
+          contains: "NET_STATE_ONLINE"
+
+        # Post-rotation TX 1
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: post_load_tx_1
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{post_load_tx_1}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        # Post-rotation TX 2
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: post_load_tx_2
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{post_load_tx_2}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+        # Post-rotation TX 3
+        - cli: "tx_create -chain main -token {{token_name}} -value {{transfer_value}} -to_addr {{bob_addr}} -from_wallet cc_shard_alice -fee {{tx_fee}}"
+          expect: success
+          save_hash: post_load_tx_3
+
+        - cli: "mempool proc_all"
+          expect: success
+
+        - cli: "net go sync"
+          expect: success
+
+        - cli: "net go sync"
+          node: "{{first_master}}"
+          expect: success
+
+        - cli: "mempool proc_all"
+          node: "{{first_master}}"
+          expect: success
+
+        - wait_for_datum: "{{post_load_tx_3}}"
+          chain: main
+          node: "{{first_master}}"
+          timeout_total: 300
+          timeout_mempool: 240
+          timeout_verification: 180
+          timeout_in_blocks: 180
+
+    # ======================================================================
+    # Group 5: Verify block signatures after sharding
+    # ======================================================================
+    - group: Verify block signatures after sharding
+      description: |
+        Block signatures must work correctly after cell rotation.
+        Chipmunk aggregated signatures should still validate.
+      steps:
+        - cli: "block last -chain zerochain"
+          expect: success
+          save: zc_last_block_hash
+          save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+
+        - cli: "block dump -chain zerochain -hash {{zc_last_block_hash}}"
+          expect: success
+          contains: "sig_dil"
+
+        - cli: "block last -chain main"
+          expect: success
+          save: main_last_block_hash
+          save_regex: 'last_block_hash:\s*["'']?(0x[A-Fa-f0-9]{64})'
+
+        - cli: "block dump -chain main -hash {{main_last_block_hash}}"
+          expect: success
+          contains: "sig_dil"
+
+    # ======================================================================
+    # Group 6: Verify shard state
+    # ======================================================================
+    - group: Verify shard state
+      description: |
+        Check that the shard state is consistent after load.
+        Verify the chain has processed all expected atoms.
+      steps:
+        - cli: "chain get atoms -chain zerochain -limit 20"
+          expect: success
+
+        # Verify network is still healthy
+        - cli: "net get status"
+          expect: success
+          contains: "NET_STATE_ONLINE"
