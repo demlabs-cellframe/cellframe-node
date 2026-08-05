@@ -156,6 +156,23 @@ const char *dap_node_version() {
     return "CellframeNode, " DAP_VERSION ", " BUILD_TS ", " BUILD_HASH;
 }
 
+/* Resolve listen port for a transport.
+ * Priority: [server_transport_<name>] port=  →  legacy [server] listen_port_<name>=  →  default.
+ * Defaults match KelVPN client IPC defaults
+ * (HTTP=80, UDP=8081, TLS=8082, WS=8083, DNS=8084). */
+static uint16_t s_trans_listen_port(dap_config_t *a_cfg,
+                                    const char *a_section,
+                                    const char *a_legacy_key,
+                                    uint16_t a_default)
+{
+    if (dap_config_get_item_type(a_cfg, a_section, "port") != DAP_CONFIG_ITEM_UNKNOWN)
+        return dap_config_get_item_uint16_default(a_cfg, a_section, "port", a_default);
+    if (a_legacy_key
+        && dap_config_get_item_type(a_cfg, "server", a_legacy_key) != DAP_CONFIG_ITEM_UNKNOWN)
+        return dap_config_get_item_uint16_default(a_cfg, "server", a_legacy_key, a_default);
+    return a_default;
+}
+
 void set_global_sys_dir(const char *dir)
 {
     g_sys_dir_path = dap_strdup(dir);
@@ -505,10 +522,11 @@ int main( int argc, const char **argv )
             }
         } else {
             l_enabled[0] = DAP_NET_TRANS_HTTP;
-            l_enabled[1] = DAP_NET_TRANS_TLS_DIRECT;
-            l_enabled[2] = DAP_NET_TRANS_WEBSOCKET;
-            l_enabled[3] = DAP_NET_TRANS_DNS_TUNNEL;
-            l_enabled_count = 4;
+            l_enabled[1] = DAP_NET_TRANS_UDP_BASIC;
+            l_enabled[2] = DAP_NET_TRANS_TLS_DIRECT;
+            l_enabled[3] = DAP_NET_TRANS_WEBSOCKET;
+            l_enabled[4] = DAP_NET_TRANS_DNS_TUNNEL;
+            l_enabled_count = 5;
         }
 
         uint16_t l_addr_count = 0;
@@ -528,25 +546,30 @@ int main( int argc, const char **argv )
             switch (l_type) {
             case DAP_NET_TRANS_HTTP:
                 l_type_name = "http";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_http", "port", 80);
+                l_port = s_trans_listen_port(g_config, "server_transport_http",
+                                             "listen_port_tcp", 80);
                 break;
             case DAP_NET_TRANS_UDP_BASIC:
             case DAP_NET_TRANS_UDP_RELIABLE:
             case DAP_NET_TRANS_UDP_QUIC_LIKE:
                 l_type_name = "udp";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_udp", "port", l_base_port);
+                l_port = s_trans_listen_port(g_config, "server_transport_udp",
+                                             "listen_port_udp", 8081);
                 break;
             case DAP_NET_TRANS_WEBSOCKET:
                 l_type_name = "websocket";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_websocket", "port", 8080);
+                l_port = s_trans_listen_port(g_config, "server_transport_websocket",
+                                             "listen_port_websocket", 8083);
                 break;
             case DAP_NET_TRANS_TLS_DIRECT:
                 l_type_name = "tls";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_tls", "port", 443);
+                l_port = s_trans_listen_port(g_config, "server_transport_tls",
+                                             "listen_port_tls", 8082);
                 break;
             case DAP_NET_TRANS_DNS_TUNNEL:
                 l_type_name = "dns";
-                l_port = dap_config_get_item_uint16_default(g_config, "server_transport_dns", "port", 53);
+                l_port = s_trans_listen_port(g_config, "server_transport_dns",
+                                             "listen_port_dns", 8084);
                 break;
             default:
                 log_it(L_WARNING, "Unknown transport type 0x%02X, skipping", l_type);
