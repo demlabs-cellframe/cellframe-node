@@ -1,0 +1,11 @@
+suite: UTXO Blocking E2E Suite
+description: End-to-end tests for UTXO blocking functionality
+author: QA Team
+tags: [utxo-blocking, e2e, critical]
+version: "1.0"
+
+options:
+  stop_on_failure: false
+  cleanup_between_scenarios: true
+  parallel_execution: false
+  timeout_per_scenario: 300

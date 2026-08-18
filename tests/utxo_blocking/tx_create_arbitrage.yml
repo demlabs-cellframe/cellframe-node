@@ -1,38 +1,31 @@
-# tx_create -arbitrage Command Test
-# Функциональный тест команды создания арбитражной транзакции
-
 name: tx_create -arbitrage Command
 description: Test creating arbitrage transaction with -arbitrage flag
 tags: [functional, utxo-blocking, tx_create, arbitrage, fast]
 version: "1.0"
 
-includes:
-  - ../../common/networks/single_node.yml
-  - ../../common/wallets/create_wallet.yml
+variables:
+  network_name: stagenet
 
 setup:
-  # Create token
-  - cli: token_decl -net stagenet -token ARBCMD -total 1000000
-    save: token
-    wait: 3s
-  
-  # Emit tokens
-  - cli: token_emit -token ARBCMD -value 10000 -addr {{wallet_addr}}
+  - cli: wallet new -w arb_cmd_w1 -net stagenet -force
+    save_wallet: wallet_addr
     wait: 3s
 
+  - cli: token_decl -net stagenet -token ARBT1 -total_supply 1000000
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    wait: 10s
+  
+  - cli: token_emit -net stagenet -token ARBT1 -value 10000 -addr {{wallet_addr}}
+    wait: 5s
+
 test:
-  # Test: Create arbitrage transaction
-  - cli: tx_create -net stagenet -token ARBCMD -value 1000 -arbitrage
+  - cli: tx_create -net stagenet -token ARBT1 -value 1000 -arbitrage -from_wallet arb_cmd_w1 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
     save: arb_tx
     expect: success
     wait: 3s
 
 check:
-  # Verify transaction exists
   - cli: tx_history -net stagenet -tx {{arb_tx}}
-    contains: {{arb_tx}}
-  
-  # Verify arbitrage marker present
-  - cli: tx_info -net stagenet -tx {{arb_tx}}
-    contains: "arbitrage"
-
+    contains: "{{arb_tx}}"

@@ -1,0 +1,46 @@
+name: Arbitrage Lock/Unlock Test
+description: Test arbitrage lock creation and unlock with root node certificate
+author: QA Team
+tags: [arbitrage, lock, unlock, critical]
+version: "1.0"
+
+variables:
+  network_name: stagenet
+
+setup:
+  # Create wallet for testing
+  - cli: wallet new -w arb_lock_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  # Declare token
+  - cli: token_decl -net stagenet -token ARBLOCK -total_supply 1000000
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    expect: success
+    wait: 10s
+  
+  # Emit tokens to wallet
+  - cli: token_emit -net stagenet -token ARBLOCK -value 100000 -addr {{wallet_addr}}
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: emission
+    wait: 5s
+
+test:
+  # Step 1: Create arbitrage lock (locks funds with root cert)
+  - cli: tx_create -net stagenet -token ARBLOCK -value 50000 -arbitrage -from_wallet arb_lock_w1 -fee 1 -certs stagenet.root.pvt.0
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: lock_tx
+    expect: success
+    wait: 5s
+
+  # Step 2: Try unlock (should work with root cert)
+  - cli: tx_create -net stagenet -from_arbitrage {{lock_tx}}:0 -to_addr {{wallet_addr}} -fee 1 -certs stagenet.root.pvt.0
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: unlock_tx
+    wait: 3s
+
+check:
+  # Verify wallet exists and has address
+  - cli: wallet info -net stagenet -w arb_lock_w1
+    contains: "addr"

@@ -1,0 +1,17 @@
+suite: UTXO Blocking Suite
+description: Tests for UTXO blocking functionality
+author: QA Team
+tags: [utxo-blocking, critical]
+version: "1.0"
+
+scenarios:
+  - token_update_utxo_add.yml
+  - arbitrage_bypass_test.yml
+  - tx_create_arbitrage.yml
+  - arbitrage_lock_unlock.yml
+
+options:
+  stop_on_failure: false
+  cleanup_between_scenarios: true
+  parallel_execution: false
+  timeout_per_scenario: 300

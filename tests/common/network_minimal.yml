@@ -1,3 +1,3 @@
-# Single node network configuration
+# Minimal network configuration
 variables:
   network_name: stagenet

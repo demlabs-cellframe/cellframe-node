@@ -1,4 +1,4 @@
-# Wallet creation
+# Wallet setup
 setup:
   - cli: wallet new -w test_wallet -net stagenet
     save: wallet_addr

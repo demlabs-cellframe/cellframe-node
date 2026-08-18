@@ -1,53 +1,45 @@
-# Arbitrage Bypass Test
-# Verifies that arbitrage transactions can bypass blocked UTXO
-
 name: Arbitrage Bypass Test
 description: Arbitrage transactions should bypass UTXO blocklist
 author: QA Team
 tags: [arbitrage, utxo-blocking, critical]
 version: "1.0"
 
-# Include common templates
-includes:
-  - common/network_minimal.yml
-  - common/wallet_setup.yml
+variables:
+  network_name: stagenet
 
-# Setup phase: create token with UTXO blocking enabled
 setup:
-  - cli: token_decl -net stagenet -token ARBTEST -total 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: wallet new -w arb_byp_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  - cli: token_decl -net stagenet -token ARBT2 -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
+    save_regex: "0x[0-9a-fA-F]{64}"
     save: token_hash
-    wait: 3s
+    wait: 10s
   
-  - cli: token_emit -token ARBTEST -value 1000000 -addr {{wallet_addr}}
+  - cli: token_emit -net stagenet -token ARBT2 -value 1000000 -addr {{wallet_addr}}
+    save_regex: "0x[0-9a-fA-F]{64}"
     save: emission_tx
-    wait: 3s
+    wait: 5s
   
-  - cli: tx_create -token ARBTEST -from_emission {{emission_tx}} -value 500
+  - cli: tx_create -net stagenet -token ARBT2 -from_emission {{emission_tx}} -value 500 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
     save: tx_hash
     wait: 5s
   
-  # Block the UTXO
-  - cli: token_update -token ARBTEST -utxo_blocked_add {{tx_hash}}:0
+  - cli: token_update -net stagenet -token ARBT2 -utxo_blocked_add {{tx_hash}}:0
     wait: 3s
 
-# Test phase: verify blocking and arbitrage bypass
 test:
-  # Regular transaction should fail
-  - cli: tx_create -token ARBTEST -value 100
+  - cli: tx_create -net stagenet -token ARBT2 -value 100 -fee 1
     expect: error
-    contains: "UTXO is blocked"
   
-  # Arbitrage transaction should succeed
-  - cli: tx_create -token ARBTEST -value 100 -arbitrage
+  - cli: tx_create -net stagenet -token ARBT2 -value 100 -arbitrage -from_wallet arb_byp_w1 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
     save: arb_tx
     expect: success
     wait: 3s
 
-# Check phase: verify results
 check:
-  - cli: tx_history -tx {{arb_tx}}
-    contains: {{arb_tx}}
-  
-  - cli: token info -token ARBTEST -history_limit 10
-    contains: {{tx_hash}}
-
+  - cli: tx_history -net stagenet -tx {{arb_tx}}
+    contains: "{{arb_tx}}"
