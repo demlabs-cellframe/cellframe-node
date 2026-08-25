@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/cellframe-node/
-ExecStart=/bin/bash /opt/cellframe-node/share/update.sh &
+ExecStart=/bin/bash /opt/cellframe-node/share/update.sh
 
 User=root
 Group=root
