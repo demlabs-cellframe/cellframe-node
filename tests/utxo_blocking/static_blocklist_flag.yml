@@ -1,0 +1,45 @@
+name: UTXO_STATIC_BLOCKLIST Flag
+description: Verify static blocklist prevents ADD/REMOVE/CLEAR operations
+tags: [functional, utxo-blocking, flags, fast]
+version: "1.0"
+
+variables:
+  network_name: stagenet
+
+setup:
+  - cli: wallet new -w static_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  # Token with static blocklist flag
+  - cli: token_decl -net stagenet -token TSTAT -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0 -flags UTXO_STATIC_BLOCKLIST
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    wait: 10s
+
+  - cli: token_emit -net stagenet -token TSTAT -value 10000 -addr {{wallet_addr}}
+    wait: 5s
+
+  - cli: tx_create -net stagenet -token TSTAT -from_wallet static_w1 -value 5000 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: utxo_tx
+    wait: 5s
+
+test:
+  # ADD should succeed (first block on static list is allowed)
+  - cli: token_update -net stagenet -token TSTAT -utxo_blocked_add {{utxo_tx}}:0
+    expect: success
+    wait: 3s
+
+  # REMOVE should FAIL (static blocklist is immutable)
+  - cli: token_update -net stagenet -token TSTAT -utxo_blocked_remove {{utxo_tx}}:0
+    expect: error
+
+  # CLEAR should FAIL (static blocklist is immutable)
+  - cli: token_update -net stagenet -token TSTAT -utxo_blocked_clear
+    expect: error
+
+check:
+  # UTXO should still be blocked
+  - cli: tx_create -net stagenet -token TSTAT -from_wallet static_w1 -value 100 -fee 1
+    expect: error

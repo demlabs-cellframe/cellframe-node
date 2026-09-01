@@ -1,0 +1,69 @@
+name: Delayed UTXO Activation
+description: Verify that blocking with future timestamp is accepted and UTXO remains spendable before activation
+tags: [functional, utxo-blocking, delayed, fast]
+version: "1.0"
+
+# NOTE: The "after activation" case (UTXO becomes blocked once blockchain time
+# passes the timestamp) is covered by the C unit test
+# utxo_blocking_test_delayed_activation in utxo_blocking_basic_tests.c.
+# This YAML test validates the CLI-level behavior: future timestamps are accepted
+# and the UTXO is NOT blocked before activation time.
+
+variables:
+  network_name: stagenet
+
+setup:
+  - cli: wallet new -w delay_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  - cli: token_decl -net stagenet -token TDELAY -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    wait: 10s
+
+  - cli: token_emit -net stagenet -token TDELAY -value 10000 -addr {{wallet_addr}}
+    wait: 5s
+
+  # Create UTXO
+  - cli: tx_create -net stagenet -token TDELAY -from_wallet delay_w1 -value 5000 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: utxo_tx
+    wait: 5s
+
+test:
+  # Step 1: Immediate activation — TX should fail right away
+  - cli: token_update -net stagenet -token TDELAY -utxo_blocked_add {{utxo_tx}}:0
+    wait: 3s
+
+  - cli: tx_create -net stagenet -token TDELAY -from_wallet delay_w1 -value 100 -fee 1
+    expect: error
+
+  # Step 2: Unblock, create new UTXO, block with FUTURE timestamp
+  - cli: token_update -net stagenet -token TDELAY -utxo_blocked_remove {{utxo_tx}}:0
+    wait: 3s
+
+  - cli: tx_create -net stagenet -token TDELAY -from_wallet delay_w1 -value 2000 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: utxo_tx_2
+    wait: 5s
+
+  # Block with future activation (1 year from now — guarantees blockchain time won't catch up)
+  - python: |
+      import time
+      future_time = int(time.time()) + 31536000
+      ctx.set_variable('future_block_time', str(future_time))
+    save: future_block_time
+
+  - cli: token_update -net stagenet -token TDELAY -utxo_blocked_add {{utxo_tx_2}}:0:{{future_block_time}}
+    wait: 3s
+
+  # Step 3: TX should SUCCEED — UTXO is NOT blocked yet (future activation)
+  # This proves the delayed timestamp is accepted and the UTXO remains spendable
+  - cli: tx_create -net stagenet -token TDELAY -from_wallet delay_w1 -value 100 -fee 1
+    expect: success
+
+check:
+  # UTXO should still be spendable (activation is 1 year in the future)
+  - cli: tx_create -net stagenet -token TDELAY -from_wallet delay_w1 -value 100 -fee 1
+    expect: success

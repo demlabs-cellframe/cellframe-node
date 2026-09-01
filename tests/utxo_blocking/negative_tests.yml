@@ -1,0 +1,40 @@
+name: Negative Tests
+description: Verify proper error handling for invalid inputs
+tags: [functional, utxo-blocking, negative, fast]
+version: "1.0"
+
+variables:
+  network_name: stagenet
+
+setup:
+  - cli: wallet new -w neg_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  - cli: token_decl -net stagenet -token TNEG -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    wait: 10s
+
+  - cli: token_emit -net stagenet -token TNEG -value 10000 -addr {{wallet_addr}}
+    wait: 5s
+
+test:
+  # Test 8.1: Invalid UTXO format
+  - cli: token_update -net stagenet -token TNEG -utxo_blocked_add "invalid_format"
+    expect: error
+
+  # Test 8.2: Non-existent UTXO (may succeed — blocking doesn't check existence)
+  - cli: token_update -net stagenet -token TNEG -utxo_blocked_add 0x0000000000000000000000000000000000000000000000000000000000000000:0
+
+  # Test 8.3: Unauthorized certificate
+  - cli: tx_create -net stagenet -token TNEG -value 100 -arbitrage -from_wallet neg_w1 -fee 1 -certs wrong_cert_name
+    expect: error
+
+  # Test 8.4: Clear empty blocklist (should succeed — idempotent)
+  - cli: token_update -net stagenet -token TNEG -utxo_blocked_clear
+    expect: success
+
+check:
+  - cli: tx_create -net stagenet -token TNEG -from_wallet neg_w1 -value 100 -fee 1
+    expect: success

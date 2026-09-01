@@ -9,6 +9,11 @@ scenarios:
   - arbitrage_bypass_test.yml
   - tx_create_arbitrage.yml
   - arbitrage_lock_unlock.yml
+  - delayed_activation.yml
+  - static_blocklist_flag.yml
+  - blocking_disabled_flag.yml
+  - arbitrage_disabled_flag.yml
+  - negative_tests.yml
 
 options:
   stop_on_failure: false

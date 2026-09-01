@@ -16,7 +16,7 @@ setup:
     save_wallet: receiver_addr
     wait: 3s
   
-  - cli: token_decl -net stagenet -token E2EBLK -total_supply 10000000
+  - cli: token_decl -net stagenet -token E2EBLK -total_supply 10000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0
     save_regex: "0x[0-9a-fA-F]{64}"
     save: token_hash
     expect: success

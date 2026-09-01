@@ -1,0 +1,47 @@
+name: UTXO_BLOCKING_DISABLED Flag
+description: Verify blocking disabled flag prevents all blocking operations
+tags: [functional, utxo-blocking, flags, fast]
+version: "1.0"
+
+variables:
+  network_name: stagenet
+
+setup:
+  - cli: wallet new -w dis_w1 -net stagenet -force
+    save_wallet: wallet_addr
+    wait: 3s
+
+  - cli: token_decl -net stagenet -token TDIS -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: token_hash
+    wait: 10s
+
+  - cli: token_emit -net stagenet -token TDIS -value 10000 -addr {{wallet_addr}}
+    wait: 5s
+
+  - cli: tx_create -net stagenet -token TDIS -from_wallet dis_w1 -value 5000 -fee 1
+    save_regex: "0x[0-9a-fA-F]{64}"
+    save: utxo_tx
+    wait: 5s
+
+  # Set UTXO_BLOCKING_DISABLED flag
+  - cli: token_update -net stagenet -token TDIS -flag_set UTXO_BLOCKING_DISABLED
+    wait: 3s
+
+test:
+  # ADD should FAIL (blocking is disabled)
+  - cli: token_update -net stagenet -token TDIS -utxo_blocked_add {{utxo_tx}}:0
+    expect: error
+
+  # REMOVE should FAIL (blocking is disabled)
+  - cli: token_update -net stagenet -token TDIS -utxo_blocked_remove {{utxo_tx}}:0
+    expect: error
+
+  # CLEAR should FAIL (blocking is disabled)
+  - cli: token_update -net stagenet -token TDIS -utxo_blocked_clear
+    expect: error
+
+check:
+  # UTXO should still be spendable (blocking is disabled)
+  - cli: tx_create -net stagenet -token TDIS -from_wallet dis_w1 -value 100 -fee 1
+    expect: success

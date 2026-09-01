@@ -12,7 +12,7 @@ setup:
     save_wallet: wallet_addr
     wait: 3s
 
-  - cli: token_decl -net stagenet -token ARBT2 -total_supply 1000000 -flags UTXO_BLOCKING_ENABLED
+  - cli: token_decl -net stagenet -token ARBT2 -total_supply 1000000 -decimals 18 -signs_total 1 -signs_emission 1 -certs stagenet.root.pvt.0
     save_regex: "0x[0-9a-fA-F]{64}"
     save: token_hash
     wait: 10s
