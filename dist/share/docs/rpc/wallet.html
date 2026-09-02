@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wallet — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 960px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.note { background: #fff8e1; border-left: 4px solid #ffc107; padding: 0.6em 1em; }
+.local-only { color: #666; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>wallet</h1>
+<p>Wallet operations — create, list, inspect balances, manage outputs, and shared-funds workflows.</p>
+
+<p>Verified against public RPC <code>http://rpc.cellframe.net/</code> (networks: <code>Backbone</code>, <code>KelVPN</code>, 2026-07-14). Address-based read-only queries (<code>info -addr</code>, <code>outputs</code>, shared ledger lookups) work against the public ledger. Subcommands that create or open <code>.dwallet</code> files act on the <strong>RPC node&rsquo;s</strong> wallet directory — they can succeed on a public node and mutate shared state; prefer your own node for write workflows.</p>
+
+<h2>JSON-RPC request</h2>
+<p>Method name: <code>wallet</code>. Response <code>type</code> is <code>2</code> (<code>TYPE_RESPONSE_JSON</code>). Two request formats are supported; if <code>params</code> is present, the version 2 path is ignored.</p>
+
+<h3>Version 1 — legacy <code>params</code> string</h3>
+<pre>{"method":"wallet","params":["wallet;list"],"id":1,"version":1}</pre>
+<pre>{"method":"wallet","params":["wallet;info;-addr;ADDR"],"id":2,"version":1}</pre>
+<p><code>params</code> is an array with one string. Every token (command, subcommand, flag, value) is separated by <code>;</code> — <strong>not spaces</strong>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<pre>{"method":"wallet","subcommand":"list","id":1,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":"info","arguments":{"addr":"ADDR"},"id":2,"version":2}</pre>
+<p><code>subcommand</code> may also be a JSON array for multi-token subcommands:</p>
+<pre>{"method":"wallet","subcommand":["shared","list"],"arguments":{"net":"Backbone"},"id":5,"version":2}</pre>
+<p>Equivalent string form: <code>"subcommand":"shared;list"</code>. Both produce <code>wallet;shared;list;-net;Backbone</code> internally.</p>
+
+<h4>Version 2 <code>arguments</code> rules</h4>
+<ul>
+<li>Keys map to CLI flags <strong>without</strong> a leading dash (<code>addr</code> → <code>-addr</code>).</li>
+<li>Values must be strings (or <code>null</code> / <code>""</code> for bare flags such as <code>verbose</code> or <code>local</code>). JSON numbers and booleans are rejected.</li>
+<li>Comma-separated CLI values stay in one string (e.g. <code>"pkey_hashes": "0xHASH1,0xHASH2"</code>).</li>
+<li>Array values in <code>arguments</code> expand to comma-separated tokens (see <code>dap_json_rpc_params_create_from_subcmd_and_args</code>).</li>
+</ul>
+
+<h4>Common <code>arguments</code> keys</h4>
+<table>
+<tr><th><code>arguments</code> key</th><th>CLI flag</th><th>Used by</th></tr>
+<tr><td><code>w</code></td><td><code>-w</code></td><td><code>info</code>, <code>outputs</code>, <code>new</code>, <code>activate</code>, shared write ops</td></tr>
+<tr><td><code>addr</code></td><td><code>-addr</code></td><td><code>info</code>, <code>outputs</code>, <code>find</code>, shared ops</td></tr>
+<tr><td><code>net</code></td><td><code>-net</code></td><td><code>info</code> (with <code>-w</code>), <code>outputs</code> (with <code>-w</code>), shared ops</td></tr>
+<tr><td><code>token</code></td><td><code>-token</code></td><td><code>outputs</code>, <code>shared hold</code></td></tr>
+<tr><td><code>value</code>, <code>fee</code></td><td><code>-value</code>, <code>-fee</code></td><td>Shared write ops</td></tr>
+<tr><td><code>verbose</code></td><td><code>-verbose</code></td><td>Any subcommand (bare flag: <code>""</code>)</td></tr>
+<tr><td><code>H</code></td><td><code>-H</code></td><td>Shared ops (<code>hex</code> or <code>base58</code>)</td></tr>
+</table>
+
+<h2>Params / CLI syntax (v1 reference)</h2>
+<pre>wallet;list
+wallet;info;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33
+wallet;info;-w;mywallet;-net;Backbone
+wallet;outputs;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33;-token;CELL
+wallet;find;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33
+wallet;shared;list;-net;Backbone
+wallet;shared;info;-net;Backbone;-addr;rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs</pre>
+
+<h2>JSON-RPC response</h2>
+<p>Envelope (verified on <code>rpc.cellframe.net</code>):</p>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>On error, <code>result</code> contains one or more objects with an <code>errors</code> array:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 3, "message": "Couldn't find any wallets" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Some subcommands (<code>info</code>, <code>outputs</code>, <code>list</code>, <code>find</code>, …) wrap their payload in an inner JSON array, so success may look like <code>"result": [[{...}]]</code>. Shared subcommands (<code>shared info</code>, <code>shared list</code>, …) return flat objects directly in <code>result</code>.</p>
+<p>Add <code>-verbose</code> (v1 params) or <code>"verbose": ""</code> (v2 arguments) to append a <code>ret_code</code> object to the response.</p>
+
+<h2 id="v1-v2-fields">v1 vs v2 response field names</h2>
+<p>The response <code>version</code> echoes the request. Most wallet fields are identical; one known difference in <code>outputs</code> per-UTXO objects:</p>
+<table>
+<tr><th>Field</th><th>version 1</th><th>version 2</th></tr>
+<tr><td>Per-output datoshi amount</td><td><code>value_datosi</code></td><td><code>value_datoshi</code></td></tr>
+</table>
+<p>Totals always use <code>total_value_datoshi</code> in both versions.</p>
+
+<h2>Subcommands reference</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>RPC on public node</th><th>Required params</th><th>Optional params</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>list</code></td>
+  <td>Yes (returns empty-wallets error)</td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr>
+  <td><code>info</code></td>
+  <td>Yes with <code>-addr</code></td>
+  <td>Exactly one of <code>-addr</code> or <code>-w</code>. With <code>-w</code>: also <code>-net</code></td>
+  <td><code>-net</code> (ignored when <code>-addr</code> is used; network is taken from the address)</td>
+</tr>
+<tr>
+  <td><code>outputs</code></td>
+  <td>Yes with <code>-addr</code></td>
+  <td>Exactly one of <code>-addr</code> or <code>-w</code>; <code>-token</code>. With <code>-w</code>: also <code>-net</code></td>
+  <td><code>-cond</code>, <code>-type &lt;cond_type&gt;</code>, <code>-value &lt;uint256&gt;</code>, <code>-mempool_check</code></td>
+</tr>
+<tr>
+  <td><code>find</code></td>
+  <td>Yes (returns <code>not found</code> on public node)</td>
+  <td><code>-addr</code></td>
+  <td><code>-file &lt;wallet_dir&gt;</code></td>
+</tr>
+<tr>
+  <td><code>new</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-w &lt;wallet_name&gt;</code> (alphanumeric only)</td>
+  <td><code>-sign &lt;sign_type&gt;</code>, <code>-restore &lt;hex&gt;</code>, <code>-restore_legacy &lt;hex&gt;</code>, <code>-net</code>, <code>-force</code>, <code>-password</code></td>
+</tr>
+<tr>
+  <td><code>activate</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-w</code>, <code>-password</code></td>
+  <td><code>-ttl &lt;minutes&gt;</code> (default 60)</td>
+</tr>
+<tr>
+  <td><code>deactivate</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-w</code></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td><code>convert</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-w</code>; exactly one of <code>-password</code> or <code>-remove_password</code></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td><code>shared hold</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-net</code>, <code>-w</code>, <code>-token</code>, <code>-value</code>, <code>-fee</code>, <code>-signs_minimum</code>; at least one of <code>-pkey_hashes</code> or <code>-addrs</code></td>
+  <td><code>-tag</code>, <code>-H hex|base58</code></td>
+</tr>
+<tr>
+  <td><code>shared refill</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-net</code>, <code>-w</code>, <code>-value</code>, <code>-fee</code>; exactly one of <code>-tx</code> or <code>-addr</code> (shared address)</td>
+  <td><code>-H hex|base58</code></td>
+</tr>
+<tr>
+  <td><code>shared take</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-net</code>, <code>-w</code>, <code>-fee</code>, <code>-value</code>, <code>-to_addr</code>; exactly one of <code>-tx</code> or <code>-addr</code></td>
+  <td><code>-H hex|base58</code>. <code>-to_addr</code> and <code>-value</code> are comma-separated lists of equal length</td>
+</tr>
+<tr>
+  <td><code>shared sign</code></td>
+  <td class="local-only">Writes to node wallet dir</td>
+  <td><code>-net</code>, <code>-tx</code>; exactly one of <code>-w</code> or <code>-cert</code></td>
+  <td><code>-H hex|base58</code></td>
+</tr>
+<tr>
+  <td><code>shared info</code></td>
+  <td>Yes</td>
+  <td><code>-net</code>; exactly one of <code>-tx</code> or <code>-addr</code> (shared address)</td>
+  <td><code>-H hex|base58</code></td>
+</tr>
+<tr>
+  <td><code>shared history</code></td>
+  <td>Yes</td>
+  <td>Exactly one of <code>-tx</code> or <code>-addr</code></td>
+  <td><code>-net</code> (required with <code>-tx</code>; auto-detected from <code>-addr</code>), <code>-H hex|base58</code></td>
+</tr>
+<tr>
+  <td><code>shared list</code></td>
+  <td>Yes</td>
+  <td>—</td>
+  <td><code>-net</code>, <code>-pkey</code>, <code>-addr</code>, <code>-w</code>, <code>-cert</code> (mutually exclusive filters), <code>-local</code>, <code>-verbose</code>, <code>-H hex|base58</code></td>
+</tr>
+</tbody>
+</table>
+<p>Conditional output types for <code>outputs -type</code>: <code>srv_pay</code>, <code>srv_xchange</code>, <code>srv_stake_pos_delegate</code>, <code>srv_stake_lock</code>, <code>fee</code>.</p>
+
+<h2>Example requests (verified on rpc.cellframe.net)</h2>
+
+<h3>list</h3>
+<p>List wallet files stored on the RPC node. When the wallet directory is empty, the response is an error object; when wallets exist, each entry includes <code>Wallet</code>, <code>status</code>, <code>deprecated</code>, and <code>signs</code>.</p>
+<pre>{"method":"wallet","params":["wallet;list"],"id":1,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"list","id":1,"version":2}</pre>
+<p>Empty directory:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 3, "message": "Couldn't find any wallets" }
+      ]
+    },
+    []
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>With a wallet present (example from a public node after <code>wallet new</code>):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      {
+        "Wallet": "testwallet.dwallet",
+        "status": "unprotected",
+        "deprecated": "false",
+        "signs": "sig_dil"
+      }
+    ]
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>info</h3>
+<p>Address balances and metadata. Use <code>-addr</code> on public RPC; use <code>-w -net</code> only on a node that stores the wallet file.</p>
+<pre>{"method":"wallet","params":["wallet;info;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"],"id":2,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"info","arguments":{"addr":"Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"},"id":2,"version":2}</pre>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      {
+        "addr": "Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33",
+        "pkey_hash": "0xAE6D3B53F6896592857BD17D65ADFA54CEA2B5D5963DAFFA9460763D1DB93EF8",
+        "network": "Backbone",
+        "signs": "sig_dil",
+        "tokens": [
+          {
+            "balance": "",
+            "coins": "3.0",
+            "datoshi": "3000000000000000000",
+            "token": { "ticker": "CELL", "description": null }
+          }
+        ]
+      }
+    ]
+  ],
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Missing <code>-addr</code>/<code>-w</code>:</p>
+<pre>{ "code": 2, "message": "You should use either the -w or -addr option for the wallet info command." }</pre>
+<p>With <code>-w</code> on a node without that wallet:</p>
+<pre>{ "code": 3, "message": "Wallet not found or addr not recognized" }</pre>
+
+<h3>outputs</h3>
+<p>List spendable UTXOs for an address and token.</p>
+<pre>{"method":"wallet","params":["wallet;outputs;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33;-token;CELL"],"id":3,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"outputs","arguments":{"addr":"Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33","token":"CELL"},"id":3,"version":2}</pre>
+<p>Version 1 response (note <code>value_datosi</code> on each UTXO):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      {
+        "wallet_addr": "Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33",
+        "total_value_coins": "3.0",
+        "total_value_datoshi": "3000000000000000000",
+        "outs": [
+          {
+            "item_type": "unspent_out",
+            "value_coins": "3.0",
+            "value_datosi": "3000000000000000000",
+            "prev_hash": "0x36B659A1FD88B4BE47D984596DE7A5C36D594D7DEE41FED20572DD5BD3778343",
+            "out_prev_idx": 0
+          }
+        ]
+      }
+    ]
+  ],
+  "id": 3,
+  "version": 1
+}</pre>
+<p>Version 2 response uses <code>value_datoshi</code> instead of <code>value_datosi</code> on each UTXO; totals are unchanged.</p>
+<p>Missing <code>-token</code>:</p>
+<pre>{ "code": 1, "message": "Subcommand outputs requires parameter '-token'" }</pre>
+
+<h3>find</h3>
+<p>Find local wallet filename(s) matching an address. Scans node wallet directory only.</p>
+<pre>{"method":"wallet","params":["wallet;find;-addr;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"],"id":4,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"find","arguments":{"addr":"Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"},"id":4,"version":2}</pre>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      { "status": "not found" }
+    ]
+  ],
+  "id": 4,
+  "version": 2
+}</pre>
+<p>Missing <code>-addr</code>:</p>
+<pre>{ "code": 8, "message": "You should use -addr option for the wallet find command." }</pre>
+
+<h3>shared list</h3>
+<pre>{"method":"wallet","params":["wallet;shared;list;-net;Backbone"],"id":5,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"shared;list","arguments":{"net":"Backbone"},"id":5,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":["shared","list"],"arguments":{"net":"Backbone"},"id":6,"version":2}</pre>
+<p>Returns one object per public-key hash with <code>pkey_hash</code>, optional <code>addr</code>, <code>tx_hashes</code>, <code>shared_wallets</code>, <code>member_of</code>. The unfiltered list can be very large; use <code>-net</code> to narrow results. Use <code>-verbose</code> / <code>"verbose": ""</code> for balances, <code>tx_hash_final</code>, owner hashes, and pending operations (may be slow on public nodes).</p>
+
+<h3>shared info</h3>
+<pre>{"method":"wallet","params":["wallet;shared;info;-net;Backbone;-addr;rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs"],"id":6,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":["shared","info"],"arguments":{"net":"Backbone","addr":"rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs"},"id":6,"version":2}</pre>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "addr": "rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs",
+      "tx_hash": "0x8F78328520CA9AE5D6BD004CD9C040C912AB85D5AA47F530B5EBC500DAB47391",
+      "tx_hash_final": "0x78C9E1889C6AFFE961417C6EA2257747569FAC972D9110F95A326E7392870C1A",
+      "tags": [],
+      "balance": { "coins": "0.2", "datoshi": "200000000000000000" },
+      "token": { "ticker": "CELL", "description": null },
+      "creator": "0xDE63054AE7E914960AA24DCDFA40E29394B4FDE55372724D24E98FB9896D6832",
+      "creator_addr": "Rj7J7MiX2bWy8sNyb2aqPVS6dadJxWe9bLg3vKk5Vvh7BgUe7UXs1yZH4qeDaC5eGz4umS63CNP8jKwYeSUKBpcKPDbfbeF7kRVizDDZ",
+      "take_verify": {
+        "signs_minimum": 2,
+        "owner_hashes": ["0xDE63054AE7E914960AA24DCDFA40E29394B4FDE55372724D24E98FB9896D6832", "..."]
+      },
+      "waiting_operations_count": 0,
+      "waiting_operations_hashes": []
+    }
+  ],
+  "id": 6,
+  "version": 2
+}</pre>
+<p>Missing <code>-tx</code>/<code>-addr</code>:</p>
+<pre>{ "code": 3, "message": "Parameter -tx or -addr is required" }</pre>
+
+<h3>shared history</h3>
+<pre>{"method":"wallet","params":["wallet;shared;history;-addr;rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs"],"id":7,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":["shared","history"],"arguments":{"addr":"rTDbDhvpdG11HLCMQQDVUyxJQP4Gxjd4n47SnASRZta1xs6AQbkQ4vpGsSHUHXEhBqzmJhev7o93NSSjhiPBcJC1g9ERzZBuZSiXzcSs"},"id":7,"version":2}</pre>
+<p>Returns <code>hold_tx</code>, <code>addr</code>, and an <code>operations</code> array (<code>hold</code>, <code>take</code>, …) with signers and values.</p>
+
+<h2>Write operations (node wallet directory)</h2>
+<p class="note">These subcommands create, unlock, or sign with <code>.dwallet</code> files under the RPC node&rsquo;s wallet path. They can succeed on public RPC (verified: <code>wallet new</code> created a wallet on <code>rpc.cellframe.net</code>) and therefore affect shared node state. Prefer your own node for any write workflow.</p>
+
+<h3>new</h3>
+<pre>{"method":"wallet","params":["wallet;new;-w;mywallet;-net;Backbone"],"id":10,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"new","arguments":{"w":"mywallet","net":"Backbone"},"id":10,"version":2}</pre>
+<p>Success fields: <code>wallet_name</code>, <code>sig_type</code>, <code>status</code>, optional <code>new_addr</code> when <code>-net</code> is given.</p>
+
+<h3>activate / deactivate</h3>
+<pre>{"method":"wallet","params":["wallet;activate;-w;mywallet;-password;secret;-ttl;60"],"id":11,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"activate","arguments":{"w":"mywallet","password":"secret","ttl":"60"},"id":11,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":"deactivate","arguments":{"w":"mywallet"},"id":12,"version":2}</pre>
+
+<h3>convert</h3>
+<pre>{"method":"wallet","params":["wallet;convert;-w;mywallet;-password;newsecret"],"id":13,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":"convert","arguments":{"w":"mywallet","password":"newsecret"},"id":13,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":"convert","arguments":{"w":"mywallet","remove_password":""},"id":14,"version":2}</pre>
+
+<h3>shared hold (create multisig hold tx)</h3>
+<pre>{"method":"wallet","params":["wallet;shared;hold;-net;Backbone;-w;mywallet;-token;CELL;-value;1.0;-fee;0.05;-signs_minimum;2;-pkey_hashes;0xHASH1,0xHASH2;-addrs;Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"],"id":20,"version":1}</pre>
+<pre>{"method":"wallet","subcommand":["shared","hold"],"arguments":{"net":"Backbone","w":"mywallet","token":"CELL","value":"1.0","fee":"0.05","signs_minimum":"2","pkey_hashes":"0xHASH1,0xHASH2","addrs":"Rj7J7MiX2bWy8sNya4yB7z86JReYjFyAjK94mmyjQmabzKSZMpimaQkwa1D139gYbBA5mmkrxRVCxVq68AxCejZZuoWWrKWiCGiDpQ33"},"id":20,"version":2}</pre>
+<p>Success: <code>status</code>, <code>tx_hash</code>, <code>addr</code> (shared address).</p>
+
+<h3>shared refill / take / sign</h3>
+<pre>{"method":"wallet","subcommand":["shared","refill"],"arguments":{"net":"Backbone","w":"mywallet","value":"1.0","fee":"0.05","tx":"0xHOLD_HASH"},"id":21,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":["shared","take"],"arguments":{"net":"Backbone","w":"mywallet","tx":"0xHOLD_HASH","to_addr":"ADDR1","value":"0.5","fee":"0.05"},"id":22,"version":2}</pre>
+<pre>{"method":"wallet","subcommand":["shared","sign"],"arguments":{"net":"Backbone","w":"mywallet","tx":"0xDEBIT_TX_HASH"},"id":23,"version":2}</pre>
+
+<h2>Value format hints</h2>
+<ul>
+<li><code>value_coins</code> (natural numbers): e.g. <code>1.0</code>, <code>123.4567</code></li>
+<li><code>value_datoshi</code> (integer): e.g. <code>1</code>, <code>20</code>, <code>0.4321e+4</code></li>
+</ul>
+
+<h2>Common error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>Typical cause</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Missing or invalid parameter (<code>-token</code>, command format, …)</td></tr>
+<tr><td>2</td><td>Missing/ambiguous <code>-w</code>/<code>-addr</code>; invalid wallet name characters</td></tr>
+<tr><td>3</td><td>No wallets on node; wallet/address not found</td></tr>
+<tr><td>6</td><td>Unknown <code>-net</code> name; <code>-net</code> required with <code>-w</code></td></tr>
+<tr><td>8</td><td>Invalid or missing address (<code>find</code>)</td></tr>
+<tr><td>9</td><td>Wallet name already exists (<code>new</code>)</td></tr>
+</tbody>
+</table>
+
+</body>
+</html>

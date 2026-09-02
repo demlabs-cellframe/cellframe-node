@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>token — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.untestable { color: #666; font-style: italic; }
+.warn { background: #fff8e6; border: 1px solid #e6d9a8; padding: 0.8em 1em; }
+</style>
+</head>
+<body>
+
+<h1>token</h1>
+<p>Token info — list all tokens with declaration/update history, or inspect a single token ticker.</p>
+
+<h2>JSON-RPC</h2>
+<p>Method name: <code>token</code>. Supports <a href="/index.html">API version 1</a> (<code>params</code> string) and version 2 (<code>subcommand</code> + <code>arguments</code>).</p>
+
+<h3>Version 1 — semicolon <code>params</code></h3>
+<pre>{
+  "jsonrpc": "2.0",
+  "method": "token",
+  "params": ["token;list;-net;Backbone"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Arguments are separated by <code>;</code> only. Example: <code>token;info;-net;Backbone;-name;CELL</code>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<pre>{
+  "method": "token",
+  "subcommand": "list",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}
+
+{
+  "method": "token",
+  "subcommand": "info",
+  "arguments": {"net": "Backbone", "name": "CELL", "history_limit": "10"},
+  "id": 2,
+  "version": 2
+}</pre>
+
+<div class="warn">
+<p><strong>Public node note:</strong> On <code>rpc.cellframe.net</code> (Jul 2026), <code>token;list</code> and <code>token;info</code> (both v1 and v2) consistently close the HTTP connection without a response body after ~15&nbsp;s (likely payload size / server timeout). Use <code>ledger;list;coins</code> for token tickers and supply summary on the public node:</p>
+<pre>{"method":"ledger","subcommand":"list;coins","arguments":{"net":"Backbone","limit":"20"},"id":3,"version":2}</pre>
+<p>Full declaration/update history requires a local node or direct CLI access.</p>
+</div>
+
+<h2>Global options</h2>
+<table>
+<tr><th>Option</th><th>v2 <code>arguments</code> key</th><th>Description</th></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td><code>net</code></td><td>Network name (required).</td></tr>
+<tr><td><code>-name &lt;token_ticker&gt;</code></td><td><code>name</code></td><td>Token ticker (required for <code>info</code>).</td></tr>
+<tr><td><code>-full</code></td><td><code>full</code> (empty string)</td><td>Local CLI: show full declaration hash in table; no effect on JSON-RPC body.</td></tr>
+<tr><td><code>-history_limit &lt;N&gt;</code></td><td><code>history_limit</code></td><td>UTXO blocklist history items per blocked UTXO in <code>current state</code> (default 10; 0 = all). Passed via <code>dap_ledger_token_info_by_name</code>.</td></tr>
+<tr><td><code>-H hex|base58</code></td><td><code>H</code></td><td>Hash format in declaration/update datum dumps (default <code>hex</code>).</td></tr>
+<tr><td><code>-h</code></td><td><code>h</code> (empty string)</td><td>Local CLI table output for <code>list</code> (see below).</td></tr>
+</table>
+
+<h2>Subcommands</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>v1 <code>params</code></th><th>v2 <code>subcommand</code></th><th>Public RPC</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list</code></td><td><code>token;list;-net;&lt;net&gt;;[-full][;-h]</code></td><td><code>"list"</code></td><td class="untestable">connection drop on rpc.cellframe.net (large response)</td></tr>
+<tr><td><code>info</code></td><td><code>token;info;-net;&lt;net&gt;;-name;&lt;ticker&gt;;[-history_limit;N]</code></td><td><code>"info"</code></td><td class="untestable">connection drop on rpc.cellframe.net (large response)</td></tr>
+<tr><td><code>tx</code></td><td>Deprecated — returns error.</td><td>—</td><td>n/a</td></tr>
+</tbody>
+</table>
+
+<h2>Example requests</h2>
+<h3>Version 1</h3>
+<pre>{"jsonrpc":"2.0","method":"token","params":["token;list;-net;Backbone"],"id":1,"version":1}
+
+{"jsonrpc":"2.0","method":"token","params":["token;info;-net;Backbone;-name;CELL;-history_limit;10"],"id":2,"version":1}</pre>
+
+<h3>Version 2</h3>
+<pre>{"method":"token","subcommand":"list","arguments":{"net":"Backbone"},"id":1,"version":2}
+
+{"method":"token","subcommand":"info","arguments":{"net":"Backbone","name":"CELL","history_limit":"10"},"id":2,"version":2}</pre>
+
+<p>Discover tickers on the public node via <code>ledger list coins</code> instead:</p>
+<pre>{"jsonrpc":"2.0","method":"ledger","params":["ledger;list;coins;-net;Backbone;-limit;20"],"id":3,"version":1}
+
+{"method":"ledger","subcommand":["list","coins"],"arguments":{"net":"Backbone","limit":"20"},"id":4,"version":2}</pre>
+
+<h2>Response envelope</h2>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Errors: <code>result[0].errors[]</code> with codes such as <code>-name</code> missing or token not found.</p>
+
+<h2>Version 1 vs version 2 response field names</h2>
+<p>Token history is built in <code>dap_chain_node_cli_cmd_tx.c</code>; per-token live state reuses <code>dap_ledger_token_info_by_name</code> (same fields as <code>ledger list coins</code>).</p>
+<table>
+<thead>
+<tr><th>Context</th><th>Version 1</th><th>Version 2</th></tr>
+</thead>
+<tbody>
+<tr><td>Top-level token array</td><td><code>TOKENS</code></td><td><code>tokens</code></td></tr>
+<tr><td>Total token count (<code>list</code> only)</td><td><code>tokens</code> (uint64)</td><td><code>tokens</code> (uint64)</td></tr>
+<tr><td>Live ledger snapshot</td><td><code>current state</code></td><td><code>current_state</code></td></tr>
+<tr><td>Token ticker in snapshot</td><td><code>--&gt;Token name</code></td><td><code>token_name</code></td></tr>
+<tr><td>Token type</td><td><code>type</code></td><td><code>subtype</code></td></tr>
+<tr><td>Supply fields</td><td><code>Supply current</code> / <code>Supply total</code></td><td><code>supply_current</code> / <code>supply_total</code></td></tr>
+<tr><td>Declaration status code</td><td><code>Ledger return code</code></td><td><code>ledger_ret_code</code></td></tr>
+<tr><td>Emissions count</td><td><code>Total emissions</code></td><td><code>total_emissions</code></td></tr>
+</tbody>
+</table>
+<p>Inside <code>current state</code> / <code>current_state</code>, field names follow the same v1/v2 mapping as <a href="/ledger.html">ledger list coins</a>.</p>
+
+<h2>Response structure (from implementation)</h2>
+<p>Both <code>list</code> and <code>info</code> call <code>dap_db_net_history_token_list</code> (<code>dap_chain_node_cli_cmd_tx.c</code>). <code>result[0]</code> is an object:</p>
+<ul>
+<li><code>TOKENS</code> (v1) or <code>tokens</code> (v2) — array of per-chain objects; each chain object maps ticker &rarr; token entry.</li>
+<li><code>tokens</code> (uint64) — total token count across chains (<code>list</code> only; same key name in both versions).</li>
+</ul>
+<p>Each token entry contains:</p>
+<ul>
+<li><code>current state</code> (v1) / <code>current_state</code> (v2) — live ledger token info from <code>dap_ledger_token_info_by_name</code> (same fields as <code>ledger list coins</code>).</li>
+<li><code>declarations</code> — array of declaration datums with <code>status</code> (<code>ACCEPTED</code>/<code>DECLINED</code>), <code>Ledger return code</code> (v1) / <code>ledger_ret_code</code> (v2), and nested <code>Datum</code> dump.</li>
+<li><code>updates</code> — array of token-update datums (same shape).</li>
+</ul>
+
+<h3>list — expected shape (local node)</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "TOKENS": [
+        {
+          "CELL": {
+            "current state": {
+              "-->Token name": "CELL",
+              "type": "CF20",
+              "Supply current": "0",
+              "Supply total": "0",
+              "Decimals": "18",
+              "Auth signs valid": 4,
+              "Auth signs total": 6,
+              "flags": ["ALL_SENDER_ALLOWED"],
+              "utxo_blocklist_count": 0,
+              "Total emissions": 26898
+            },
+            "declarations": [
+              {
+                "status": "ACCEPTED",
+                "Ledger return code": 0,
+                "Datum": { "hash": "0x...", "type_id": "DATUM_TOKEN", "...": "..." }
+              }
+            ],
+            "updates": []
+          },
+          "BUSD": { "...": "..." }
+        }
+      ],
+      "tokens": 42
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>With <code>version: 2</code>, <code>TOKENS</code> becomes <code>tokens</code> (array), <code>current state</code> becomes <code>current_state</code>, and nested token fields use snake_case as in the mapping table above. <code>TOKENS</code> has one element per chain that contains token datums (e.g. <code>zerochain</code> on Backbone). Tickers are keys inside each chain object.</p>
+
+<h3>info — expected shape (local node)</h3>
+<p>Same object as <code>list</code>, but the token array contains only the requested ticker (or an error if not found).</p>
+<pre>{
+  "result": [
+    {
+      "TOKENS": [
+        {
+          "CELL": {
+            "current state": { "...": "..." },
+            "declarations": [ "..." ],
+            "updates": [ "..." ]
+          }
+        }
+      ]
+    }
+  ]
+}</pre>
+
+<h3>current state / UTXO blocklist fields</h3>
+<p>When UTXO blocking is enabled, <code>current state</code> / <code>current_state</code> may include:</p>
+<ul>
+<li><code>utxo_blocklist_count</code></li>
+<li><code>utxo_blocklist</code> array with <code>tx_hash</code>, <code>out_idx</code>, <code>blocked_time</code>, <code>becomes_effective</code>, <code>becomes_unblocked</code> (0 = permanent)</li>
+<li><code>history_recent</code> / <code>history_total_count</code> per blocked UTXO (controlled by <code>-history_limit</code>)</li>
+</ul>
+
+<h2>Local CLI <code>-h</code> vs JSON-RPC response</h2>
+<p>
+JSON-RPC always returns the JSON object above; <code>-h</code> does not change the HTTP response (same as <code>block</code> and <code>ledger</code>).
+Local CLI uses <code>s_print_for_token_list</code> to print an ASCII table for <code>token list ... -h</code>.
+</p>
+<table>
+<thead>
+<tr><th>Context</th><th><code>token;list;...;-h</code> output</th></tr>
+</thead>
+<tbody>
+<tr><td>JSON-RPC</td><td>Full JSON (identical to omitting <code>-h</code>).</td></tr>
+<tr><td>Local CLI</td><td>Table columns: Token Ticker, Type, Decimals, Current Signs, Declarations, Updates, Decl Status, Decl Hash, Total Supply, Current Supply; footer <code>Total tokens: N</code>.</td></tr>
+</tbody>
+</table>
+<p>With <code>-full</code> in local CLI, declaration hash column shows the full hash; otherwise last 10 characters.</p>
+
+<p><a href="/index.html">Back to index</a></p>
+
+</body>
+</html>
