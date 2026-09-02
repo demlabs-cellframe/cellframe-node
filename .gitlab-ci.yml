@@ -67,7 +67,7 @@ stages:
      - ci-polygon
 .ci-ansible:
   tags:
-     - ci-ansible
+     - ci-polygon
 
 .ci-test:
   tags:
@@ -422,10 +422,12 @@ any:android.release:
 
 version:up:
   stage: post_build
+  image: demlabs/debian/amd64:qt6
+
   dependencies:
     - amd64:linux.rwd.bld
   tags:
-    - ansible-runner
+    - ci-polygon
   variables:
     # No git checkout: only version.mk, .deb and prod_build/ci/ from amd64:linux.rwd.bld artifacts
     GIT_STRATEGY: none

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>block — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.untestable { color: #666; font-style: italic; }
+.warn { background: #fff8e6; border: 1px solid #e6d9a8; padding: 0.8em 1em; }
+</style>
+</head>
+<body>
+
+<h1>block</h1>
+<p>Create and explore blockchains (block-type chains such as <code>main</code> on Backbone).</p>
+
+<h2>JSON-RPC</h2>
+<p>Method name: <code>block</code>. Supports <a href="/index.html">API version 1</a> (<code>params</code> string) and version 2 (<code>subcommand</code> + <code>arguments</code>).</p>
+
+<h3>Version 1 — semicolon <code>params</code></h3>
+<p>Put the full CLI command in <code>params[0]</code>. Every token is separated by <code>;</code> — <strong>not spaces</strong>.</p>
+<pre>{
+  "jsonrpc": "2.0",
+  "method": "block",
+  "params": ["block;list;-net;Backbone;-limit;10;-offset;0"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Example: <code>block;count;-net;Backbone</code> (not <code>block count -net Backbone</code>).</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<p>Omit <code>params</code> entirely. Argument keys map to CLI flags without a leading dash (<code>"net"</code> &rarr; <code>-net</code>). Use string values for numbers (<code>"limit": "10"</code>).</p>
+<pre>{
+  "method": "block",
+  "subcommand": "count",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}
+
+{
+  "method": "block",
+  "subcommand": "list",
+  "arguments": {"net": "Backbone", "limit": "3", "offset": "0"},
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Multi-token subcommands (e.g. <code>fee collect</code>, <code>reward set</code>) must use <code>;</code> or a JSON array — <strong>not spaces</strong>: <code>"fee;collect"</code> or <code>["fee","collect"]</code>.</p>
+
+<h2>Global options</h2>
+<table>
+<tr><th>Option</th><th>v2 <code>arguments</code> key</th><th>Description</th></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td><code>net</code></td><td>Network name (required).</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td><code>chain</code></td><td>Block chain name. Defaults to the network&rsquo;s transaction/anchor chain (<code>main</code> on Backbone).</td></tr>
+<tr><td><code>-limit &lt;N&gt;</code></td><td><code>limit</code></td><td>Maximum number of results (list).</td></tr>
+<tr><td><code>-offset &lt;N&gt;</code></td><td><code>offset</code></td><td>Skip first N results (list).</td></tr>
+<tr><td><code>-head</code></td><td><code>head</code> (empty string)</td><td>Traverse from oldest block first (list).</td></tr>
+<tr><td><code>-H hex|base58</code></td><td><code>H</code></td><td>Hash output format for <code>dump</code> / <code>find</code> (default: <code>hex</code>).</td></tr>
+<tr><td><code>-brief</code></td><td><code>brief</code> (empty string)</td><td>Brief <code>dump</code> output (datum num + hash only).</td></tr>
+<tr><td><code>-datum &lt;hash&gt;</code></td><td><code>datum</code></td><td>Datum hash for <code>find</code>.</td></tr>
+<tr><td><code>-hash &lt;hash&gt;</code></td><td><code>hash</code></td><td>Block hash for <code>dump</code>.</td></tr>
+<tr><td><code>-num &lt;N&gt;</code></td><td><code>num</code></td><td>Block number for <code>dump</code>.</td></tr>
+<tr><td><code>-h</code></td><td><code>h</code> (empty string)</td><td>Human-readable table output in <strong>local CLI only</strong> (see below).</td></tr>
+</table>
+
+<h2>Explorer subcommands (read-only)</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>v1 <code>params</code></th><th>v2 <code>subcommand</code></th><th>Public RPC</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list</code></td><td><code>block;list;-net;&lt;net&gt;;[-chain;&lt;chain&gt;;][-limit;N][;-offset;N][;-head]</code></td><td><code>"list"</code></td><td>tested</td></tr>
+<tr><td><code>count</code></td><td><code>block;count;-net;&lt;net&gt;;[-chain;&lt;chain&gt;]</code></td><td><code>"count"</code></td><td>tested</td></tr>
+<tr><td><code>last</code></td><td><code>block;last;-net;&lt;net&gt;;-chain;&lt;chain&gt;</code></td><td><code>"last"</code></td><td>tested</td></tr>
+<tr><td><code>find</code></td><td><code>block;find;-net;&lt;net&gt;;-chain;&lt;chain&gt;;-datum;&lt;datum_hash&gt;</code></td><td><code>"find"</code></td><td class="untestable">slow / may timeout on public node</td></tr>
+<tr><td><code>dump</code></td><td><code>block;dump;-net;&lt;net&gt;;[-chain;&lt;chain&gt;;][-brief];{-hash;&lt;hash&gt;|-num;&lt;num&gt;}</code></td><td><code>"dump"</code></td><td>tested</td></tr>
+</tbody>
+</table>
+<p>
+<code>list</code> filter priority: date range &rarr; hash range &rarr; offset/limit.
+Date (<code>-from_date</code>/<code>-to_date</code> in <code>YYMMDD</code>) and hash (<code>-from_hash</code>/<code>-to_hash</code>) ranges cannot be mixed.
+Optional filters: <code>signed</code>, <code>first_signed</code> (require <code>-cert</code> or <code>-pkey_hash</code>), <code>-unspent</code>.
+</p>
+
+<h2>Example requests</h2>
+<h3>Version 1</h3>
+<pre>{"jsonrpc":"2.0","method":"block","params":["block;list;-net;Backbone;-limit;3;-offset;0"],"id":1,"version":1}
+
+{"jsonrpc":"2.0","method":"block","params":["block;count;-net;Backbone"],"id":2,"version":1}
+
+{"jsonrpc":"2.0","method":"block","params":["block;last;-net;Backbone;-chain;main"],"id":3,"version":1}</pre>
+
+<h3>Version 2</h3>
+<pre>{"method":"block","subcommand":"count","arguments":{"net":"Backbone"},"id":1,"version":2}
+
+{"method":"block","subcommand":"list","arguments":{"net":"Backbone","limit":"3","offset":"0"},"id":2,"version":2}
+
+{"method":"block","subcommand":"last","arguments":{"net":"Backbone","chain":"main"},"id":3,"version":2}</pre>
+
+<h2>Response envelope</h2>
+<p><code>block</code> is a JSON-response command. On success, HTTP body contains:</p>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>On error, the <code>result</code> array contains an object with an <code>errors</code> array (not a top-level JSON-RPC <code>error</code> field):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 103, "message": "Enter block hash or block number" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h2>Version 1 vs version 2 response field names</h2>
+<p>The response <code>version</code> echoes the request <code>version</code>. Handlers in <code>dap_chain_cs_blocks.c</code> use labeled keys on version 1 and snake_case on version 2. Some summary keys (e.g. <code>Backbone.main has blocks - </code>) are the same in both versions.</p>
+<table>
+<thead>
+<tr><th>Context</th><th>Version 1</th><th>Version 2</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list</code> block number</td><td><code>block number</code></td><td><code>block_num</code></td></tr>
+<tr><td><code>list</code> block hash</td><td><code>hash</code></td><td><code>block_hash</code></td></tr>
+<tr><td><code>list</code> timestamp</td><td><code>ts_create</code></td><td><code>ts_create</code></td></tr>
+<tr><td><code>last</code> block number</td><td><code>Last block num</code></td><td><code>last_block_num</code></td></tr>
+<tr><td><code>last</code> block hash</td><td><code>Last block hash</code></td><td><code>last_block_hash</code></td></tr>
+<tr><td><code>last</code> timestamp</td><td><code>ts_created</code></td><td><code>ts_created</code></td></tr>
+<tr><td><code>find</code> block list</td><td><code>Blocks</code></td><td><code>blocks</code></td></tr>
+<tr><td><code>find</code> count</td><td><code>Total</code></td><td><code>total</code></td></tr>
+<tr><td><code>dump</code> block number</td><td><code>Block number</code></td><td><code>block_num</code></td></tr>
+<tr><td><code>dump</code> datum hash</td><td><code>hash</code></td><td><code>datum_hash</code></td></tr>
+</tbody>
+</table>
+
+<h2>Response fields (verified on rpc.cellframe.net / Backbone, Jul 2026)</h2>
+
+<h3>block list</h3>
+<p><code>result</code> is a two-element array: block rows (nested array) plus a filter summary object. Pagination metadata appears as objects <code>{"limit": N}</code> and optionally <code>{"offset": N}</code> inside the block array.</p>
+<p><strong>Version 1:</strong></p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      {
+        "block number": 542723,
+        "hash": "0x1BAA1E9BED45A899D7A24283FFCD0E3EF9E6F18D22E81BE4475DF5FFB3704322",
+        "ts_create": "Tue, 14 Jul 2026 08:58:06 +0000"
+      },
+      { "limit": 2 }
+    ],
+    {
+      "Backbone.main with filter - none, have blocks": 2
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p><strong>Version 2:</strong></p>
+<pre>{
+  "type": 2,
+  "result": [
+    [
+      {
+        "block_num": 542723,
+        "block_hash": "0x1BAA1E9BED45A899D7A24283FFCD0E3EF9E6F18D22E81BE4475DF5FFB3704322",
+        "ts_create": "Tue, 14 Jul 2026 08:58:06 +0000"
+      },
+      { "limit": 2 }
+    ],
+    {
+      "Backbone.main with filter - none, have blocks": 2
+    }
+  ],
+  "id": 2,
+  "version": 2
+}</pre>
+
+<h3>block count</h3>
+<p>Count summary key is identical in both versions (network/chain-specific label).</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "Backbone.main has blocks - ": 542723
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h3>block last</h3>
+<p>Requires <code>-chain</code> / <code>chain</code>. Returns last block metadata and total block count.</p>
+<p><strong>Version 1:</strong></p>
+<pre>{
+  "result": [
+    {
+      "Last block num": 542723,
+      "Last block hash": "0x1BAA1E9BED45A899D7A24283FFCD0E3EF9E6F18D22E81BE4475DF5FFB3704322",
+      "ts_created": "Tue, 14 Jul 2026 08:58:06 +0000",
+      "Backbone.main has blocks": 542723
+    }
+  ]
+}</pre>
+<p><strong>Version 2:</strong></p>
+<pre>{
+  "result": [
+    {
+      "last_block_num": 542723,
+      "last_block_hash": "0x1BAA1E9BED45A899D7A24283FFCD0E3EF9E6F18D22E81BE4475DF5FFB3704322",
+      "ts_created": "Tue, 14 Jul 2026 08:58:06 +0000",
+      "Backbone.main has blocks": 542723
+    }
+  ]
+}</pre>
+
+<h3>block find</h3>
+<p>Requires <code>-datum</code> / <code>datum</code> (transaction or other datum hash). Returns block hashes containing that datum. Version 1 uses <code>Blocks</code>/<code>Total</code>; version 2 uses <code>blocks</code>/<code>total</code>.</p>
+
+<h2>Local CLI <code>-h</code> vs JSON-RPC response</h2>
+<p>
+<code>block</code>, <code>ledger</code>, and <code>token</code> are registered in <code>json_commands()</code>: HTTP JSON-RPC always returns structured JSON in <code>result</code>, even when <code>-h</code> is present in the params string.
+</p>
+<p>
+The <code>-h</code> flag affects <strong>local</strong> <code>cellframe-node-cli</code> only. After the node returns JSON, the CLI parser (<code>s_print_for_block_list</code> in <code>dap_chain_node_cli.c</code>) formats <code>list</code> output as an ASCII table when <code>-h</code> is set.
+</p>
+<table>
+<thead>
+<tr><th>Context</th><th><code>block;list;...;-h</code> output</th></tr>
+</thead>
+<tbody>
+<tr><td>JSON-RPC (<code>POST http://rpc.cellframe.net/</code>)</td><td>Same JSON array as without <code>-h</code> (verified).</td></tr>
+<tr><td>Local CLI (<code>cellframe-node-cli block list ... -h</code>)</td><td>ASCII table: columns <em>Block #</em>, <em>Block hash</em>, <em>Time create</em>; trailing <code>limit</code>/<code>offset</code> lines when present.</td></tr>
+</tbody>
+</table>
+
+<h2>Write subcommands</h2>
+<p class="untestable">The following require a node with master/miner role and local keys — not tested on public RPC. Multi-token forms use <code>;</code> or JSON arrays: <code>"fee;collect"</code>, <code>["reward","set"]</code>.</p>
+<ul>
+<li><code>new</code>, <code>new_datum_add</code>, <code>new_datum_del</code>, <code>new_datum_list</code>, <code>new_complete</code></li>
+<li><code>fee collect</code>, <code>reward set|show|collect</code>, <code>autocollect status|renew</code></li>
+</ul>
+
+<p><a href="/index.html">Back to index</a></p>
+
+</body>
+</html>
