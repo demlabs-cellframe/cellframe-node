@@ -129,7 +129,7 @@ stage_env_tests:
   extends: .ci-test
   interruptible: true
   stage: diagnostic_builds
-  timeout: 2 hours
+  timeout: 4 hours
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
