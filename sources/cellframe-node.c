@@ -625,6 +625,12 @@ int main( int argc, const char **argv )
 
     dap_chain_net_load_all();
 
+    /* Must run after networks/chains are loaded (dap_chain_net_iter_start()
+     * needs something to iterate); non-fatal if it can't find any TX chains,
+     * dap_chain_mempool_out_is_used() falls back to its historical full-scan
+     * implementation in that case. */
+    dap_chain_mempool_spent_index_init();
+
     /* VPN service creation happens in cf_vpn_srv_init() which is called
      * by the plugin system AFTER dap_chain_net_load_all(). */
 
