@@ -67,11 +67,11 @@ cpack
 ```
 
 ##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb``` 
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.7-Debian-...-amd64.deb``` (the exact name depends on your distribution and build date).
 
 Please use ```dpkg``` command to install it:
 ```
-sudo dpkg -i ./cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb
+sudo dpkg -i ./cellframe-node-5.7-Debian-...-amd64.deb
 ```
 
 In some cases there is a following command required to be executed
@@ -83,6 +83,10 @@ sudo apt --fix-broken install
 
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
 
+* For Debian 12 (Bookworm):
+  ```
+  deb https://debian.pub.demlabs.net/public bookworm main
+  ```
 * For Debian 11:
   ```
   deb https://debian.pub.demlabs.net/public bullseye main
@@ -239,6 +243,103 @@ To stop it use the next command:
 ```
   sudo service cellframe-node stop
 ```
+
+### Working with the RPC interface
+
+Besides the `cellframe-node-cli` command line tool, the node exposes a **JSON-RPC 2.0**
+interface over HTTP. Both share the same command set (wallet, tx_create, token, net,
+memPool, block, version, etc.): every CLI command is available as an RPC `method`, and its
+positional arguments are passed as the `params` array.
+
+The interface is provided by the `[cli-server]` section of
+`/opt/cellframe-node/etc/cellframe-node.cfg`.
+
+#### Configuration
+
+```
+[cli-server]
+enabled=true
+# Protocol version of the RPC/CLI command layer (default 1)
+version=1
+# Unix domain socket used by cellframe-node-cli by default
+listen-path=[../var/run/node_cli]
+# HTTP address:port to serve JSON-RPC and the built-in docs.
+# Loopback by default; bind 0.0.0.0 to expose it to your LAN.
+listen-address=[127.0.0.1:12345]
+# Uncomment to serve the unix socket only (no HTTP/TCP listener)
+#unix-only
+# Static RPC documentation directory (relative to the config dir). See below.
+http-index-path=../share/docs/rpc
+# Optional: restrict which RPC methods remote (non-loopback) clients may call.
+# A space/comma separated list of method names, e.g.:
+#allowed_cmd=[version,net,block,tx_create_json]
+# Extra logging
+#debug_more=false
+```
+
+After editing the config, restart the node: `sudo service cellframe-node restart`.
+
+#### Security model
+
+- Connections coming from a **unix socket or from loopback (127.0.0.1 / ::1)** are trusted
+  and can call every method.
+- Connections from any **other address** are restricted: only the methods listed in
+  `allowed_cmd` are accepted, everything else returns a `Command "..." is restricted` error.
+- If you don't need HTTP at all, set `unix-only` (or leave `listen-address` commented) so
+  only the local unix socket is served.
+- Binding `listen-address` to `0.0.0.0`/a public IP exposes node management to the network —
+  always set `allowed_cmd` in that case, or keep it loopback-only and reach it via an
+  authenticated reverse proxy.
+
+#### Built-in self-documented interface (open it in a browser)
+
+The RPC endpoint doubles as a small web documentation server. Point a browser at the HTTP
+`listen-address` (e.g. **http://127.0.0.1:12345/**) and you get an interactive HTML
+reference generated from the docs in `http-index-path` (installed at
+`/opt/cellframe-node/share/docs/rpc`): a method list grouped per module (block, wallet,
+token, mempool, net, net_srv, srv_xchange, stake_lock, tx_create_json, tx_history,
+version, …) with a **Try-it-out** form that issues the JSON-RPC request for you.
+
+Notes on the docs server:
+- `GET /` (or `/index.html`) returns the auto-generated index; each module is also served
+  at `/<module>.html`.
+- Only modules allowed by `allowed_cmd` are shown for the corresponding audience; if
+  `allowed_cmd` is unset, all present docs are served.
+- If `http-index-path` doesn't exist on disk, the server falls back to a minimal stub page
+  (application name, `DAP_VERSION` and build hash) instead of erroring.
+- CORS is enabled (`Access-Control-Allow-Origin: *`, `GET`/`POST`/`OPTIONS`), so the UI can
+  call the RPC from a browser on another origin. Symlinks and path traversal are rejected.
+
+#### Making raw JSON-RPC requests
+
+Send a JSON-RPC 2.0 object with the `method` and the `params` array via HTTP POST:
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"version","params":[],"id":1}'
+```
+
+A call that returns a value, e.g. listing wallets:
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"wallet","params":["list"],"id":2}'
+```
+
+Transactions can also be built from a JSON body using the dedicated
+`tx_create_json` method (see the `tx_create_json` module in the web docs for its schema):
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"tx_create_json","params":["{\"net\":\"minkowski\", ... }"],"id":3}'
+```
+
+Successful calls return `{"result": ... ,"id":N}`; errors return `{"error":{"code":...,"message":...}}`.
+To discover every method and its exact parameters without reading code, open the web docs
+at the `listen-address` — that is the intended, always-up-to-date reference for the RPC.
 
 ### How to publish service in network 
 
