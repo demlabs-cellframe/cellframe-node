@@ -48,6 +48,12 @@ cd cellframe-node
 
 ```bash
 git submodule update --init --recursive
+##### Install from local package
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.7-Debian-...-amd64.deb``` (the exact name depends on your distribution and build date).
+
+Please use ```dpkg``` command to install it:
+```
+sudo dpkg -i ./cellframe-node-5.7-Debian-...-amd64.deb
 ```
 
 ### Сборка и запуск из дерева сборки
@@ -66,6 +72,80 @@ cd build
 проверьте выбранные сети, адреса прослушивания и пути к данным.
 
 ### Создание пакета
+* Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
+
+* For Debian 12 (Bookworm):
+  ```
+  deb https://debian.pub.demlabs.net/public bookworm main
+  ```
+* For Debian 11:
+  ```
+  deb https://debian.pub.demlabs.net/public bullseye main
+  ```
+* For Debian 10:
+  ```
+  deb https://debian.pub.demlabs.net/public buster main
+  ```
+* For Debian 9:
+  ```
+  deb https://debian.pub.demlabs.net/public stretch main
+  ```
+* For Ubuntu 18 (Bionic):
+  ```
+  deb https://debian.pub.demlabs.net/public bionic main 
+  ```
+* Then download public signature and install it:
+  ```
+  wget https://debian.pub.demlabs.net/public/public-key.gpg
+  sudo apt-key add public-key.gpg
+  ```
+* Then update your apt cache and install the package (apt-transport-https should be installed):
+  ```
+  sudo apt-get update
+  sudo apt-get install cellframe-node
+  ```
+
+During installation it asks some questions
+
+#### Debian package questions
+All this could be changed after in configs
+
+
+* Auto online
+If true, the node goes online after he starts and then try to keep this state automatically 
+
+* Debug mode
+If true - produce more log output in files. Suggested to set ```true``` until the testing period 
+
+* Debug stream headers
+Dump stream headers in logs, set it ```true``` only if you want to get more debug information about stream packages passing through. Suggested ```false``` for almost everybody
+
+* Accept connections
+Enable/disable listening network address. Set ```false``` if you don't want to accept network connections to your node
+
+* Server address
+Network address used for listentning. Set ```0.0.0.0``` if you want to listen all network interfaces on your computer
+
+* Server port (optional, usually don't ask)
+Server port, 8079 by default but sometimes better to set it to ```80``` or ```443``` to masquarade service as web service. 
+
+* Subzero: Enable network
+Set ```true``` if you want to connect your node with ```Subzero``` (testnet)
+
+* Mileena: Node type (role)
+Select node type (or node role) from suggested list with short descriptions. By default suggested to select ```full``` (testnet)
+
+* Minkowski: Enable network
+Set ```true``` if you want to connect your node with ```Minkowski``` (KelVPN testnet)
+
+* Bacbone: Enable network
+Set ```true``` if you want to connect your node with ```Backbone``` (Mainnet)
+
+
+### How to configure VPN service share
+To share VPN service you must have a node with master role.
+#### Node base configuration
+Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.cfg``` and find next section:
 
 ```bash
 cmake --build build --target package
