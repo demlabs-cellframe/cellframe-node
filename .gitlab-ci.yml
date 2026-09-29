@@ -315,8 +315,9 @@ any:macos.release:
       - security unlock-keychain -p 1234 ~/Library/Keychains/login.keychain-db 
       - ./prod_build/build.sh --target osx release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
       - ./prod_build/pack.sh --target osx release --sign /opt/buildtools/sign/demlabs.sh
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg
-      - /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest.universal --just-redirect
+      # the upload from the mac runner to pub has hung for the whole 3h30m job timeout; fail fast instead
+      - ./tests/scripts/ci_timeout.pl 1200 /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg
+      - ./tests/scripts/ci_timeout.pl 300 /opt/buildtools/deploy_files.sh pub_cellframe macos/cellframe-node/$CI_COMMIT_REF_NAME/ ./build_*/*signed.pkg --redirect-with-link macos/cellframe-node/$CI_COMMIT_REF_NAME/latest.universal --just-redirect
       - lipo -info build_osx_release/dist/Applications/CellframeNode.app/Contents/MacOS/cellframe-node
 
     artifacts:
