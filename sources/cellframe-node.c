@@ -630,6 +630,8 @@ int main( int argc, const char **argv )
      * dap_chain_mempool_out_is_used() falls back to its historical full-scan
      * implementation in that case. */
     dap_chain_mempool_spent_index_init();
+    // Janitorial mempool cleanup in the background, off the 'mempool list' RPC path
+    dap_chain_mempool_filter_timer_start();
 
     /* VPN service creation happens in cf_vpn_srv_init() which is called
      * by the plugin system AFTER dap_chain_net_load_all(). */
