@@ -484,6 +484,14 @@ int main( int argc, const char **argv )
 
     dap_chain_net_load_all();
 
+    // Must run after networks/chains are loaded (dap_chain_net_iter_start()
+    // needs something to iterate); non-fatal if it can't find any TX chains,
+    // dap_chain_mempool_out_is_used() falls back to its historical full-scan
+    // implementation in that case.
+    dap_chain_mempool_spent_index_init();
+    // Janitorial mempool cleanup in the background, off the 'mempool list' RPC path
+    dap_chain_mempool_filter_timer_start();
+
     if( (dap_chain_wallet_shared_notify_init()) ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
