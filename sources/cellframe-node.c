@@ -704,6 +704,7 @@ int main( int argc, const char **argv )
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
+    dap_chain_mempool_filter_timer_stop();
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_pos_delegate_deinit();
