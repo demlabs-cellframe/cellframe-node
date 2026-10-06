@@ -87,3 +87,8 @@ slc
 /tests/stage-env.cfg
 .cursor/
 cache/
+
+# docker local
+build-docker/
+docker-artifacts/
+.zcode/
