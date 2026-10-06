@@ -84,3 +84,8 @@ cmake-build-*
 .cursorrules
 .slc/
 slc
+
+# docker local
+build-docker/
+docker-artifacts/
+.zcode/

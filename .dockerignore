@@ -1,0 +1,15 @@
+# Whitelist context: no sources ever reach the daemon. The builder image works
+# on mounted sources at runtime; the deploy image copies only the collected
+# docker-artifacts/{bin,python-lib} plus the runtime data (dist/). The
+# builder's build/ and node-base/ live inside docker-artifacts/ too, so they
+# are re-excluded below.
+*
+!Dockerfile
+!Dockerfile.build
+!docker-compose.yml
+!docker/
+!dist/
+!docker-artifacts/
+docker-artifacts/build/
+docker-artifacts/node-base/
+!README.md

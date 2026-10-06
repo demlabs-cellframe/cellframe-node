@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1
+# Cellframe Node — BUILD/DEV image. Sources are NOT baked in: mount the repo
+# at /src and an output dir at /out. Nothing in the source tree is written.
+#
+#   docker build -t cellframe-node-builder -f Dockerfile.build .
+#
+# Build (artifacts land in ./build-docker/dist-bin, chowned to you):
+#   docker run --rm -v "$PWD:/src" -v "$PWD/build-docker:/out" cellframe-node-builder
+#
+# Build + run the sdk test suite:
+#   docker run --rm -v "$PWD:/src" -v "$PWD/build-docker:/out" -e BUILD_TESTS=1 cellframe-node-builder
+#
+# Build + run the node in debug mode (config generated under ./build-docker/node-base,
+# CLI/RPC published host-side as you wish):
+#   docker run --rm -it -v "$PWD:/src" -v "$PWD/build-docker:/out" -e RUN_NODE=1 \
+#       -p 127.0.0.1:12345:12345 cellframe-node-builder
+#
+# Env: BUILD_TESTS=1 (configure with tests, run ctest), RUN_NODE=1 (debug node),
+#      BUILD_TYPE (RelWithDebInfo), BUILDER_UID/BUILDER_GID (chown of /out).
+
+FROM debian:12
+
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+        build-essential cmake libmagic-dev libsqlite3-dev libjson-c-dev libffi-dev \
+        libssl-dev libcurl4-openssl-dev libpq-dev file python3-dev git ca-certificates \
+        xsltproc curl tini procps net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY docker/build-entrypoint.sh /usr/local/bin/build-entrypoint.sh
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/build-entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Sources come from the -v mount, never from the image
+VOLUME ["/src", "/out"]
+WORKDIR /src
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/build-entrypoint.sh"]
