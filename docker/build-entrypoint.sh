@@ -11,12 +11,30 @@ BUILD_TYPE="${BUILD_TYPE:-RelWithDebInfo}"
 echo "[builder] src=$SRC out=$OUT type=$BUILD_TYPE tests=${BUILD_TESTS:-0} node=${RUN_NODE:-0}"
 
 # First-time configure. Tests mode enables the sdk test targets so ctest can
-# find them in the same build tree.
+# find them in the same build tree; a tree configured without tests is
+# reconfigured in place (the root-project-only workflow: everything builds
+# and tests from the node repo, no standalone sdk builds).
+# The sdk test suite expects the default config/certs to be generated
+# (the plain build.sh configures with CREATE_DEFAULT_CONFIG=OFF, which makes
+# fixture-based tests fail with "No default cert path" / "Failed to open
+# config"), so the test mode configures differently.
+CFG_DEFAULT=$([ "${BUILD_TESTS:-0}" = "1" ] && echo ON || echo OFF)
+if [ -f "$BUILD_DIR/CMakeCache.txt" ]; then
+    l_need_reconf=0
+    [ "${BUILD_TESTS:-0}" = "1" ] && ! grep -q "BUILD_CELLFRAME_SDK_TESTS:BOOL=ON" "$BUILD_DIR/CMakeCache.txt" && l_need_reconf=1
+    [ "$CFG_DEFAULT" = "ON" ] && ! grep -q "CREATE_DEFAULT_CONFIG:BOOL=ON" "$BUILD_DIR/CMakeCache.txt" && l_need_reconf=1
+    if [ "$l_need_reconf" = "1" ]; then
+        echo "[builder] reconfiguring (tests=${BUILD_TESTS:-0}, default_config=$CFG_DEFAULT)"
+        cmake -S "$SRC" -B "$BUILD_DIR" \
+            -DBUILD_CELLFRAME_SDK_TESTS=$([ "${BUILD_TESTS:-0}" = "1" ] && echo ON || echo OFF) \
+            -DCREATE_DEFAULT_CONFIG=$CFG_DEFAULT
+    fi
+fi
 if [ ! -f "$BUILD_DIR/CMakeCache.txt" ]; then
     cmake -S "$SRC" -B "$BUILD_DIR" \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-        -DCREATE_DEFAULT_CONFIG=OFF \
+        -DCREATE_DEFAULT_CONFIG=$CFG_DEFAULT \
         -DSUPPORT_PYTHON_PLUGINS=OFF \
         -DBUILD_WITH_PYTHON_ENV=OFF \
         -DBUILD_WITH_GDB_DRIVER_MDBX=ON \
