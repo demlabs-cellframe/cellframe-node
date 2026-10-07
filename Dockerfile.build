@@ -18,7 +18,7 @@
 # Env: BUILD_TESTS=1 (configure with tests, run ctest), RUN_NODE=1 (debug node),
 #      BUILD_TYPE (RelWithDebInfo), BUILDER_UID/BUILDER_GID (chown of /out).
 
-FROM debian:12
+FROM debian:12@sha256:2c037a04925515fdd6ea85ea14a682d0e79931f5e9f5d07b6dbfc6ba12f9e858
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         build-essential cmake libmagic-dev libsqlite3-dev libjson-c-dev libffi-dev \
