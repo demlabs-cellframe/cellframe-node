@@ -12,7 +12,7 @@
 # Environment knobs (docker/entrypoint.sh): CELLFRAME_NETWORKS (Backbone),
 # CELLFRAME_NODE_ROLE (full), CELLFRAME_DEBUG_MODE (false).
 
-FROM debian:12-slim
+FROM debian:12-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         libmagic1 libmagic-mgc libjson-c5 libffi8 libsqlite3-0 libssl3 libcurl4 \

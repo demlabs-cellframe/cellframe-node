@@ -35,13 +35,20 @@ if [ ! -f "$CFG" ]; then
 
     # Explicit CLI listener so `cellframe-node-cli` and the /health check work
     # the same way in every deployment (the template ships it commented out).
-    # Inside a container the address must be 0.0.0.0 - docker port publishing
-    # cannot reach a loopback-only bind; exposure is controlled host-side by
-    # what gets published (-p 127.0.0.1:12345:12345 keeps it private).
+    # Inside a container the address defaults to 0.0.0.0 - docker port
+    # publishing cannot reach a loopback-only bind; exposure is controlled
+    # host-side by what gets published (-p 127.0.0.1:12345:12345 keeps it
+    # private). Set CELLFRAME_RPC_BIND to override (e.g. 127.0.0.1 with
+    # --network host or docker run --net container:...).
+    RPC_BIND="${CELLFRAME_RPC_BIND:-0.0.0.0}"
     if grep -q '^#listen-address=\[127.0.0.1:12345\]' "$CFG"; then
-        sed -i 's|^#listen-address=\[127.0.0.1:12345\]|listen-address=0.0.0.0:12345|' "$CFG"
+        sed -i "s|^#listen-address=\[127.0.0.1:12345\]|listen-address=[$RPC_BIND:12345]|" "$CFG"
     else
-        printf '\nlisten-address=0.0.0.0:12345\n' >> "$CFG"
+        printf '\nlisten-address=%s:12345\n' "$RPC_BIND" >> "$CFG"
+    fi
+    if [ "$RPC_BIND" = "0.0.0.0" ] || [ "$RPC_BIND" = "::" ]; then
+        echo "[entrypoint] CLI/RPC listens on all interfaces inside the container;"
+        echo "[entrypoint] publish the port on the loopback host side (-p 127.0.0.1:12345:12345)"
     fi
 
     # The shipped template still carries verbose per-request DEX logging;
