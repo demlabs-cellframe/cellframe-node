@@ -10,6 +10,15 @@ DAP_PREFIX="/opt/$DAP_APP_NAME"
 echo "[*] Creating run, lib, var dirs...."
 mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
 
+# Dedicated unprivileged user for the node service. The old world-writable
+# config (chmod 666/777) let any local user rewrite the root-run node's
+# config through the etc/cellframe-node.cfg.d drop-in dir.
+echo "[*] Creating service user and fixing ownership"
+if ! id cellframe >/dev/null 2>&1; then
+    useradd --system --home-dir $DAP_PREFIX --shell /usr/sbin/nologin cellframe || true
+fi
+chown -R cellframe:cellframe $DAP_PREFIX/etc $DAP_PREFIX/var || true
+
 if [ -e /.dockerenv ]
 then
     echo "[ ] No logrotate in docker-container"
@@ -163,10 +172,11 @@ echo "[!] Run cellframe-config for configuration..."
 $DAP_PREFIX/bin/cellframe-node-config -i $DAP_PREFIX/share/default.setup
 
 echo "[!] Set cfg permissions"
-#set rwo permissions to configs
-chmod 666 $(find ${DAP_PREFIX}/etc/ -type f)
-#set rwx permissions to dirs
-chmod 777 $(find ${DAP_PREFIX}/etc/ -type d)
+# Owner-only configs: they steer a service that runs with elevated
+# capabilities, and etc/ holds the config drop-in dir merged at startup
+find ${DAP_PREFIX}/etc/ -type d -exec chmod 755 {} +
+find ${DAP_PREFIX}/etc/ -type f -exec chmod 644 {} +
+chown -R cellframe:cellframe ${DAP_PREFIX}/etc || true
 
 echo "[!] Setting up cellframe-node as service"
 $DAP_PREFIX/bin/cellframe-node-config -e service enable
