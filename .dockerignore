@@ -12,4 +12,5 @@
 !docker-artifacts/
 docker-artifacts/build/
 docker-artifacts/node-base/
+docker-artifacts/artifacts/
 !README.md

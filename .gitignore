@@ -89,3 +89,11 @@ slc
 build-docker/
 docker-artifacts/
 .zcode/
+
+# Runtime key material & secrets: never commit node keys, wallets or env files
+var/
+*.key
+*.pem
+*.p12
+.env
+*.dwallet
