@@ -23,7 +23,7 @@ FROM debian:12
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         build-essential cmake libmagic-dev libsqlite3-dev libjson-c-dev libffi-dev \
         libssl-dev libcurl4-openssl-dev libpq-dev file python3-dev git ca-certificates \
-        xsltproc curl tini procps net-tools \
+        xsltproc curl tini procps net-tools gdb \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/build-entrypoint.sh /usr/local/bin/build-entrypoint.sh
