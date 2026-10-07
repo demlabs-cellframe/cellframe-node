@@ -5,13 +5,31 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/cellframe-node
+# No trailing '&': systemd does not spawn a shell, it was passed to the binary as argv[1]
 ExecStart=/opt/cellframe-node/bin/cellframe-node
+ExecStop=/bin/kill -SIGTERM $MAINPID
 Restart=always
-User=root
-Group=root
+# Unprivileged service user (created by the package postinst)
+User=cellframe
+Group=cellframe
 RestartSec=10
 LogNamespace=cellframe
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_IPC_LOCK CAP_KILL CAP_LEASE CAP_MKNOD CAP_NET_ADMIN CAP_NET_BROADCAST CAP_NET_RAW CAP_SYS_NICE CAP_SYS_RAWIO CAP_SYSLOG CAP_WAKE_ALARM CAP_SYS_RESOURCE CAP_DAC_READ_SEARCH
+# Trimmed from the old near-root set (CAP_SYS_RAWIO/CAP_MKNOD/CAP_DAC_READ_SEARCH
+# and friends are not needed by the node). NET_RAW/NET_ADMIN are used by the
+# iputils ping helpers; IPC_LOCK covers mlock'ed key memory.
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_IPC_LOCK CAP_NET_ADMIN CAP_NET_RAW CAP_SYS_RESOURCE
+AmbientCapabilities=CAP_NET_BIND_SERVICE CAP_NET_ADMIN CAP_NET_RAW
+# Sandbox: the node only writes under its var/ tree
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/cellframe-node/var
+PrivateTmp=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
 
 [Install]
 WantedBy=multi-user.target
