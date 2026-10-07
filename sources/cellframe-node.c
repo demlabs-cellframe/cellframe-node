@@ -663,6 +663,15 @@ int main( int argc, const char **argv )
         return -61;
     }
 
+    // Standalone plain-HTTP JSON-RPC service ([rpc-server]): a listener of its own, next to the
+    // CLI port and the signed /exec_cmd path, for clients that want the command set over plain
+    // HTTP without the encryption/signature handshake. Off unless the config enables it.
+    if (dap_json_rpc_service_init(g_config)) {
+        log_it( L_CRITICAL, "Can't init the HTTP RPC service" );
+        return -13;
+    }
+    }
+
     if( dap_chain_net_srv_order_init() )
         return -67;
 
@@ -723,6 +732,7 @@ int main( int argc, const char **argv )
 #if !DAP_OS_ANDROID
     dap_http_folder_deinit();
 #endif
+    dap_json_rpc_service_deinit();
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
