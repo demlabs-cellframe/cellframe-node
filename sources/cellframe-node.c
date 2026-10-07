@@ -32,6 +32,13 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <getopt.h>
+#ifndef _WIN32
+#include <sys/stat.h>
+#include <sys/resource.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+#endif
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -165,7 +172,22 @@ int main( int argc, const char **argv )
 {
     if ( argv[1] && !dap_strcmp("-version", argv[1]) )
         return printf("%s\n", dap_node_version()), 0;
-        
+
+    // Private-by-default file creation (wallets/certs/keys live in var/lib)
+    // and no core dumps: a dump would contain every loaded private key and
+    // the cached wallet passwords. Release builds only — the asan/tsan/debug
+    // variants keep dumps for crash triage.
+#ifndef DAP_DEBUG
+    umask(0077);
+#if defined(DAP_OS_UNIX) && !defined(_WIN32)
+    struct rlimit l_nocore = { 0, 0 };
+    setrlimit(RLIMIT_CORE, &l_nocore);
+#endif
+#ifdef __linux__
+    prctl(PR_SET_DUMPABLE, 0, 0, 0, 0);
+#endif
+#endif
+
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
