@@ -342,13 +342,14 @@ max_request_size=1048576
 Проверка:
 
 ```bash
-# команда (params[0] = "имя_команды;арг1;арг2;..." — та же строка, что и в CLI)
+# params[0] = "имя_команды;арг1;арг2;..." — имя дублируется из method, дальше аргументы
 curl -s -H 'Content-Type: application/json' \
      -d '{"method":"version","params":["version"],"id":1}' http://127.0.0.1:12400/
 
-# команда с аргументами: cellframe-node-cli net list -net Backbone
+# команда с аргументами: cellframe-node-cli net list chains -net Backbone
+# (params[0] начинается с имени команды, дальше аргументы через ';')
 curl -s -H 'Content-Type: application/json' \
-     -d '{"method":"net","params":["net;list;-net;Backbone"],"id":2}' http://127.0.0.1:12400/rpc
+     -d '{"method":"net","params":["net;list;chains;-net;Backbone"],"id":2}' http://127.0.0.1:12400/rpc
 
 # список доступных команд с флагом public (что доступно не-loopback)
 curl -s http://127.0.0.1:12400/
