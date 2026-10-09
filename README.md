@@ -289,6 +289,85 @@ curl -s -H 'Content-Type: application/json' \
 идёт через тот же счётчик inflight/heavy, что и у CLI, поэтому тяжёлые
 команды не обходят общие ограничения.
 
+### Кэширование, лимитеры и RPC-сервер: практическое руководство
+
+Все кэши, лимитеры и RPC-точки настраиваются в `etc/cellframe-node.cfg`
+(или drop-in'ами в `etc/cellframe-node.cfg.d/*.cfg` — они применяются поверх
+базового конфига). Значения ниже — дефолты кода: если ручка закомментирована,
+поведение именно такое.
+
+#### Кэши (включены по умолчанию)
+
+| Кэш | Секция / ручка | Дефолт | Что делает |
+|---|---|---|---|
+| Леджер | `[ledger] cache_enabled` | `true` | Перезапуск читает состояние (txs, токены, эмиссии, балансы) из GlobalDB вместо репроцессинга каждой цепи. Сброс: `cellframe-node-cli ledger cache reset -net <сеть>` |
+| DEX-книга + история | `[srv_dex] cache_enabled` | `true` | Ордера и события в RAM; запросы history/orders/orderbook не трогают GlobalDB на чтении |
+| DEX serialized-reply LRU | `[srv_dex] history_cache_max_entries` / `history_cache_max_mbytes` / `history_cache_ttl_sec` | 256 / 64 МБ / 10 с | Повтор запроса выдаёт готовый ответ (инвалидация по версии книги/событий пары + TTL) |
+| Индекс адресов | `[wallets] wallets_cache` | `local` | `disable` — индекса нет (медленный скан); `local` — только локальные кошельки; `all` — все адреса сети (нужно для `wallet outputs` по произвольным адресам). Прогрев: первая старт-загрузка, потом инкрементально |
+| 503 при прогреве | `[wallets] wallets_cache_cold_reply_unavailable` | `true` | При `wallets_cache=all` и непрогретом индексе — быстрый 503 + Retry-After вместо медленного скана леджера |
+| Дамп блоков | (без ручки) | 32 зап. / 64 МБ / 300 с | LRU сериализованных ответов; сбрасывается при purge/форке |
+
+#### Лимитеры и защита от перегрузки
+
+| Ручка | Секция | Дефолт | Что делает |
+|---|---|---|---|
+| `max_inflight` | `[cli-server]` (и `[rpc-server]`) | 2 × CPU (4…32) | Максимум одновременных запросов через все точки входа; сверх — HTTP 503 + `Retry-After: 1` |
+| `max_inflight_heavy` | там же | CPU / 4 (1…4) | Отдельный слот для тяжёлых команд (walk по цепи/леджеру/истории адреса): `wallet outputs`, `tx_history`, `block/dag list`, `srv_dex history/orders/orderbook` |
+| `rate_limit` | `[cli-server]` | `false` | Per-`/16` token-bucket для не-loopback вызовов; сверх — HTTP 429 |
+| `rate_limit_rps` / `rate_limit_burst` | `[cli-server]` | 20 / 40 | Параметры бакета: устоявшийся rate и burst |
+| `max_request_size` | `[server]` / `[rpc-server]` | 16 МБ / 1 МБ | Лимит тела запроса; сверх — HTTP 413 |
+
+**Счётчики inflight общие** для CLI-порта, подписанного `/exec_cmd` и plain
+RPC-сервиса: обход одной точкой входа не обходит лимиты другой.
+
+#### RPC-сервер: включение и управление
+
+Три точки входа, один набор команд:
+
+1. **CLI-порт** (`[cli-server]`, TCP/unix) — родной протокол `cellframe-node-cli`.
+2. **Подписанный `/exec_cmd`** (`[server] exec_cmd=[<pkey hash>]`) — JSON-RPC поверх HTTP с обязательной подписью тела.
+3. **Plain HTTP-RPC** (`[rpc-server]`) — отдельный listener без шифрования/подписи (самый быстрый, для краулеров за балансировщиком).
+
+Включение plain RPC:
+
+```ini
+[rpc-server]
+enable=true
+listen-address=[0.0.0.0:12400]
+allowed_cmd_control=true          # true: не-loopback — только allowed_cmd
+allowed_cmd=[version,net,node,block,token,global_db]
+max_request_size=1048576
+```
+
+Проверка:
+
+```bash
+# команда (формат params: "имя_команды;арг1;арг2;...")
+curl -s -H 'Content-Type: application/json' \
+     -d '{"method":"version","params":["version"],"id":1}' http://127.0.0.1:12400/
+
+# список доступных команд с флагом public (что доступно не-loopback)
+curl -s http://127.0.0.1:12400/
+
+# готовность (200/503 + Retry-After) — для балансировщика
+curl -s http://127.0.0.1:12400/health
+```
+
+Публичные и приватные команды: `allowed_cmd_control=true` — не-loopback вызывающий
+может запускать только команды из `allowed_cmd`; loopback (127.0.0.1 / ::1) — весь
+набор. `false` — весь набор всем (только за собственным гейткипером). Loopback
+определяется по адресу пира — reverse proxy на том же хосте выглядит как loopback.
+
+HTTP keep-alive включён (HTTP/1.1 persistent, `Connection: close` работает как обычно) —
+повторные запросы идут по одному соединению.
+
+#### Диагностика
+
+- `GET /health` на CLI-порту и на RPC-порту: 200 когда все сети ONLINE и (при
+  `wallets_cache=all`) индекс адресов прогрет; 503 + причина + `Retry-After`.
+- `cellframe-node-cli ledger cache reset -net <сеть>` — сброс кэша леджера
+  (перезапустит построение из цепей при следующем обращении/рестарте).
+
 ### Удалённый JSON-RPC через `/exec_cmd`
 
 Секция `[server]` включает общий HTTP-сервер ноды. Для удалённых вызовов
