@@ -847,13 +847,12 @@ else()
         INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_CLI_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
         INSTALL(TARGETS ${NODE_TOOL_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
-        # Strip binaries in Release builds (debug symbols go to -dbg package)
         if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             INSTALL(CODE "
-                execute_process(COMMAND \${CMAKE_STRIP} --strip-unneeded
-                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node
-                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-cli
-                    \${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-tool
+                execute_process(COMMAND \"${CMAKE_STRIP}\" --strip-unneeded
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-cli
+                    \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cellframe-node-tool
                     OUTPUT_VARIABLE STRIP_OUT ERROR_VARIABLE STRIP_ERR
                     RESULT_VARIABLE STRIP_RC)
                 if(STRIP_RC)
