@@ -862,8 +862,14 @@ else()
 
     if(WIN32)
         INSTALL(FILES os/windows/cellframe-node.nsis DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.ico DESTINATION ${CMAKE_INSTALL_ROOT}/ )
-        INSTALL(FILES resources/cellframe.bmp DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+        # The branding files are not in the repo (never were on develop-5.8
+        # either); install them only when present so `make install`/packaging
+        # does not die on the missing path.
+        foreach(_brand resources/cellframe.ico resources/cellframe.bmp)
+            if(EXISTS ${CMAKE_SOURCE_DIR}/${_brand})
+                INSTALL(FILES ${_brand} DESTINATION ${CMAKE_INSTALL_ROOT}/ )
+            endif()
+        endforeach()
     endif()
 
     if (NOT ANDROID)
