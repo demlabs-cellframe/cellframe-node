@@ -693,7 +693,6 @@ int main( int argc, const char **argv )
         log_it( L_CRITICAL, "Can't init the HTTP RPC service" );
         return -13;
     }
-    }
 
     if( dap_chain_net_srv_order_init() )
         return -67;
