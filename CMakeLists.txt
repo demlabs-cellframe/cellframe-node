@@ -317,7 +317,9 @@ if(UNIX)
     SET( CPACK_DEBIAN_PACKAGE_SECTION "extra")
     SET( CPACK_DEBIAN_PACKAGE_DEPENDS "dpkg (>=1.17), bash (>=4), less, pv, psmisc, logrotate, irqbalance, xz-utils")        
     #have to figure out how to use it properly with custom RPATH for python plugins...
-    if (NOT SUPPORT_PYTHON_PLUGINS)
+    # Cross builds keep shlibdeps off (see the CPACK_TARGET_ARCHITECTURE gate
+    # above): the sysroot has no target libc dev sets for dpkg-shlibdeps.
+    if (NOT SUPPORT_PYTHON_PLUGINS AND NOT CPACK_TARGET_ARCHITECTURE)
         SET( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif()
 
