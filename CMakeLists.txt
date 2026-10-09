@@ -258,6 +258,17 @@ if(UNIX)
         set (CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${CPACK_TARGET_ARCHITECTURE})
     endif()
 
+    # Cross-compiled arm packages: dpkg-shlibdeps cannot resolve the target's
+    # base libraries (libc/pthread/dl) unless the build image carries the full
+    # multiarch libc dev sets - which the current sysroots don't (broken on
+    # develop-5.8 since at least Sep-2026). Ship without auto-Depends there;
+    # native amd64 keeps dependency generation.
+    if(CPACK_TARGET_ARCHITECTURE)
+        set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.28), libsqlite3-0")
+        message(STATUS "[*] Cross build (${CPACK_TARGET_ARCHITECTURE}): shlibdeps off, static Depends")
+    endif()
+
     if(NOT CPACK_SYSTEM_NAME)
         set(CPACK_SYSTEM_NAME ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
     endif()
