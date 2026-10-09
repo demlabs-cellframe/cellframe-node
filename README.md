@@ -311,11 +311,11 @@ curl -s -H 'Content-Type: application/json' \
 
 | Ручка | Секция | Дефолт | Что делает |
 |---|---|---|---|
-| `max_inflight` | `[cli-server]` (и `[rpc-server]`) | 2 × CPU (4…32) | Максимум одновременных запросов через все точки входа; сверх — HTTP 503 + `Retry-After: 1` |
-| `max_inflight_heavy` | там же | CPU / 4 (1…4) | Отдельный слот для тяжёлых команд (walk по цепи/леджеру/истории адреса): `wallet outputs`, `tx_history`, `block/dag list`, `srv_dex history/orders/orderbook` |
-| `rate_limit` | `[cli-server]` | `false` | Per-`/16` token-bucket для не-loopback вызовов; сверх — HTTP 429 |
+| `max_inflight` | `[cli-server]` | 2 × CPU (4…32) | Максимум одновременных запросов; сверх — HTTP 503 + `Retry-After: 1`. Ручка читается только из `[cli-server]` — RPC-порт и `/exec_cmd` разделяют те же счётчики |
+| `max_inflight_heavy` | `[cli-server]` | CPU / 4 (1…4) | Отдельный слот для тяжёлых команд (walk по цепи/леджеру/истории адреса): `wallet outputs`, `tx_history`, `block/dag list`, `srv_dex history/orders/orderbook` |
+| `rate_limit` | `[cli-server]` | `false` | Per-`/16` token-bucket для не-loopback вызовов (действует и на RPC-порт); сверх — HTTP 429 |
 | `rate_limit_rps` / `rate_limit_burst` | `[cli-server]` | 20 / 40 | Параметры бакета: устоявшийся rate и burst |
-| `max_request_size` | `[server]` / `[rpc-server]` | 16 МБ / 1 МБ | Лимит тела запроса; сверх — HTTP 413 |
+| `max_request_size` | `[server]` — 16 МБ; `[rpc-server]` — 1 МБ | 16 МБ / 1 МБ | Лимит тела запроса (своя копия у каждой секции); сверх — HTTP 413 |
 
 **Счётчики inflight общие** для CLI-порта, подписанного `/exec_cmd` и plain
 RPC-сервиса: обход одной точкой входа не обходит лимиты другой.
@@ -342,9 +342,13 @@ max_request_size=1048576
 Проверка:
 
 ```bash
-# команда (формат params: "имя_команды;арг1;арг2;...")
+# команда (params[0] = "имя_команды;арг1;арг2;..." — та же строка, что и в CLI)
 curl -s -H 'Content-Type: application/json' \
      -d '{"method":"version","params":["version"],"id":1}' http://127.0.0.1:12400/
+
+# команда с аргументами: cellframe-node-cli net list -net Backbone
+curl -s -H 'Content-Type: application/json' \
+     -d '{"method":"net","params":["net;list;-net;Backbone"],"id":2}' http://127.0.0.1:12400/rpc
 
 # список доступных команд с флагом public (что доступно не-loopback)
 curl -s http://127.0.0.1:12400/
@@ -366,7 +370,8 @@ HTTP keep-alive включён (HTTP/1.1 persistent, `Connection: close` раб�
 - `GET /health` на CLI-порту и на RPC-порту: 200 когда все сети ONLINE и (при
   `wallets_cache=all`) индекс адресов прогрет; 503 + причина + `Retry-After`.
 - `cellframe-node-cli ledger cache reset -net <сеть>` — сброс кэша леджера
-  (перезапустит построение из цепей при следующем обращении/рестарте).
+  (по умолчанию сеть перезагружается и кэш пересобирается из цепей немедленно;
+  `-no-reload` — только очистить, без перезагрузки).
 
 ### Удалённый JSON-RPC через `/exec_cmd`
 
