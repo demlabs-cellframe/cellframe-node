@@ -18,7 +18,13 @@
 # Env: BUILD_TESTS=1 (configure with tests, run ctest), RUN_NODE=1 (debug node),
 #      BUILD_TYPE (RelWithDebInfo), BUILDER_UID/BUILDER_GID (chown of /out).
 
-FROM debian:12@sha256:2c037a04925515fdd6ea85ea14a682d0e79931f5e9f5d07b6dbfc6ba12f9e858
+# Debian 13 (trixie) builder; override with --build-arg BASE_IMAGE=<ref> if
+# an older userland is ever needed (e.g. the pinned bookworm image).
+ARG BASE_IMAGE=debian:trixie@sha256:913f6706df59a68922d1dd08f78c2476560a8d367897200a6005b00e5f67c2d5
+FROM ${BASE_IMAGE}
+
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+        dpkg-dev file
 
 RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         build-essential cmake libmagic-dev libsqlite3-dev libjson-c-dev libffi-dev \
