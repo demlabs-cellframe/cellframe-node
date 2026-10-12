@@ -8,7 +8,13 @@ DAP_PREFIX="/opt/$DAP_APP_NAME"
 
 #unconditianly create directories on pkg instllation
 echo "[*] Creating run, lib, var dirs...."
-mkdir -p $DAP_PREFIX/var/{run,lib/wallet,lib/global_db,var/plugins} || true
+# The python plugin loader resolves py_path=../var/lib/plugins (relative to
+# bin/) — /opt/cellframe-node/var/lib/plugins. The old brace list also made a
+# stray var/var/plugins and never created the real plugin dir.
+mkdir -p $DAP_PREFIX/var/run \
+         $DAP_PREFIX/var/lib/wallet \
+         $DAP_PREFIX/var/lib/global_db \
+         $DAP_PREFIX/var/lib/plugins || true
 
 # Dedicated unprivileged user for the node service. The old world-writable
 # config (chmod 666/777) let any local user rewrite the root-run node's
