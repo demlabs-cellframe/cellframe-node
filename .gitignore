@@ -97,3 +97,7 @@ var/
 *.p12
 .env
 *.dwallet
+
+# local cpython seeds for offline FetchContent (see .cpython-x64/)
+.cpython-x64/
+.cpython-x64-cache/
