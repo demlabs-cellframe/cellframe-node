@@ -1,87 +1,74 @@
 #!/usr/bin/env bash
-# vpn-server-check.sh — Проверка VPN-сервера
+# Read-only Linux VPN diagnostics. Exit 1 = failed checks, 2 = missing prerequisite.
 set -u
-
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-ok()   { echo -e "  ${GREEN}PASS${NC}  $*"; }
-fail() { echo -e "  ${RED}FAIL${NC}  $*"; }
-warn() { echo -e "  ${YELLOW}WARN${NC}  $*"; }
-
 VPN_SUBNET="${VPN_SUBNET:-10.11.12.0/24}"
 VPN_GW="${VPN_GW:-10.11.12.1}"
-WAN_IF=$(ip -4 route show default 2>/dev/null | awk '{print $5; exit}')
-WAN_IF="${WAN_IF:-eth0}"
-
-echo "═══════════════════════════════════════"
-echo " VPN Server Check"
-echo "═══════════════════════════════════════"
-
-# 1
-echo ""
-echo "1. IP Forwarding"
-[[ "$(sysctl -n net.ipv4.ip_forward 2>/dev/null)" == "1" ]] && ok "ip_forward=1" || fail "ip_forward != 1"
-
-# 2
-echo "2. NAT"
-iptables -t nat -C POSTROUTING -s "$VPN_SUBNET" -o "$WAN_IF" -j MASQUERADE 2>/dev/null \
-    && ok "MASQUERADE $VPN_SUBNET -> $WAN_IF" \
-    || fail "MASQUERADE не найден"
-
-# 3
-echo "3. FORWARD"
-iptables -C FORWARD -i tun+ -o "$WAN_IF" -j ACCEPT 2>/dev/null \
-    && ok "tun+ -> $WAN_IF" \
-    || fail "Нет FORWARD tun+ -> $WAN_IF"
-iptables -C FORWARD -i "$WAN_IF" -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null \
-    && ok "$WAN_IF -> tun+" \
-    || fail "Нет FORWARD $WAN_IF -> tun+"
-
-# 4
-echo "4. TUN"
-if ip link show tun0 &>/dev/null; then
-    addr=$(ip -4 addr show tun0 2>/dev/null | grep -oP 'inet \K[0-9.]+')
-    [[ "$addr" == "$VPN_GW" ]] && ok "tun0=$addr" || warn "tun0=$addr (ожидается $VPN_GW)"
-else
-    fail "tun0 не найден"
-fi
-
-# 5
-echo "5. DNS"
-if systemctl is-active --quiet dnsmasq 2>/dev/null; then
-    ok "dnsmasq active"
-else
-    fail "dnsmasq не запущен"
-fi
-ss -uln 2>/dev/null | grep -q ':53 ' && ok "UDP 53 слушает" || fail "UDP 53 не слушает"
-
-# 6
-echo "6. DNS тест"
-if command -v dig &>/dev/null; then
-    r=$(timeout 3 dig +short +tries=1 @"$VPN_GW" google.com A 2>/dev/null | head -1)
-    [[ -n "$r" ]] && ok "dig -> $r" || fail "dig: нет ответа от $VPN_GW"
-else
-    warn "dig не установлен"
-fi
-
-# 7
-echo "7. Порты"
-for p in 8079 8081; do
-    ss -tuln 2>/dev/null | grep -q ":${p} " && ok "Порт $p" || fail "Порт $p"
+TUN_IF="${TUN_IF:-tun0}"
+NODE_CFG="${NODE_CFG:-/opt/cellframe-node/etc/cellframe-node.cfg}"
+PLUGIN_CFG="${PLUGIN_CFG:-/opt/cellframe-node/var/lib/plugins/srv-vpn/srv-vpn.cfg}"
+DNS_MODE="${DNS_MODE:-plugin}"
+FAILURES=0
+ok() { printf 'PASS %s\n' "$*"; }
+fail() { printf 'FAIL %s\n' "$*" >&2; FAILURES=$((FAILURES+1)); }
+warn() { printf 'WARN %s\n' "$*"; }
+cfg() {
+    awk -v section="$2" -v key="$3" '
+      /^[ \t]*[;#]/ {next}
+      /^[ \t]*\[/ {s=$0; sub(/^[ \t]*\[/,"",s); sub(/\].*$/,"",s); next}
+      s==section {p=index($0,"="); if(!p) next; k=substr($0,1,p-1); gsub(/^[ \t]+|[ \t]+$/,"",k);
+        if(k==key) {v=substr($0,p+1); sub(/[ \t]+[;#].*$/,"",v); gsub(/^[ \t]+|[ \t\r]+$/,"",v); value=v}}
+      END {print value}' "$1"
+}
+printf '=== VPN check: host=%s UTC=%s ===\n' "$(hostname)" "$(date -u +%FT%TZ)"
+printf 'Node config: %s\nPlugin config: %s\n' "$NODE_CFG" "$PLUGIN_CFG"
+if [[ $EUID -ne 0 ]]; then printf 'ERROR: run with sudo for firewall diagnostics\n' >&2; exit 2; fi
+for cmd in ip ss sysctl iptables awk; do
+    command -v "$cmd" >/dev/null || { printf 'ERROR: missing command %s\n' "$cmd" >&2; exit 2; }
 done
-
-# 8
-echo "8. [srv_vpn]"
-CFG=""
-for f in /opt/cellframe-node/etc/cellframe-node.cfg \
-         /home/kostya/Project_1/cellframe-node/dist/share/configs/cellframe-node.cfg; do
-    [[ -f "$f" ]] && { CFG="$f"; break; }
-done
-if [[ -n "$CFG" ]]; then
-    v=$(grep -A5 '^\[srv_vpn\]' "$CFG" | grep '^enabled=' | head -1 | cut -d= -f2)
-    [[ "$v" == "true" ]] && ok "enabled=true" || fail "enabled=$v"
-else
-    warn "Конфиг не найден"
-fi
-
-echo ""
-echo "═══════════════════════════════════════"
+ip -brief -4 address show
+WAN_IF="${WAN_IF:-$(ip -4 route show default | awk 'NR==1 {for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}')}"
+printf 'Server label: %s | WAN=%s | TUN=%s | subnet=%s\n' "${SERVER_LABEL:-$(hostname)}" "$WAN_IF" "$TUN_IF" "$VPN_SUBNET"
+[[ -n "$WAN_IF" ]] || { fail 'No default IPv4 route; set WAN_IF explicitly'; exit 1; }
+[[ $(sysctl -n net.ipv4.ip_forward) == 1 ]] && ok 'IPv4 forwarding' || fail 'IPv4 forwarding disabled'
+iptables -t nat -C POSTROUTING -s "$VPN_SUBNET" -o "$WAN_IF" -j MASQUERADE && ok 'NAT rule present' || fail 'NAT rule missing (command error above)'
+iptables -C FORWARD -i "$TUN_IF" -s "$VPN_SUBNET" -o "$WAN_IF" -j ACCEPT && ok 'VPN outbound rule' || fail 'VPN outbound rule missing'
+iptables -C FORWARD -i "$WAN_IF" -o "$TUN_IF" -d "$VPN_SUBNET" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT && ok 'VPN return rule' || fail 'VPN return rule missing'
+warn 'Rule presence does not prove reachability: earlier DROP rules/cloud firewall may override it.'
+if ip -4 addr show dev "$TUN_IF"; then
+    ip -4 -o addr show dev "$TUN_IF" | awk -v gw="$VPN_GW" '{split($4,a,"/"); if(a[1]==gw) found=1} END {exit !found}' && ok 'VPN gateway address' || fail "Expected gateway $VPN_GW missing"
+else fail "TUN $TUN_IF absent; inspect plugin initialization"; fi
+if [[ -f "$PLUGIN_CFG" ]]; then
+    [[ $(cfg "$PLUGIN_CFG" srv_vpn enabled) == true ]] && ok 'Plugin enabled' || fail 'Plugin enabled is not true'
+    [[ $(cfg "$PLUGIN_CFG" srv_vpn allow_free_srv) == true ]] && ok 'Free service enabled in plugin config' || fail 'Plugin allow_free_srv is not true'
+else fail "Missing plugin config: $PLUGIN_CFG"; fi
+if [[ -f "$NODE_CFG" ]]; then
+    net=$(cfg "$NODE_CFG" srv_vpn net)
+    [[ -n "$net" ]] && ok "SDK network name: $net (Offline is allowed for free mode)" || fail 'SDK [srv_vpn] net missing; current SDK still uses node global config'
+    transports=$(cfg "$NODE_CFG" server transports)
+    transports=${transports:-'[http,udp,tls,websocket,dns]'}
+    transports=${transports//[\[\],]/ }
+    for transport in $transports; do
+        case "$transport" in http) port=8079; protocol=tcp;; udp) port=8081; protocol=udp;; tls) port=8082; protocol=tcp;; websocket) port=8083; protocol=tcp;; dns) port=8084; protocol=udp;; *) fail "Unknown transport: $transport"; continue;; esac
+        configured=$(cfg "$NODE_CFG" "server_transport_$transport" port)
+        port=${configured:-$port}
+        printf '\nListener %s/%s port %s:\n' "$transport" "$protocol" "$port"
+        if [[ "$protocol" == tcp ]]; then sockets=$(ss -H -lntp "sport = :$port"); else sockets=$(ss -H -lnup "sport = :$port"); fi
+        [[ -n "$sockets" ]] && { printf '%s\n' "$sockets"; ok "$transport listener"; } || fail "$transport listener absent"
+    done
+    warn 'Config parsing covers these files only; inspect cfg.d overrides and actual listener output.'
+else fail "Missing node config: $NODE_CFG"; fi
+case "$DNS_MODE" in
+    plugin) printf 'DNS mode: plugin forwarding; dnsmasq is not required.\n';;
+    dnsmasq)
+        systemctl is-active dnsmasq || fail 'dnsmasq inactive'
+        if command -v dig >/dev/null; then
+            answer=$(dig +short +time=2 +tries=1 @"$VPN_GW" example.com A) && [[ -n "$answer" ]] && ok "DNS reply: $answer" || fail 'No DNS reply from VPN gateway'
+        else fail 'Install dig to test DNS'; fi;;
+    external) warn 'External DNS must be tested from a VPN client';;
+    *) fail "Unknown DNS_MODE: $DNS_MODE";;
+esac
+printf '\nRecent node errors (historical entries may belong to a prior start):\n'
+if command -v journalctl >/dev/null; then journalctl -u cellframe-node.service -p warning -n 30 --no-pager; fi
+warn 'A listening transport is not proof that VPN service UID 1 is registered. Check plugin loaded successfully and a real free connection.'
+printf '\nResult: %s failed checks on %s\n' "$FAILURES" "${SERVER_LABEL:-$(hostname)}"
+(( FAILURES == 0 ))
