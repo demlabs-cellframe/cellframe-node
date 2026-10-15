@@ -404,6 +404,11 @@ int main( int argc, const char **argv )
         return -71;
     }
 
+    // Before the nets: the ledger snapshot restore (inside dap_chain_net_init)
+    // populates the wallet cache unspent index and needs the [wallets] mode
+    // and the cache lock to be live already.
+    dap_chain_wallet_cache_preinit();
+
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
