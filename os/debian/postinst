@@ -39,6 +39,12 @@ fi
 echo "[!] Set exec permissions"
 chmod +x $DAP_PREFIX/bin/$DAP_APP_NAME-cli $DAP_PREFIX/python/bin/pip3* $DAP_PREFIX/python/bin/python3* || true
 
+# The bundled python environment may be packed with group-only permissions
+# (depends on the build host umask), which leaves the node user unable to read
+# the stdlib and the python plugin type fails with PermissionError on start.
+# a+rX only adds read (and traverse for directories), never removes anything.
+chmod -R a+rX $DAP_PREFIX/python || true
+
 # Function to find working pip and python executables
 find_python_executables() {
     # Find working pip executable
