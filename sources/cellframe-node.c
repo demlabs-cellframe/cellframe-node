@@ -628,6 +628,9 @@ int main( int argc, const char **argv )
     dap_chain_net_try_online_all();
     rc = dap_events_wait();
     log_it(L_INFO, "Server loop stopped with return code %d", rc);
+    // First thing on shutdown: the module deinit chain below may take seconds
+    // (or stall), and the ledger work since the last periodic save would be lost.
+    dap_chain_net_snapshot_save_all();
     // Deinit modules
 
 //failure:

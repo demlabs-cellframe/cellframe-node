@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -40,6 +41,13 @@ static void clear_pid_file() {
 static void sig_exit_handler(int sig_code) {
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
     fflush(stdout);
+    // Persist the ledger state before leaving. The full module deinit chain is
+    // not shutdown-safe here (dap_events_stop_all() wakes the workers, but the
+    // subsequent joins stalled past systemd's stop timeout in testing), so the
+    // snapshot save is done directly; exit(0) keeps the previous stop latency.
+    // Best-effort by design: a stalled save still ends with systemd's SIGKILL,
+    // exactly as before.
+    dap_chain_net_snapshot_save_all();
     exit(0);
     /*clear_pid_file();
 	
