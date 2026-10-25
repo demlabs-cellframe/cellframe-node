@@ -367,6 +367,15 @@ if(SUPPORT_PYTHON_PLUGINS)
     add_definitions("-DDAP_SUPPORT_PYTHON_PLUGINS")
 
     if(BUILD_WITH_PYTHON_ENV)
+        # Every primary URL points at pub.cellframe.net. When that host is
+        # unreachable (it has refused connections, breaking CI and local builds)
+        # the build must still work: each PYTHON_URL gets a mirror list of the
+        # same archive on public python-build-standalone releases (identical
+        # "install_only" layout the code below already handles: python/ prefix
+        # with lib/libpython3.10.so and include/python3.10/). FetchContent tries
+        # the URLs in order, so the primary keeps priority and the mirrors are
+        # the fallback.
+        set(PBS_BASE "https://github.com/astral-sh/python-build-standalone/releases/download/20251010")
         # Select Python URL based on platform
         if(WIN32)
             set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251120-x86_64-pc-windows-msvc-install_only.tar.gz")
@@ -380,22 +389,31 @@ if(SUPPORT_PYTHON_PLUGINS)
                 message("[*] Universal build detected (arm64 + x86_64)")
                 message("[*] Will download both Python architectures and combine with lipo")
                 set(PYTHON_UNIVERSAL_BUILD ON)
-                set(PYTHON_URL_ARM64 "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz")
-                set(PYTHON_URL_X86_64 "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL_ARM64 "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz"
+                                     "${PBS_BASE}/cpython-3.10.19%2B20251010-aarch64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL_X86_64 "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz"
+                                      "${PBS_BASE}/cpython-3.10.19%2B20251010-x86_64-apple-darwin-install_only.tar.gz")
                 # Use arm64 as primary for headers/stdlib, will lipo the dylib
                 set(PYTHON_URL "${PYTHON_URL_ARM64}")
             elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-aarch64-apple-darwin-install_only.tar.gz"
+                               "${PBS_BASE}/cpython-3.10.19%2B20251010-aarch64-apple-darwin-install_only.tar.gz")
             else()
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19+20251120-x86_64-apple-darwin-install_only.tar.gz"
+                               "${PBS_BASE}/cpython-3.10.19%2B20251010-x86_64-apple-darwin-install_only.tar.gz")
             endif()
         else()
-            # Linux default
-            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz")
+            # Linux default (x86_64): cpython310.tar.xz is the legacy layout with
+            # the payload at the archive root; the standalone pip tarball carries
+            # it under python/ - both are handled below.
+            set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython310.tar.xz"
+                           "${PBS_BASE}/cpython-3.10.19%2B20251010-x86_64-unknown-linux-gnu-install_only.tar.gz")
             if(CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "arm64")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.9%2B20221220-aarch64-unknown-linux-gnu-install_only.tar.gz"
+                               "${PBS_BASE}/cpython-3.10.19%2B20251010-aarch64-unknown-linux-gnu-install_only.tar.gz")
             elseif(CPACK_DEBIAN_PACKAGE_ARCHITECTURE STREQUAL "armhf")
-                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
+                set(PYTHON_URL "https://pub.cellframe.net/3rdparty/python/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz"
+                               "${PBS_BASE}/cpython-3.10.19%2B20251010-armv7-unknown-linux-gnueabihf-install_only.tar.gz")
             endif()
         endif()
         add_definitions("-DPYTHON_VERSION=\"python3.10\"")
