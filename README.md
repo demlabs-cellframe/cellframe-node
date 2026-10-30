@@ -300,7 +300,7 @@ curl -s -H 'Content-Type: application/json' \
 
 | Кэш | Секция / ручка | Дефолт | Что делает |
 |---|---|---|---|
-| Леджер | `[ledger] cache_enabled` | `true` | Перезапуск читает состояние (txs, токены, эмиссии, балансы) из GlobalDB вместо репроцессинга каждой цепи. Сброс: `cellframe-node-cli ledger cache reset -net <сеть>` |
+| Леджер | `[ledger] cache_enabled` | `true` | Перезапуск читает состояние (txs, токены, эмиссии, балансы) из GlobalDB вместо репроцессинга каждой цепи. Сброс: `cellframe-node-cli ledger cache reset -net <сеть> [-reload]` — пересборка при следующей загрузке цепей, `-reload` перезагружает сеть сразу |
 | DEX-книга + история | `[srv_dex] cache_enabled` | `true` | Ордера и события в RAM; запросы history/orders/orderbook не трогают GlobalDB на чтении |
 | DEX serialized-reply LRU | `[srv_dex] history_cache_max_entries` / `history_cache_max_mbytes` / `history_cache_ttl_sec` | 256 / 64 МБ / 10 с | Повтор запроса выдаёт готовый ответ (инвалидация по версии книги/событий пары + TTL) |
 | Индекс адресов | `[wallets] wallets_cache` | `local` | `disable` — индекса нет (медленный скан); `local` — только локальные кошельки; `all` — все адреса сети (нужно для `wallet outputs` по произвольным адресам). Прогрев: первая старт-загрузка, потом инкрементально |
@@ -370,9 +370,11 @@ HTTP keep-alive включён (HTTP/1.1 persistent, `Connection: close` раб�
 
 - `GET /health` на CLI-порту и на RPC-порту: 200 когда все сети ONLINE и (при
   `wallets_cache=all`) индекс адресов прогрет; 503 + причина + `Retry-After`.
-- `cellframe-node-cli ledger cache reset -net <сеть>` — сброс кэша леджера
-  (по умолчанию сеть перезагружается и кэш пересобирается из цепей немедленно;
-  `-no-reload` — только очистить, без перезагрузки).
+- `cellframe-node-cli ledger cache reset -net <сеть> [-reload]` — очистка кэша
+  леджера; леджер пересобирается при следующей загрузке цепей, а `-reload`
+  сразу запускает перезагрузку сети. Перезагрузка — явный opt-in: локальный
+  рескан без снапшота не завершается, поэтому для лечения повреждённого
+  леджера сеть нужно ресинхронизировать с пиров.
 
 ### Удалённый JSON-RPC через `/exec_cmd`
 
