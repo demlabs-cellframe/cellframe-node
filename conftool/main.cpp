@@ -114,11 +114,11 @@ std::string getNodeConfigPath(std::string basepath){
     #endif
 
     #ifdef __linux__
-        return "/opt/cellframe-node/";
+        return "/opt/cellframe-node";
     #endif
     
     #ifdef __APPLE__ 
-        return  "/Library/Application Support/CellframeNode/";
+        return  "/Library/Application Support/CellframeNode";
     #endif
 
 
@@ -130,7 +130,7 @@ std::string getNodeConfigPath(std::string basepath){
         std::wstring path;
         GetStringRegKey(hKey, L"Common Documents", path, L"");
         std::string stdpath(path.begin(),path.end());
-        return (std::filesystem::path{stdpath}/"cellframe-node/").string();
+        return (std::filesystem::path{stdpath}/"cellframe-node").string();
     #endif
 }
 
@@ -334,16 +334,15 @@ int main(int argc, char * argv[])
 
     if (cmdOptionExists(argv, argv+argc, "--dryrun") || cmdOptionExists(argv, argv+argc, "-d")) flags = flags | F_DRYRUN;
 
+    std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
+    if (!node_intall_path.empty())
+    {
+        variable_storage["CONFIGS_PATH"] = node_intall_path;
+    }
+
     if(cmdOptionExists(argv, argv+argc, "-i") || cmdOptionExists(argv, argv+argc, "--init"))
     {
-        //--init already exists, give me filename
         std::string init_file_name = getCmdOption(argv, argv+argc, "--init", "-i");
-        std::string node_intall_path = getCmdOption(argv, argv+argc, "--path", "-p");
-
-        if (!node_intall_path.empty())
-        {
-            variable_storage["CONFIGS_PATH"] = node_intall_path;
-        }
 
         bool non_interactive = cmdOptionExists(argv, argv+argc, "--non-interactive") || cmdOptionExists(argv, argv+argc, "-n");
 

@@ -1,0 +1,92 @@
+<h1>version</h1>
+
+<p>Return software version.</p>
+
+<h2>Description</h2>
+<p>Returns the application name and build version string in a JSON array (the command is listed in <code>json_commands()</code>).</p>
+
+<h2>CLI usage</h2>
+<pre>version</pre>
+
+<h2>JSON-RPC request</h2>
+<p>
+The top-level <code>method</code> must be <code>"version"</code>.
+Two request formats are supported (see <a href="/index.html">index</a> for full rules).
+If <code>params</code> is present, the version 2 path is ignored.
+</p>
+
+<h3>Version 1 — legacy <code>params</code> string</h3>
+<p>
+<code>params</code> is an array; the first element is the command string passed to the CLI parser.
+Tokens are split on semicolons (<code>;</code>), not spaces.
+If <code>params</code> is omitted, empty, or the first element is an empty string, the server uses the <code>method</code> name as the command string.
+</p>
+
+<h4>Minimal request</h4>
+<pre>{"method":"version","params":[""],"id":1,"version":1}</pre>
+
+<h4>Explicit command string</h4>
+<pre>{"method":"version","params":["version"],"id":2,"version":1}</pre>
+<p>Equivalent forms: <code>params</code> <code>[""]</code>, <code>["version"]</code>, omitted <code>params</code>, or <code>params</code> <code>[]</code>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<p>
+Omit <code>params</code>. No subcommand or arguments are required — the server runs the bare <code>version</code> command.
+</p>
+<pre>{"method":"version","id":1,"version":2}</pre>
+<p>
+This is equivalent to version 1 with an empty or omitted <code>params</code> array.
+There are no flags for <code>version</code>; <code>arguments</code> is unused.
+</p>
+
+<p>Request fields (both formats):</p>
+<ul>
+<li><code>method</code> — <code>"version"</code> (required)</li>
+<li><code>params</code> — version 1 only: array with optional command string</li>
+<li><code>subcommand</code> / <code>arguments</code> — version 2 only; both optional for this command</li>
+<li><code>id</code> — request identifier (required)</li>
+<li><code>version</code> — RPC protocol version: <code>1</code> or <code>2</code> (optional; defaults to the server <code>cli-server.version</code> setting)</li>
+</ul>
+<p>The <code>jsonrpc</code> field is not used by the Cellframe CLI server and may be omitted.</p>
+
+<h2>JSON-RPC response</h2>
+<p>
+The HTTP body is a Cellframe RPC envelope (not a standard JSON-RPC 2.0 <code>result</code>-only object).
+<code>type</code> is <code>2</code> (<code>TYPE_RESPONSE_JSON</code>).
+<code>result</code> is a JSON array with one object containing a <code>status</code> string.
+The response <code>version</code> echoes the request <code>version</code>.
+</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "status": "cellframe-node version 5.7-1\n"
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Version 2 request returns the same shape with <code>"version": 2</code> in the envelope.</p>
+
+<p>The <code>status</code> value is <code>&lt;appname&gt; version &lt;DAP_VERSION&gt;\n</code> from <code>dap_get_appname()</code> and the compile-time <code>DAP_VERSION</code> macro. The exact string depends on the running node build (on <code>rpc.cellframe.net</code>, alternating backends have returned both <code>5.7-1</code> and <code>5.7-41</code>).</p>
+
+<h2>Restricted access</h2>
+<p>
+On public nodes, <code>version</code> is in <code>allowed_cmd</code> and is callable remotely.
+If a method is not allowed, the server returns <code>type</code> <code>2</code> with an error object:
+</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        {
+          "code": -1,
+          "message": "Command \"&lt;name&gt;\" is restricted"
+        }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 1
+}</pre>

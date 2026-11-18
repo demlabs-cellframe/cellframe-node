@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>srv_xchange / srv_dex</title>
+</head>
+<body>
+<h1>srv_xchange / srv_dex</h1>
+
+<p>Cellframe exposes two <strong>separate</strong> JSON-RPC methods for exchange services. They are
+registered independently in the node (<code>dap_chain_net_srv_xchange.c</code> and
+<code>dap_chain_net_srv_dex.c</code>) and are <em>not</em> RPC aliases of each other.</p>
+
+<p>HTTP documentation for <code>srv_dex</code> is served from this page
+(<code>srv_dex.html</code> and <code>dex.html</code> map here in <code>dap_cli_http_docs.c</code>).
+That is a documentation redirect only; RPC calls must use the correct <code>method</code> name.</p>
+
+<h2>JSON-RPC request</h2>
+
+<p>Send <code>POST</code> to the CLI server (for example <code>http://rpc.cellframe.net/</code>).
+The top-level <code>method</code> names the module (<code>srv_xchange</code> or <code>srv_dex</code>).
+The HTTP body uses the Cellframe RPC envelope (<code>type</code>, <code>result</code>, <code>id</code>,
+<code>version</code>); the <code>jsonrpc</code> field is not used.</p>
+
+<p>Two equivalent request shapes are supported (see
+<code>dap_json_rpc_request_from_json</code> and
+<code>dap_json_rpc_params_create_from_subcmd_and_args</code>):</p>
+
+<h3>Version 1 — <code>params</code> string</h3>
+
+<p><code>params</code> is an array with one semicolon-separated string. Every token (module name,
+subcommand, flag, value) is separated by <code>;</code>, not spaces. The string must start with the
+module name.</p>
+
+<pre>{"method":"srv_xchange","params":["srv_xchange;orders;-net;Backbone"],"id":1,"version":1}
+
+{"method":"srv_dex","params":["srv_dex;pairs;-net;Backbone"],"id":1,"version":1}</pre>
+
+<h3>Version 2 — <code>subcommand</code> and <code>arguments</code></h3>
+
+<p>Omit <code>params</code>. Provide <code>subcommand</code> (string or JSON array for nested
+subcommands) and <code>arguments</code> (JSON object). Each key in <code>arguments</code> maps to a
+CLI flag <code>-&lt;key&gt;</code>; values are strings. Array values become comma-separated flag
+values (used for multi-value flags such as <code>-orders</code>).</p>
+
+<pre>{"method":"srv_xchange","subcommand":"orders","arguments":{"net":"Backbone"},"id":1,"version":2}
+
+{"method":"srv_xchange","subcommand":["order","remove"],"arguments":{"net":"Backbone","order":"0x...","w":"mywallet","fee":"1000000000000000"},"id":1,"version":2}
+
+{"method":"srv_dex","subcommand":"pairs","arguments":{"net":"Backbone"},"id":1,"version":2}
+
+{"method":"srv_dex","subcommand":"orderbook","arguments":{"net":"Backbone","pair":"CELL/KEL"},"id":2,"version":2}</pre>
+
+<p>Verified live on <code>rpc.cellframe.net</code> (July 2026).</p>
+
+<h3>Response envelope</h3>
+
+<pre>{
+  "type": 2,
+  "result": [ { ... } ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<p><code>type</code> <code>2</code> (<code>TYPE_RESPONSE_JSON</code>). Errors appear inside
+<code>result</code> as objects with an <code>errors</code> array (<code>code</code>,
+<code>message</code>). Use <code>version</code> <code>2</code> in requests for current snake_case
+field names in JSON responses.</p>
+
+<p>Omitting subcommands or using a params string without the module prefix returns an error
+(verified: empty <code>params</code> for <code>srv_xchange</code> yields code&nbsp;60,
+<em>&ldquo;Only 'order remove' and 'orders' are supported&rdquo;</em>).</p>
+
+<h2>Availability on rpc.cellframe.net</h2>
+
+<p>Verified live against <code>http://rpc.cellframe.net/</code> (July 2026). Both methods are in
+<code>allowed_cmd</code>; they expose different command sets:</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr><th>RPC method</th><th>Public node</th><th>Notes</th></tr>
+<tr>
+  <td><code>srv_xchange</code></td>
+  <td><strong>Legacy only</strong></td>
+  <td>Only <code>orders</code> and <code>order remove</code>. All other legacy subcommands
+      (<code>token_pair</code>, <code>tx_list</code>, etc.) are disabled in the handler
+      (<code>#if 0</code> in <code>s_cli_srv_xchange</code>).</td>
+</tr>
+<tr>
+  <td><code>srv_dex</code></td>
+  <td><strong>Full DEX v2</strong></td>
+  <td>Query, analytics, trading, migration, and governance subcommands work on the public node.
+      Write operations require a wallet on the node (<code>-w</code>) or unsigned mode
+      (<code>-unsigned -addr</code>).</td>
+</tr>
+</table>
+
+<p>Do not call <code>method: srv_dex</code> expecting <code>srv_xchange</code> behaviour, or vice
+versa. Use <code>srv_xchange;orders</code> for legacy open-order listing and
+<code>srv_dex;orders</code> for the DEX v2 order book.</p>
+
+<!-- ================================================================== -->
+<h2>srv_xchange &mdash; legacy exchange (v1)</h2>
+
+<p>Handler: <code>s_cli_srv_xchange</code> in <code>dap_chain_net_srv_xchange.c</code>.
+Dispatches <code>order</code> / <code>orders</code> to <code>s_cli_srv_xchange_order</code>; any
+other subcommand returns code&nbsp;60.</p>
+
+<h3>orders</h3>
+
+<pre>srv_xchange orders -net &lt;net_name&gt; [-addr &lt;seller_addr&gt; | -seller &lt;seller_addr&gt;]</pre>
+
+<p>List open legacy (<code>SRV_XCHANGE</code>) orders. Omit <code>-addr</code> / <code>-seller</code>
+to list all open orders on the network.</p>
+
+<p><strong>RPC examples (public node):</strong></p>
+<pre>{"method":"srv_xchange","params":["srv_xchange;orders;-net;Backbone"],"id":1,"version":1}
+
+{"method":"srv_xchange","subcommand":"orders","arguments":{"net":"Backbone"},"id":1,"version":2}</pre>
+
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>-net</code> &mdash; network name (required)</li>
+<li><code>-addr</code> / <code>-seller</code> &mdash; seller wallet address (optional)</li>
+</ul>
+
+<p><strong>JSON response</strong> (verified live):</p>
+<pre>// version 1
+{ "orders": [ { ... } ], "number of orders": 283 }
+
+// version 2
+{ "orders": [ { ... } ], "total_orders": 283 }</pre>
+
+<p>Each element of <code>orders</code> contains:</p>
+<ul>
+<li><code>order_hash</code> &mdash; current tail transaction hash (hex)</li>
+<li><code>order_root</code> &mdash; root order hash (hex; equals <code>order_hash</code> when unchanged)</li>
+<li><code>seller_addr</code> &mdash; seller wallet address</li>
+<li><code>pair</code> &mdash; <code>SELL/BUY</code> ticker pair (e.g. <code>CELL/mCELL</code>)</li>
+<li><code>sell_token</code>, <code>buy_token</code> &mdash; tickers</li>
+<li><code>rate</code> &mdash; price string (buy per sell)</li>
+<li><code>remain_coins</code>, <code>remain_datoshi</code> &mdash; unfilled amount</li>
+<li><code>availability</code> &mdash; <code>migrate</code> or <code>cancel_only</code></li>
+</ul>
+
+
+<h3>order remove</h3>
+
+<pre>srv_xchange order remove -net &lt;net_name&gt; -order &lt;order_hash&gt; -w &lt;wallet_name&gt; -fee &lt;value_datoshi&gt;</pre>
+
+<p>Cancel a legacy order. Requires a wallet present on the node.</p>
+
+<p><strong>RPC examples:</strong></p>
+<pre>{"method":"srv_xchange","params":["srv_xchange;order;remove;-net;Backbone;-order;0x...;-w;mywallet;-fee;1000000000000000"],"id":1,"version":1}
+
+{"method":"srv_xchange","subcommand":["order","remove"],"arguments":{"net":"Backbone","order":"0x...","w":"mywallet","fee":"1000000000000000"},"id":1,"version":2}</pre>
+
+<p><strong>Parameters (all required):</strong></p>
+<ul>
+<li><code>-net</code> &mdash; network name</li>
+<li><code>-w</code> &mdash; wallet name on the node</li>
+<li><code>-order</code> &mdash; order transaction hash</li>
+<li><code>-fee</code> &mdash; transaction fee in datoshi</li>
+</ul>
+
+<p><strong>Validation order</strong> (live error probes): missing <code>-net</code> &rarr; code&nbsp;22;
+missing <code>-w</code> &rarr; code&nbsp;24; unknown wallet &rarr; code&nbsp;25;
+missing <code>-order</code> &rarr; code&nbsp;23; missing <code>-fee</code> &rarr; code&nbsp;26.</p>
+
+<p><strong>Success response:</strong></p>
+<pre>// version 1
+{ "status": "...", "Created inactivate tx with hash": "0x...", "sign": "..." }
+
+// version 2
+{ "status": "success", "tx_hash": "0x...", "sign": "..." }</pre>
+
+<h3>Not available via srv_xchange RPC</h3>
+
+<p>The following appear in older documentation or dead code but are <strong>not</strong> reachable
+through the current handler (return code&nbsp;60):</p>
+<ul>
+<li><code>order create</code>, <code>order history</code>, <code>order status</code></li>
+<li><code>token_pair list|average|history</code></li>
+<li><code>tx_list</code></li>
+</ul>
+<p>Use <code>srv_dex</code> for DEX v2 order management and market data.</p>
+
+<!-- ================================================================== -->
+<h2>srv_dex &mdash; DEX v2</h2>
+
+<p>Handler: <code>s_cli_srv_dex</code> in <code>dap_chain_net_srv_dex.c</code>. Registered as a
+separate CLI/RPC command (<code>dap_cli_server_cmd_add("srv_dex", ...)</code>).</p>
+
+<p>Available on <code>rpc.cellframe.net</code> for read and write subcommands. Query/analytics
+examples verified live: <code>orders</code>, <code>orderbook</code>, <code>pairs</code>,
+<code>history</code>, <code>spread</code>, <code>purchase_auto -dry-run</code>.</p>
+
+<p>Set <code>method</code> to <code>srv_dex</code>. In v1, prefix the params string with
+<code>srv_dex;</code>. In v2, use <code>subcommand</code> / <code>arguments</code> (no
+<code>params</code>).</p>
+
+<p><strong>RPC examples (verified live):</strong></p>
+<pre>{"method":"srv_dex","params":["srv_dex;pairs;-net;Backbone"],"id":1,"version":1}
+
+{"method":"srv_dex","subcommand":"pairs","arguments":{"net":"Backbone"},"id":1,"version":2}
+
+{"method":"srv_dex","subcommand":"orderbook","arguments":{"net":"Backbone","pair":"CELL/KEL"},"id":2,"version":2}</pre>
+
+<h3>Order Management</h3>
+<pre>srv_dex order create -net &lt;net_name&gt; -token_sell &lt;ticker&gt; -token_buy &lt;ticker&gt;
+    (-w &lt;wallet&gt; | -unsigned -addr &lt;addr&gt;) -value &lt;amount&gt; -rate &lt;price&gt; -fee &lt;fee&gt;
+    [-fill_policy AON|min|min_from_origin] [-min_fill_pct &lt;0-100&gt;] [-min_fill_value &lt;amount&gt;]
+
+srv_dex order remove -net &lt;net_name&gt; -order &lt;hash&gt; (-w &lt;wallet&gt; | -unsigned -addr &lt;addr&gt;) -fee &lt;fee&gt;
+
+srv_dex order update -net &lt;net_name&gt; -order &lt;root_hash&gt; (-w &lt;wallet&gt; | -unsigned -addr &lt;addr&gt;) -value &lt;amount&gt; -fee &lt;fee&gt;</pre>
+
+<h3>Query</h3>
+<pre>srv_dex orderbook -net &lt;net_name&gt; -pair &lt;BASE/QUOTE&gt;
+    [-depth &lt;N&gt;] [-tick_price &lt;step&gt;] [-tick &lt;decimals&gt;] [-cumulative]
+
+srv_dex orders -net &lt;net_name&gt; [-pair &lt;BASE/QUOTE&gt;] [-seller &lt;addr&gt;] [-limit &lt;N&gt;] [-offset &lt;N&gt;]
+
+srv_dex pairs -net &lt;net_name&gt;
+
+srv_dex status -net &lt;net_name&gt; -pair &lt;BASE/QUOTE&gt; [-seller &lt;addr&gt;]</pre>
+
+<p><strong>srv_dex orders response fields</strong> (verified live, per order): <code>pair</code>,
+<code>side</code> (<code>ASK</code>/<code>BID</code>), <code>root</code>, <code>tail</code>,
+<code>price</code>, <code>value_sell</code>, <code>locked_initial</code>, <code>filled_pct</code>,
+<code>min_fill_pct</code>, <code>min_fill_value</code>, <code>seller</code>, <code>ts</code>,
+<code>created</code>.</p>
+
+<h3>Analytics</h3>
+<pre>srv_dex find_matches -net &lt;net_name&gt; -order &lt;hash&gt; -addr &lt;wallet_addr&gt;
+
+srv_dex history -net &lt;net_name&gt; [-pair &lt;BASE/QUOTE&gt; | -order &lt;hash&gt;] [-from &lt;ts&gt;] [-to &lt;ts&gt;] [-seller &lt;addr&gt;] [-buyer &lt;addr&gt;]
+    [-view events|summary|ohlc|volume|stats]
+      events (default):  [-type all|trade|market|targeted|order|update|cancel] [-limit &lt;N&gt;] [-offset &lt;N&gt;] [-tail]
+      summary:           [-type all|trade|market|targeted|order|update|cancel] [-limit &lt;N&gt;] [-offset &lt;N&gt;] [-tail]
+      ohlc:              [-type market|trade] [-bucket &lt;sec&gt;] [-fill]
+      volume:            [-type market|targeted|trade] [-bucket &lt;sec&gt; [-fill]]
+      stats:             [-type market|trade] (default range: last 1d if -from/-to omitted)
+    Timestamp &lt;ts&gt;: unix | RFC822 (e.g. "01 Jan 2026 00:00:00 +0000") | now | -30m | -1h | -2d
+    -tail: newest first (events|summary only)
+    -fill without -bucket uses history_bucket_sec
+
+srv_dex slippage -net &lt;net_name&gt; -pair &lt;BASE/QUOTE&gt;
+    -value &lt;amount&gt; -side buy|sell -unit base|quote [-max_slippage_pct &lt;pct&gt;]
+
+srv_dex spread -net &lt;net_name&gt; -pair &lt;BASE/QUOTE&gt; [-verbose]
+
+srv_dex tvl -net &lt;net_name&gt; [-token &lt;ticker&gt;] [-by pair] [-top &lt;N&gt;]</pre>
+
+<h3>Trading</h3>
+<pre>srv_dex cancel_all_by_seller -net &lt;net_name&gt; -pair &lt;BASE/QUOTE&gt; -seller &lt;addr&gt; -side ask|bid
+    (-w &lt;wallet&gt; | -unsigned -addr &lt;addr&gt;) -fee &lt;fee&gt; [-limit &lt;N&gt;] [-dry-run]
+
+srv_dex purchase -net &lt;net_name&gt; -order &lt;hash&gt; (-w &lt;wallet&gt; [-addr &lt;addr&gt;] | -unsigned -addr &lt;addr&gt;) [-value &lt;amount&gt;] -fee &lt;fee&gt;
+    [-unit sell|buy] [-create_leftover_order [-leftover_rate &lt;rate&gt;] [-leftover_fill_policy AON|min|min_from_origin]
+    [-leftover_min_fill_pct &lt;0-100&gt;]]
+
+srv_dex purchase_auto -net &lt;net_name&gt; -token_sell &lt;ticker&gt; -token_buy &lt;ticker&gt;
+    execute: -value &lt;amount&gt; -fee &lt;fee&gt; (-w &lt;wallet&gt; [-addr &lt;addr&gt;] | -unsigned -addr &lt;addr&gt;)
+    dry-run: -dry-run -addr &lt;addr&gt; -value &lt;amount&gt;
+    [-unit sell|buy] [-rate_cap &lt;price&gt;] [-create_leftover_order [-leftover_rate &lt;rate&gt;]
+    [-leftover_fill_policy AON|min|min_from_origin] [-leftover_min_fill_pct &lt;0-100&gt;]]
+
+srv_dex purchase_multi -net &lt;net_name&gt; -orders &lt;hash1,hash2,...&gt; (-w &lt;wallet&gt; [-addr &lt;addr&gt;] | -unsigned -addr &lt;addr&gt;) -value &lt;amount&gt; -fee &lt;fee&gt;
+    [-unit sell|buy] [-create_leftover_order [-leftover_rate &lt;rate&gt;] [-leftover_fill_policy AON|min|min_from_origin]
+    [-leftover_min_fill_pct &lt;0-100&gt;]]</pre>
+
+<h3>Migration</h3>
+<pre>srv_dex migrate -net &lt;net_name&gt; -from &lt;tx&gt; -rate &lt;price&gt; -fee &lt;fee&gt; (-w &lt;wallet&gt; | -unsigned -addr &lt;addr&gt;)</pre>
+
+<h3>Governance</h3>
+<pre>srv_dex decree -net &lt;net_name&gt; -w &lt;wallet&gt; -service_key &lt;cert&gt; -fee &lt;fee&gt;
+    -method fee_set|pair_add|pair_fee_set|pair_fee_set_all|pair_remove
+      fee_set:          -fee_amount &lt;amount&gt; -fee_addr &lt;addr&gt;
+      pair_add:         -token_base &lt;ticker&gt; -token_quote &lt;ticker&gt;
+                        [-net_base &lt;net&gt;] [-net_quote &lt;net&gt;] [&lt;fee_opt&gt;]
+      pair_fee_set:     -token_base &lt;ticker&gt; -token_quote &lt;ticker&gt;
+                        [-net_base &lt;net&gt;] [-net_quote &lt;net&gt;] &lt;fee_opt&gt;
+      pair_fee_set_all: &lt;fee_opt&gt;
+      pair_remove:      -token_base &lt;ticker&gt; -token_quote &lt;ticker&gt;
+                        [-net_base &lt;net&gt;] [-net_quote &lt;net&gt;]
+    &lt;fee_opt&gt;: -fee_pct &lt;pct&gt; | -fee_native &lt;amount&gt; | -fee_config &lt;byte&gt;
+               -fee_pct 2.0 = 2% of INPUT, -fee_native 0.05 = 0.05 native</pre>
+
+<h2>CLI human-readable output</h2>
+<p>When using the local CLI client, append <code>-h</code> to format JSON-RPC results as tables.
+Add <code>-full</code> to show full hashes and addresses. This applies to both modules where
+supported.</p>
+
+</body>
+</html>

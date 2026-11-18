@@ -32,6 +32,13 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <getopt.h>
+#ifndef _WIN32
+#include <sys/stat.h>
+#include <sys/resource.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+#endif
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -62,8 +69,8 @@
 #include "dap_notify_srv.h"
 #include "dap_http_server.h"
 #include "dap_http_folder.h"
-#include "dap_dns_client.h"
-#include "dap_dns_server.h"
+#include "dap_chain_node_dns_client.h"
+#include "dap_chain_node_dns_server.h"
 #include "dap_chain_net_balancer.h"
 #include "dap_chain_net_node_list.h"
 
@@ -101,6 +108,7 @@
 #include "dap_chain_mempool.h"
 #include "dap_chain_node.h"
 #include "dap_chain_node_cli.h"
+#include "dap_json_rpc.h"
 
 #include "dap_stream.h"
 #include "dap_stream_ctl.h"
@@ -110,7 +118,9 @@
 #include "dap_chain_net_srv_bridge.h"
 #include "dap_chain_net_srv_stake_pos_delegate.h"
 #include "dap_chain_net_srv_stake_lock.h"
-#include "dap_chain_net_srv_emit_delegate.h"
+#include "dap_chain_net_srv_dex.h"
+#include "dap_chain_net_srv_stake_ext.h"
+#include "dap_chain_wallet_shared.h"
 
 #include "dap_chain_wallet_cache.h"
 #include "dap_chain_policy.h"
@@ -128,6 +138,7 @@
     #include "dap_plugins_python_app_context.h"
 #endif
 
+#define MEMPOOL_URL "/mempool"
 #define MAIN_URL "/"
 const char *dap_node_version();
 static int s_proc_running_check(const char *a_path);
@@ -161,7 +172,22 @@ int main( int argc, const char **argv )
 {
     if ( argv[1] && !dap_strcmp("-version", argv[1]) )
         return printf("%s\n", dap_node_version()), 0;
-        
+
+    // Private-by-default file creation (wallets/certs/keys live in var/lib)
+    // and no core dumps: a dump would contain every loaded private key and
+    // the cached wallet passwords. Release builds only — the asan/tsan/debug
+    // variants keep dumps for crash triage.
+#ifndef DAP_DEBUG
+    umask(0077);
+#if defined(DAP_OS_UNIX) && !defined(_WIN32)
+    struct rlimit l_nocore = { 0, 0 };
+    setrlimit(RLIMIT_CORE, &l_nocore);
+#endif
+#ifdef __linux__
+    prctl(PR_SET_DUMPABLE, 0, 0, 0, 0);
+#endif
+#endif
+
     dap_server_t *l_server = NULL; // DAP Server instance
     bool l_debug_mode = true;
     bool bServerEnabled = false;
@@ -177,6 +203,23 @@ int main( int argc, const char **argv )
     if (argc > 2 && !dap_strcmp("-B" , argv[1]))
         g_sys_dir_path = dap_strdup(argv[2]);
 #endif
+
+    const char *l_plugins_path_arg = NULL;
+#if !DAP_OS_ANDROID
+    if (!dap_cli_server_cmd_find_option_val((char **)argv, 1, argc, "--plugins-path", &l_plugins_path_arg))
+        dap_cli_server_cmd_find_option_val((char **)argv, 1, argc, "-P", &l_plugins_path_arg);
+#endif
+    char *l_plugins_path_override = NULL;
+    if (l_plugins_path_arg) {
+        if (l_plugins_path_arg[0] == '~' && (l_plugins_path_arg[1] == '/' || l_plugins_path_arg[1] == '\0')) {
+            const char *l_home = getenv("HOME");
+            l_plugins_path_override = l_home
+                ? dap_strdup_printf("%s%s", l_home, l_plugins_path_arg + 1)
+                : dap_strdup(l_plugins_path_arg);
+        } else {
+            l_plugins_path_override = dap_strdup(l_plugins_path_arg);
+        }
+    }
 
     if (!g_sys_dir_path) {
 #ifdef DAP_OS_WINDOWS
@@ -239,6 +282,8 @@ int main( int argc, const char **argv )
 #endif
 
     log_it(L_DEBUG, "Parsing command line args");
+    if (l_plugins_path_override)
+        log_it(L_NOTICE, "Plugins path overridden from command line: %s", l_plugins_path_override);
 
     l_debug_mode = dap_config_get_item_bool_default( g_config,"general","debug_mode", false );
 
@@ -254,7 +299,7 @@ int main( int argc, const char **argv )
     if ( dap_config_get_item_bool_default(g_config, "log", "rotate_enabled", false) ) {
         size_t  l_timeout_minutes   = dap_config_get_item_int64(g_config, "log", "rotate_timeout"),
                 l_max_file_size     = dap_config_get_item_int64(g_config, "log", "rotate_size");
-        log_it(L_NOTICE, "Log rotation every %lu min enabled, max log file size %lu MB",
+        log_it(L_NOTICE, "Log rotation every %zu min enabled, max log file size %zu MB",
                          l_timeout_minutes, l_max_file_size);
         dap_common_enable_cleaner_log(l_timeout_minutes * 60000, l_max_file_size);
     }
@@ -359,6 +404,11 @@ int main( int argc, const char **argv )
         return -71;
     }
 
+    // Before the nets: the ledger snapshot restore (inside dap_chain_net_init)
+    // populates the wallet cache unspent index and needs the [wallets] mode
+    // and the cache lock to be live already.
+    dap_chain_wallet_cache_preinit();
+
     if( dap_chain_net_init() ){
         log_it(L_CRITICAL,"Can't init dap chain network module");
         return -65;
@@ -382,6 +432,10 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_xchange_init()) {
         log_it(L_ERROR, "Can't provide exchange capability");
     }
+    // Initialize DEX v2 service
+    if (dap_chain_net_srv_dex_init()) {
+        log_it(L_ERROR, "Can't provide DEX v2 capability");
+    }
 
     if (dap_chain_net_srv_voting_init()) {
         log_it(L_ERROR, "Can't provide voting capability");
@@ -390,14 +444,15 @@ int main( int argc, const char **argv )
     if (dap_chain_net_srv_bridge_init()) {
         log_it(L_ERROR, "Can't provide bridge capability");
     }
+
+    if (dap_chain_net_srv_stake_ext_init()) {
+        log_it(L_ERROR, "Can't provide stake-ext capability");
+    }
     
     if (dap_chain_net_srv_stake_lock_init()) {
         log_it(L_ERROR, "Can't start stake lock service");
     }
 
-    if (dap_chain_net_srv_emit_delegate_init()) {
-        log_it(L_ERROR, "Can't start stake lock service");
-    }
 #ifndef _WIN32
 #   if !DAP_OS_ANDROID
     if( dap_chain_net_srv_vpn_pre_init() ){
@@ -423,12 +478,51 @@ int main( int argc, const char **argv )
         return -11;
     }
 
+    
     if( dap_chain_wallet_cache_init() ) {
         log_it(L_CRITICAL,"Can't init dap chain wallet module");
         return -61;
     }
 
+    bool l_plugins_enabled = dap_config_get_item_bool_default(g_config, "plugins", "enabled", false);
+    if (l_plugins_enabled) {
+#ifdef DAP_OS_WINDOWS
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
+#else
+        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
+#endif
+        int rc_plugin_init = 0;
+        rc_plugin_init = dap_plugin_init(l_plugins_path_override
+            ? l_plugins_path_override
+            : dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default));
+        if (rc_plugin_init) {
+            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);
+            l_plugins_enabled = false;
+        } else {
+#ifdef DAP_SUPPORT_PYTHON_PLUGINS
+            log_it(L_NOTICE, "Registering python plugin type");
+            rc_plugin_init = dap_chain_plugins_init(g_config);
+#endif
+            dap_plugin_load_all();
+            dap_plugin_preinit_all();
+        }
+        DAP_DELETE(l_plugins_path_default);
+    }
+
     dap_chain_net_load_all();
+
+    // Must run after networks/chains are loaded (dap_chain_net_iter_start()
+    // needs something to iterate); non-fatal if it can't find any TX chains,
+    // dap_chain_mempool_out_is_used() falls back to its historical full-scan
+    // implementation in that case.
+    dap_chain_mempool_spent_index_init();
+    // Janitorial mempool cleanup in the background, off the 'mempool list' RPC path
+    dap_chain_mempool_filter_timer_start();
+
+    if( (dap_chain_wallet_shared_notify_init()) ) {
+        log_it(L_CRITICAL,"Can't init dap chain wallet module");
+        return -61;
+    }
 
     if( dap_chain_net_srv_order_init() )
         return -67;
@@ -443,8 +537,8 @@ int main( int argc, const char **argv )
         return -133;
     }
 
-    log_it(L_INFO, "Automatic mempool processing %s",
-           dap_chain_node_mempool_autoproc_init() ? "enabled" : "disabled");
+    bool l_mempool_autoproc = dap_chain_node_mempool_autoproc_init();
+    log_it(L_NOTICE, "Automatic mempool processing %s", l_mempool_autoproc ? "enabled" : "disabled");
     
     uint16_t l_listen_addrs_count = 0;
     if ( bServerEnabled )
@@ -457,6 +551,17 @@ int main( int argc, const char **argv )
         // Streaming URLs
         dap_stream_add_proc_http( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM );
         dap_stream_ctl_add_proc( DAP_HTTP_SERVER(l_server), "/"DAP_UPLINK_PATH_STREAM_CTL );
+
+        const char *str_start_mempool = dap_config_get_item_str( g_config, "mempool", "accept" );
+        if ( str_start_mempool && !strcmp(str_start_mempool, "true")) {
+            dap_chain_mempool_add_proc(DAP_HTTP_SERVER(l_server), MEMPOOL_URL);
+        }
+
+        if (dap_json_rpc_init(l_server, g_config)) {
+            log_it( L_CRITICAL, "Can't init json-rpc" );
+            return -12;
+        } 
+
 
         // Built in WWW server
 #if !DAP_OS_ANDROID
@@ -481,6 +586,14 @@ int main( int argc, const char **argv )
     } else
         log_it( L_INFO, "No enabled server, working in client mode only" );
 
+    // Standalone plain-HTTP JSON-RPC service ([rpc-server]): a listener of its own, next to the
+    // CLI port and the signed /exec_cmd path, for clients that want the command set over plain
+    // HTTP without the encryption/signature handshake. Off unless the config enables it.
+    if (dap_json_rpc_service_init(g_config)) {
+        log_it( L_CRITICAL, "Can't init the HTTP RPC service" );
+        return -13;
+    }
+
 #if defined(DAP_OS_DARWIN) || ( defined(DAP_OS_LINUX) && ! defined (DAP_OS_ANDROID))
     // vpn server
     if(dap_config_get_item_bool_default(g_config, "srv_vpn", "enabled", false)) {
@@ -503,44 +616,25 @@ int main( int argc, const char **argv )
     }
 #endif
 
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
-#ifdef DAP_OS_WINDOWS
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins/", g_sys_dir_path);
-#else
-        char * l_plugins_path_default = dap_strdup_printf("%s/var/lib/plugins", g_sys_dir_path);
-#endif
-        int rc_plugin_init = 0;
-        rc_plugin_init = dap_plugin_init( dap_config_get_item_str_default(g_config, "plugins", "path", l_plugins_path_default) );
-        if (rc_plugin_init) {
-            log_it(L_ERROR, "The initial initialization for working with manifests and binary plugins failed. Error code %d", rc_plugin_init);    
-            DAP_DELETE(l_plugins_path_default);
-        } else {
-            DAP_DELETE(l_plugins_path_default);
+    if (l_plugins_enabled) {
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            //Init python plugins
-            log_it(L_NOTICE, "Loading python plugins");
-            dap_plugins_python_app_content_init(l_server);
-            rc_plugin_init = dap_chain_plugins_init(g_config);
+        dap_plugins_python_app_content_init(l_server);
 #endif
-            dap_plugin_start_all();
-
+        dap_plugin_start_all();
 #ifdef DAP_SUPPORT_PYTHON_PLUGINS
-            if (!rc_plugin_init) {
-                dap_chain_plugins_save_thread(g_config);
-            } else {
-                log_it(L_ERROR, "Failed to initialize python-cellframe plugins. Error code %d", rc_plugin_init);
-            }
+        dap_chain_plugins_save_thread(g_config);
 #endif
-        }
     }
     dap_chain_net_try_online_all();
-    dap_chain_net_announce_addr_all();
     rc = dap_events_wait();
-    log_it( rc ? L_CRITICAL : L_NOTICE, "Server loop stopped with return code %d", rc );
+    log_it(L_INFO, "Server loop stopped with return code %d", rc);
+    // First thing on shutdown: the module deinit chain below may take seconds
+    // (or stall), and the ledger work since the last periodic save would be lost.
+    dap_chain_net_snapshot_save_all();
     // Deinit modules
 
 //failure:
-    if(dap_config_get_item_bool_default(g_config,"plugins","enabled",false)){
+    if (l_plugins_enabled) {
         dap_plugin_stop_all();
         dap_plugin_deinit();
     }
@@ -551,9 +645,11 @@ int main( int argc, const char **argv )
 #if !DAP_OS_ANDROID
     dap_http_folder_deinit();
 #endif
+    dap_json_rpc_service_deinit();
     dap_http_deinit();
     if (bServerEnabled) dap_server_deinit();
     dap_enc_ks_deinit();
+    dap_chain_mempool_filter_timer_stop();
     dap_chain_node_mempool_autoproc_deinit();
     dap_chain_net_srv_xchange_deinit();
     dap_chain_net_srv_stake_pos_delegate_deinit();
@@ -566,6 +662,7 @@ int main( int argc, const char **argv )
     dap_config_close( g_config );
     dap_interval_timer_deinit();
     dap_common_deinit();
+    DAP_DEL_Z(l_plugins_path_override);
 
     return rc * 10;
 }

@@ -4,12 +4,10 @@ case "$1" in
 	remove|purge|abort-install|abort-upgrade)
 		echo "[*] Stopping cellframe-node and services..."
 		systemctl stop cellframe-node.service || true
-		systemctl stop cellframe-diagtool.service || true
 		systemctl stop cellframe-updater.service || true
 
 		echo "[*] Disabling cellframe-node and services..."
 		systemctl disable cellframe-node.service || true
-		systemctl disable cellframe-diagtool.service || true
 		systemctl disable cellframe-updater.service || true
 
 		if [ -d /run/user/$SUDO_UID ]; then
@@ -26,7 +24,6 @@ case "$1" in
 	upgrade)
 		echo "[*] Stopping cellframe-node and services..."
         systemctl stop cellframe-node.service || true
-		systemctl stop cellframe-diagtool.service || true
         systemctl stop cellframe-updater.service || true
 		if [ -d /run/user/$SUDO_UID ]; then
       		export XDG_RUNTIME_DIR=/run/user/$SUDO_UID
@@ -39,7 +36,6 @@ case "$1" in
 	failed-upgrade)
 		echo "[*] Stopping cellframe-node and services"
         systemctl stop cellframe-node.service || true
-		systemctl stop cellframe-diagtool.service || true
         systemctl stop cellframe-updater.service || true
 		if [ -d /run/user/$SUDO_UID ]; then
       		export XDG_RUNTIME_DIR=/run/user/$SUDO_UID

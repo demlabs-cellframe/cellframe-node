@@ -1,6 +1,7 @@
 # Prerequisites
 build/*
 debug/*
+test_build/
 build_stretch/*
 test/build
 *.txt.user
@@ -74,3 +75,29 @@ cmake_install.cmake
 *~
 cmake-build-*
 .idea
+.git
+.mcp
+.context
+.cache
+#slc
+.clangd
+.cursorrules
+.slc/
+slc
+
+# docker local
+build-docker/
+docker-artifacts/
+.zcode/
+
+# Runtime key material & secrets: never commit node keys, wallets or env files
+var/
+*.key
+*.pem
+*.p12
+.env
+*.dwallet
+
+# local cpython seeds for offline FetchContent (see .cpython-x64/)
+.cpython-x64/
+.cpython-x64-cache/

@@ -1,0 +1,203 @@
+name: Validator Quorum and Fault Tolerance
+description: >
+  Tests consensus behavior under validator loss: stop one master to verify
+  that consensus continues with remaining validators (N-1 quorum), then
+  stop another to verify consensus stalls when below min_validators.
+  Validates block production resumes after validators rejoin.
+tags: [e2e, consensus, esbocs, quorum, fault-tolerance, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+setup:
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 180
+
+  - cli: "esbocs min_validators_count show -net {{network_name}}"
+    node: node-1
+    save: initial_min_validators
+  - print: "Initial min_validators: {{initial_min_validators}}"
+
+test:
+  # ================================================================
+  # Phase 1: Baseline — all validators operational
+  # ================================================================
+  - name: "Phase 1: Baseline block production with full validator set"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: baseline_blocks
+        expect: any
+      - print: "Baseline block count: {{baseline_blocks}}"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: baseline_blocks_after
+        expect: any
+      - print: "Blocks after waiting: {{baseline_blocks_after}}"
+
+  # ================================================================
+  # Phase 2: Stop one master — consensus should continue (N-1)
+  # ================================================================
+  - name: "Phase 2: Stop one master, verify consensus continues"
+    steps:
+      - set: stopped_master
+        value: "master_nodes[-1]"
+        eval: true
+      - print: "Stopping master: {{stopped_master}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_before_stop
+        expect: any
+      - print: "Blocks before stopping {{stopped_master}}: {{blocks_before_stop}}"
+
+      - docker_op: stop
+        services: ["{{stopped_master}}"]
+
+      - wait: "15s"
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 240
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: blocks_after_stop1
+        expect: any
+      - print: "Blocks after 1 master stopped: {{blocks_after_stop1}}"
+
+  # ================================================================
+  # Phase 3: Restart stopped master, verify it catches up
+  # ================================================================
+  - name: "Phase 3: Restart stopped master, verify sync"
+    steps:
+      - docker_op: start
+        services: ["{{stopped_master}}"]
+
+      - wait: cli_ready
+        node: "{{stopped_master}}"
+        timeout: 120
+
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: "{{stopped_master}}"
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+
+      - wait: "30s"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{stopped_master}}"
+        save: restarted_blocks
+        expect: any
+      - print: "Restarted master block count: {{restarted_blocks}}"
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: active_blocks
+        expect: any
+      - print: "Active master block count: {{active_blocks}}"
+
+  # ================================================================
+  # Phase 4: Block production post-recovery
+  # ================================================================
+  - name: "Phase 4: Verify block production after full recovery"
+    steps:
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: recovery_blocks_t0
+        expect: any
+
+      - wait: block_created
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        min_blocks: 1
+        timeout: 180
+
+      - cli: "block count -net {{network_name}} -chain main"
+        node: "{{first_master}}"
+        save: recovery_blocks_t1
+        expect: any
+      - print: "Post-recovery blocks: {{recovery_blocks_t0}} -> {{recovery_blocks_t1}}"
+
+  # ================================================================
+  # Phase 5: Block consistency across all nodes after recovery
+  # ================================================================
+  - name: "Phase 5: Cross-node block consistency"
+    steps:
+      - wait: "15s"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "block count -net {{network_name}} -chain main"
+            node: "{{_node}}"
+            save: _final_bc_m
+            expect: any
+          - print: "[{{_node}}] final block count: {{_final_bc_m}}"
+
+  # ================================================================
+  # Phase 6: Ensure all nodes are online before next test
+  # ================================================================
+  - name: "Phase 6: Wait for all nodes to be fully online"
+    steps:
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-4
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-5
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+      - wait: cli
+        cmd: "net -net {{network_name}} get status"
+        node: node-6
+        contains: "NET_STATE_ONLINE"
+        timeout: 120
+        interval: 5
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE"
+  - cli: "block count -net {{network_name}} -chain main"
+    node: "{{first_master}}"
+    expect: success

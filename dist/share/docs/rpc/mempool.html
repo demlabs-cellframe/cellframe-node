@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>mempool</title>
+</head>
+<body>
+
+<h1>mempool</h1>
+
+<p>Command for working with mempool.</p>
+
+<h2>JSON-RPC</h2>
+
+<p>Send a POST request to the node CLI JSON-RPC endpoint (for example <code>POST http://rpc.cellframe.net/</code>). Set <code>method</code> to <code>mempool</code>. Subcommands are the first token after <code>mempool</code> (<code>list</code>, <code>count</code>, <code>check</code>, …).</p>
+
+<p>Two request formats are supported (see <a href="/index.html">index</a> for full rules):</p>
+<ul>
+<li><strong>Version 1</strong> — <code>params</code> array with one semicolon-separated CLI string.</li>
+<li><strong>Version 2</strong> — omit <code>params</code>; use <code>subcommand</code> and <code>arguments</code> instead. Argument keys must <strong>not</strong> include a leading dash (<code>"net"</code>, not <code>"-net"</code>). Use string values and <code>""</code> for bare flags; JSON booleans and numbers in <code>arguments</code> are rejected.</li>
+</ul>
+
+<p>Response field names depend on <code>version</code>: version 2 uses <code>datum_hash</code> / <code>datum_type</code>; version 1 uses legacy <code>hash</code> / <code>type</code>.</p>
+
+<h3>Version 1 — params string</h3>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;list;-net;Backbone;-chain;main;-limit;2"],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Version 2 — subcommand + arguments</h3>
+<pre>{
+  "method": "mempool",
+  "subcommand": "list",
+  "arguments": {"net": "Backbone", "chain": "main", "limit": "2", "brief": ""},
+  "id": 1,
+  "version": 2
+}</pre>
+<p>Both requests above are equivalent to CLI <code>mempool list -net Backbone -chain main -limit 2 -brief</code>.</p>
+
+<h3>Method aliases</h3>
+<p>These aliases map subcommands to separate RPC <code>method</code> names. On public nodes such as <code>rpc.cellframe.net</code> only the base <code>mempool</code> method is allowed; alias methods return <code>Command "mempool" is restricted</code>.</p>
+<ul>
+<li><code>mempool_list</code> — <code>mempool list</code></li>
+<li><code>mempool_check</code> — <code>mempool check</code></li>
+<li><code>mempool_proc</code> — <code>mempool proc</code></li>
+<li><code>mempool_proc_all</code> — <code>mempool proc_all</code></li>
+<li><code>mempool_delete</code> — <code>mempool delete</code></li>
+<li><code>mempool_add_ca</code> / <code>chain_ca_copy</code> — <code>mempool add_ca</code></li>
+</ul>
+
+<h2>Subcommands</h2>
+
+<h3>list</h3>
+<pre>mempool list -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] [-addr &lt;addr&gt;] [-brief] [-limit &lt;n&gt;] [-offset &lt;n&gt;] [-H hex|base58] [-h]</pre>
+<p>List mempool entries for the selected network. Without <code>-chain</code>, all chains in the network are scanned. With <code>-addr</code>, only datums related to the address are returned. <code>-brief</code> returns hash, type, and timestamp only (mutually exclusive with <code>-addr</code>).</p>
+
+<h3>count</h3>
+<pre>mempool count -net &lt;net_name&gt; [-chain &lt;chain_name&gt;]</pre>
+<p>Return the number of mempool elements per chain.</p>
+
+<h3>check</h3>
+<pre>mempool check -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -datum &lt;datum_hash&gt; [-H hex|base58]</pre>
+<p>Check whether a datum is present in the mempool or already in a chain.</p>
+
+<h3>dump</h3>
+<pre>mempool dump -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -datum &lt;datum_hash&gt; [-tx_to_json] [-H hex|base58]</pre>
+<p>Output information about a datum in the mempool. With <code>-tx_to_json</code>, transaction datums are returned in the JSON format used by <code>tx_create_json</code> (<code>items</code> array with <code>type</code> fields).</p>
+
+<h3>proc</h3>
+<pre>mempool proc -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -datum &lt;datum_hash&gt;</pre>
+<p>Process a mempool entry with the specified hash.</p>
+<p><strong>CAUTION:</strong> This command processes the transaction with any commission. The <code>minimum_comission</code> parameter is not taken into account.</p>
+<p>Requires master node role or higher. Not available on public read-only RPC nodes.</p>
+
+<h3>proc_all</h3>
+<pre>mempool proc_all -net &lt;net_name&gt; -chain &lt;chain_name&gt;</pre>
+<p>Process all mempool entries for the selected chain.</p>
+
+<h3>delete</h3>
+<pre>mempool delete -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -datum &lt;datum_hash&gt;</pre>
+<p>Delete a datum with the given hash from the mempool.</p>
+
+<h3>add_ca</h3>
+<pre>mempool add_ca -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -ca_name &lt;pub_cert_name&gt;</pre>
+<p>Add a public certificate into the mempool to prepare its way to chains. Requires a local certificate on the node.</p>
+
+<h2>Common parameters</h2>
+
+<table border="1" cellpadding="4">
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>Chain network (required for all subcommands).</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td>Limit operation to one chain; omit to scan all chains in the network.</td></tr>
+<tr><td><code>-datum &lt;hash&gt;</code></td><td>Datum hash (hex with <code>0x</code> prefix or base58).</td></tr>
+<tr><td><code>-addr &lt;addr&gt;</code></td><td>Filter list results to datums related to this address.</td></tr>
+<tr><td><code>-brief</code></td><td>Fast list mode: hash, type, and timestamp only. Mutually exclusive with <code>-addr</code>.</td></tr>
+<tr><td><code>-limit &lt;n&gt;</code></td><td>Pagination limit (default: 1000).</td></tr>
+<tr><td><code>-offset &lt;n&gt;</code></td><td>Pagination offset (default: 0).</td></tr>
+<tr><td><code>-H hex|base58</code></td><td>Hash output format (default: hex).</td></tr>
+<tr><td><code>-h</code></td><td>Human-readable table output (CLI client only; JSON-RPC always returns JSON).</td></tr>
+</table>
+
+<h2>JSON-RPC response envelope</h2>
+
+<p><code>mempool</code> is a JSON-response command. Successful and failed calls both return HTTP 200 with this envelope:</p>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 2
+}</pre>
+<ul>
+<li><code>type</code> — <code>2</code> (<code>TYPE_RESPONSE_JSON</code>) for structured JSON commands</li>
+<li><code>result</code> — JSON array of result objects (or error objects)</li>
+<li><code>id</code> — echoes the request <code>id</code></li>
+<li><code>version</code> — RPC protocol version (<code>1</code> or <code>2</code>)</li>
+</ul>
+<p>There is no top-level <code>error</code> field. Command errors appear inside <code>result</code> as objects with an <code>errors</code> array. Add <code>-verbose</code> anywhere in the params string to append a <code>ret_code</code> object to the result array.</p>
+
+<h2>Examples (verified on rpc.cellframe.net)</h2>
+
+<h3>Count</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;count;-net;Backbone"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "mempool",
+  "subcommand": "count",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h3>List (Backbone, main chain, brief, limit 2)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;list;-net;Backbone;-chain;main;-brief;-limit;2"],
+  "id": 2,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "mempool",
+  "subcommand": "list",
+  "arguments": {"net": "Backbone", "chain": "main", "limit": "2", "brief": ""},
+  "id": 2,
+  "version": 2
+}</pre>
+
+<h3>List with address filter</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;list;-net;Backbone;-chain;main;-addr;Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me;-limit;1"],
+  "id": 3,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "mempool",
+  "subcommand": "list",
+  "arguments": {
+    "net": "Backbone",
+    "chain": "main",
+    "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me",
+    "limit": "1"
+  },
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>Check datum in mempool</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;check;-net;Backbone;-datum;0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9"],
+  "id": 4,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "mempool",
+  "subcommand": "check",
+  "arguments": {
+    "net": "Backbone",
+    "datum": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9"
+  },
+  "id": 4,
+  "version": 2
+}</pre>
+
+<h3>Dump with tx_to_json</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "mempool",
+  "params": ["mempool;dump;-net;Backbone;-chain;main;-datum;0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9;-tx_to_json"],
+  "id": 5,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "mempool",
+  "subcommand": "dump",
+  "arguments": {
+    "net": "Backbone",
+    "chain": "main",
+    "datum": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+    "tx_to_json": ""
+  },
+  "id": 5,
+  "version": 2
+}</pre>
+
+<h2>Typical responses</h2>
+
+<h3>list (full mode)</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "net": "Backbone",
+      "chains": [
+        {
+          "name": "main",
+          "removed": 0,
+          "datums": [
+            {
+              "datum_type": "DATUM_TX",
+              "datum_hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+              "created": {
+                "time_stamp": 1783947227,
+                "str": "Mon, 13 Jul 2026 12:53:47 +0000"
+              },
+              "main_ticker": "",
+              "ledger_rc": "No enough valid signatures in datum",
+              "service": "wallet_shared",
+              "action": "take",
+              "batching": "true",
+              "from": "Rj7J7MiX2bWy8sNyadg47jAEJQuj6AF3drDg7o6Gc4zetrzkUNceEyYbSR3FDrx2PbPJn28u6wPZkS7xX2U9viSx2V8uNnio83nHLVJ7",
+              "to": [
+                {
+                  "money": {
+                    "value": "526683128422439695515",
+                    "coins": "526.683128422439695515",
+                    "token": "CELL"
+                  },
+                  "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me"
+                }
+              ],
+              "fee": [
+                {
+                  "value": "62971038373205741",
+                  "coins": "0.062971038373205741",
+                  "token": "CELL"
+                }
+              ],
+              "change": [ { "money": { "value": "...", "coins": "...", "token": "CELL" } } ]
+            }
+          ],
+          "pages": [ { "limit": 1 } ],
+          "total": "Backbone.main: 6"
+        }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<p>When no chain is specified, all chains are returned (for example <code>zerochain</code> and <code>main</code>). Version 1 uses <code>hash</code> and <code>type</code> instead of <code>datum_hash</code> and <code>datum_type</code>.</p>
+
+<h3>list (-brief)</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "net": "Backbone",
+      "chains": [
+        {
+          "name": "main",
+          "removed": 0,
+          "datums": [
+            {
+              "datum_type": "DATUM_TX",
+              "datum_hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+              "created": {
+                "time_stamp": 1783947227,
+                "str": "Mon, 13 Jul 2026 12:53:47 +0000"
+              }
+            }
+          ],
+          "pages": [ { "limit": 2 } ],
+          "total": "Backbone.main: 6"
+        }
+      ]
+    }
+  ],
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>count</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "net": "Backbone",
+      "chains": [
+        { "name": "zerochain", "count": 0 },
+        { "name": "main", "count": 6 }
+      ]
+    }
+  ],
+  "id": 4,
+  "version": 2
+}</pre>
+
+<h3>check — found in mempool</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "datum_hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+      "net": "Backbone",
+      "chain": "main",
+      "find": true,
+      "source": "mempool",
+      "datum": {
+        "datum": {
+          "datum_type": "transaction",
+          "hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+          "items": [ { "item_type": "in", "tx_prev_hash": "0x...", "tx_out_prev_idx": 4 } ]
+        }
+      }
+    }
+  ],
+  "id": 5,
+  "version": 2
+}</pre>
+
+<h3>check — not found</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "datum_hash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "net": "Backbone",
+      "chain": null,
+      "find": false
+    }
+  ],
+  "id": 5,
+  "version": 2
+}</pre>
+
+<h3>dump (-tx_to_json)</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "datum_hash": "0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9",
+      "ts_created": 1783947227,
+      "datum_type": "tx",
+      "items": [
+        { "type": "in", "prev_hash": "0xC7ECF43411E24509C240C6FC2003227AB930183719291555F658744C1FE46FF8", "out_prev_idx": 4 },
+        { "type": "out_std", "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me", "token": "CELL", "value": "526683128422439695515" }
+      ]
+    }
+  ],
+  "id": 6,
+  "version": 2
+}</pre>
+<p>Without <code>-tx_to_json</code>, <code>dump</code> returns a nested <code>datum</code> object with <code>item_type</code> fields (serialized transaction view).</p>
+
+<h3>Errors</h3>
+<p>Missing <code>-net</code>:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 102, "message": "mempool requires parameter '-net'" },
+        { "code": 102, "message": "Request parsing error (code: 102)" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<p>Invalid subcommand (plain string in result array):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    "Invalid sub command specified. Sub command foo is not supported."
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2>CLI table output (-h)</h2>
+
+<p>When <code>-h</code> is passed with <code>mempool list</code>, the CLI client (<code>s_print_for_mempool_list</code>) formats the JSON response as a table:</p>
+
+<pre>Removed 0 records from the main chain mempool in Backbone network.
+________________________________________________________________________________________________________________
+  Hash                                                         | Datum type             | Time create
+________________________________________________________________________________________________________________
+  0xFEEDA89E98CE31F90DF1907F088B630FCCC2E940D1AF30BA1865A4736B37DFF9 | DATUM_TX               | Mon, 13 Jul 2026 12:53:47 +0000 |
+_____________________________________________________________________|________________________|_________________________________|
+
+  total: Backbone.main: 6</pre>
+
+<p>Without <code>-h</code>, the CLI prints raw JSON. JSON-RPC always returns structured JSON.</p>
+<p>The table reader accepts both v1 (<code>hash</code>, <code>type</code>) and v2 (<code>datum_hash</code>, <code>datum_type</code>) response formats. The <code>created</code> object may contain <code>str</code> (RFC822 string) or <code>time_stamp</code> (numeric).</p>
+
+</body>
+</html>

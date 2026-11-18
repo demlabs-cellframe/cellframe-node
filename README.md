@@ -1,88 +1,83 @@
 # cellframe-node
 
-[Cellframe Node usage Wiki](https://wiki.cellframe.net/en/soft)
+Cellframe Node — полноузловой сервер сетей Cellframe. Он отвечает за
+синхронизацию сетей и цепочек, глобальную базу данных, кошельки,
+валидацию транзакций и консенсус, а также предоставляет локальный CLI и
+удалённый JSON-RPC интерфейс.
 
-## This guide will work on Debian/Ubuntu
+Актуальное описание установки, настройки и команд:
+[Cellframe Node Wiki](https://wiki.cellframe.net/en/soft).
 
-### Build from sources:
+Этот файл описывает сборку и работу с репозиторием. Для типовых
+операционных задач первичным источником остаётся Wiki; RPC-справочник
+доступен непосредственно на запущенной ноде, как описано ниже.
 
-#### Linux Prerequsites 
+## Сборка из исходных кодов
 
-To successfully complete of the build, you need to have the following packages to be installed 
-(packages are named as in Debian GNU/Linux 10 "buster", please found the corresponding packages for your distribution):
+### Зависимости
 
+Debian/Ubuntu:
 
-* libsqlite3-dev
-* libmagic-dev
-* libz-dev
-* traceroute
-* build-essential
-* cmake
-* dpkg-dev
-* debconf-utils
-
-Please use the command below to install dependencies listed above
-```
-sudo apt-get install build-essential cmake dpkg-dev libz-dev libmagic-dev libsqlite3-dev traceroute debconf-utils xsltproc libpq-dev
+```bash
+sudo apt-get install \
+  build-essential cmake dpkg-dev debconf-utils xsltproc git \
+  libsqlite3-dev libz-dev libmagic-dev libpq-dev libcurl4-openssl-dev
 ```
 
-#### MacOS Prerequsites 
+macOS (Homebrew):
 
-Install latest XCode from App Store or directly from official Apple site.
-Install Homebrew from brew.sh, if you have Apple Sillicon chipset pls setup it to /opt/homebrew as recommendent on the Homebrew site.
-Then install cmake and sqlite
-```
-brew install cmake sqlite3 zlib
+```bash
+brew install cmake sqlite zlib
 ```
 
-Generaly thats all what you need
+Для сборки можно использовать и другие дистрибутивы, при условии
+наличия CMake, компилятора C, OpenSSL/libcrypto, SQLite, zlib и libmagic.
+Имена пакетов при этом отличаются.
 
+### Получение исходных кодов
 
-#### Get all cellframe-node sources
+Репозиторий использует сабмодули, поэтому их необходимо инициализировать:
 
-This command fetch sources from gitlab and build them. 
-  ```
-  git clone https://gitlab.demlabs.net/cellframe/cellframe-node.git --recursive
-  ```
-
-#### Build cellframe using cmake framework
-Get into directory with cellframe-node and execute the following commands
-  ```
-  mkdir build
-  cd build
-  cmake ../
-  make -j$(nproc)
-  ```
-*-j$(nproc)* nrpoc parameter depends on your machine capacity - number of processor cores.
-As a result, you should be able to fine make files in your build folder which will be used by cpack command to create an installation package.
-
-#### Build cellframe-node packages for MacOS
-Right now you can just type ```make install``` and it will install all the files in your system at /Applications/CellFrameNode.app
-
-#### Build cellframe-node package for Linux
-Use the following command ```cpack``` from the build directory to create cellframe-node installation package:
-
-```
-cpack
+```bash
+git clone --recurse-submodules \
+  https://gitlab.demlabs.net/cellframe/cellframe-node.git
+cd cellframe-node
 ```
 
+Если клон уже создан без сабмодулей:
+
+```bash
+git submodule update --init --recursive
 ##### Install from local package
-If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb``` 
+If everyting went well you should be able to find the following file in your build folder ```cellframe-node-5.7-Debian-...-amd64.deb``` (the exact name depends on your distribution and build date).
 
 Please use ```dpkg``` command to install it:
 ```
-sudo dpkg -i ./cellframe-node-5.2-0-Debian-21.10-amd64-impish-dbg.deb
+sudo dpkg -i ./cellframe-node-5.7-Debian-...-amd64.deb
 ```
 
-In some cases there is a following command required to be executed
-```
-sudo apt --fix-broken install
+### Сборка и запуск из дерева сборки
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+cd build
+./cellframe-node
 ```
 
-##### Install from DemLabs official public repository
+По умолчанию узел ищет `cellframe-node.cfg` относительно каталога
+исполняемого файла. Для локальной сборки используйте конфигурацию,
+установленную в `build/etc/cellframe-node.cfg`, или явно скопируйте
+шаблон из `dist/share/configs/cellframe-node.cfg`. Перед выходом в сеть
+проверьте выбранные сети, адреса прослушивания и пути к данным.
 
+### Создание пакета
 * Create file /etc/apt/sources.list.d/demlabs.list with command ```sudo nano /etc/apt/sources.list.d/demlabs.list``` with one line below 
 
+* For Debian 12 (Bookworm):
+  ```
+  deb https://debian.pub.demlabs.net/public bookworm main
+  ```
 * For Debian 11:
   ```
   deb https://debian.pub.demlabs.net/public bullseye main
@@ -152,93 +147,429 @@ To share VPN service you must have a node with master role.
 #### Node base configuration
 Open ```/opt/cellframe-node/etc/cellframe-node.cfg``` with command ```sudo nano /opt/cellframe-node/etc/cellframe-node.cfg``` and find next section:
 
+```bash
+cmake --build build --target package
 ```
-# VPN stream channel processing module
-[srv_vpn]
-#   Turn to true if you want to share VPN service from you node
+
+Пакет формируется средствами CPack в каталоге `build/`.
+
+### Установка
+
+Поддерживаются два основных способа:
+
+- из официального репозитория Cellframe:
+  `sudo apt-get install cellframe-node`;
+- из локально собранного `.deb`-пакета:
+  `sudo dpkg -i build/cellframe-node-<version>_<codename>-<arch>.deb`,
+  при необходимости затем `sudo apt --fix-broken install`.
+
+Точные версии пакета и поддерживаемые дистрибутивы смотрите в
+установочных инструкциях Wiki. При установке пакет может создавать
+собственного пользователя, systemd-юнит и служебные каталоги; после
+установки типовой путь конфигурации:
+
+```text
+/opt/cellframe-node/etc/cellframe-node.cfg
+```
+
+После изменения конфигурации перезапустите службу:
+
+```bash
+sudo systemctl restart cellframe-node
+sudo systemctl status cellframe-node
+```
+
+## RPC и CLI
+
+У ноды есть два разных, но родственных входа для команд.
+
+### Локальный CLI/RPC
+
+Секция `[cli-server]` управляет локальным console/CLI-сервером. Он
+слушает unix-сокет и/или TCP-адрес и принимает JSON-RPC-запросы.
+В конфигурации это секция вида:
+
+```ini
+[cli-server]
 enabled=true
-#   List of local security access groups. Built in: expats,admins,services,nobody,everybody
-network_address=10.11.12.0
-network_mask=255.255.255.0
-net=KelVPN
-wallet_addr=
-receipt_sign_cert=my_awesome_cert
+version=1
+#listen-path=[../var/run/node_cli]
+#listen-address=[127.0.0.1:12345]
+#http-index-path=../share/docs/rpc
 ```
 
-Turn ```enabled``` parameter to ```true``` thats enable VPN service on your node. Then, the next lines ```network_address``` and ```network_mask``` usually you don't need to touch. Default configuration reserves network addresses for 254 connections at one time, if you have more - change network mask to smth like ```255.255.0.0``` and network address to ```10.11.0.0``` thats gives you 4095 local addresses. 
-Thats important - all the addresses are local and used only inside virtual private network (VPN). For this address and mask also should be configured OS - should be present DNS server, switched on IP4 forwarding and configured NAT. Example of such configurations are below.
-The next line ```net``` sets the name of the network on which the service will be shared.
-Line ```wallet_addr``` sets the address of the wallet to which the payment for the service sharing will be sent.
-Line ```receipt_sign_cert``` sets the name of the certificate for signing receipts. Must match the master node certificate.
+Параметры секции:
 
-#### Pricelist config
-To set the price for VPN services, you need to create an order with the corresponding values. An example of creating an order will be presented below. If you do not create an order and enable VPN sharing the service will not start. To share service for free turn ```allow_free_srv``` parameter in ```[srv_vpn]``` section to ```true``` and create order with zero price.
+- `enabled` — включить или отключить CLI/RPC-сервер;
+- `version` — версия протокола `1` или `2`;
+- `listen-path` — список unix-сокетов, например
+  `../var/run/node_cli`;
+- `listen-address` — TCP-адрес и порт вида `127.0.0.1:12345`;
+- `http-index-path` — каталог HTML-документации RPC.
 
-#### DNS server install
+Помимо этих настроек в `dap-sdk/net/server/cli_server/dap_cli_server.c`
+поддерживаются ограничительные параметры:
 
-Install DNS server, it could be any other than Bind9 but for example we will use exactly thats one - did we test this with any other? at a least a couple of others?
+- `max_inflight` — максимальное число одновременных обычных запросов
+  (по умолчанию `32`);
+- `max_inflight_heavy` — лимит для тяжёлых операций, помеченных
+  соответствующим флагом (по умолчанию `4`);
+- `allowed_cmd` — белый список методов, разрешённых для не-локальных
+  вызовов;
+- `allowed_cmd_control` — включает проверку `allowed_cmd` (по умолчанию
+  `false`);
+- `rate_limit`, `rate_limit_rps` и `rate_limit_burst` — token-bucket
+  ограничение частоты запросов на IPv4-/16 подсеть источника; по
+  умолчанию `false`, `20` и `40`.
 
-```sudo apt-get install bind9```
+При перегрузке сервер отвечает `HTTP/1.1 429 Too Many Requests` вместо
+неопределённо долгого удержания соединения, а после локального завершения
+команды соединение закрывается.
 
-#### Switch on IPv4 forwarding 
+Запрос к локальному порту:
 
-Open ```/etc/sysctl.conf``` with command ```sudo nano /etc/sysctl.conf``` and find line 
-```
-# Uncomment the next line to enable packet forwarding for IPv4
-#net.ipv4.ip_forward=1
-```
-
-Uncomment ```net.ipv4.ip_forward=1``` as the comment above suggests. Then after you've changed them and saved changes, implement them with:
-```
-sudo sysctl -p
-```
-Then after reboot they will be implemented automatically - do we need to specify a reboot command?
-
-
-#### Configuring firewall with NAT
-
-Easiest way is to install ```arno-iptables-firewall``` with the next command:
-```
-sudo apt-get install arno-iptables-firewall
-```
-It would ask next questions:
-
-*  `Do you want to manage the firewall setup with debconf` answer `Yes`
-*  `External network interfaces` answer with you network interface thats used for internet access. Usually its `eth0` or `wifi0` but could be different, examine you network configuration first.
-*  `Open external TCP-ports` answer `8079` or what the port do you configured for cellframe node when it was installed
-*  `Open external UDP-ports:` answer same as in previous
-*  `Internal network interfaces` answer `tun0` if you haven't configured any other VPN servers. If they are - find what the tunnel number is biggest and list all of them here with your tunnel name (`tun<max number plus 1>` )
-*  `Internal subnets ` here should be network_adddres/network_mask from VPN service configuration, ```10.11.12.0/255.255.255.0``` in our example
-*  `Should be restarted` answer `No` becase we need some more configs
-
-Now lets increase config ask level and reconfigure the package with the next command:
-```
-sudo dpkg-reconfigure -plow arno-iptables-firewall
-``` 
-
-For answers where you'll see right answers just press enter to skip them. Then the next questions should appears:
-* `Is DHCP used on external interfaces? ` usually answer `Yes`, answer `No` only if you have static network configuration for external connections
-* `Should the machine be pingable from the outside world?` answer `Yes` because we use pings for network speed measurements
-* `Do you want to enable NAT? ` answer `Yes`
-* `Internal networks with access to external networks:` here you list internal networks again, ```10.11.12.0/255.255.255.0``` in our example
-* `Should the firewall be (re)started now?` now answer `Yes` and have everything ready for routing
-
-
-### How to run 
-
-If the node is installed in your system you need only to check it if its runned on your system
-```
-  sudo service cellframe-node status
-```
-And if its not runned - start it. Start after reboot should be automaticaly executed.
-```
-  sudo service cellframe-node start
+```bash
+curl -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  --data '{"method":"version","params":[""],"id":1,"version":1}'
 ```
 
-To stop it use the next command:
+Текстовый режим CLI доступен через штатную утилиту `cellframe-node-cli`:
+
+```bash
+cellframe-node-cli wallet info -w my_wallet -net Backbone
+cellframe-node-cli help
+cellframe-node-cli help wallet
 ```
-  sudo service cellframe-node stop
+
+### Отдельный HTTP-RPC сервис (`[rpc-server]`)
+
+Помимо CLI-порта и подписанного `/exec_cmd`, нода умеет поднимать
+**отдельный JSON-RPC сервис на штатном dap HTTP** — без шифрования,
+сессий и проверки подписи, то есть заметно дешевле на запрос. Он
+слушает свой адрес и настраивается в своей секции:
+
+```ini
+[rpc-server]
+enable=true
+listen-address=[0.0.0.0:12400]
+#allowed_cmd_control=true
+#allowed_cmd=[version,net,node,block,token,global_db]
+#max_request_size=1048576
 ```
+
+Запросы — обычный JSON-RPC 2.0 поверх POST (или PUT) на `/` и `/rpc`:
+
+```bash
+curl -s -H 'Content-Type: application/json' \
+     -d '{"method":"version","params":[],"id":1}' http://127.0.0.1:12400/
+```
+
+Публичные и приватные команды разделяет `allowed_cmd_control`:
+
+* `true` (по умолчанию) — вызовы с **не-loopback** адресов могут
+  запускать только команды из `allowed_cmd` (остальные получают 403
+  с текстом ошибки в JSON); с loopback доступен весь набор команд.
+  Важно: loopback определяется по адресу пира, поэтому reverse proxy
+  на том же хосте выглядит как loopback — ограничивайте списком
+  `allowed_cmd`;
+* `false` — весь набор команд открыт всем (только за собственным
+  гейткепером).
+
+Список команд: `GET /` отдаёт JSON-массив всех зарегистрированных
+команд с их описанием и флагом `public` (то есть стала бы команда
+выполняться для не-loopback вызывающего при текущей конфигурации).
+Готовность ноды: `GET /health` — 200, либо 503 с `Retry-After`, если
+нода ещё грузит сети (те же правила, что у CLI-порта).
+
+Ограничения и защита: тело запроса ограничено `max_request_size`
+(больше — 413), превышение лимита одновременных запросов даёт 503 с
+`Retry-After: 1`, а per-source бюджет (по /16) общий с CLI-портом и
+`/exec_cmd` — при флуде запрос получает 429 вместо очереди. Выполнение
+идёт через тот же счётчик inflight/heavy, что и у CLI, поэтому тяжёлые
+команды не обходят общие ограничения.
+
+### Кэширование, лимитеры и RPC-сервер: практическое руководство
+
+Все кэши, лимитеры и RPC-точки настраиваются в `etc/cellframe-node.cfg`
+(или drop-in'ами в `etc/cellframe-node.cfg.d/*.cfg` — они применяются поверх
+базового конфига). Значения ниже — дефолты кода: если ручка закомментирована,
+поведение именно такое.
+
+#### Кэши (включены по умолчанию)
+
+| Кэш | Секция / ручка | Дефолт | Что делает |
+|---|---|---|---|
+| Леджер | `[ledger] cache_enabled` | `true` | Перезапуск читает состояние (txs, токены, эмиссии, балансы) из GlobalDB вместо репроцессинга каждой цепи. Сброс: `cellframe-node-cli ledger cache reset -net <сеть> [-reload]` — пересборка при следующей загрузке цепей, `-reload` перезагружает сеть сразу |
+| DEX-книга + история | `[srv_dex] cache_enabled` | `true` | Ордера и события в RAM; запросы history/orders/orderbook не трогают GlobalDB на чтении |
+| DEX serialized-reply LRU | `[srv_dex] history_cache_max_entries` / `history_cache_max_mbytes` / `history_cache_ttl_sec` | 256 / 64 МБ / 10 с | Повтор запроса выдаёт готовый ответ (инвалидация по версии книги/событий пары + TTL) |
+| Индекс адресов | `[wallets] wallets_cache` | `local` | `disable` — индекса нет (медленный скан); `local` — только локальные кошельки; `all` — все адреса сети (нужно для `wallet outputs` по произвольным адресам). Прогрев: первая старт-загрузка, потом инкрементально |
+| 503 при прогреве | `[wallets] wallets_cache_cold_reply_unavailable` | `true` | При `wallets_cache=all` и непрогретом индексе — быстрый 503 + Retry-After вместо медленного скана леджера |
+| Дамп блоков | (без ручки) | 32 зап. / 64 МБ / 300 с | LRU сериализованных ответов; сбрасывается при purge/форке |
+
+#### Лимитеры и защита от перегрузки
+
+| Ручка | Секция | Дефолт | Что делает |
+|---|---|---|---|
+| `max_inflight` | `[cli-server]` | 2 × CPU (4…32) | Максимум одновременных запросов; сверх — HTTP 503 + `Retry-After: 1`. Ручка читается только из `[cli-server]` — RPC-порт и `/exec_cmd` разделяют те же счётчики |
+| `max_inflight_heavy` | `[cli-server]` | CPU / 4 (1…4) | Отдельный слот для тяжёлых команд (walk по цепи/леджеру/истории адреса): `wallet outputs`, `tx_history`, `block/dag list`, `srv_dex history/orders/orderbook` |
+| `rate_limit` | `[cli-server]` | `false` | Per-`/16` token-bucket для не-loopback вызовов (действует и на RPC-порт); сверх — HTTP 429 |
+| `rate_limit_rps` / `rate_limit_burst` | `[cli-server]` | 20 / 40 | Параметры бакета: устоявшийся rate и burst |
+| `max_request_size` | `[server]` — 16 МБ; `[rpc-server]` — 1 МБ | 16 МБ / 1 МБ | Лимит тела запроса (своя копия у каждой секции); сверх — HTTP 413 |
+
+**Счётчики inflight общие** для CLI-порта, подписанного `/exec_cmd` и plain
+RPC-сервиса: обход одной точкой входа не обходит лимиты другой.
+
+#### RPC-сервер: включение и управление
+
+Три точки входа, один набор команд:
+
+1. **CLI-порт** (`[cli-server]`, TCP/unix) — родной протокол `cellframe-node-cli`.
+2. **Подписанный `/exec_cmd`** (`[server] exec_cmd=[<pkey hash>]`) — JSON-RPC поверх HTTP с обязательной подписью тела.
+3. **Plain HTTP-RPC** (`[rpc-server]`) — отдельный listener без шифрования/подписи (самый быстрый, для краулеров за балансировщиком).
+
+Включение plain RPC:
+
+```ini
+[rpc-server]
+enable=true
+listen-address=[0.0.0.0:12400]
+allowed_cmd_control=true          # true: не-loopback — только allowed_cmd
+allowed_cmd=[version,net,node,block,token,global_db]
+max_request_size=1048576
+```
+
+Проверка:
+
+```bash
+# params[0] = "имя_команды;арг1;арг2;..." — имя дублируется из method, дальше аргументы
+curl -s -H 'Content-Type: application/json' \
+     -d '{"method":"version","params":["version"],"id":1}' http://127.0.0.1:12400/
+
+# команда с аргументами: cellframe-node-cli net list chains -net Backbone
+# (params[0] начинается с имени команды, дальше аргументы через ';')
+curl -s -H 'Content-Type: application/json' \
+     -d '{"method":"net","params":["net;list;chains;-net;Backbone"],"id":2}' http://127.0.0.1:12400/rpc
+
+# список доступных команд с флагом public (что доступно не-loopback)
+curl -s http://127.0.0.1:12400/
+
+# готовность (200/503 + Retry-After) — для балансировщика
+curl -s http://127.0.0.1:12400/health
+```
+
+Публичные и приватные команды: `allowed_cmd_control=true` — не-loopback вызывающий
+может запускать только команды из `allowed_cmd`; loopback (127.0.0.1 / ::1) — весь
+набор. `false` — весь набор всем (только за собственным гейткипером). Loopback
+определяется по адресу пира — reverse proxy на том же хосте выглядит как loopback.
+
+HTTP keep-alive включён (HTTP/1.1 persistent, `Connection: close` работает как обычно) —
+повторные запросы идут по одному соединению.
+
+#### Диагностика
+
+- `GET /health` на CLI-порту и на RPC-порту: 200 когда все сети ONLINE и (при
+  `wallets_cache=all`) индекс адресов прогрет; 503 + причина + `Retry-After`.
+- `cellframe-node-cli ledger cache reset -net <сеть> [-reload]` — очистка кэша
+  леджера; леджер пересобирается при следующей загрузке цепей, а `-reload`
+  сразу запускает перезагрузку сети. Перезагрузка — явный opt-in: локальный
+  рескан без снапшота не завершается, поэтому для лечения повреждённого
+  леджера сеть нужно ресинхронизировать с пиров.
+
+### Удалённый JSON-RPC через `/exec_cmd`
+
+Секция `[server]` включает общий HTTP-сервер ноды. Для удалённых вызовов
+зарегистрирован путь `/exec_cmd`:
+
+```ini
+[server]
+enabled=true
+listen-address=[0.0.0.0:8079]
+#exec_cmd=[<authorized public-key hash>]
+#max_request_size=16777216
+```
+
+Для HTTP-сервера используется ключ `listen-address` (дефис в имени
+параметра, как в `dap-sdk/io/include/dap_net.h`).
+HTTP-запрос на `/exec_cmd` должен быть подписан; список доверенных
+ключей задаётся параметром `exec_cmd`. Запросы к другим путям общего
+HTTP-сервера не являются заменой CLI RPC.
+
+`max_request_size` — верхняя граница тела HTTP-запроса в байтах
+(по умолчанию 16 МБ, диапазон 1 КБ–16 МБ); всё, что больше, получает
+`413 Payload Too Large` вместо аллокации.
+
+### Требование метаданных комитета (ESBOCS)
+
+В конфигурации сети (`etc/<net>.cfg`, секция `[esbocs]`) доступен ключ:
+
+```ini
+[esbocs]
+#require_signs_meta_since=0
+```
+
+Блоки, созданные после указанного unix-времени, обязаны нести метаданные
+комитета (`SYNC_ATTEMPT` и др.); без них они отклоняются. `0` (по умолчанию)
+проверку отключает — исторические блоки и смешанные версии сети работают
+как раньше. Включайте после того, как все сабмиттеры сети обновились до
+сборки, штампующей метаданные всегда.
+
+### RPC-документация и self-help
+
+Да, на актуальной сборке сервер сам отдаёт встроенную HTML-документацию:
+при запуске вызывается `dap_cli_http_docs_init("cli-server")`, а
+GET-запросы обрабатывает `dap_cli_http_docs_try_get()` в
+`dap-sdk/net/server/cli_server/dap_cli_http_docs.c`.
+
+Откройте корневой адрес CLI/RPC-сервера:
+
+```bash
+curl http://127.0.0.1:12345/
+```
+
+Например, `http://127.0.0.1:12345/` отдаёт индекс с доступными
+модулями RPC. Страницы доступны и напрямую:
+
+- `/help.html` — справочник вызова команды через RPC;
+- `/wallet.html`, `/net.html`, `/block.html`, `/tx_history.html` и т.д.
+  — документация по соответствующим RPC-командам;
+- `/rpc-app.js` и `/rpc-theme.css` — интерфейс и оформление справочника.
+
+Документация берётся из `http-index-path` относительно каталога, где
+находится `cellframe-node.cfg`. Для типового пакетного пути
+`/opt/cellframe-node/etc` и значения по умолчанию
+`http-index-path=../share/docs/rpc` это означает
+`/opt/cellframe-node/share/docs/rpc`.
+
+Помимо HTML-справочника, команда `help` возвращает текстовую справку по
+всем зарегистрированным RPC-командам:
+
+```bash
+cellframe-node-cli help
+cellframe-node-cli help wallet
+```
+
+или эквивалентным JSON-RPC-запросом. Таким образом, актуальную справку
+можно открыть прямо в браузере или получить через RPC, не обращаясь к
+отдельному внешнему документу.
+
+## Напоминание о безопасности
+
+Не выставляйте RPC-порт без необходимости. По умолчанию используйте
+loopback/ unix-сокет или reverse proxy; при включении TCP проверьте:
+
+- список `allowed_cmd` для удалённых вызовов;
+- привязку к нужному интерфейсу и файрвол;
+- лимиты `max_inflight`, `max_inflight_heavy` и rate-limit;
+- доступность и корректность локальной HTML-документации, если она
+  включена на публичном узле.
+
+## Удаление
+
+```bash
+sudo apt-get remove cellframe-node
+```
+
+Конфигурационные и рабочие каталоги могут сохраняться; при необходимости
+удалите `/opt/cellframe-node` и связанные данные только после резервной
+копии и проверки, что служба остановлена.
+
+### Working with the RPC interface
+
+Besides the `cellframe-node-cli` command line tool, the node exposes a **JSON-RPC 2.0**
+interface over HTTP. Both share the same command set (wallet, tx_create, token, net,
+memPool, block, version, etc.): every CLI command is available as an RPC `method`, and its
+positional arguments are passed as the `params` array.
+
+The interface is provided by the `[cli-server]` section of
+`/opt/cellframe-node/etc/cellframe-node.cfg`.
+
+#### Configuration
+
+```
+[cli-server]
+enabled=true
+# Protocol version of the RPC/CLI command layer (default 1)
+version=1
+# Unix domain socket used by cellframe-node-cli by default
+listen-path=[../var/run/node_cli]
+# HTTP address:port to serve JSON-RPC and the built-in docs.
+# Loopback by default; bind 0.0.0.0 to expose it to your LAN.
+listen-address=[127.0.0.1:12345]
+# Uncomment to serve the unix socket only (no HTTP/TCP listener)
+#unix-only
+# Static RPC documentation directory (relative to the config dir). See below.
+http-index-path=../share/docs/rpc
+# Optional: restrict which RPC methods remote (non-loopback) clients may call.
+# A space/comma separated list of method names, e.g.:
+#allowed_cmd=[version,net,block,tx_create_json]
+# Extra logging
+#debug_more=false
+```
+
+After editing the config, restart the node: `sudo service cellframe-node restart`.
+
+#### Security model
+
+- Connections coming from a **unix socket or from loopback (127.0.0.1 / ::1)** are trusted
+  and can call every method.
+- Connections from any **other address** are restricted: only the methods listed in
+  `allowed_cmd` are accepted, everything else returns a `Command "..." is restricted` error.
+- If you don't need HTTP at all, set `unix-only` (or leave `listen-address` commented) so
+  only the local unix socket is served.
+- Binding `listen-address` to `0.0.0.0`/a public IP exposes node management to the network —
+  always set `allowed_cmd` in that case, or keep it loopback-only and reach it via an
+  authenticated reverse proxy.
+
+#### Built-in self-documented interface (open it in a browser)
+
+The RPC endpoint doubles as a small web documentation server. Point a browser at the HTTP
+`listen-address` (e.g. **http://127.0.0.1:12345/**) and you get an interactive HTML
+reference generated from the docs in `http-index-path` (installed at
+`/opt/cellframe-node/share/docs/rpc`): a method list grouped per module (block, wallet,
+token, mempool, net, net_srv, srv_xchange, stake_lock, tx_create_json, tx_history,
+version, …) with a **Try-it-out** form that issues the JSON-RPC request for you.
+
+Notes on the docs server:
+- `GET /` (or `/index.html`) returns the auto-generated index; each module is also served
+  at `/<module>.html`.
+- Only modules allowed by `allowed_cmd` are shown for the corresponding audience; if
+  `allowed_cmd` is unset, all present docs are served.
+- If `http-index-path` doesn't exist on disk, the server falls back to a minimal stub page
+  (application name, `DAP_VERSION` and build hash) instead of erroring.
+- CORS is enabled (`Access-Control-Allow-Origin: *`, `GET`/`POST`/`OPTIONS`), so the UI can
+  call the RPC from a browser on another origin. Symlinks and path traversal are rejected.
+
+#### Making raw JSON-RPC requests
+
+Send a JSON-RPC 2.0 object with the `method` and the `params` array via HTTP POST:
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"version","params":[],"id":1}'
+```
+
+A call that returns a value, e.g. listing wallets:
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"wallet","params":["list"],"id":2}'
+```
+
+Transactions can also be built from a JSON body using the dedicated
+`tx_create_json` method (see the `tx_create_json` module in the web docs for its schema):
+
+```
+curl -s -X POST http://127.0.0.1:12345/ \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"tx_create_json","params":["{\"net\":\"minkowski\", ... }"],"id":3}'
+```
+
+Successful calls return `{"result": ... ,"id":N}`; errors return `{"error":{"code":...,"message":...}}`.
+To discover every method and its exact parameters without reading code, open the web docs
+at the `listen-address` — that is the intended, always-up-to-date reference for the RPC.
 
 ### How to publish service in network 
 

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>net — Cellframe Node RPC</title>
+<style>
+body { font-family: sans-serif; max-width: 960px; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+pre { background: #f4f4f4; padding: 1em; overflow-x: auto; }
+code { font-family: monospace; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.note { background: #fff8e1; border-left: 4px solid #ffc107; padding: 0.6em 1em; }
+</style>
+</head>
+<body>
+
+<h1>net</h1>
+<p>Network commands — list networks/chains, inspect status and fees, view links and statistics, manage sync state.</p>
+<p>Verified against public RPC <code>http://rpc.cellframe.net/</code> (networks: <code>Backbone</code>, <code>KelVPN</code>).</p>
+
+<h2>JSON-RPC request</h2>
+<p>Method name: <code>net</code>. Response <code>type</code> is <code>2</code> (<code>TYPE_RESPONSE_JSON</code>).</p>
+<p>Two request formats are supported. The response <code>version</code> echoes the request <code>version</code> and affects JSON field names in some subcommands (see <a href="#v1-v2-fields">v1 vs v2 field names</a>).</p>
+
+<h3>Version 1 — legacy <code>params</code> string</h3>
+<pre>{
+  "method": "net",
+  "params": ["net;-net;Backbone;get;status"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p><code>params</code> is an array with one string. Every token (command name, subcommand, flag, value) is separated by <code>;</code> — <strong>not spaces</strong>. Example: <code>net;-net;Backbone;get;status</code>.</p>
+
+<h3>Version 2 — <code>subcommand</code> + <code>arguments</code></h3>
+<pre>{
+  "method": "net",
+  "subcommand": "get;status",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}</pre>
+<p><code>subcommand</code> may also be a JSON array (one token per element):</p>
+<pre>{
+  "method": "net",
+  "subcommand": ["get", "status"],
+  "arguments": {"net": "Backbone"},
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Both forms above produce the same internal command: <code>net;get;status;-net;Backbone</code>.</p>
+<p class="note"><strong>Spaces in <code>subcommand</code> do not work.</strong> <code>"get status"</code> is treated as a single unknown token and returns error code 34. Use <code>"get;status"</code> or <code>["get","status"]</code>.</p>
+<p>To use version 2 fields, omit <code>params</code> entirely — if <code>params</code> is present, <code>subcommand</code> / <code>arguments</code> are ignored.</p>
+
+<h4>Version 2 <code>arguments</code> mapping</h4>
+<p>Each key in <code>arguments</code> is prefixed with <code>-</code> automatically. Do not include a leading dash in keys.</p>
+<table>
+<tr><th><code>arguments</code> key</th><th>CLI flag</th><th>Used by</th></tr>
+<tr><td><code>net</code></td><td><code>-net</code></td><td>All subcommands except bare <code>list</code></td></tr>
+<tr><td><code>mode</code></td><td><code>-mode</code></td><td><code>go</code>, <code>sync</code> (<code>update</code> or <code>all</code>)</td></tr>
+<tr><td><code>H</code></td><td><code>-H</code></td><td>Hash output format (<code>hex</code> or <code>base58</code>)</td></tr>
+<tr><td><code>from</code>, <code>to</code>, <code>prev_day</code></td><td><code>-from</code>, <code>-to</code>, <code>-prev_day</code></td><td><code>stats tx</code></td></tr>
+<tr><td><code>cert</code>, <code>hash</code></td><td><code>-cert</code>, <code>-hash</code></td><td><code>ca add</code>, <code>ca del</code></td></tr>
+</table>
+<p>Argument values must be strings (or <code>null</code>/empty string for bare flags). JSON numbers and booleans are rejected.</p>
+
+<h2>Global options</h2>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>-H hex|base58</code></td><td>Hash output format (default: <code>hex</code>).</td></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>Network selector (required for all subcommands except bare <code>net list</code>).</td></tr>
+<tr><td><code>-mode update|all</code></td><td>Sync mode for <code>go</code> / <code>sync</code>. Default: <code>update</code> (incremental). <code>all</code> rebuilds from zero.</td></tr>
+</table>
+
+<h2>Subcommands</h2>
+<table>
+<thead>
+<tr><th>Subcommand</th><th>Description</th><th>Public RPC</th></tr>
+</thead>
+<tbody>
+<tr><td><code>list</code></td><td>List network names, or with <code>chains</code> list chain details.</td><td>tested</td></tr>
+<tr><td><code>get status|fee|id</code></td><td>Network status, fee info, or network ID.</td><td>tested</td></tr>
+<tr><td><code>stats tx</code></td><td>Transaction statistics for a time range.</td><td>tested</td></tr>
+<tr><td><code>link list</code></td><td>List active uplinks/downlinks.</td><td>tested</td></tr>
+<tr><td><code>link add|del|info</code></td><td>Link management — currently returns <code>"Not implemented"</code>.</td><td>tested (stub)</td></tr>
+<tr><td><code>poa_certs list</code></td><td>List PoA certificate public-key hashes configured for the network.</td><td>tested</td></tr>
+<tr><td><code>ca list</code></td><td>List authority certificates from GDB ACL group.</td><td>error on public node (no ACL group)</td></tr>
+<tr><td><code>go online|offline|sync</code></td><td>Change network state / resync.</td><td>tested</td></tr>
+<tr><td><code>sync</code></td><td>Trigger network sync (returns state machine info).</td><td>tested</td></tr>
+<tr><td><code>link disconnect_all</code></td><td>Stop network and disconnect all links.</td><td class="note">state-changing — not tested on public node</td></tr>
+<tr><td><code>ledger reload</code></td><td>Purge ledger cache and reload from chain files.</td><td class="note">state-changing — not tested on public node</td></tr>
+<tr><td><code>ca add</code></td><td>Add CA cert by <code>-cert</code> or <code>-hash</code>.</td><td class="note">requires local certificate — not testable on public node</td></tr>
+<tr><td><code>ca del -hash</code></td><td>Delete CA cert by hash.</td><td class="note">requires local certificate / write access — not testable on public node</td></tr>
+</tbody>
+</table>
+<p><code>go</code> and <code>sync</code> are allowed on <code>rpc.cellframe.net</code> and change the public node&rsquo;s network state. Use with care.</p>
+
+<h2>Subcommand syntax (CLI / v1 params)</h2>
+<pre>net;list
+net;list;chains                          # all networks with chain details
+net;list;chains;-net;&lt;net_name&gt;         # chain names for one network
+
+net;-net;&lt;net_name&gt;;get;status
+net;-net;&lt;net_name&gt;;get;fee
+net;-net;&lt;net_name&gt;;get;id
+
+net;-net;&lt;net_name&gt;;stats;tx
+net;-net;&lt;net_name&gt;;stats;tx;-from;2026-07-01_00:00:00;-to;2026-07-02_00:00:00
+net;-net;&lt;net_name&gt;;stats;tx;-prev_day;1
+
+net;-net;&lt;net_name&gt;;link;list
+net;-net;&lt;net_name&gt;;link;add            # returns "Not implemented"
+net;-net;&lt;net_name&gt;;link;del            # returns "Not implemented"
+net;-net;&lt;net_name&gt;;link;info           # returns "Not implemented"
+net;-net;&lt;net_name&gt;;link;disconnect_all
+
+net;-net;&lt;net_name&gt;;poa_certs;list
+net;-net;&lt;net_name&gt;;ca;list
+net;-net;&lt;net_name&gt;;ca;add;-cert;&lt;cert_name&gt;
+net;-net;&lt;net_name&gt;;ca;add;-hash;&lt;cert_hash&gt;
+net;-net;&lt;net_name&gt;;ca;del;-hash;&lt;cert_hash&gt;
+
+net;-net;&lt;net_name&gt;;-mode;update;go;online
+net;-net;&lt;net_name&gt;;-mode;all;go;offline
+net;-net;&lt;net_name&gt;;go;sync
+net;-net;&lt;net_name&gt;;sync
+net;-net;&lt;net_name&gt;;ledger;reload</pre>
+<p><code>stats tx</code> time format: <code>YYYY-MM-DD_HH:MM:SS</code>. If <code>-from</code> is omitted, defaults to last 24 hours. <code>-to</code> defaults to now. Use <code>-prev_day &lt;days&gt;</code> as an alternative to <code>-from</code>/<code>-to</code>.</p>
+<p>CLI help mentions <code>stats tps</code> and <code>sync {all|gdb|chains}</code>, but the current implementation only handles <code>stats tx</code> and calls a single sync routine without sub-arguments.</p>
+
+<h2>Example requests</h2>
+
+<h3>Version 1</h3>
+<pre>{"method":"net","params":["net;list"],"id":1,"version":1}
+
+{"method":"net","params":["net;list;chains;-net;Backbone"],"id":2,"version":1}
+
+{"method":"net","params":["net;-net;KelVPN;get;status"],"id":3,"version":1}
+
+{"method":"net","params":["net;-net;Backbone;get;fee"],"id":4,"version":1}
+
+{"method":"net","params":["net;-net;KelVPN;stats;tx;-prev_day;1"],"id":5,"version":1}
+
+{"method":"net","params":["net;-net;Backbone;link;list"],"id":6,"version":1}
+
+{"method":"net","params":["net;-net;KelVPN;poa_certs;list"],"id":7,"version":1}</pre>
+
+<h3>Version 2 (verified on rpc.cellframe.net)</h3>
+<pre>{"method":"net","subcommand":"list","id":1,"version":2}
+
+{"method":"net","subcommand":"list;chains","arguments":{"net":"Backbone"},"id":2,"version":2}
+
+{"method":"net","subcommand":"get;status","arguments":{"net":"Backbone"},"id":3,"version":2}
+
+{"method":"net","subcommand":["get","status"],"arguments":{"net":"Backbone"},"id":4,"version":2}
+
+{"method":"net","subcommand":"get;fee","arguments":{"net":"Backbone"},"id":5,"version":2}
+
+{"method":"net","subcommand":"stats;tx","arguments":{"net":"Backbone","prev_day":"1"},"id":6,"version":2}
+
+{"method":"net","subcommand":"link;list","arguments":{"net":"Backbone"},"id":7,"version":2}
+
+{"method":"net","subcommand":"go;online","arguments":{"net":"Backbone"},"id":8,"version":2}
+
+{"method":"net","subcommand":"go;sync","arguments":{"net":"KelVPN","mode":"update"},"id":9,"version":2}
+
+{"method":"net","subcommand":"sync","arguments":{"net":"Backbone"},"id":10,"version":2}</pre>
+
+<h2>Response envelope</h2>
+<p><code>net</code> is a JSON-response command. On success, HTTP body contains:</p>
+<pre>{
+  "type": 2,
+  "result": [ { ... } ],
+  "id": 1,
+  "version": 2
+}</pre>
+<ul>
+<li><code>type</code> — <code>2</code> (<code>TYPE_RESPONSE_JSON</code>)</li>
+<li><code>result</code> — JSON array of result objects (or error objects)</li>
+<li><code>id</code> — echoes the request <code>id</code></li>
+<li><code>version</code> — RPC protocol version (<code>1</code> or <code>2</code>)</li>
+</ul>
+<p>On error, the <code>result</code> array contains an object with an <code>errors</code> array (not a top-level JSON-RPC <code>error</code> field):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 103, "message": "Network UnknownNet not found" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2 id="v1-v2-fields">v1 vs v2 response field names</h2>
+<p>Most <code>net</code> subcommands return the same field names regardless of request version. The main difference is in <code>get status</code> chain sync details under <code>status.processed.&lt;chain&gt;</code>:</p>
+<table>
+<tr><th>Version 1</th><th>Version 2</th><th>Context</th></tr>
+<tr><td><code>in network</code></td><td><code>in_network</code></td><td>Total atoms in network for each chain</td></tr>
+</table>
+<p>Push-notification payloads (not returned by CLI/RPC commands) also use version-dependent class names: <code>NetInfo</code>/<code>net_info</code>, <code>NetList</code>/<code>net_list</code>, <code>errorMessage</code>/<code>error_message</code>.</p>
+
+<h2>Response fields (verified on rpc.cellframe.net)</h2>
+
+<h3>net list</h3>
+<pre>{
+  "result": [
+    { "networks": ["KelVPN", "Backbone"] }
+  ]
+}</pre>
+
+<h3>net list chains (all networks)</h3>
+<pre>{
+  "result": [
+    {
+      "networks": [
+        {
+          "name": "Backbone",
+          "chain": [
+            {
+              "name": "zerochain",
+              "default_types": ["token", "emission", "ca", "decree"]
+            },
+            {
+              "name": "main",
+              "default_types": ["transaction", "anchor"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre>
+
+<h3>net list chains -net &lt;name&gt;</h3>
+<pre>{
+  "result": [
+    {
+      "net": "Backbone",
+      "chains": ["zerochain", "main"]
+    }
+  ]
+}</pre>
+
+<h3>net get status</h3>
+<pre>{
+  "result": [
+    {
+      "status": {
+        "net": "Backbone",
+        "current_addr": "4A57::286A::8CE4::0B50",
+        "links": { "active": 3, "required": 3 },
+        "processed": {
+          "zerochain": {
+            "status": "synced",
+            "current": 106727,
+            "in_network": 106727,
+            "percent": "100.000 %"
+          },
+          "main": {
+            "status": "idle",
+            "current": 542723,
+            "in_network": 542723,
+            "percent": "100.000 %"
+          }
+        },
+        "states": {
+          "current": "NET_STATE_ONLINE",
+          "target": "NET_STATE_ONLINE"
+        }
+      }
+    }
+  ]
+}</pre>
+<p>Example above uses version 2 (<code>in_network</code>). With <code>version: 1</code> the same field is <code>"in network"</code> (with a space). Chain <code>status</code> values: <code>synced</code>, <code>idle</code>, <code>sync in process</code>, <code>error</code>. State strings use <code>NET_STATE_*</code> prefix. <code>links</code> is omitted when the network is offline.</p>
+
+<h3>net get fee</h3>
+<pre>{
+  "result": [
+    {
+      "fees": {
+        "network": {
+          "coins": "0.002",
+          "balance": "2000000000000000",
+          "ticker": "CELL",
+          "addr": "Rj7J7MiX2bWy8sNyX38bB86KTFUnSn7sdKDsTFa2RJyQTDWFaebrj6BucT7Wa5CSq77zwRAwevbiKy1sv1RBGTonM83D3xPDwoyGasZ7"
+        },
+        "validators": {
+          "min": { "balance": "1000000000000", "coin": "0.000001" },
+          "max": { "balance": "10000000000000000000", "coin": "10.0" },
+          "average": { "balance": "62468943222748815", "coin": "0.062468943222748815" },
+          "median": { "balance": "10000000000000000", "coin": "0.01" },
+          "token": "CELL"
+        },
+        "xchange": "service has not announced a commission fee"
+      }
+    }
+  ]
+}</pre>
+<p><code>xchange</code> may be a JSON object when the exchange service reports fees, or a plain string when not configured. Field names are the same on v1 and v2.</p>
+
+<h3>net get id</h3>
+<pre>{
+  "result": [
+    {
+      "network": "Backbone",
+      "id": "0x0404202200000000"
+    }
+  ]
+}</pre>
+
+<h3>net stats tx</h3>
+<pre>{
+  "result": [
+    {
+      "transaction_statistics": {
+        "from": "2026-07-13_09:08:18",
+        "to": "2026-07-14_09:08:18",
+        "transaction_per_day": "1105.000",
+        "total": 1105
+      }
+    }
+  ]
+}</pre>
+
+<h3>net link list</h3>
+<pre>{
+  "result": [
+    {
+      "links": {
+        "uplinks": [
+          {
+            "addr": "1B3B::5AE6::8800::D011",
+            "ip": "159.203.77.225 ",
+            "port": 8079,
+            "channel": "RCGEND",
+            "total_packets_sent": 8160873
+          }
+        ],
+        "downlinks": null
+      }
+    }
+  ]
+}</pre>
+
+<h3>net link add / del / info (stub)</h3>
+<pre>{ "result": [ { "add": "Not implemented" } ] }
+{ "result": [ { "info": "Not implemented" } ] }</pre>
+
+<h3>net poa_certs list</h3>
+<pre>{
+  "result": [
+    {
+      "poa_certs": [
+        "0xCB73427D1124F5EA8068EEFA5AEC91D37888561ED43E737AFD0D08A07BE67809",
+        "0x3B244B31B4DC6DD7791FE34A67712BDD7647648BB9089D0266A6CC245AF70DE4"
+      ]
+    }
+  ]
+}</pre>
+
+<h3>net go (verified on rpc.cellframe.net)</h3>
+<pre>// go online
+{ "result": [ { "net": "Backbone", "current": "NET_STATE_SYNC_CHAINS", "to": "NET_STATE_ONLINE" } ] }
+
+// go offline
+{ "result": [ { "net": "KelVPN", "current": "NET_STATE_ONLINE", "to": "NET_STATE_OFFLINE" } ] }
+
+// go sync
+{ "result": [ { "net": "KelVPN", "current": "NET_STATE_SYNC_CHAINS", "start": "resynchronizing" } ] }</pre>
+<p><code>go online</code> / <code>go offline</code> return <code>to</code> with the target state. <code>go sync</code> returns <code>start: "resynchronizing"</code> instead of <code>to</code>.</p>
+
+<h3>net sync (verified on rpc.cellframe.net)</h3>
+<pre>{
+  "result": [
+    {
+      "state_machine": {
+        "current": "NET_STATE_SYNC_CHAINS",
+        "requested": "SYNC_ALL"
+      }
+    }
+  ]
+}</pre>
+
+<h2>Common error codes</h2>
+<table>
+<tr><th>Code</th><th>When</th></tr>
+<tr><td>34</td><td>Unknown subcommand (e.g. <code>"get status"</code> with a space instead of <code>"get;status"</code>).</td></tr>
+<tr><td>102</td><td>Missing required <code>-net</code> parameter.</td></tr>
+<tr><td>103</td><td>Unknown network name.</td></tr>
+<tr><td>15</td><td><code>stats</code> subcommand requires <code>tx</code>.</td></tr>
+<tr><td>16</td><td><code>go</code> subcommand requires <code>online</code>, <code>offline</code>, or <code>sync</code>.</td></tr>
+<tr><td>22</td><td><code>ca add</code> requires <code>-cert</code> or <code>-hash</code>.</td></tr>
+<tr><td>28</td><td><code>ca list</code> — database ACL group not defined (observed on rpc.cellframe.net).</td></tr>
+</table>
+
+</body>
+</html>

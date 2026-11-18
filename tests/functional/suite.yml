@@ -1,0 +1,25 @@
+suite: Cellframe Node Functional Tests
+description: >
+  Functional tests for individual node subsystems.
+  Each test validates a specific module's CLI commands
+  and behavior on a running network.
+
+network:
+  topology: default
+
+variables:
+  first_root: "node-1"
+  first_master: "node-4"
+
+scenarios:
+  - wallet/test_wallet_lifecycle.yml
+  - token/test_token_lifecycle.yml
+  - transaction/test_transactions.yml
+  - mempool/test_mempool_operations.yml
+  - ledger/test_ledger_queries.yml
+  - global_db/test_global_db.yml
+  - network/test_network_management.yml
+  - dag/test_dag_operations.yml
+  - block/test_block_operations.yml
+  - stake/test_stake_operations.yml
+  - decree/test_decree_and_policy.yml

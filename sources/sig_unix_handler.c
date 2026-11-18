@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -16,7 +17,7 @@
 #include "dap_enc_ks.h"
 #include "dap_enc_http.h"
 #include "dap_http_server.h"
-#include "dap_dns_server.h"
+#include "dap_chain_node_dns_server.h"
 #include "sig_unix_handler.h"
 #include "dap_plugin.h"
 #ifdef DAP_MODULES_DYNAMIC
@@ -40,6 +41,13 @@ static void clear_pid_file() {
 static void sig_exit_handler(int sig_code) {
     log_it(L_DEBUG, "Got exit code: %d", sig_code);
     fflush(stdout);
+    // Persist the ledger state before leaving. The full module deinit chain is
+    // not shutdown-safe here (dap_events_stop_all() wakes the workers, but the
+    // subsequent joins stalled past systemd's stop timeout in testing), so the
+    // snapshot save is done directly; exit(0) keeps the previous stop latency.
+    // Best-effort by design: a stalled save still ends with systemd's SIGKILL,
+    // exactly as before.
+    dap_chain_net_snapshot_save_all();
     exit(0);
     /*clear_pid_file();
 	
@@ -56,7 +64,6 @@ static void sig_exit_handler(int sig_code) {
     dap_enc_ks_deinit();
     enc_http_deinit();
     dap_http_deinit();
-    dap_dns_server_stop();
 #ifdef DAP_MODULES_DYNAMIC
     dap_modules_dynamic_close_cdb();
 #endif

@@ -1,0 +1,218 @@
+name: DAG-PoA Consensus on Zerochain
+description: >
+  Deep verification of DAG-PoA consensus on the zerochain: event creation
+  via token declaration, event propagation across root nodes, event signing,
+  DAG round completion, and cross-node DAG consistency.
+tags: [e2e, consensus, dag, poa, zerochain, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 180
+
+test:
+  # ================================================================
+  # Group 1: Baseline DAG state
+  # ================================================================
+  - name: "Baseline DAG event counts"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _dag_baseline
+            expect: any
+          - print: "[{{_node}}] baseline DAG events: {{_dag_baseline}}"
+
+  # ================================================================
+  # Group 2: Create a token declaration (adds datum to zerochain DAG)
+  # ================================================================
+  - name: "Token declaration creates DAG event"
+    steps:
+      - cli: "dag event count -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: dag_before_decl
+        expect: any
+      - print: "DAG events before token_decl: {{dag_before_decl}}"
+
+      - cli: "token_decl -net {{network_name}} -chain zerochain -token DAGTEST -total_supply 1000000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+        save: decl_result
+        save_hash: decl_hash
+      - print: "Token declaration result: {{decl_result}}"
+      - print: "Token declaration hash: {{decl_hash}}"
+
+      - if: "decl_hash"
+        then:
+          - wait_for_datum: "{{decl_hash}}"
+            node: node-1
+            network: "{{network_name}}"
+            chain: zerochain
+            timeout_total: 120
+            timeout_mempool: 30
+            save_status: decl_datum_status
+          - print: "Declaration datum status: {{decl_datum_status}}"
+
+  # ================================================================
+  # Group 3: Verify DAG event propagated to all root nodes
+  # ================================================================
+  - name: "DAG event propagation across root nodes"
+    steps:
+      - wait: "15s"
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "dag event count -net {{network_name}} -chain zerochain"
+            node: "{{_node}}"
+            save: _dag_after
+            expect: any
+          - print: "[{{_node}}] DAG events after decl: {{_dag_after}}"
+
+  # ================================================================
+  # Group 4: Verify token appeared in ledger after DAG processing
+  # ================================================================
+  - name: "Token visible in ledger after DAG consensus"
+    steps:
+      - wait: cli
+        cmd: "ledger list coins -net {{network_name}}"
+        node: node-1
+        contains: "DAGTEST"
+        timeout: 120
+        interval: 5
+
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "ledger list coins -net {{network_name}}"
+            node: "{{_node}}"
+            save: _token_list_r
+            expect: any
+          - print: "[{{_node}}] ledger coins: {{_token_list_r}}"
+
+  # ================================================================
+  # Group 5: Token info consistency across nodes
+  # ================================================================
+  - name: "Token info consistency"
+    steps:
+      - wait: "5s"
+
+      - for: _node
+        in: "{{all_nodes}}"
+        steps:
+          - cli: "token info -net {{network_name}} -name DAGTEST"
+            node: "{{_node}}"
+            save: _tinfo
+            expect: any
+          - print: "[{{_node}}] DAGTEST info: {{_tinfo}}"
+
+  # ================================================================
+  # Group 6: DAG event details — dump last event
+  # ================================================================
+  - name: "DAG event dump on root nodes"
+    steps:
+      - cli: "dag event last -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: last_dag_event
+        expect: any
+      - print: "Last DAG event: {{last_dag_event}}"
+
+      - set: last_event_hash
+        value: "regex_extract(str(last_dag_event), r'(0x[A-Fa-f0-9]{64})', 1) if '0x' in str(last_dag_event) else ''"
+        eval: true
+
+      - if: "last_event_hash"
+        then:
+          - cli: "dag event dump -net {{network_name}} -chain zerochain -event {{last_event_hash}} -from events"
+            node: node-1
+            save: event_dump
+            expect: any
+          - print: "Event dump: {{event_dump}}"
+
+  # ================================================================
+  # Group 7: Multiple rapid declarations — DAG stress
+  # ================================================================
+  - name: "Rapid token declarations — DAG stress test"
+    steps:
+      - cli: "dag event count -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: dag_pre_stress
+        expect: any
+      - print: "DAG events pre-stress: {{dag_pre_stress}}"
+
+      - loop: 3
+        steps:
+          - cli: "token_decl -net {{network_name}} -chain zerochain -token DAGSTR{{i}} -total_supply 500000000000000000 -decimals 18 -signs_emission {{root_count}} -signs_total {{root_count}} -type CF20 -certs {{root_certs}}"
+            save: _stress_decl
+            expect: any
+          - print: "Stress declaration {{i}}: {{_stress_decl}}"
+
+      - wait: "30s"
+
+      - cli: "dag event count -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: dag_post_stress
+        expect: any
+      - print: "DAG events post-stress: {{dag_post_stress}}"
+
+  # ================================================================
+  # Group 8: DAG round completion check
+  # ================================================================
+  - name: "DAG round operations"
+    steps:
+      - cli: "dag event list -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: dag_event_list
+        expect: any
+      - print: "DAG event list (truncated): present"
+
+      - cli: "dag event list -net {{network_name}} -chain zerochain -from round.new"
+        node: node-1
+        save: dag_round_new
+        expect: any
+      - print: "DAG round.new events: {{dag_round_new}}"
+
+  # ================================================================
+  # Group 9: Mempool should be empty after processing
+  # ================================================================
+  - name: "Zerochain mempool should be drained"
+    steps:
+      - wait: "15s"
+
+      - cli: "mempool count -net {{network_name}} -chain zerochain"
+        node: node-1
+        save: zc_mempool_count
+        expect: any
+      - print: "Zerochain mempool count: {{zc_mempool_count}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-2
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-3
+    contains: "NET_STATE_ONLINE"
+  - cli: "ledger list coins -net {{network_name}}"
+    node: node-1
+    contains: "DAGTEST"

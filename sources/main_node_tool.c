@@ -31,7 +31,6 @@
 #include "dap_common.h"
 #include "dap_config.h"
 #include "dap_cert.h"
-#include "dap_stream.h"
 #include "dap_cert_file.h"
 #include "dap_chain_wallet.h"
 #include "dap_file_utils.h"
@@ -53,7 +52,7 @@ static int s_is_file_available (char *l_path, const char *name, const char *ext)
 static void s_fill_hash_key_for_data(dap_enc_key_t *key, void *data);
 
 static char s_system_ca_dir[MAX_PATH];
-static char s_system_wallet_dir[MAX_PATH - sizeof(".dwallet")];
+static char s_system_wallet_dir[MAX_PATH];
 
 static int s_wallet_create(int argc, const char **argv);
 static int s_wallet_create_from(int argc, const char **argv);
@@ -97,7 +96,7 @@ struct options {
 } s_opts[] = {
 { "wallet", {"create"}, 1, s_wallet_create },
 { "wallet", {"create_from"}, 1, s_wallet_create_from },
-{ "wallet", {"create_wp"}, 1, s_wallet_create_wp},
+{"wallet", {"create_wp"}, 1, s_wallet_create_wp},
 { "wallet", {"pkey", "show"}, 2, s_wallet_pkey_show },
 { "wallet", {"pkey", "show_full"}, 2, s_wallet_pkey_show_full },
 { "cert", {"create"}, 1, s_cert_create },
@@ -109,7 +108,7 @@ struct options {
 { "cert", {"sign"}, 1, s_cert_sign },
 { "cert", {"pkey", "show"}, 2, s_cert_pkey_show },
 { "cert", {"pkey", "show_full"}, 2, s_cert_pkey_show_full },
-{ "cert", {"addr", "show"}, 2, s_cert_get_addr }
+{"cert", {"addr", "show"}, 2, s_cert_get_addr }
 };
 
 #ifdef __ANDROID__
@@ -185,6 +184,7 @@ static int s_wallet_create(int argc, const char **argv) {
       const char *l_wallet_name = argv[3];
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
     dap_chain_wallet_t *l_wallet = NULL;
+    const char *l_seed_str = NULL;
 
     //
     // Check if wallet name has only digits and English letters
@@ -208,11 +208,24 @@ static int s_wallet_create(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type))
+    if (dap_sign_type_is_deprecated(l_sig_type))
     {
         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                 dap_sign_get_str_recommended_types());
         exit( -2004 );
+    }
+
+    // Parse optional -seed argument appearing after required args
+    for (int i = 5; i < argc; i++) {
+        if (!strcmp(argv[i], "-seed")) {
+            if (i + 1 < argc) {
+                l_seed_str = argv[i + 1];
+                i++;
+            } else {
+                log_it(L_ERROR, "Option -seed requires a value\n");
+                exit(-2009);
+            }
+        }
     }
 
     char *l_file_name = dap_strdup_printf("%s/%s.dwallet", dap_chain_wallet_get_path(g_config), l_wallet_name);
@@ -230,13 +243,17 @@ static int s_wallet_create(int argc, const char **argv) {
         dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};
         size_t l_count_signs  = 0;
         for (int i = 6; i < argc; i++) {
+            if (!strcmp(argv[i], "-seed")) { // skip option and its value
+                i++;
+                continue;
+            }
             l_types[l_count_signs] = dap_sign_type_from_str(argv[i]);
             if (l_types[l_count_signs].type == SIG_TYPE_NULL) {
                 log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
                         argv[i], dap_sign_get_str_recommended_types());
                 exit(-2007);
             }
-            if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+            if (dap_sign_type_is_deprecated(l_types[l_count_signs]))
             {
                 log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                         dap_sign_get_str_recommended_types());
@@ -246,9 +263,11 @@ static int s_wallet_create(int argc, const char **argv) {
         }
         l_wallet = dap_chain_wallet_create_with_seed_multi(l_wallet_name, s_system_wallet_dir,
                                                                l_types, l_count_signs,
-                                                               NULL, 0, NULL);
+                                                               l_seed_str, l_seed_str ? strlen(l_seed_str) : 0, NULL);
     } else
-        l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, NULL);
+        l_wallet = l_seed_str && *l_seed_str
+                   ? dap_chain_wallet_create_with_seed(l_wallet_name, s_system_wallet_dir, l_sig_type, l_seed_str, strlen(l_seed_str), NULL)
+                   : dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, NULL);
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
@@ -269,6 +288,7 @@ static int s_wallet_create_wp(int argc, const char **argv) {
     const char *l_wallet_name = argv[3], *l_pass_str = argv[4];
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[5] );
     dap_chain_wallet_t *l_wallet = NULL;
+    const char *l_seed_str = NULL;
 
     //
     // Check if wallet name has only digits and English letters
@@ -292,11 +312,24 @@ static int s_wallet_create_wp(int argc, const char **argv) {
     //
     // Check unsupported tesla algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type))
+    if (dap_sign_type_is_deprecated(l_sig_type))
     {
         log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                 dap_sign_get_str_recommended_types());
         exit( -2004 );
+    }
+
+    // Parse optional -seed argument after required args
+    for (int i = 6; i < argc; i++) {
+        if (!strcmp(argv[i], "-seed")) {
+            if (i + 1 < argc) {
+                l_seed_str = argv[i + 1];
+                i++;
+            } else {
+                log_it(L_ERROR, "Option -seed requires a value\n");
+                exit(-2009);
+            }
+        }
     }
 
     char *l_file_name = dap_strdup_printf("%s/%s.dwallet", dap_chain_wallet_get_path(g_config), l_wallet_name);
@@ -320,13 +353,17 @@ static int s_wallet_create_wp(int argc, const char **argv) {
         dap_sign_type_t l_types[MAX_ENC_KEYS_IN_MULTYSIGN] = {0};
         size_t l_count_signs  = 0;
         for (int i = 6; i < argc; i++) {
+            if (!strcmp(argv[i], "-seed")) { // skip option and its value
+                i++;
+                continue;
+            }
             l_types[l_count_signs] = dap_sign_type_from_str(argv[i]);
             if (l_types[l_count_signs].type == SIG_TYPE_NULL) {
                 log_it( L_ERROR, "Invalid signature type '%s', you can use the following:\n%s",
                         argv[i], dap_sign_get_str_recommended_types());
                 exit(-2007);
             }
-            if (dap_sign_type_is_depricated(l_types[l_count_signs]))
+            if (dap_sign_type_is_deprecated(l_types[l_count_signs]))
             {
                 log_it( L_ERROR, "Tesla, picnic, bliss algorithms is not supported, please, use another variant:\n%s",
                         dap_sign_get_str_recommended_types());
@@ -336,9 +373,11 @@ static int s_wallet_create_wp(int argc, const char **argv) {
         }
         l_wallet = dap_chain_wallet_create_with_seed_multi(l_wallet_name, s_system_wallet_dir,
                                                                l_types, l_count_signs,
-                                                               NULL, 0, l_pass_str);
+                                                               l_seed_str, l_seed_str ? strlen(l_seed_str) : 0, l_pass_str);
     } else
-        l_wallet = dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
+        l_wallet = l_seed_str && *l_seed_str
+                   ? dap_chain_wallet_create_with_seed(l_wallet_name, s_system_wallet_dir, l_sig_type, l_seed_str, strlen(l_seed_str), l_pass_str)
+                   : dap_chain_wallet_create(l_wallet_name, s_system_wallet_dir, l_sig_type, l_pass_str);
 
     if (l_wallet) {
         log_it(L_NOTICE, "Wallet %s has been created.\n", l_wallet_name);
@@ -402,6 +441,20 @@ static int s_cert_create(int argc, const char **argv) {
     }
 
     dap_sign_type_t l_sig_type = dap_sign_type_from_str( argv[4] );
+    // Optional seed parsing: look for -seed <ascii>
+    const char *l_seed_str = NULL;
+    for (int i = 5; i < argc; i++) {
+        if (!strcmp(argv[i], "-seed")) {
+            if (i + 1 < argc) {
+                l_seed_str = argv[i + 1];
+                i++;
+            } else {
+                log_it(L_ERROR, "Option -seed requires a value\n");
+                DAP_DELETE(l_cert_path);
+                exit(-603);
+            }
+        }
+    }
 
     if (l_sig_type.type == SIG_TYPE_NULL || l_sig_type.type == SIG_TYPE_MULTI_CHAINED) {
         log_it(L_ERROR, "Unknown signature type %s specified, recommended signatures:\n%s",
@@ -417,7 +470,7 @@ static int s_cert_create(int argc, const char **argv) {
     //
     // Check unsupported algorithm
     //
-    if (dap_sign_type_is_depricated(l_sig_type)) {
+    if (dap_sign_type_is_deprecated(l_sig_type)) {
         log_it(L_ERROR, "Signature type %s is obsolete, we recommend the following signatures:\n%s",
                argv[4], dap_cert_get_str_recommended_sign());
         exit(-602);
@@ -426,9 +479,28 @@ static int s_cert_create(int argc, const char **argv) {
     dap_enc_key_type_t l_key_type = dap_sign_type_to_key_type(l_sig_type);
 
     if ( l_key_type != DAP_ENC_KEY_TYPE_INVALID ) {
-      dap_cert_t * l_cert = dap_cert_generate(l_cert_name,l_cert_path,l_key_type ); // key length ignored!
+      dap_cert_t * l_cert = NULL;
+      if (l_seed_str && *l_seed_str) {
+          l_cert = dap_cert_generate_mem_with_seed(l_cert_name, l_key_type, l_seed_str, strlen(l_seed_str));
+      } else {
+          l_cert = dap_cert_generate_mem(l_cert_name, l_key_type);
+      }
       if (l_cert == NULL){
-        log_it(L_ERROR, "Can't create \"%s\"",l_cert_path);
+        log_it(L_ERROR, "Can't create certificate in memory");
+        DAP_DELETE(l_cert_path);
+        exit(-500);
+      }
+      if (dap_cert_add(l_cert)) {
+        log_it(L_ERROR, "Can't register certificate in memory");
+        dap_cert_delete(l_cert);
+        DAP_DELETE(l_cert_path);
+        exit(-500);
+      }
+      if (dap_cert_save_to_folder(l_cert, s_system_ca_dir)) {
+        log_it(L_ERROR, "Can't save certificate to the file!\n");
+        dap_cert_delete(l_cert);
+        DAP_DELETE(l_cert_path);
+        exit(-500);
       }
       dap_cert_delete(l_cert);
     } else {
@@ -641,24 +713,24 @@ static int s_wallet_pkey_show(int argc, const char **argv)
     }
     dap_chain_wallet_t *l_wallet = dap_chain_wallet_open(argv[4], s_system_wallet_dir, NULL);
     if (!l_wallet) {
-        char l_wallet_path[MAX_PATH] = {0};
+        char l_wallet_path[MAX_PATH + 10] = {0};
         snprintf(l_wallet_path, sizeof(l_wallet_path), "%s/%s.dwallet", s_system_wallet_dir, argv[4]);
 
         if (access(l_wallet_path, F_OK) == 0) {
             const char * l_pass_str = argv[5];
             if (!l_pass_str) {
-                printf("Password required for wallet %s .\n", argv[4]);
+                printf("Password required for wallet %s\n", argv[4]);
                 exit(-134);
             }
             unsigned int res = 0;
             dap_log_level_set(L_CRITICAL);
             l_wallet = dap_chain_wallet_open_file(l_wallet_path, l_pass_str, &res);
             if (!l_wallet) {
-                printf("Wrong password for wallet %s .\n", argv[4]);
+                printf("Wrong password for wallet %s\n", argv[4]);
                 exit(-134);
             }
         } else {
-            printf("Wallet %s not found in the directory %s.\n", argv[4], s_system_wallet_dir);
+            printf("Wallet %s not found in the directory %s\n", argv[4], s_system_wallet_dir);
             exit(-136);
         }
     }
@@ -808,10 +880,10 @@ static void s_help()
     printf( "%s usage:\n\n", l_tool_appname);
 
     printf(" * Create new key wallet and generate signatures with same names plus index \n" );
-    printf("\t%s wallet create <wallet name> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
+    printf("\t%s wallet create <wallet name> <signature type> [-seed \"ascii value here\"] [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
     printf(" * Create a new key wallet and generate signatures with the same names plus index. The wallet will be password protected. \n" );
-    printf("\t%s wallet create_wp <wallet name> <password> <signature type> [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
+    printf("\t%s wallet create_wp <wallet name> <password> <signature type> [-seed \"ascii value here\"] [<signature type 2>[...<signature type N>]]\n\n", l_tool_appname);
 
 
 #if 0
@@ -823,7 +895,7 @@ static void s_help()
     printf("\t%s wallet pkey show <wallet name> {<password>}\n\n", l_tool_appname);
 
     printf(" * Create new key file with randomly produced key stored in\n");
-    printf("\t%s cert create <cert name> <sign type> [<key length>]\n\n", l_tool_appname);
+    printf("\t%s cert create <cert name> <sign type> [-seed \"ascii value here\"] [<key length>]\n\n", l_tool_appname);
 
     printf(" * Dump cert data stored in <file path>\n");
     printf("\t%s cert dump <cert name>\n\n", l_tool_appname);

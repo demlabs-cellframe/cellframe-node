@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>tx_create_json</title>
+</head>
+<body>
+
+<h1>tx_create_json</h1>
+
+<p>Make transaction from a JSON description and place it in the mempool.</p>
+
+<p><strong>Note:</strong> This command creates and signs transactions on the RPC node. Public read-only nodes such as <code>rpc.cellframe.net</code> allow probing error responses but cannot create real transactions (no local wallet keys, no write access). Use a local node with wallets for actual transaction creation. The equivalent command <code>mempool_add</code> accepts the same <code>-tx_obj</code> / <code>-json</code> parameters.</p>
+
+<h2>JSON-RPC</h2>
+
+<p>Send a POST request to the node CLI JSON-RPC endpoint (for example <code>POST http://rpc.cellframe.net/</code>). Set <code>method</code> to <code>tx_create_json</code>.</p>
+
+<p>Two request formats are supported (see <a href="/index.html">index</a> for full rules):</p>
+<ul>
+<li><strong>Version 1</strong> — <code>params</code> array with one semicolon-separated CLI string.</li>
+<li><strong>Version 2</strong> — omit <code>params</code>; use <code>subcommand</code> (usually empty) and <code>arguments</code>. Argument keys must <strong>not</strong> include a leading dash. Use string values; JSON booleans and numbers in <code>arguments</code> are rejected.</li>
+</ul>
+
+<p>For RPC, prefer inline JSON via <code>tx_obj</code> (version 2) or <code>-tx_obj</code> (version 1). The <code>json</code> / <code>-json</code> option expects a file path on the node filesystem. The built-in help string only documents <code>-json</code>, but the handler also accepts <code>-tx_obj</code> (same as <code>mempool_add</code>).</p>
+
+<h3>Version 1 — params string</h3>
+<pre>{
+  "method": "tx_create_json",
+  "params": ["tx_create_json;-net;Backbone;-chain;main;-tx_obj;{\"items\":[...]}"],
+  "id": 1,
+  "version": 1
+}</pre>
+
+<h3>Version 2 — subcommand + arguments</h3>
+<pre>{
+  "method": "tx_create_json",
+  "subcommand": "",
+  "arguments": {
+    "net": "Backbone",
+    "chain": "main",
+    "tx_obj": "{\"items\":[...]}"
+  },
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2>Command form</h2>
+
+<pre>tx_create_json -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -json &lt;json_file_path&gt;
+tx_create_json -net &lt;net_name&gt; [-chain &lt;chain_name&gt;] -tx_obj &lt;json_string&gt;</pre>
+
+<h2>Parameters</h2>
+
+<table border="1" cellpadding="4">
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>-net &lt;net_name&gt;</code></td><td>Chain network. Can be omitted if <code>net</code> is set inside the JSON object.</td></tr>
+<tr><td><code>-chain &lt;chain_name&gt;</code></td><td>Target chain. Can be omitted if <code>chain</code> is set in JSON; otherwise the default TX chain is used.</td></tr>
+<tr><td><code>-json &lt;path&gt;</code></td><td>Path to a JSON file on the node.</td></tr>
+<tr><td><code>-tx_obj &lt;string&gt;</code></td><td>Inline JSON object (recommended for RPC).</td></tr>
+</table>
+
+<p>One of <code>-json</code> or <code>-tx_obj</code> is required.</p>
+
+<h2>JSON-RPC response envelope</h2>
+
+<p><code>tx_create_json</code> is a JSON-response command:</p>
+<pre>{
+  "type": 2,
+  "result": [ ... ],
+  "id": 1,
+  "version": 2
+}</pre>
+<ul>
+<li><code>type</code> — <code>2</code> (<code>TYPE_RESPONSE_JSON</code>)</li>
+<li><code>result</code> — JSON array of result objects (or error objects)</li>
+<li><code>id</code> — echoes the request <code>id</code></li>
+<li><code>version</code> — RPC protocol version</li>
+</ul>
+<p>There is no top-level <code>error</code> field. Errors appear inside <code>result</code> as <code>{ "errors": [ { "code": &lt;int&gt;, "message": "&lt;text&gt;" } ] }</code>. Partial item validation failures return a result object with <code>tx_create: false</code> instead of an <code>errors</code> wrapper.</p>
+
+<h2>Transaction JSON format</h2>
+
+<p>The JSON object must contain an <code>items</code> array. Optional top-level fields:</p>
+<ul>
+<li><code>net</code> — network name (if not passed via <code>-net</code>)</li>
+<li><code>chain</code> — chain name (if not passed via <code>-chain</code>)</li>
+<li><code>ts_created</code> — Unix timestamp (defaults to current time)</li>
+</ul>
+
+<pre>{
+  "net": "Backbone",
+  "chain": "main",
+  "ts_created": 1783947227,
+  "items": [
+    {
+      "type": "in",
+      "prev_hash": "0xC7ECF43411E24509C240C6FC2003227AB930183719291555F658744C1FE46FF8",
+      "out_prev_idx": 4
+    },
+    {
+      "type": "out_std",
+      "addr": "Rj7J7MiX2bWy8sNyZ43aVJB3RACsGwXbLrabvgAVEMr3vBVoqJy85nKTE5ghwytbymAbQCiLV1VparMcyKetuLx6TUhhbsSVN6zTY1me",
+      "value": "1000000000000000000",
+      "token": "CELL"
+    },
+    {
+      "type": "sig",
+      "sig_b64": "&lt;base64_signature&gt;",
+      "sig_size": 2096
+    }
+  ]
+}</pre>
+<p>Use <code>mempool dump -tx_to_json</code> on an existing mempool transaction to obtain a template in this format.</p>
+
+<h3>Supported item types</h3>
+<table border="1" cellpadding="4">
+<tr><th>type</th><th>Key fields</th></tr>
+<tr><td><code>in</code></td><td><code>prev_hash</code>, <code>out_prev_idx</code></td></tr>
+<tr><td><code>in_cond</code></td><td><code>prev_hash</code>, <code>out_prev_idx</code>, <code>receipt_idx</code></td></tr>
+<tr><td><code>out</code></td><td><code>addr</code>, <code>value</code></td></tr>
+<tr><td><code>out_std</code></td><td><code>addr</code>, <code>value</code>, <code>token</code></td></tr>
+<tr><td><code>out_ext</code></td><td><code>addr</code>, <code>value</code>, <code>token</code> (required)</td></tr>
+<tr><td><code>out_cond</code></td><td><code>subtype</code> plus subtype-specific fields (e.g. srv_pay, srv_xchange, stake, wallet_shared)</td></tr>
+<tr><td><code>sig</code></td><td><code>sig_b64</code> (base64 signature), optional <code>sig_size</code></td></tr>
+<tr><td><code>data</code></td><td><code>data_type</code>, <code>data</code> (base64 payload)</td></tr>
+<tr><td><code>event</code></td><td><code>group_name</code>, <code>event_type</code>, <code>service_id</code> or <code>service</code></td></tr>
+<tr><td><code>receipt</code></td><td><code>service_id</code>, <code>price_unit</code>, <code>units</code>, <code>value</code></td></tr>
+<tr><td><code>tsd</code></td><td>Type-specific TSD payload fields</td></tr>
+</table>
+
+<p>Values are in datoshi (uint256 string). Addresses are base58-encoded.</p>
+
+<h2>Examples</h2>
+
+<h3>Error probe: missing JSON input (verified on rpc.cellframe.net)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_create_json",
+  "params": ["tx_create_json;-net;Backbone"],
+  "id": 1,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_create_json",
+  "subcommand": "",
+  "arguments": {"net": "Backbone"},
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h3>Error probe: invalid JSON string</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_create_json",
+  "params": ["tx_create_json;-net;Backbone;-tx_obj;{bad}"],
+  "id": 2,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_create_json",
+  "subcommand": "",
+  "arguments": {"net": "Backbone", "tx_obj": "{bad}"},
+  "id": 2,
+  "version": 2
+}</pre>
+
+<h3>Create via inline JSON (local node with wallet)</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_create_json",
+  "params": ["tx_create_json;-net;Backbone;-chain;main;-tx_obj;{\"items\":[{\"type\":\"in\",\"prev_hash\":\"0xABC...\",\"out_prev_idx\":0},{\"type\":\"out_std\",\"addr\":\"Rj7...\",\"value\":\"1000000000\",\"token\":\"CELL\"},{\"type\":\"sig\",\"sig_b64\":\"MEUCIQ...\"}]}"],
+  "id": 3,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_create_json",
+  "subcommand": "",
+  "arguments": {
+    "net": "Backbone",
+    "chain": "main",
+    "tx_obj": "{\"items\":[{\"type\":\"in\",\"prev_hash\":\"0xABC...\",\"out_prev_idx\":0},{\"type\":\"out_std\",\"addr\":\"Rj7...\",\"value\":\"1000000000\",\"token\":\"CELL\"},{\"type\":\"sig\",\"sig_b64\":\"MEUCIQ...\"}]}"
+  },
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>Create from file on node</h3>
+<p>Version 1:</p>
+<pre>{
+  "method": "tx_create_json",
+  "params": ["tx_create_json;-net;Backbone;-json;/opt/cellframe/tx.json"],
+  "id": 4,
+  "version": 1
+}</pre>
+<p>Version 2:</p>
+<pre>{
+  "method": "tx_create_json",
+  "subcommand": "",
+  "arguments": {"net": "Backbone", "json": "/opt/cellframe/tx.json"},
+  "id": 4,
+  "version": 2
+}</pre>
+
+<h2>Typical responses</h2>
+
+<h3>Success</h3>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "tx_create": true,
+      "hash": "0x1234...abcd",
+      "total_items": 3
+    }
+  ],
+  "id": 3,
+  "version": 2
+}</pre>
+
+<h3>Partial validation failure</h3>
+<p>Some items could not be processed; transaction is not created.</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "tx_create": false,
+      "valid_items": 2,
+      "total_items": 3,
+      "errors": [
+        "For item 2 of type 'out_std' the string representation of the address could not be converted, or the size of the output sum is 0."
+      ]
+    }
+  ],
+  "id": 3,
+  "version": 2
+}</pre>
+<p>Note: item-level validation errors are plain strings in the <code>errors</code> array, not <code>{code, message}</code> objects.</p>
+
+<h3>Command errors (verified on rpc.cellframe.net)</h3>
+<p>Missing <code>-json</code> / <code>-tx_obj</code>:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 11, "message": "Command requires one of parameters '-json &lt;json file path&gt; or -tx_obj &lt;string&gt;'" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<p>Invalid JSON string:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 12, "message": "Can't parse input JSON-string" }
+      ]
+    }
+  ],
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Empty or invalid <code>items</code> array:</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 18, "message": "Can't create transaction from json file" }
+      ]
+    }
+  ],
+  "id": 2,
+  "version": 2
+}</pre>
+<p>Other possible errors (local node):</p>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 15, "message": "Not found net by name 'UnknownNet'" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+<pre>{
+  "type": 2,
+  "result": [
+    {
+      "errors": [
+        { "code": 20, "message": "Can't add transaction to mempool" }
+      ]
+    }
+  ],
+  "id": 1,
+  "version": 2
+}</pre>
+
+<h2>Related commands</h2>
+<ul>
+<li><code>mempool_add</code> — same JSON input; alias for creating and adding to mempool</li>
+<li><code>mempool dump -tx_to_json</code> — export an existing mempool transaction as a JSON template</li>
+<li><code>tx_create</code> — create transaction via CLI flags instead of JSON</li>
+<li><code>mempool list</code> — verify the transaction appears in mempool</li>
+<li><code>tx_history -tx</code> — inspect transaction after it is accepted to chain</li>
+<li><code>wallet outputs</code> — list UTXOs to obtain <code>prev_hash</code> / <code>out_prev_idx</code> for <code>in</code> items</li>
+</ul>
+
+</body>
+</html>

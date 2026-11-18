@@ -1,0 +1,37 @@
+# Cellframe Node — single-container deployment.
+#
+# The deploy image contains no sources; build it after the builder produced
+# ./docker-artifacts (see README.docker.md):
+#   docker run --rm -v "$PWD:/src" -v "$PWD/docker-artifacts:/out" \
+#       -e BUILDER_UID=$(id -u) -e BUILDER_GID=$(id -g) cellframe-node-builder
+#   docker compose up -d --build
+#
+# RPC: docker compose exec cellframe-node ./bin/cellframe-node-cli net list
+# Health: curl http://127.0.0.1:12345/health
+services:
+  cellframe-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cellframe-node:local
+    container_name: cellframe-node
+    restart: unless-stopped
+    environment:
+      CELLFRAME_NETWORKS: "Backbone"      # built-in nets to enable, comma-separated
+      CELLFRAME_NODE_ROLE: "full"         # light | full | archive | master | root
+      CELLFRAME_DEBUG_MODE: "false"
+    ports:
+      - "127.0.0.1:12345:12345"   # CLI / JSON-RPC (GET /health)
+      # - "8079:8079"             # p2p uplink — publish together with [server] enabled
+    volumes:
+      - cellframe-var:/opt/cellframe-node/var    # chain data, wallets (var/lib/wallet),
+                                                 # user certs (var/lib/ca), plugins (var/lib/plugins)
+      - cellframe-etc:/opt/cellframe-node/etc    # configs; drop overrides into
+                                                 # etc/cellframe-node.cfg.d/*.cfg or etc/patches.d/*.cfg,
+                                                 # custom networks into etc/network/
+      # - ./my-certs:/opt/cellframe-node/var/lib/ca:ro   # bind-mount user certificates instead
+    stop_grace_period: 60s
+
+volumes:
+  cellframe-var:
+  cellframe-etc:

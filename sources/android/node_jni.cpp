@@ -89,7 +89,7 @@ void callOnNotify(JNIEnv *env, const _jstring *message_)
 bool notifycallback(const char *data){
     __android_log_print(ANDROID_LOG_ERROR, "CellframeNotify", "%s" , data);
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "GetEnv:", " start Callback  to JNL [%d]  \n", data);
+    __android_log_print(ANDROID_LOG_VERBOSE, "GetEnv:", " start Callback  to JNL [%s]  \n", data);
     JNIEnv *g_env;
     if (NULL == jvm) {
         __android_log_print(ANDROID_LOG_ERROR, "GetEnv:", "  No VM  \n");

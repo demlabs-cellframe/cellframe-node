@@ -1,0 +1,185 @@
+name: Conditional Transactions and Service Payments
+description: >
+  Tests conditional transaction lifecycle: create service-conditioned TX,
+  verify unspent conditional outputs, remove conditional TX, and verify
+  ledger state. Covers the tx_cond_create/remove/unspent_find flow.
+  Note: conditional TXs require the native token (TCELL).
+tags: [e2e, transactions, conditional, service, deep]
+version: "1.0"
+
+defaults:
+  node: node-1
+  wait: 2s
+
+variables:
+  fee_value: "50000000000000000"
+  cond_value: "100000000000000000"
+  srv_uid: "1"
+  funding_value: "10000000000000000000"
+
+setup:
+  - set: root_certs
+    value: "','.join([f'{network_name}.root.pvt.{i}' for i in range(root_count)])"
+    eval: true
+
+  - wait_network: online
+    nodes:
+      - node-1
+      - node-2
+      - node-3
+      - node-4
+      - node-5
+      - node-6
+    timeout: 300
+
+  - cli: "wallet new -w cond_wallet -sign sig_dil"
+  - cli: "wallet info -w cond_wallet -net {{network_name}}"
+    save_wallet: cond_addr
+  - print: "Conditional wallet addr: {{cond_addr}}"
+
+  # Fund conditional wallet with native tokens (required for cond TX + fees)
+  - cli: "tx_create -net {{network_name}} -chain main -token {{native_ticker}} -from_wallet {{network_name}}_root_0 -to_addr {{cond_addr}} -value {{funding_value}} -fee {{fee_value}}"
+    node: node-1
+    save_hash: cond_funding_hash
+  - if: "cond_funding_hash"
+    then:
+      - wait_for_datum: "{{cond_funding_hash}}"
+        node: "{{first_master}}"
+        network: "{{network_name}}"
+        chain: main
+        timeout_total: 180
+        timeout_mempool: 60
+
+test:
+  # ================================================================
+  # Test 1: Create conditional transaction
+  # ================================================================
+  - name: "Create conditional transaction"
+    steps:
+      - cli: "tx_cond_create -net {{network_name}} -token {{native_ticker}} -w cond_wallet -cert {{network_name}}.root.pvt.0 -value {{cond_value}} -fee {{fee_value}} -unit B -srv_uid {{srv_uid}}"
+        save: cond_create_result
+        save_hash: cond_tx_hash
+      - print: "Cond TX create result: {{cond_create_result}}"
+      - print: "Cond TX hash: {{cond_tx_hash}}"
+
+      - if: "cond_tx_hash"
+        then:
+          - wait_for_datum: "{{cond_tx_hash}}"
+            node: "{{first_master}}"
+            network: "{{network_name}}"
+            chain: main
+            timeout_total: 180
+            timeout_mempool: 60
+            save_status: cond_datum_status
+          - print: "Cond TX datum status: {{cond_datum_status}}"
+
+  # ================================================================
+  # Test 2: Find unspent conditional outputs
+  # ================================================================
+  - name: "Find unspent conditional outputs"
+    steps:
+      - wait: "10s"
+
+      - cli: "tx_cond_unspent_find -net {{network_name}} -srv_uid {{srv_uid}} -w cond_wallet"
+        save: unspent_cond
+        expect: any
+      - print: "Unspent conditional outputs: {{unspent_cond}}"
+
+  # ================================================================
+  # Test 3: Create multiple conditional TXs
+  # ================================================================
+  - name: "Multiple conditional transactions"
+    steps:
+      - loop: 2
+        steps:
+          - cli: "tx_cond_create -net {{network_name}} -token {{native_ticker}} -w cond_wallet -cert {{network_name}}.root.pvt.0 -value {{cond_value}} -fee {{fee_value}} -unit B -srv_uid {{srv_uid}}"
+            save: _multi_cond_result
+            save_hash: _multi_cond_hash
+            expect: any
+          - print: "Multi cond TX {{i}}: {{_multi_cond_result}}"
+
+          - if: "_multi_cond_hash"
+            then:
+              - wait_for_datum: "{{_multi_cond_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+
+      - cli: "tx_cond_unspent_find -net {{network_name}} -srv_uid {{srv_uid}} -w cond_wallet"
+        save: multi_unspent
+        expect: any
+      - print: "Multiple unspent conditionals: {{multi_unspent}}"
+
+  # ================================================================
+  # Test 4: Remove conditional TX
+  # ================================================================
+  - name: "Remove conditional transaction"
+    steps:
+      - if: "cond_tx_hash"
+        then:
+          - cli: "tx_cond_remove -net {{network_name}} -hashes {{cond_tx_hash}} -w cond_wallet -fee {{fee_value}} -srv_uid {{srv_uid}}"
+            save: cond_remove_result
+            save_hash: cond_remove_hash
+            expect: any
+          - print: "Cond remove result: {{cond_remove_result}}"
+
+          - if: "cond_remove_hash"
+            then:
+              - wait_for_datum: "{{cond_remove_hash}}"
+                node: "{{first_master}}"
+                network: "{{network_name}}"
+                chain: main
+                timeout_total: 180
+                timeout_mempool: 60
+                save_status: remove_status
+              - print: "Remove datum status: {{remove_status}}"
+
+  # ================================================================
+  # Test 5: Verify balance after conditional operations
+  # ================================================================
+  - name: "Balance after conditional operations"
+    steps:
+      - wait: "10s"
+
+      - cli: "wallet info -w cond_wallet -net {{network_name}}"
+        save: cond_wallet_final
+        expect: any
+      - print: "Conditional wallet final state: {{cond_wallet_final}}"
+
+      - cli: "tx_history -w cond_wallet -net {{network_name}}"
+        save: cond_history
+        expect: any
+      - print: "Conditional TX history: {{cond_history}}"
+
+  # ================================================================
+  # Test 6: Cross-node ledger consistency for conditional TXs
+  # ================================================================
+  - name: "Cross-node ledger consistency"
+    steps:
+      - for: _node
+        in: "{{root_nodes}}"
+        steps:
+          - cli: "wallet info -w cond_wallet -net {{network_name}}"
+            node: "{{_node}}"
+            save: _cond_bal
+            expect: any
+          - print: "[{{_node}}] cond wallet balance: {{_cond_bal}}"
+
+      - for: _node
+        in: "{{master_nodes}}"
+        steps:
+          - cli: "wallet info -w cond_wallet -net {{network_name}}"
+            node: "{{_node}}"
+            save: _cond_bal_m
+            expect: any
+          - print: "[{{_node}}] cond wallet balance: {{_cond_bal_m}}"
+
+check:
+  - cli: "net -net {{network_name}} get status"
+    node: node-1
+    contains: "NET_STATE_ONLINE"
+  - cli: "net -net {{network_name}} get status"
+    node: node-4
+    contains: "NET_STATE_ONLINE"

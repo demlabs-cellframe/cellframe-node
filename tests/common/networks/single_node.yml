@@ -1,0 +1,10 @@
+# Single Node Network
+# Предоставляет: node1 (root validator)
+
+network:
+  topology: minimal
+  nodes:
+    - name: node1
+      role: root
+      validator: true
+
